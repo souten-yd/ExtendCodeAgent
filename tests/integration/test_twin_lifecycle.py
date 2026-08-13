@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from extendcodeagent.core.contracts import ProjectRef
+from extendcodeagent.graph.analyzers import PythonGraphAnalyzer
 from extendcodeagent.storage import SqliteGraphStore
 from extendcodeagent.twin import TwinReadiness, TwinService
 
@@ -90,3 +91,28 @@ def test_restart_and_workspace_isolation(tmp_path: Path) -> None:
     with SqliteGraphStore(database) as reopened:
         assert reopened.current_revision(_project(root)) == first.revision
         assert reopened.current_revision(_project(root, "w2")) != first.revision
+
+
+def test_python_facts_persist_and_changed_file_symbols_are_invalidated(tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    root.mkdir()
+    _write(root, "service.py", "def old_name():\n    return 1\n")
+    database = tmp_path / "graph.db"
+    with SqliteGraphStore(database) as store:
+        twin = TwinService(store, analyzer=PythonGraphAnalyzer())
+        opened = twin.open(_project(root))
+        assert opened.readiness is TwinReadiness.READY
+        assert any(
+            node.canonical_ref.value == "py://service#old_name"
+            for node in twin.snapshot(_project(root)).nodes
+        )
+    with SqliteGraphStore(database) as store:
+        twin = TwinService(store, analyzer=PythonGraphAnalyzer())
+        reopened = twin.open(_project(root))
+        assert reopened.revision == opened.revision
+        _write(root, "service.py", "def new_name():\n    return 2\n")
+        refreshed = twin.refresh(_project(root), changed_paths=("service.py",))
+        refs = {node.canonical_ref.value for node in twin.snapshot(_project(root)).nodes}
+        assert refreshed.readiness is TwinReadiness.READY
+        assert "py://service#old_name" not in refs
+        assert "py://service#new_name" in refs

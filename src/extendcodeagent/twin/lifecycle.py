@@ -13,7 +13,15 @@ from extendcodeagent.core.contracts import (
     ProjectRef,
     Provenance,
 )
-from extendcodeagent.graph import FactStatus, GraphDelta, GraphNode, GraphRevision, GraphSnapshot
+from extendcodeagent.graph import (
+    FactStatus,
+    GraphDelta,
+    GraphEdge,
+    GraphNode,
+    GraphRevision,
+    GraphSnapshot,
+)
+from extendcodeagent.graph.analyzers import GraphAnalyzer
 from extendcodeagent.storage import RevisionConflict, SqliteGraphStore
 
 from .source_snapshot import SourceFileSnapshot, SourceSnapshot, SourceSnapshotter
@@ -37,18 +45,25 @@ class TwinRefreshResult:
 
 
 class TwinService:
-    """Coordinates source snapshots and durable graph revisions without semantic analysis."""
+    """Coordinates source snapshots, optional analysis, and durable graph revisions."""
 
     def __init__(
-        self, store: SqliteGraphStore, snapshotter: SourceSnapshotter | None = None
+        self,
+        store: SqliteGraphStore,
+        snapshotter: SourceSnapshotter | None = None,
+        analyzer: GraphAnalyzer | None = None,
     ) -> None:
         self.store = store
         self.snapshotter = snapshotter or SourceSnapshotter()
+        self.analyzer = analyzer
 
     def open(self, project: ProjectRef) -> TwinRefreshResult:
         source = self.snapshotter.snapshot(project)
         current = self.store.current_revision(project)
-        if current and _matches(current, source):
+        expected_versions = dict(source.analyzer_versions)
+        if self.analyzer is not None:
+            expected_versions.update(self.analyzer.analyzer_versions)
+        if current and _matches(current, source, expected_versions):
             return TwinRefreshResult(TwinReadiness.READY, current, current.revision_id)
         return self._apply(
             project,
@@ -91,25 +106,52 @@ class TwinService:
         previous_id = current.revision_id if current else None
         paths = tuple(item.path for item in source.files) if full else source.changed_paths
         selected = {item.path: item for item in source.files if item.path in set(paths)}
-        nodes = tuple(_file_node(project, source, item) for item in selected.values())
-        existing = self.store.snapshot(project).nodes if current else ()
-        active_in_scope = {
-            node.source_ref: node for node in existing if full or node.source_ref in paths
+        node_by_ref = {
+            f"file://{item.path}": _file_node(project, source, item) for item in selected.values()
         }
+        edges: tuple[GraphEdge, ...] = ()
+        analyzer_versions = dict(source.analyzer_versions)
+        diagnostics = list(source.diagnostics)
+        if self.analyzer is not None:
+            analysis = self.analyzer.analyze(project, source, paths=None if full else paths)
+            node_by_ref.update({item.canonical_ref.value: item for item in analysis.nodes})
+            edges = analysis.edges
+            analyzer_versions.update(analysis.analyzer_versions)
+            diagnostics.extend(analysis.diagnostics)
+        nodes = tuple(node_by_ref[key] for key in sorted(node_by_ref))
+        previous_snapshot = (
+            self.store.snapshot(project) if current else GraphSnapshot(project, None)
+        )
+        generated_node_ids = {node.node_id for node in nodes}
         invalidations = tuple(
-            node.node_id for path, node in active_in_scope.items() if path not in selected
+            node.node_id
+            for node in previous_snapshot.nodes
+            if (full or node.source_ref in paths) and node.node_id not in generated_node_ids
+        )
+        generated_edge_ids = {edge.edge_id for edge in edges}
+        edge_invalidations = tuple(
+            edge.edge_id
+            for edge in previous_snapshot.edges
+            if (full or edge.source_ref in paths) and edge.edge_id not in generated_edge_ids
         )
         key_payload = "\n".join(
-            [source.worktree_fingerprint, "full" if full else "incremental", *sorted(paths)]
+            [
+                source.worktree_fingerprint,
+                "full" if full else "incremental",
+                *(f"{key}:{value}" for key, value in sorted(analyzer_versions.items())),
+                *sorted(paths),
+            ]
         )
         delta = GraphDelta(
             project,
             source.source_revision,
             source.worktree_fingerprint,
             hashlib.sha256(key_payload.encode()).hexdigest(),
-            dict(source.analyzer_versions),
+            analyzer_versions,
             nodes,
+            edges,
             invalidate_node_ids=invalidations,
+            invalidate_edge_ids=edge_invalidations,
             expected_revision_id=expected_revision_id,
         )
         try:
@@ -127,17 +169,19 @@ class TwinService:
             revision,
             previous_id,
             len(nodes),
-            len(invalidations),
+            len(invalidations) + len(edge_invalidations),
             paths,
-            source.diagnostics,
+            tuple(diagnostics),
         )
 
 
-def _matches(revision: GraphRevision, source: SourceSnapshot) -> bool:
+def _matches(
+    revision: GraphRevision, source: SourceSnapshot, analyzer_versions: dict[str, str]
+) -> bool:
     return (
         revision.source_revision == source.source_revision
         and revision.worktree_fingerprint == source.worktree_fingerprint
-        and dict(revision.analyzer_versions) == dict(source.analyzer_versions)
+        and dict(revision.analyzer_versions) == analyzer_versions
     )
 
 
