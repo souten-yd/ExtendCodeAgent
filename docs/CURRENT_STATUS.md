@@ -4,7 +4,7 @@ Status date: 2026-08-13
 
 ## Program state
 
-Overall: **PR-C SEMANTIC/IMPACT IMPLEMENTED AND LOCALLY VERIFIED — PUBLICATION PENDING**
+Overall: **PR-C STRUCTURAL/SEMANTIC/IMPACT COMPLETE — PR-D NOT STARTED**
 
 The project now contains the strategic planning baseline plus a working Python host-neutral
 foundation. PR-A provides shared immutable contracts, centralized JSON/JSONC configuration,
@@ -44,7 +44,7 @@ adapters, local validation scripts, and architecture-boundary tests.
 | Planning PR | architecture, migration audit, implementation/validation/model-routing plan | complete |
 | PR-A | foundation contracts, config/capability policy, model-router contracts, local harness | complete |
 | PR-B | graph revision/store/source snapshot | complete |
-| PR-C | structural/Python semantic/path/impact | implementation/local evidence complete; PR pending |
+| PR-C | structural/Python semantic/path/impact | complete |
 | PR-D | OpenCode adapter + MCP advisory integration | not started |
 | PR-E | context/test intelligence/runtime ingest | not started |
 | PR-F | Blueprint + task-level Convergence | not started |
@@ -54,11 +54,12 @@ adapters, local validation scripts, and architecture-boundary tests.
 
 ## Immediate next action
 
-Publish and merge PR-C after final diff and exact-head evidence review. PR-C now provides
+Begin PR-D from updated `main` after re-checking the current stable OpenCode plugin and MCP
+interfaces. PR-C now provides
 deterministic structural/Python AST facts, analyzer-owned Python alias resolution, persisted
 dependency-aware refresh, bounded path/impact traversal, weakest-link confidence, uncertainty,
 explanations, and test-candidate projection. Curated FP/FN review and real-repository repeated-query
-measurements are recorded under `docs/evidence/pr-c/`.
+measurements are recorded under `docs/evidence/pr-c/`; PR #6 merged as `ef6db532`.
 
 PR-A intentionally has no real OpenCode or real-LLM claim. Live host integration remains PR-D;
 live model routing remains PR-G. The local PR-A gates passed on Python 3.12.3: Ruff lint/format,
