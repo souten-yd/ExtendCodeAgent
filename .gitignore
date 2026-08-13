@@ -9,3 +9,4 @@ __pycache__/
 *.py[cod]
 node_modules/
 npm-debug.log*
+.extendcodeagent/

@@ -1,7 +1,8 @@
-import { join, relative, resolve } from "node:path"
+import { join, resolve } from "node:path"
 import type { Plugin } from "@opencode-ai/plugin"
 
 import { SidecarClient } from "./client.js"
+import { workspacePath } from "./paths.js"
 import { CoalescingEventQueue } from "./queue.js"
 import { createTools } from "./tools.js"
 
@@ -26,7 +27,8 @@ export const ExtendCodeAgentPlugin: Plugin = async ({ directory, worktree }) => 
   return {
     event: async ({ event }) => {
       if (event.type === "file.edited" || event.type === "file.watcher.updated") {
-        queue.enqueue(event.type, [workspacePath(root, event.properties.file)])
+        const path = workspacePath(root, event.properties.file)
+        if (path) queue.enqueue(event.type, [path])
       } else if (
         event.type === "lsp.updated" ||
         event.type === "session.created" ||
@@ -47,15 +49,6 @@ export const ExtendCodeAgentPlugin: Plugin = async ({ directory, worktree }) => 
       await client.stop()
     },
   }
-}
-
-function workspacePath(root: string, path: string): string {
-  const absolute = resolve(root, path)
-  const value = relative(root, absolute)
-  if (value === ".." || value.startsWith(`..${process.platform === "win32" ? "\\" : "/"}`)) {
-    return path
-  }
-  return value.replaceAll("\\", "/")
 }
 
 function readMode(

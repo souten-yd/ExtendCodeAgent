@@ -87,3 +87,15 @@
 - Confirmed OpenCode was not installed, then checked current official stable plugin/MCP/config/CLI
   docs and V2 beta docs before choosing an adapter target.
 - Current npm versions: OpenCode/plugin 1.18.18 and MCP SDK 1.30.0.
+- Added the host-neutral application service plus authenticated local v1 sidecar, with off/shadow/
+  advisory behavior tests and persisted restart behavior.
+- Added the stable TypeScript OpenCode plugin, coalescing background event queue, six tools, and MCP
+  stdio server sharing the same sidecar/service.
+- Adapter typecheck passed; four adapter tests passed, including real MCP protocol call and sidecar
+  stop/reconnect.
+- Real OpenCode 1.18.18 loaded the plugin, exposed all six tools through its server, and reported the
+  configured MCP connected.
+- Real watcher testing exposed a `.git/index.lock`/Git-fingerprint feedback loop. Added adapter-side
+  filtering matching source snapshot exclusions before events enter the queue.
+- Real plugin loading also showed that helper functions must not be exported from the entry module;
+  moved path normalization to a dedicated module and reverified loader success.

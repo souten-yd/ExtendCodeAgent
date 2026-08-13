@@ -29,3 +29,13 @@
 - Dynamic receiver calls are deliberately emitted as inferred `may_call` edges at confidence 0.35.
   This avoids false certainty but can produce name-collision false positives through alias bridging;
   the PR-C FP/FN report must quantify representative cases.
+
+## PR-D current limitations
+
+- Stable OpenCode 1.18.18 emits `.git/index.lock` watcher events while the Twin computes its Git
+  fingerprint. Unfiltered handling caused a self-sustaining refresh loop. The plugin now discards
+  `.git`, `.extendcodeagent`, dependency, cache, and build paths before enqueue; the final real-host
+  smoke must retain explicit no-loop evidence.
+- A first external-edit attempt made through the Codex `apply_patch` mechanism was not observed by
+  OpenCode's inotify watcher, although session and `.git/index.lock` events were observed. Repeat
+  using a tracked smoke fixture and an ordinary formatter write before closing the acceptance gate.
