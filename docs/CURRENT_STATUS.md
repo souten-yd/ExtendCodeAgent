@@ -4,7 +4,7 @@ Status date: 2026-08-13
 
 ## Program state
 
-Overall: **PR-D OPENCode/MCP IMPLEMENTED — PUBLICATION GATES IN PROGRESS**
+Overall: **PR-D OPENCode/MCP COMPLETE — PR-E NOT STARTED**
 
 The project now contains the strategic planning baseline plus a working Python host-neutral
 foundation. PR-A provides shared immutable contracts, centralized JSON/JSONC configuration,
@@ -45,7 +45,7 @@ adapters, local validation scripts, and architecture-boundary tests.
 | PR-A | foundation contracts, config/capability policy, model-router contracts, local harness | complete |
 | PR-B | graph revision/store/source snapshot | complete |
 | PR-C | structural/Python semantic/path/impact | complete |
-| PR-D | OpenCode adapter + MCP advisory integration | in progress |
+| PR-D | OpenCode adapter + MCP advisory integration | complete |
 | PR-E | context/test intelligence/runtime ingest | not started |
 | PR-F | Blueprint + task-level Convergence | not started |
 | PR-G | live model routing + Strategy | not started |
@@ -54,7 +54,7 @@ adapters, local validation scripts, and architecture-boundary tests.
 
 ## Immediate next action
 
-Complete PR-D publication and merge after final exact-head gates. PR-C provides
+Begin PR-E only after the PR-D docs closeout is merged. PR-C provides
 deterministic structural/Python AST facts, analyzer-owned Python alias resolution, persisted
 dependency-aware refresh, bounded path/impact traversal, weakest-link confidence, uncertainty,
 explanations, and test-candidate projection. Curated FP/FN review and real-repository repeated-query
@@ -65,7 +65,8 @@ live model routing remains PR-G. PR-D now adds a stable OpenCode 1.18.18 TypeScr
 bounded tools, an authenticated versioned local sidecar, a shared MCP server, coalesced background
 events, restart/reconnect handling, and a measured filesystem-watcher fallback isolated to the
 adapter. Real model-free OpenCode evidence is recorded under `docs/evidence/pr-d/`; native/off/
-shadow/advisory behavior was exercised without transmitting source to a model.
+shadow/advisory behavior was exercised without transmitting source to a model. PR #8 merged as
+`1cc7fd26` after exact local/remote head and mergeability verification.
 
 The local PR-A gates passed on Python 3.12.3: Ruff lint/format,
 strict mypy, 25 unit/architecture tests, sdist/wheel build, and wheel-archive import smoke.
