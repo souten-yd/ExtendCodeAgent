@@ -6,6 +6,7 @@ import json
 import urllib.error
 import urllib.request
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import cast
 
@@ -13,7 +14,7 @@ from .contracts import ModelRequest, ModelResponse, ModelUnavailable
 
 JsonObject = dict[str, object]
 OpenAITransport = Callable[[str, JsonObject, dict[str, str]], JsonObject]
-HostTransport = Callable[[str, str, JsonObject | None], JsonObject]
+HostTransport = Callable[[str, str, JsonObject | None], object]
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,6 +69,8 @@ class OpenCodeHostAdapter:
     def complete(self, request: ModelRequest) -> ModelResponse:
         send = self.transport or self._send
         session = send("POST", "/session", {"title": "ExtendCodeAgent model routing"})
+        if not isinstance(session, dict):
+            raise ModelUnavailable("OpenCode returned an invalid session")
         session_id = str(session.get("id", ""))
         if not session_id:
             raise ModelUnavailable("OpenCode did not create a session")
@@ -77,30 +80,40 @@ class OpenCodeHostAdapter:
         }
         if not self.enable_native_tools:
             body["tools"] = {}
-        raw = send(
-            "POST",
-            f"/session/{session_id}/message",
-            body,
-        )
+        message_path = f"/session/{session_id}/message"
+        raw = send("POST", message_path, body)
         try:
+            if not isinstance(raw, dict):
+                raise TypeError
             parts = cast("list[JsonObject]", raw["parts"])
             text = "\n".join(
                 str(item["text"]) for item in parts if item.get("type") == "text" and "text" in item
             )
-            info = cast("JsonObject", raw.get("info", {}))
-            tokens = cast("JsonObject", info.get("tokens", {}))
-            return ModelResponse(
+            history = send("GET", message_path, None)
+            if not isinstance(history, list):
+                raise TypeError
+            assistant_messages = [
+                cast("JsonObject", item)
+                for item in history
+                if isinstance(item, dict)
+                and isinstance(item.get("info"), dict)
+                and cast("JsonObject", item["info"]).get("role") == "assistant"
+            ]
+            response = ModelResponse(
                 text,
-                int(cast("int", tokens.get("input", 0))),
-                int(cast("int", tokens.get("output", 0))),
-                sum(1 for item in parts if item.get("type") == "tool"),
-                float(cast("float", info["cost"])) if info.get("cost") is not None else None,
+                sum(_message_token_count(item, "input") for item in assistant_messages),
+                sum(_message_token_count(item, "output") for item in assistant_messages),
+                sum(_message_tool_count(item) for item in assistant_messages),
+                sum(_message_cost(item) for item in assistant_messages),
             )
+            with suppress(ModelUnavailable):
+                send("DELETE", f"/session/{session_id}", None)
+            return response
         except (KeyError, TypeError, ValueError) as error:
             raise ModelUnavailable("invalid OpenCode host response") from error
 
-    def _send(self, method: str, path: str, payload: JsonObject | None) -> JsonObject:
-        return _request_json(
+    def _send(self, method: str, path: str, payload: JsonObject | None) -> object:
+        return _request_value(
             method,
             f"{self.base_url.rstrip('/')}{path}",
             payload,
@@ -116,6 +129,19 @@ def _request_json(
     headers: dict[str, str],
     timeout: float,
 ) -> JsonObject:
+    value = _request_value(method, url, payload, headers, timeout)
+    if not isinstance(value, dict):
+        raise ModelUnavailable("model transport returned a non-object response")
+    return cast("JsonObject", value)
+
+
+def _request_value(
+    method: str,
+    url: str,
+    payload: JsonObject | None,
+    headers: dict[str, str],
+    timeout: float,
+) -> object:
     request = urllib.request.Request(
         url,
         data=json.dumps(payload).encode() if payload is not None else None,
@@ -127,6 +153,20 @@ def _request_json(
             value = json.loads(response.read())
     except (OSError, urllib.error.URLError, json.JSONDecodeError) as error:
         raise ModelUnavailable(f"model transport unavailable: {url}") from error
-    if not isinstance(value, dict):
-        raise ModelUnavailable("model transport returned a non-object response")
-    return cast("JsonObject", value)
+    return value
+
+
+def _message_token_count(message: JsonObject, kind: str) -> int:
+    info = cast("JsonObject", message["info"])
+    tokens = cast("JsonObject", info.get("tokens", {}))
+    return int(cast("int", tokens.get(kind, 0)))
+
+
+def _message_tool_count(message: JsonObject) -> int:
+    parts = cast("list[JsonObject]", message.get("parts", []))
+    return sum(1 for item in parts if item.get("type") == "tool")
+
+
+def _message_cost(message: JsonObject) -> float:
+    info = cast("JsonObject", message["info"])
+    return float(cast("float", info.get("cost", 0.0)))
