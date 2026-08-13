@@ -107,6 +107,9 @@ def test_local_first_falls_back_after_unavailable_local() -> None:
     )
     assert result.response.text == "host"
     assert result.attempts == ("local-small", "host-default")
+    assert result.escalation_count == 1
+    assert result.selected_locality == "host"
+    assert result.wall_time_ms >= 0
 
 
 def test_remote_code_deny_blocks_remote_endpoint() -> None:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from time import perf_counter
 from types import MappingProxyType
 
 from ..config.schema import (
@@ -57,6 +58,7 @@ class PolicyModelRouter:
         )
 
     def execute(self, request: ModelRequest) -> RoutedResponse:
+        started = perf_counter()
         decision = self.route(request)
         attempts: list[str] = []
         if not decision.candidates:
@@ -87,7 +89,12 @@ class PolicyModelRouter:
                 reasons=decision.reasons + (f"completed:{endpoint_id}",),
             )
             return RoutedResponse(
-                response=response, decision=final_decision, attempts=tuple(attempts)
+                response=response,
+                decision=final_decision,
+                attempts=tuple(attempts),
+                wall_time_ms=round((perf_counter() - started) * 1_000, 4),
+                escalation_count=max(0, len(tuple(dict.fromkeys(attempts))) - 1),
+                selected_locality=self.config.endpoints[endpoint_id].locality.value,
             )
         raise ModelUnavailable(f"model endpoints unavailable after attempts: {attempts}")
 

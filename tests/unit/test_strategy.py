@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import pytest
 
+from extendcodeagent.core.model_routing import FakeModelAdapter
 from extendcodeagent.strategy import (
+    ModelStrategySynthesis,
     ProposedAlternative,
     StrategyError,
     StrategyRequest,
@@ -49,3 +51,21 @@ def test_strategy_scores_project_facts_deterministically_and_llm_only_proposes_t
 def test_strategy_has_no_generic_fallback_when_synthesis_is_unavailable() -> None:
     with pytest.raises(StrategyError, match="no alternatives"):
         build_strategy(StrategyRequest("plan", ()), StrategySignals(), FakeSynthesis(()))
+
+
+def test_model_synthesis_accepts_only_explicit_structured_alternatives() -> None:
+    adapter = FakeModelAdapter(
+        '{"alternatives":[{"id":"narrow","changed_files":["a.py"],'
+        '"explanation":"small","rollback_plan":"revert"}]}'
+    )
+    synthesis = ModelStrategySynthesis(adapter)
+    proposals = synthesis.propose({"goal": "fix", "constraints": (), "candidate_files": ("a.py",)})
+    assert proposals[0].alternative_id == "narrow"
+    assert adapter.calls[0].requires_structured_output is True
+    assert adapter.calls[0].contains_source_code is False
+
+
+def test_model_synthesis_rejects_invalid_payload_without_fallback() -> None:
+    synthesis = ModelStrategySynthesis(FakeModelAdapter("not-json"))
+    with pytest.raises(StrategyError, match="invalid strategy synthesis"):
+        synthesis.propose({"goal": "fix", "constraints": (), "candidate_files": ()})

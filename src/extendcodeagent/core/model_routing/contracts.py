@@ -85,6 +85,9 @@ class RoutedResponse:
     response: ModelResponse
     decision: RouteDecision
     attempts: tuple[str, ...]
+    wall_time_ms: float = 0.0
+    escalation_count: int = 0
+    selected_locality: str | None = None
 
 
 class ModelAdapter(Protocol):

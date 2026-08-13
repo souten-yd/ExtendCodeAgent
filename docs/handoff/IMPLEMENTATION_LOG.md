@@ -172,3 +172,7 @@
   passed plus adapter 9 passed, and Python package/TypeScript build PASS.
 - PR #12 remote head `44d123b` matched and was mergeable with no GitHub CI; it squash-merged to
   `main` as `157fd19b56db6c61e61b5f02ab81e3bf985d79fd`.
+- PR-G extended the existing router with adaptive signals and execution metrics, added live
+  OpenAI-compatible/OpenCode host adapters, and added deterministic Strategy scoring plus strict
+  model synthesis. Real conformance passed on Qwen3 0.6B, Qwen 3.6 27B, and OpenCode big-pickle;
+  the trivial host prompt consumed 8,250 input tokens, so it is not a weak-model bounded path.

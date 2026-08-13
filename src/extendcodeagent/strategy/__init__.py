@@ -7,6 +7,7 @@ from .contracts import (
     StrategySignals,
     StrategySynthesisPort,
 )
+from .model import ModelStrategySynthesis
 from .service import build_strategy
 
 __all__ = [
@@ -17,5 +18,6 @@ __all__ = [
     "StrategyResult",
     "StrategySignals",
     "StrategySynthesisPort",
+    "ModelStrategySynthesis",
     "build_strategy",
 ]
