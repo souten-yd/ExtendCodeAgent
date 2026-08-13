@@ -186,3 +186,5 @@
   failure detection was corrected and reverified; frontier remains unavailable, not passed.
 - Final PR-G local gates passed: Ruff/format/strict mypy, 85 Python tests, 9 adapter tests, Python
   sdist/wheel and TypeScript builds, 13 Python integration tests, and repeated 9 adapter tests.
+- PR #14 was published from exact local/remote head `f772017fc4848cee7f6e4535ce2cbf9e06b55104`;
+  no GitHub Actions checks are configured. Mergeability was still calculating at first query.
