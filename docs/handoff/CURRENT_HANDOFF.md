@@ -3,11 +3,11 @@
 Updated: 2026-08-13 (Asia/Tokyo)
 
 Current branch: `agent/pr-e-closeout`
-Current PR: not created (closeout)
+Current PR: `#11` — <https://github.com/souten-yd/ExtendCodeAgent/pull/11>
 Base commit: `fbdfcbd3864a3c46b76cc9ff10d77a57639258a6`
-Latest commit: `fbdfcbd` (PR-E squash merge)
+Latest commit: `e02a0e3` (PR-E merged-state closeout)
 Current milestone: PR-E merged-state closeout
-Current task: synchronize canonical status/handoff and publish the closeout
+Current task: verify and merge closeout PR #11
 Task status: in progress; PR-E implementation is complete
 
 Goal: add revision-aware runtime observations, deterministic test selection and obsolescence, and
@@ -102,7 +102,7 @@ Known failures: an initial concurrent execution of both OpenCode smokes caused o
 lock; both passed when rerun serially. The earlier session-shell hook expectation was corrected.
 Known limitations: actual stable `bash` metadata lacked exit status and remains `observed`; the
 resolver correction does not claim dynamic-import completeness; context projects Graph nodes only.
-Uncommitted work: merged-state closeout documents only.
+Uncommitted work: PR-creation handoff sync only.
 Temporary work: none.
 
 Next exact action: commit/publish/merge the closeout; fast-forward main; pass all-fast/build; create
