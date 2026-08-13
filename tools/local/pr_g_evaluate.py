@@ -222,6 +222,7 @@ def _evaluate(adapter: ModelAdapter, tier: str, mode: str, scenario: Scenario) -
                 ModelRole.CODE_REASONER,
                 prompt,
                 context_tokens=max(1, len(prompt) // 4),
+                max_output_tokens=128,
                 requires_structured_output=tier.startswith("local"),
             )
         )

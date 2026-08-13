@@ -41,6 +41,7 @@ class ModelRequest:
     role: ModelRole
     prompt: str
     context_tokens: int = 0
+    max_output_tokens: int = 512
     contains_source_code: bool = False
     remote_context_approved: bool = False
     requires_structured_output: bool = False
@@ -54,6 +55,8 @@ class ModelRequest:
             raise ValueError("model prompt must not be empty")
         if self.context_tokens < 0:
             raise ValueError("context_tokens must not be negative")
+        if self.max_output_tokens <= 0:
+            raise ValueError("max_output_tokens must be positive")
         if self.minimum_reasoning_strength < 0:
             raise ValueError("minimum_reasoning_strength must not be negative")
 

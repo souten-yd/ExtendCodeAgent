@@ -25,11 +25,13 @@ def test_openai_compatible_adapter_uses_bounded_chat_completion_contract() -> No
         ModelRequest(
             ModelRole.SMALL_STRUCTURED,
             "one focused question",
+            max_output_tokens=96,
             requires_structured_output=True,
         )
     )
     assert calls[0][0].endswith("/chat/completions")
     assert calls[0][1]["response_format"] == {"type": "json_object"}
+    assert calls[0][1]["max_tokens"] == 96
     assert response.text == '{"answer":"ok"}'
     assert (response.input_tokens, response.output_tokens) == (12, 4)
 

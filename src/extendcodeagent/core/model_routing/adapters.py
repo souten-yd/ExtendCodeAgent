@@ -28,6 +28,7 @@ class OpenAICompatibleAdapter:
         payload: JsonObject = {
             "model": self.model_id,
             "messages": [{"role": "user", "content": request.prompt}],
+            "max_tokens": request.max_output_tokens,
         }
         if request.requires_structured_output:
             payload["response_format"] = {"type": "json_object"}
