@@ -5,10 +5,10 @@ Updated: 2026-08-14 (Asia/Tokyo)
 Current branch: `agent/pr-h-js-ts-deep-graph`
 Current PR: not created
 Base commit: `fe61a16e8f7f07e760d99ca449bc09c90166a6c5`
-Latest commit: `c6e4326` (PR-H JS/TS semantic implementation)
+Latest commit: `9222fa08a58bd4c97eaddb34cff7afbe1a8998eb`
 Milestone: PR-H JS/TS semantic and benchmark-justified on-demand deep graph
-Current task: run final PR-H gates, inspect diff, publish PR
-Status: PR-H implementation and real-repository evidence complete locally
+Current task: publish and merge PR-H, then leave closeout on main
+Status: PR-H final local gates and diff inspection PASS
 
 Completed:
 - added official tree-sitter JavaScript/TypeScript/TSX parsing dependencies;
@@ -51,7 +51,7 @@ Completed:
 - verified frontier failure is reported unavailable for all 18 attempts, not as an empty success.
 
 In progress:
-- final all-fast/build/integration/diff gates and PR publication.
+- PR publication and merge.
 
 Not started:
 - PR-I Research/Evidence/Traceability/project convergence;
@@ -76,6 +76,11 @@ Exact tests executed:
 - PR-H parser safety focused gate: Ruff PASS, strict mypy PASS, 5 focused tests PASS;
 - auto refresh focused gate: Ruff PASS, strict mypy PASS, 18 focused tests PASS;
 - three independent `PYTHONFAULTHANDLER=1` ControlDeck cold plus App.tsx refresh processes.
+- final all-fast: Ruff/format/strict mypy PASS, Python 91 passed, adapter 9 passed;
+- final build: Python sdist/wheel and TypeScript build PASS;
+- final integration: Python 15 passed and adapter 9 passed;
+- final benchmark rerun PASS; `git diff --check origin/main...HEAD` PASS; boundary grep found no
+  OpenCode/model/research dependency in Graph/Twin implementation.
 - `tools/local/pr-g-evaluate --tiers local-low,local-medium --modes off,advisory,active`;
 - `tools/local/pr-g-evaluate --tiers host --modes off,advisory,active`;
 - `tools/local/pr-g-evaluate --tiers frontier --modes off,advisory,active`.
@@ -89,6 +94,7 @@ Exact results:
 - worktree mutation: false for every evaluation process.
 - PR-H ControlDeck parser safety: 3/3 PASS without native crash; each snapshot contained 1,255
   nodes and 3,888 edges before and after refresh.
+- final PR-H gate: 91 Python tests, 9 adapter tests, 15 Python integration tests, both builds PASS.
 
 Benchmark results:
 - host native: 78,016 ms, 39,606 new input, 352,000 cached input, 2,431 output, 40 calls;
@@ -109,23 +115,18 @@ Known limitations: local-low is stochastic; active is not made default; stable O
 a per-request max-output field; host cache tokens must not be conflated with new input. PR-H's
 current JS/TS analyzer builds a transient cross-file index; broad dependency closures therefore
 select full refresh. A persisted symbol index remains a future optimization, not a PR-H requirement.
-Uncommitted work: coherent JS/TS semantic/composition/config implementation and tests.
+Uncommitted work: this handoff gate update only.
 Temporary work: evaluation-only Ollama `qwen3:0.6b` remains installed; no temporary repo files.
 
-Next exact action: commit this slice; benchmark a real JS/TS repository for cold/incremental/query/
-DB/memory and curated impact recall; implement only measured framework/deep relations if justified.
-Next files: `tools/local/`, `docs/evidence/pr-h/`, optional plugin-style framework analyzer.
+Next exact action: commit handoff, push branch, create/inspect/merge PR-H, then sync main handoff.
+Next files: PR metadata, then canonical closeout handoff only.
 Next commands:
 
 ```bash
 cd /home/souten/ExtendCodeAgent
-.venv/bin/python -m json.tool docs/evidence/pr-g/model-evaluation.json >/dev/null
-tools/local/all-fast
-tools/local/build
-tools/local/test-integration
-git diff --check
 git status --short
+git push -u origin agent/pr-h-js-ts-deep-graph
 ```
 
-Rollback path: revert only PR-G commits on this branch; merged PR-F closeout `7b1fb75` remains the
-clean base. Do not remove or rewrite PR-B through PR-F implementations.
+Rollback path: switch to `main`; PR-G closeout `fe61a16` is the clean base. PR-H commits are
+isolated on this branch. Do not remove or rewrite PR-B through PR-G implementations.
