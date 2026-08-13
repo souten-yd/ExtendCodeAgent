@@ -1,28 +1,28 @@
 # Next Task
 
-Next task is PR-C Structural/Python Semantic + Path/Impact.
+Finish PR-C publication and merge; do not add new PR-C capability.
 
-1. Start from updated `main`; verify PR-B and its closeout are merged and all local gates pass.
-2. Read only the PR-C and semantic/path/impact sections of the execution plan/migration audit.
-3. Inspect KasaneCore `project_twin/static_graph.py`, `analyzers/python.py`, `analysis.py`, and their
-   direct tests; classify behavior before implementation.
-4. Add curated ground-truth fixtures first: function->caller, route->handler, handler->DB effect,
-   implementation->test, transitive dependency, and ambiguous call.
-5. Implement structural repository/directory/file/module/class/function/method/test/dependency facts,
-   then Python AST definitions/references/imports/calls/decorators/inheritance.
-6. Put `py://`/alias behavior behind a Python `CanonicalReferenceResolver`; do not hard-code it in
-   generic traversal.
-7. Implement bounded path queries and direct/transitive impact with weakest-link confidence,
-   uncertainty, explanation paths, and test candidates.
-8. Produce a human-reviewable false-positive/false-negative report and repeated-query benchmark.
-9. Run focused/integration/all-fast/build/benchmark gates, update handoff, publish and merge PR-C.
+1. Inspect the complete branch diff against `origin/main`, including the host-neutral architecture
+   test and `docs/evidence/pr-c/`.
+2. Commit the dependency-aware refresh, benchmark, evidence, and final documentation slice.
+3. Run exact-head `tools/local/all-fast`, `tools/local/test-integration`, `tools/local/build`, and
+   `tools/local/benchmark-pr-c`; record exact results if they differ from current evidence.
+4. Create a scoped PR-C draft, verify the remote head and absence of required GitHub Actions, mark
+   ready only after local evidence matches that head, then squash-merge.
+5. Fast-forward local `main`, rerun fast/integration gates, and create a small closeout commit/PR if
+   the merged-state handoff cannot truthfully be represented by the PR branch documentation.
+6. Create `agent/pr-d-opencode-mcp` only after PR-C closeout. Re-check the current stable OpenCode
+   plugin/MCP APIs before implementing adapters.
 
 Resume:
 
 ```bash
 cd /home/souten/ExtendCodeAgent
-git switch main
-git pull --ff-only origin main
-git switch -c agent/pr-c-semantic-impact
+git switch agent/pr-c-semantic-impact
 git status --short
+git diff --check
+tools/local/all-fast
+tools/local/test-integration
+tools/local/build
+tools/local/benchmark-pr-c
 ```

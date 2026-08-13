@@ -1,0 +1,32 @@
+{
+  "cold_revision_created": true,
+  "cold_semantic_index_ms": 623.969,
+  "comparison_note": "rg is a lexical file-candidate baseline, not an equivalent impact engine; quality is reviewed separately in ground-truth-report.md",
+  "db_and_wal_size_bytes": 3975808,
+  "graph_edges": 2194,
+  "graph_nodes": 423,
+  "impact_items_total": 2490,
+  "impact_latency_mean_ms": 0.1525,
+  "impact_latency_p50_ms": 0.0649,
+  "impact_latency_p95_ms": 0.3118,
+  "impact_queries": 100,
+  "incremental_affected_paths": [
+    "src/extendcodeagent/core/contracts.py",
+    "src/extendcodeagent/core/diagnostics.py"
+  ],
+  "incremental_revision_changed": true,
+  "incremental_semantic_refresh_ms": 282.761,
+  "max_rss_kib": 44720,
+  "native_rg_files_total": 270,
+  "native_rg_latency_mean_ms": 2.5212,
+  "native_rg_latency_p50_ms": 2.2538,
+  "native_rg_latency_p95_ms": 3.3223,
+  "native_rg_queries": 100,
+  "platform": "Linux-7.0.0-28-generic-x86_64-with-glibc2.39",
+  "python": "3.12.3",
+  "query_repetitions": 5,
+  "query_symbols": 20,
+  "repository": "/home/souten/ExtendCodeAgent",
+  "schema": "extendcodeagent.pr-c-benchmark.v1",
+  "source_files": 64
+}

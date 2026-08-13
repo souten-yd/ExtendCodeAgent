@@ -2,100 +2,91 @@
 
 Updated: 2026-08-13 (Asia/Tokyo)
 
-Current branch: `main` (PR-B merged; create a new branch for PR-C)
-Current PR: [#4](https://github.com/souten-yd/ExtendCodeAgent/pull/4) (merged)
-Base commit: `40602d3ad8f147c9166e32919f7005da1c11279e`
-Latest commit: `0618cd29da2e695f7babaccd931727e214f96217` (PR-B squash merge)
-Current milestone: PR-B Graph / Digital Twin Foundation
-Current task: behavior-first Graph contracts, immutable revisions, SQLite store, source snapshot, full/file-level incremental refresh, persistence and benchmark
-Task status: complete and merged
+Current branch: `agent/pr-c-semantic-impact`
+Current PR: [#6](https://github.com/souten-yd/ExtendCodeAgent/pull/6) (draft)
+Base commit: `faf307dbff00f8f33671a8cb885bfe8593b5725f`
+Latest commit: `e3a65b7` (completed PR-C implementation and evidence)
+Current milestone: PR-C Structural/Python Semantic + Path/Impact
+Current task: remote exact-head verification, ready transition, merge, and closeout
+Task status: in progress
 
-Goal: Adapt KasaneCore's proven revision/store/source lifecycle into the existing host-neutral PR-A foundation without importing semantic, impact, OpenCode/MCP, runtime, or model behavior.
+Goal: extend the PR-B graph/twin foundation with deterministic structural and Python semantic facts,
+bounded explainable path queries, and confidence-aware impact analysis without adding OpenCode,
+runtime, test-obsolescence, or LLM behavior.
 
 Scope:
-- GraphNode/GraphEdge/GraphEvidence/GraphRevision/GraphDelta/GraphSnapshot contracts;
-- atomic SQLite revision store, current pointer, historical reads, isolation/conflict handling;
-- bounded source snapshots and Git/non-Git fingerprints including untracked state;
-- full build and file-level changed/deleted refresh;
-- restart/retention/export-import foundation and local real-repository benchmark.
+- repository/directory/file/module/class/function/method/test/dependency facts;
+- contains/defines/imports/references/depends_on plus Python call/decorator/inheritance relations;
+- analyzer-owned Python canonical-reference aliases;
+- bounded paths and direct/transitive impact with weakest-link confidence;
+- test candidates, requirements, side effects, historical risk, uncertainty, and explanations;
+- curated ground truth, human-reviewable FP/FN evidence, and repeated-query benchmark.
 
 Out of scope:
-- semantic/call graph, path/impact, OpenCode/MCP, runtime/test/context, Blueprint/Convergence,
-  live model routing, research, and Atlas/Nexus application infrastructure.
+- OpenCode/MCP adapters, runtime observations, test obsolescence, context injection, Blueprint,
+  Convergence, live models/strategy, JS/TS/deep graphs, and Research/Evidence.
 
 Completed:
-- fetched and fast-forward checked `origin/main` (already current);
-- reviewed the PR-A planning baseline and relevant KasaneCore contracts/rollout tests;
-- checked current official OpenCode plugin and MCP surfaces;
-- created this PR-A branch and handoff framework.
-- implemented the first host-neutral foundation slice: contracts/diagnostics, config resolver,
-  capability policy, model-routing contracts/router/fakes, local scripts, and focused tests.
-- passed lint/format, strict typecheck, 25 focused unit/architecture tests, package build, and
-  generated-wheel archive smoke.
-- published and squash-merged PR #2; post-merge `main` fast gates passed again.
+- PR-B and its closeout merged to `main` (`0618cd2`, `faf307d`);
+- created this branch from exact `origin/main`;
+- reviewed the PR-C execution-plan and migration-audit slices;
+- inspected KasaneCore static/Python analyzers, path/impact service, and direct tests.
+- added structural/Python AST facts and analyzer-owned canonical reference resolution;
+- added bounded path and confidence-aware impact contracts/service;
+- integrated optional analysis into Twin full/incremental persistence without changing file-only use;
+- added seven focused ground-truth tests plus semantic persistence/invalidation integration.
+- added dependency-aware importer refresh, an end-to-end persisted impact/test-candidate fixture,
+  expanded host-neutral architecture coverage, a human FP/FN report, and real-repository benchmark.
+- published draft PR #6; initial remote head `699d0d39c42763ad28ab8c0fe1aaa49d4aff941d`.
 
-In progress: none.
+In progress:
+- handoff publication update and remote exact-head gate review.
 
 Not started:
-- PR publication/merge/closeout; PR-C.
+- ready transition, merge, post-merge validation, and closeout.
 
 Important architecture decisions:
-- Use the planning baseline's recommended Python-first staged core for PR-A; no TypeScript OpenCode adapter is introduced in this slice.
-- Adapt KasaneCore immutable contract and truthful diagnostic semantics, but replace Atlas identities/rollout environment parsing with host-neutral contracts and one centralized resolver.
-- Treat OpenCode stable and V2 beta APIs as future adapter-only dependencies; neither may be imported by core.
+- ADAPT the newer deterministic Python semantic analyzer behavior and graph analysis algorithms.
+- CONSOLIDATE facts into PR-B `GraphNode`/`GraphEdge`/`GraphSnapshot`; do not introduce duplicate DTOs.
+- REPLACE hard-coded `py://`/`pyname://` traversal knowledge with an analyzer-owned resolver.
+- DO NOT PORT Atlas/Pydantic DTOs, JS/HTML analysis, clone detection, LSP enrichment, runtime, or model code.
 
 Important invariants:
-- Core must not import OpenCode, Atlas, Nexus, provider SDKs, or adapter packages.
-- Unknown/invalid configuration fails explicitly; it never enables a capability accidentally.
-- Global off and per-capability off are inert.
-- Remote routing obeys the resolved privacy and escalation policy.
-- Fake model adapters do not perform network access.
+- Core has no OpenCode, Atlas, Nexus, provider-SDK, or adapter imports.
+- Ambiguous calls remain inferred `may_call` facts with reduced confidence, never verified calls.
+- Path and impact queries are revision-aware, bounded, read-only, and preserve weakest-link confidence.
+- Structural containers do not become behavioral impact items.
 
-Files changed:
-- package metadata/README/ignore rules;
-- `src/extendcodeagent/core/*` foundation implementation;
-- `tests/unit/*` and `tests/architecture/*`;
-- `tools/local/*`;
-- required handoff files.
+Files changed: `src/extendcodeagent/{analysis,graph/analyzers,twin/lifecycle.py}`; focused unit and
+integration tests; handoff documentation.
+Files currently being edited: final PR-C documentation and evidence metadata.
 
-Files currently being edited: PR-B behavioral test design and handoff documentation.
-
-Tests executed at PR-B start:
+Exact tests executed:
+- `.venv/bin/pytest -q tests/unit/test_python_semantic.py tests/unit/test_graph_analysis.py tests/integration/test_twin_lifecycle.py`
 - `tools/local/all-fast`
-- `tools/local/build`
-- `.venv/bin/pytest -q tests/unit/test_graph_contracts.py tests/unit/test_source_snapshot.py`
-- `.venv/bin/pytest -q tests/unit/test_sqlite_store.py`
-- `tools/local/all-fast` after SQLite implementation
 - `tools/local/test-integration`
-- `tools/local/benchmark-pr-b`
-Exact results:
-- Ruff lint: `All checks passed!`
-- Ruff format: `17 files already formatted`
-- mypy 1.17.1 strict: `Success: no issues found in 17 source files`
-- pytest 8.4.1: `25 passed in 0.04s`
-- sdist/wheel build: success
-- PR-B focused contracts/source snapshot: `6 passed`
-- SQLite store focused: `5 passed`
-- all-fast: Ruff PASS; strict mypy PASS; `36 passed in 0.09s`
-- final all-fast: Ruff PASS; strict mypy PASS; `38 passed in 0.13s`
-- Twin lifecycle integration: `5 passed in 0.21s`
-Benchmarks executed: `tools/local/benchmark-pr-b` against this real repository (50 source files).
-Exact results: cold 185.638 ms; incremental 182.145 ms; query 0.302 ms; DB+WAL 255,448 bytes;
-max RSS 28,472 KiB. Incremental correctness passed, but latency advantage was only 1.9%.
-OpenCode version tested: unavailable; `opencode` is not installed locally. Real integration is deferred to PR-D.
-ExtendCodeAgent config tested: defaults plus user/project/runtime/session/command overrides; JSONC,
-strict validation, immutability, capability off/shadow/advisory/active bounds, endpoint/role config.
-LLM/provider tested: deterministic fake local/host/remote adapters only; no real LLM is required for PR-A.
-Model routing profile: manual/local-first/frontier-first/cost/latency/quality/adaptive/host-only/local-only contracts; focused tests exercised local-only, host-only, fallback/retry, capability filters, and remote-code policy.
-Known failures: none in required local gates.
-Known limitations: PR-B graph is file-level only by design; fingerprint scanning dominates small-repo
-incremental latency; import restores current facts as a new local revision rather than preserving
-foreign revision IDs; semantic/impact/OpenCode/model features remain out of scope.
-Uncommitted work: none after this docs-only closeout is merged.
-Temporary files: none.
-Experimental code: none.
+- `tools/local/build`
+- `tools/local/benchmark-pr-c`
+Exact results: focused `15 passed`; substantive-head all-fast Ruff PASS, strict mypy PASS,
+`45 passed in 0.18s`; integration `8 passed in 3.30s`; sdist/wheel build success.
+Benchmark results: 64 files, 423 nodes, 2,194 edges; cold semantic index 623.969 ms;
+dependency-aware two-file incremental refresh 282.761 ms; DB+WAL 3,975,808 bytes; max RSS
+44,720 KiB; 100 impact queries p50 0.0649 ms/p95 0.3118 ms; 100 lexical `rg` baseline queries
+p50 2.2538 ms/p95 3.3223 ms. The baselines are not quality-equivalent.
+OpenCode version: not tested; PR-D acceptance.
+Model/provider: none; PR-C is deterministic.
+Routing profile: not applicable.
+Known failures: none.
+Known limitations: LSP enrichment is optional in the plan and deferred because no host-neutral LSP
+consumer exists; Python analysis intentionally reports unresolved dynamic dispatch as uncertain;
+incremental semantic refresh parses all Python ASTs to build a correct symbol index before emitting
+only affected facts, so its scaling advantage is not yet proven.
+Uncommitted work: PR-created handoff metadata only; production/evidence implementation is committed.
+Temporary work: none.
 
-Next exact action: create `agent/pr-c-semantic-impact` from updated main and capture curated ground-truth tests before implementation.
-Next files: `../KasaneCore/agent/project_twin/store.py` relevant schema/apply/snapshot slices and `module.py` refresh slices; then `tests/unit/test_graph_contracts.py` and PR-B component tests.
-Next commands: targeted `sed` of those slices; `git status --short`; focused pytest after tests exist.
-Rollback path: revert merge commit `0618cd29da2e695f7babaccd931727e214f96217`; do not reset unrelated work.
+Next exact action: commit/push this PR-created handoff update, rerun exact-head local gates, verify
+remote head/mergeability/check state, mark PR #6 ready, then squash-merge.
+Next files: `docs/handoff/CURRENT_HANDOFF.md`, `IMPLEMENTATION_LOG.md`, then GitHub PR #6 metadata.
+Next commands: commit/push docs; `tools/local/all-fast`; `tools/local/test-integration`;
+`tools/local/build`; inspect `gh pr view 6`; ready and merge only when exact-head evidence matches.
+Rollback path: delete this unpushed branch or revert its coherent commits; do not reset unrelated work.

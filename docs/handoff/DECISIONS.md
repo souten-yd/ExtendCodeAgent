@@ -66,3 +66,23 @@ Consequence: do not claim incremental speed superiority yet. Preserve correct in
 semantics, and evaluate a Git-status fingerprint fast path plus an automatic full-rebuild choice
 for small repositories in the next performance slice. The current behavior remains deterministic
 and bounded.
+
+## 2026-08-13 — PR-C migration classification and analysis boundary
+
+- ADAPT: deterministic Python AST definitions/imports/decorators/inheritance/calls, bounded path
+  traversal, reverse dependency impact, forward implementation expansion, weakest-link confidence,
+  uncertainty, explanations, and test-candidate projection.
+- CONSOLIDATE: semantic and structural facts into the existing immutable PR-B Graph contracts and
+  snapshots instead of introducing KasaneCore `SemanticNode`, `TwinNode`, or result DTO copies.
+- REPLACE: KasaneCore's generic impact-engine knowledge of `py://` and `pyname://` with a Python
+  `CanonicalReferenceResolver` supplied to generic analysis.
+- NEW: curated human-reviewable FP/FN evidence and a repeated-query local benchmark against native
+  repository search.
+- DO NOT PORT: Atlas/Pydantic contracts, old monolithic static analyzer, clone fingerprints,
+  HTML/JS relations, LSP integration without a host-neutral consumer, runtime evidence, OpenCode,
+  or LLM behavior.
+
+The analyzer stays deterministic and stdlib-only. Unresolved dynamic dispatch is represented as
+an inferred `may_call` edge with low confidence; it must never be promoted to a verified call.
+GitHub Actions remain unnecessary because this slice is reproducible through local fixtures,
+integration tests, package build, and benchmark scripts.
