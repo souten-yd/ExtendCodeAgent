@@ -9,6 +9,8 @@ Implement ExtendCodeAgent incrementally with minimal token waste, minimal duplic
 
 Codex must treat existing code as the first implementation candidate. Search, inspect, adapt, consolidate, or delete duplication before creating new subsystems.
 
+The implementation must remain effective with both weak local LLMs and frontier models. Do not let high-end model capability hide poor interfaces, excessive context, or missing deterministic analysis.
+
 ## 2. Required read order per task
 
 Read only what is necessary for the active slice:
@@ -16,7 +18,7 @@ Read only what is necessary for the active slice:
 1. `docs/PROJECT_INTELLIGENCE_MASTER_PLAN.md` relevant section.
 2. `docs/KASANECORE_MIGRATION_AUDIT.md` relevant component classification.
 3. `docs/IMPLEMENTATION_EXECUTION_LOCAL_VALIDATION_PLAN.md` active PR/milestone section.
-4. `docs/CURRENT_STATUS.md` when it exists.
+4. `docs/CURRENT_STATUS.md`.
 5. target source, direct callers, tests, and dependencies.
 
 Do not repeatedly load all planning documents into context.
@@ -71,13 +73,17 @@ deterministic algorithm
 All model calls must go through a model-routing port and logical role. Never call a named vendor/model directly from graph/twin/impact/test/strategy/convergence domain code.
 
 Model behavior must support:
-- low local model;
-- medium local model;
+- weak/low-context local model;
+- practical medium local model;
 - OpenCode host/default model;
 - frontier model;
 - local-only privacy mode;
 - host-only mode;
 - explicit no-fallback mode.
+
+For weak models, reduce problem size before adding prompt instructions: use graph facts, candidate filtering, compact schemas, single-purpose calls, and lower context budgets.
+
+For frontier models, permit richer synthesis but preserve the same deterministic evidence, privacy policy, and completion rules. Do not make a stronger model an excuse to bypass tests or provenance.
 
 ## 6. Configuration rule
 
@@ -89,6 +95,8 @@ New configurable behavior requires:
 - project/user override semantics;
 - tests for disabled and enabled paths;
 - safe behavior when configuration is invalid.
+
+Model/provider settings must be role-based and endpoint-configured. Exact model IDs belong in config, never in domain source.
 
 ## 7. Local-first validation sequence
 
@@ -120,6 +128,8 @@ Real-LLM evaluation must be reproducible enough to compare trends:
 - same timeout/retry budget;
 - compare native/off/shadow/advisory/active where relevant.
 
+At minimum, milestone evaluation should cover a weak local profile and a strong host/frontier profile when both are available. Use the same task and ground truth so improvements are attributable to Project Intelligence rather than model class alone.
+
 Store result summaries, not huge transcripts, unless a transcript is necessary to explain a failure.
 
 ## 9. PR discipline
@@ -146,6 +156,7 @@ Stop expanding the current approach and document/reassess if:
 - incremental refresh is slower than practical full rebuild for target scale;
 - a feature increases tokens/tool calls without improving task outcomes;
 - weak local models become materially worse because context is too complex;
+- frontier-model success hides failures in deterministic/local-model paths;
 - OpenCode API changes require edits outside the adapter boundary;
 - Python sidecar lifecycle/packaging cost outweighs reuse benefit;
 - real tests contradict design assumptions.
@@ -180,6 +191,7 @@ Feature flags/config affected:
 Local commands and exact results:
 Benchmark/E2E evidence:
 Real OpenCode/LLM evidence, if required:
+Model profiles evaluated:
 Unavailable checks:
 Performance/token observations:
 Known limitations:
