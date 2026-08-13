@@ -71,3 +71,7 @@
 - Substantive commit `e3a65b7`; exact substantive-head gates: all-fast `45 passed in 0.18s`,
   integration `8 passed in 3.30s`, sdist/wheel build success. Repeated benchmark: cold 623.969 ms,
   incremental 282.761 ms, impact p50 0.0649 ms, lexical `rg` p50 2.2538 ms.
+- Final evidence commit `699d0d3`; exact-head all-fast `45 passed in 0.17s`, integration
+  `8 passed in 0.36s`, and sdist/wheel build succeeded.
+- Published draft PR [#6](https://github.com/souten-yd/ExtendCodeAgent/pull/6); initial remote head
+  `699d0d39c42763ad28ab8c0fe1aaa49d4aff941d` matched the locally verified head.

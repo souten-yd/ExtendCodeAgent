@@ -3,11 +3,11 @@
 Updated: 2026-08-13 (Asia/Tokyo)
 
 Current branch: `agent/pr-c-semantic-impact`
-Current PR: not created
+Current PR: [#6](https://github.com/souten-yd/ExtendCodeAgent/pull/6) (draft)
 Base commit: `faf307dbff00f8f33671a8cb885bfe8593b5725f`
 Latest commit: `e3a65b7` (completed PR-C implementation and evidence)
 Current milestone: PR-C Structural/Python Semantic + Path/Impact
-Current task: final diff/evidence review before PR-C publication
+Current task: remote exact-head verification, ready transition, merge, and closeout
 Task status: in progress
 
 Goal: extend the PR-B graph/twin foundation with deterministic structural and Python semantic facts,
@@ -37,12 +37,13 @@ Completed:
 - added seven focused ground-truth tests plus semantic persistence/invalidation integration.
 - added dependency-aware importer refresh, an end-to-end persisted impact/test-candidate fixture,
   expanded host-neutral architecture coverage, a human FP/FN report, and real-repository benchmark.
+- published draft PR #6; initial remote head `699d0d39c42763ad28ab8c0fe1aaa49d4aff941d`.
 
 In progress:
-- final documentation, diff, and exact-head gate review.
+- handoff publication update and remote exact-head gate review.
 
 Not started:
-- PR publication, remote exact-head verification, merge, and closeout.
+- ready transition, merge, post-merge validation, and closeout.
 
 Important architecture decisions:
 - ADAPT the newer deterministic Python semantic analyzer behavior and graph analysis algorithms.
@@ -80,11 +81,12 @@ Known limitations: LSP enrichment is optional in the plan and deferred because n
 consumer exists; Python analysis intentionally reports unresolved dynamic dispatch as uncertain;
 incremental semantic refresh parses all Python ASTs to build a correct symbol index before emitting
 only affected facts, so its scaling advantage is not yet proven.
-Uncommitted work: final exact-evidence metadata only; production/evidence implementation is committed.
+Uncommitted work: PR-created handoff metadata only; production/evidence implementation is committed.
 Temporary work: none.
 
-Next exact action: commit the completed PR-C evidence slice, rerun exact-head gates, create the PR.
-Next files: current branch diff and PR-C evidence documents.
-Next commands: `git diff --check`; commit; `tools/local/all-fast`; `tools/local/test-integration`;
-`tools/local/build`; `tools/local/benchmark-pr-c`; publish PR.
+Next exact action: commit/push this PR-created handoff update, rerun exact-head local gates, verify
+remote head/mergeability/check state, mark PR #6 ready, then squash-merge.
+Next files: `docs/handoff/CURRENT_HANDOFF.md`, `IMPLEMENTATION_LOG.md`, then GitHub PR #6 metadata.
+Next commands: commit/push docs; `tools/local/all-fast`; `tools/local/test-integration`;
+`tools/local/build`; inspect `gh pr view 6`; ready and merge only when exact-head evidence matches.
 Rollback path: delete this unpushed branch or revert its coherent commits; do not reset unrelated work.
