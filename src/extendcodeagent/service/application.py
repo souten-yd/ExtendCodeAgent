@@ -72,7 +72,7 @@ class ProjectIntelligenceApplication:
                 "nodes": 0,
                 "edges": 0,
             }
-        snapshot = self._snapshot(open_if_missing=False)
+        snapshot = self._ensure_twin().snapshot(self.project)
         return {
             "interface": INTERFACE_VERSION,
             "readiness": "ready" if snapshot.revision else "absent",
