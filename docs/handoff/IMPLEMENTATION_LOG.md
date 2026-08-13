@@ -112,3 +112,10 @@
   and Python/TypeScript builds. Draft PR [#8](https://github.com/souten-yd/ExtendCodeAgent/pull/8)
   was published with an exact matching remote head and reported `MERGEABLE/CLEAN`; no GitHub
   Actions checks are configured.
+- Final remote head `86b7f511d789c7d191bcbbd0b378eb790d0d3a44` passed all-fast, matched
+  local exactly, and was `MERGEABLE/CLEAN`. PR #8 was marked ready and squash-merged as
+  `1cc7fd26a4e13aaca051edba2d92a91827a2e5b6`.
+- Post-merge `main`: Ruff/mypy passed; Python unit/architecture `49 passed in 0.31s`; adapter
+  `6 passed in 4.26s`; Python integration `9 passed in 0.43s`; repeated adapter `6 passed in 4.26s`.
+- PR-D closeout documentation worktree: all-fast passed with Python `49 passed in 0.34s` and
+  adapter `6 passed in 4.26s`.
