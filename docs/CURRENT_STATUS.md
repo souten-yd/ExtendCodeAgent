@@ -97,8 +97,8 @@ planned revisions and compare small `TargetSnapshot`, `ActualSnapshot`, and
 The implemented PR-F slice now does so: immutable payloads are separate from lifecycle metadata,
 planned and Actual namespaces are guarded, all eight task states and seven bounded decisions are
 deterministic, stale/unavailable evidence cannot complete, and SQLite restart/workspace isolation
-is covered. The 200-element benchmark under `docs/evidence/pr-f/` measured evaluation p50 0.2452 ms
-and restart 1.9422 ms; final exact-head gates and publication remain.
+is covered. The standalone 200-element benchmark under `docs/evidence/pr-f/` measured evaluation
+p50 0.2348 ms and restart 1.8938 ms. Exact-head local gates passed; publication remains.
 
 The reproducible PR-D smoke measured alternating three-run startup medians of 1,046 ms native and
 1,070 ms plugin-enabled (+24 ms), then observed tool and external edit refreshes at 151 ms, MCP

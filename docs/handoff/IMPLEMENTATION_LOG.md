@@ -165,5 +165,8 @@
 - PR-F behavior-first contracts were committed red, then implemented as immutable Blueprint
   payload/lifecycle plus schema-independent task Convergence, shared SQLite durability, application
   projection, and centralized policy guards. Full fast gate passed 75 Python and 9 adapter tests.
-- PR-F 200-element benchmark: lifecycle 16.0006 ms, convergence p50 0.2452 ms/p95 0.3129 ms,
-  restart 1.9422 ms, DB 241,664 bytes, max RSS 23,772 KiB, decision `complete`.
+- Standalone exact-head PR-F 200-element benchmark: lifecycle 16.1298 ms, convergence p50 0.2348
+  ms/p95 0.3639 ms, restart 1.8938 ms, DB 241,664 bytes, max RSS 23,548 KiB, decision `complete`.
+  A concurrent gate run was slower from host contention and was not used as the reference value.
+- PR-F final gates: Ruff/format/mypy PASS, Python 75 passed, adapter 9 passed, integration Python 13
+  passed plus adapter 9 passed, and Python package/TypeScript build PASS.
