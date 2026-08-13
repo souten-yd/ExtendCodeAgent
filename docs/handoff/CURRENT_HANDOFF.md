@@ -5,9 +5,9 @@ Updated: 2026-08-13 (Asia/Tokyo)
 Current branch: `agent/pr-e-context-test-runtime`
 Current PR: not created
 Base commit: `01efc16b40c5233fc21e725beae158dc87520b8e`
-Latest commit: `01efc16` (PR-D closeout merge)
+Latest commit: `c689b7e` (real PR-E host and benchmark harness)
 Current milestone: PR-E Context + Test Intelligence + Runtime Ingest
-Current task: capture behavior-first contracts and tests before production implementation
+Current task: correct measured Python re-export selection recall, then capture exact-head evidence
 Task status: in progress
 
 Goal: add revision-aware runtime observations, deterministic test selection and obsolescence, and
@@ -55,10 +55,13 @@ Completed:
   exit metadata; restart retained it and off mode added none;
 - ran an initial real-repository benchmark: standard context 100 items/2,131 tokens versus weak 8
   items/148 tokens; the selected symbol had no test candidate and safely fell back to full suite.
+- diagnosed the fallback as a Python `src.`/public-package re-export mismatch, added an
+  import-evidence-constrained language-owned resolver bridge and collision fixture, and recovered
+  two candidates with no fallback in a worktree benchmark.
 
 In progress:
-- commit reproducible real-host/benchmark harness changes, rerun them on exact head, and record
-  compact PR-E evidence.
+- commit the bounded resolver correction, rerun all real-host/benchmark gates on exact head, and
+  record compact PR-E evidence.
 
 Not started:
 - exact-head evidence commit, final gates, publication.
@@ -79,8 +82,8 @@ Important invariants:
 - context is bounded, explains inclusion, and preserves revision/provenance/confidence.
 
 Files changed: PR-E domains/store/application, sidecar, stable plugin/MCP tools, adapter tests,
-architecture boundary, and handoff.
-Files currently being edited: sidecar/adapter slice handoff before commit.
+architecture boundary, local harnesses, Python resolver, and handoff.
+Files currently being edited: Python resolver collision test, benchmark gate, and decision/handoff.
 
 Exact tests executed: base `tools/local/all-fast`; base `tools/local/build`; focused PR-E pytest;
 post-domain `tools/local/all-fast`; focused store/application pytest; post-integration
@@ -98,11 +101,11 @@ Routing profile: not applicable; live routing is out of scope.
 Known failures: the first runtime smoke incorrectly expected session-shell to emit a stable tool
 hook and timed out after 20 seconds; corrected after real-host diagnosis.
 Known limitations: actual stable `bash` metadata lacked exit status and remains `observed`; the
-first real-repo selection target fell back to full suite; context projects Graph nodes only.
-Uncommitted work: real-host/benchmark harness, measured-decision docs, and this handoff update.
+resolver correction does not claim dynamic-import completeness; context projects Graph nodes only.
+Uncommitted work: bounded resolver correction, benchmark candidate gate, and measured-decision docs.
 Temporary work: none.
 
-Next exact action: commit the reproducible harness, rerun model-free/model-backed OpenCode smoke and
+Next exact action: commit the resolver correction, rerun model-free/model-backed OpenCode smoke and
 the PR-E benchmark on exact head, then record compact evidence and final gates.
 Next files: `tools/local/`, `docs/evidence/pr-e/`, CURRENT_STATUS and handoff.
 Next commands: `git diff --check`; commit; `tools/local/opencode-smoke`;

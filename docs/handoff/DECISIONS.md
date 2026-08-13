@@ -162,3 +162,26 @@ verification. Automatic ingest is limited to shadow/active; advisory remains exp
 The temporary Ollama provider configuration follows current stable OpenCode provider documentation:
 <https://opencode.ai/docs/providers/>. Live model routing remains PR-G; this PR-E use is only a
 bounded adapter conformance check.
+
+## 2026-08-13 — PR-E test-selection recall correction from real-repository evidence
+
+The first PR-E benchmark selected the concrete implementation ref
+`py://src.extendcodeagent.runtime.service#reconcile_observations`, while tests called the public
+package re-export `py://extendcodeagent.runtime#reconcile_observations`. The generic Impact engine
+therefore found no candidate and correctly fell back to the full suite. This disproved the planning
+assumption that PR-C's existing concrete/name-only bridge covered installed-package source roots and
+re-exports.
+
+Decision: ADAPT only the Python-owned `CanonicalReferenceResolver`. Strip the conventional `src.`
+prefix and derive package aliases only from Graph `imports` edges that target the exact concrete
+definition. Do not hard-code Python aliases into Impact, equate every identical short name, or widen
+PR-E into new semantic languages/edge extraction.
+
+Alternatives rejected:
+- accept full-suite fallback: safe, but fails useful real-repository test-selection recall;
+- equate all same-named concrete functions: increases false positives across unrelated modules;
+- redesign the analyzer/import graph in PR-E: exceeds the measured gap and PR scope.
+
+Measured result before commit: the focused collision fixture passed and the real-repository
+candidate count changed from zero/full-suite fallback to two graph-linked candidates/no fallback.
+Exact-head latency and candidate refs are recorded with the PR-E evidence after commit.

@@ -177,3 +177,35 @@ def test_missing_path_and_strict_confidence_are_truthful() -> None:
     assert all(
         item.canonical_ref != "py://plugin#dynamic_caller" for item in impact.transitive_impacts
     )
+
+
+def test_source_root_package_reexport_resolves_to_calling_test_without_name_collision() -> None:
+    project = ProjectRef("p", "w", "file:///fixture")
+    source = SourceRevision("source")
+    definition = "py://src.extendcodeagent.runtime.service#reconcile_observations"
+    package_alias = "py://extendcodeagent.runtime#reconcile_observations"
+    test_ref = "py://tests.unit.test_runtime#test_reconcile"
+    unrelated = "py://other#reconcile_observations"
+    snapshot = GraphSnapshot(
+        project,
+        GraphRevision("r1", project, source, "tree", {"fixture": "v1"}),
+        (
+            _node(definition, "function"),
+            _node(test_ref, "test"),
+            _node(unrelated, "function"),
+        ),
+        (
+            _edge("module://src.extendcodeagent.runtime", definition, "imports"),
+            _edge(test_ref, package_alias, "calls"),
+            _edge("py://other#caller", unrelated, "calls"),
+        ),
+    )
+    report = GraphAnalysisService(
+        snapshot, PythonCanonicalReferenceResolver()
+    ).assess_impact(ImpactQuery((definition,), max_depth=3))
+
+    assert {item.canonical_ref for item in report.recommended_tests} == {test_ref}
+    assert all(
+        item.canonical_ref != "py://other#caller"
+        for item in report.direct_impacts + report.transitive_impacts
+    )

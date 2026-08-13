@@ -51,6 +51,7 @@
 - The real local Qwen agent `bash` hook omitted explicit exit metadata, so its successful command is
   truthfully stored as `observed`, not `passed`.
 - The first real-repository test-selection sample found no graph-linked candidate for
-  `reconcile_observations` and correctly selected full-suite fallback. This may be a source-root/
-  re-export resolution recall gap; do not widen PR-E into semantic-analyzer work without a bounded
-  diagnosis and ownership decision.
+  `reconcile_observations` and correctly selected full-suite fallback. A bounded diagnosis confirmed
+  a Python `src.`/package re-export alias gap; the language-owned resolver now uses exact import
+  evidence and a collision fixture. This repairs the measured sample without claiming general
+  dynamic-import or alias completeness.

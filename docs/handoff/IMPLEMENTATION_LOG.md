@@ -151,3 +151,7 @@
 - Initial real-repo PR-E benchmark: cold graph/symbol 2,164 ms; standard context 100 items/2,131
   tokens, weak context 8 items/148 tokens; both p50 about 28.6 ms. Test selection p50 30.90 ms and
   safely fell back to full suite for the selected uncovered/unaligned target.
+- Diagnosed that fallback as a concrete `src.` implementation versus public package re-export gap,
+  not missing tests. Added an import-evidence-constrained Python resolver bridge and a name-collision
+  fixture; the focused graph analysis suite passed and the worktree benchmark recovered two
+  candidates with no fallback. Kept the correction out of generic Impact and out of other languages.

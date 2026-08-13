@@ -81,6 +81,8 @@ def main() -> None:
             selection, selection_samples = _measure(lambda: application.tests((target,)))
         if weak["used_tokens"] >= standard["used_tokens"]:
             raise RuntimeError("weak context was not smaller than standard context")
+        if not selection["items"] or selection["fallback"] is not None:
+            raise RuntimeError("real-repository test selection did not find safe candidates")
         evidence = {
             "commit": subprocess.check_output(
                 ["git", "rev-parse", "HEAD"], cwd=REPO, text=True
@@ -97,6 +99,7 @@ def main() -> None:
             "test_selection": {
                 **_latency_metrics(selection_samples),
                 "candidate_count": len(selection["items"]),
+                "candidate_refs": [item["canonical_ref"] for item in selection["items"]],
                 "fallback": selection["fallback"],
                 "health_states": [item["state"] for item in selection["health"]],
             },
