@@ -119,3 +119,44 @@
   `6 passed in 4.26s`; Python integration `9 passed in 0.43s`; repeated adapter `6 passed in 4.26s`.
 - PR-D closeout documentation worktree: all-fast passed with Python `49 passed in 0.34s` and
   adapter `6 passed in 4.26s`.
+
+## 2026-08-13 — PR-E started
+
+- PR-D closeout PR #9 merged as `01efc16b`; post-closeout main all-fast passed with Python
+  `49 passed in 0.28s` and adapter `6 passed in 4.26s`; package and TypeScript builds passed.
+- Created `agent/pr-e-context-test-runtime` from exact `01efc16b`.
+- Read the bounded PR-E plan/audit sections and inspected KasaneCore runtime reconciliation,
+  collectors, context broker/query behavior, and direct tests before writing production code.
+- Chose ADAPT for truthful revision-aware runtime/context behavior, CONSOLIDATE for existing target
+  contracts, NEW for Test Obsolescence, and DO NOT PORT for Atlas runners/application DTOs.
+- Added behavior-first pure-domain slices for immutable runtime observations/reconciliation,
+  confidence-aware test selection, six-state test health, and bounded weak/standard context.
+- Expanded architecture boundaries to the new host-neutral packages. Focused `12 passed`; all-fast
+  passed with Python `61 passed in 0.48s` and adapter `6 passed in 4.25s`.
+- Added SQLite runtime observations with idempotent restart-safe storage, collision rejection,
+  workspace isolation, and ref lookup; integrated runtime/context/test health into the existing
+  application/store rather than adding a parallel coordinator.
+- Verified fresh green to stale after source refresh and off-mode inertness. Focused `8 passed`;
+  all-fast Python `63 passed in 0.43s`, adapter `6 passed in 4.27s`; integration `11 passed in
+  0.60s`, repeated adapter `6 passed in 4.27s`.
+- Added strict sidecar context/runtime operations, two stable plugin/MCP query tools, and adapter-only
+  tool observation normalization. Unknown stable-host outcomes remain observed, explicit exit
+  metadata controls pass/fail, output text is not persisted, and `pi_*` calls do not recurse.
+- Sidecar/adapter gate: all-fast Python `63 passed in 0.43s`, adapter `9 passed in 4.27s`;
+  integration `12 passed in 1.18s`, repeated adapter `9 passed in 4.27s`.
+- First extended real-host run disproved the assumption that model-free session shell emits stable
+  tool hooks: it produced zero observations. A real local Ollama Qwen 3.6 27B agent `bash` call did
+  emit one hook, persisted/reconnected correctly, and truthfully normalized to `observed` because
+  actual metadata had no exit status; off added no evidence. Eight `pi_*` tools were discovered.
+- Initial real-repo PR-E benchmark: cold graph/symbol 2,164 ms; standard context 100 items/2,131
+  tokens, weak context 8 items/148 tokens; both p50 about 28.6 ms. Test selection p50 30.90 ms and
+  safely fell back to full suite for the selected uncovered/unaligned target.
+- Diagnosed that fallback as a concrete `src.` implementation versus public package re-export gap,
+  not missing tests. Added an import-evidence-constrained Python resolver bridge and a name-collision
+  fixture; the focused graph analysis suite passed and the worktree benchmark recovered two
+  candidates with no fallback. Kept the correction out of generic Impact and out of other languages.
+- Exact `47d47cd` PR-E evidence: benchmark found two test candidates/no fallback; standard context
+  was 100 items/2,131 tokens and weak context 8 items/148 tokens. Serial model-free and real-Qwen
+  OpenCode 1.18.18 smokes passed; the real tool observation persisted as truthful `observed`.
+- Final gates: Ruff/format/mypy passed, Python 64 tests passed, adapter 9 tests passed, integration
+  12 tests passed, and Python package plus TypeScript build passed.

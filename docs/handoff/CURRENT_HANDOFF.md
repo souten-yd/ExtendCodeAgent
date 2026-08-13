@@ -2,84 +2,110 @@
 
 Updated: 2026-08-13 (Asia/Tokyo)
 
-Current branch: `agent/pr-d-closeout`
-Current PR: not created
-Base commit: `1cc7fd26a4e13aaca051edba2d92a91827a2e5b6`
-Latest commit: `1cc7fd2` (PR-D squash merge)
-Current milestone: PR-D closeout / PR-E preparation
-Current task: publish merged-state handoff and open the PR-E starting boundary
+Current branch: `agent/pr-e-context-test-runtime`
+Current PR: `#10` — <https://github.com/souten-yd/ExtendCodeAgent/pull/10>
+Base commit: `01efc16b40c5233fc21e725beae158dc87520b8e`
+Latest commit: `b754d56` (PR-E exact-head evidence and validation handoff)
+Current milestone: PR-E Context + Test Intelligence + Runtime Ingest
+Current task: verify PR #10 remote head and mergeability, then merge
 Task status: in progress
 
-Goal: record the verified PR-D merge without adding implementation, then begin a separate PR-E for
-Context, Test, and Runtime Intelligence.
+Goal: add revision-aware runtime observations, deterministic test selection and obsolescence, and
+bounded context packages without introducing Blueprint, live model routing, or new semantic graphs.
 
 Scope:
-- synchronize canonical status and handoff documents with merged PR #8;
-- record post-merge local gates;
-- define the bounded PR-E start order and exclusions.
+- immutable host-neutral runtime/verification observations and truthful freshness reconciliation;
+- deterministic graph-based test selection with explicit confidence/full-suite fallback;
+- evidence-based test-health states without automatic deletion;
+- bounded revision/provenance-aware context packages with smaller weak-model profiles;
+- adapter-only normalization of OpenCode tool results after core behavior is proven.
 
 Out of scope:
-- PR-E production code on this closeout branch;
-- Blueprint/Convergence, live model routing/Strategy, JS/TS semantic analysis, and Research.
+- Blueprint and Convergence (PR-F);
+- live model routing and Strategy (PR-G);
+- JS/TS semantic/deep graphs (PR-H);
+- Research, requirement traceability, and project convergence (PR-I).
 
 Completed:
-- PR-B Graph/Twin merged as `0618cd29` and its closeout merged;
-- PR-C structural/Python semantic/path/impact merged as `ef6db532` and its closeout merged;
-- PR-D stable OpenCode/MCP adapter published as PR #8 from exact remote head
-  `86b7f511d789c7d191bcbbd0b378eb790d0d3a44`;
-- PR #8 was `MERGEABLE/CLEAN`, had no configured GitHub checks, and was squash-merged as
-  `1cc7fd26a4e13aaca051edba2d92a91827a2e5b6`;
-- fast-forwarded local `main` to the exact merge and passed post-merge all-fast and integration.
+- PR-D implementation PR #8 merged as `1cc7fd26`; closeout PR #9 merged as `01efc16b`;
+- post-closeout main all-fast and package/TypeScript build passed;
+- created this branch from exact `01efc16b`;
+- read the PR-E execution-plan section and runtime/test/context migration-audit slices;
+- inspected KasaneCore runtime reconciliation/collectors plus context/query behavioral tests and
+  current ExtendCodeAgent Impact/application/config call paths;
+- added immutable host-neutral runtime observations for all seven planned kinds, revision-aware
+  reconciliation, truthful unavailable/failure rollup, and collector-unavailable construction;
+- added confidence-aware deterministic test selection plus all six evidence-based test-health
+  states with an invariant that no result recommends deletion;
+- added bounded revision/provenance/confidence-aware context packages and a materially smaller weak
+  profile;
+- expanded architecture-boundary coverage to the new `runtime`, `testing`, and `context` packages.
+- added durable runtime observation storage with idempotency, payload-collision rejection, restart
+  persistence, workspace isolation, and canonical-ref reverse lookup;
+- integrated context, runtime ingest/evidence, confidence fallback, and test health into the one
+  existing Project Intelligence application/store;
+- verified a matching-revision green test becomes stale after an active source refresh, while off
+  mode remains inert and creates no database;
+- exposed strict sidecar operations for context, runtime ingest, and runtime evidence;
+- added stable plugin/MCP `pi_context` and `pi_runtime_evidence` tools plus adapter-only tool-result
+  normalization that never infers passed from output presence, never stores output text, and avoids
+  recursive evidence for `pi_*` tools;
+- measured stable real-host behavior: model-free session shell emitted no tool hook, while a real
+  local Qwen 3.6 27B agent `bash` call emitted and persisted one `observed` result with no explicit
+  exit metadata; restart retained it and off mode added none;
+- ran an initial real-repository benchmark: standard context 100 items/2,131 tokens versus weak 8
+  items/148 tokens; the selected symbol had no test candidate and safely fell back to full suite.
+- diagnosed the fallback as a Python `src.`/public-package re-export mismatch, added an
+  import-evidence-constrained language-owned resolver bridge and collision fixture, and recovered
+  two candidates with no fallback in a worktree benchmark.
 
 In progress:
-- closeout documentation branch and PR.
+- PR #10 is published; synchronize this event, verify the remote head, and merge.
 
 Not started:
-- PR-E behavior tests or implementation.
+- PR-E merge and merged-state closeout.
 
 Important architecture decisions:
-- PR-D targets stable OpenCode 1.18.18; V2 remains a separate future adapter.
-- Plugin and MCP share the authenticated `extendcodeagent.local.v1` sidecar/application service.
-- Native and fallback file events share one bounded queue; Chokidar remains adapter-only.
-- PR-E must extend the current CapabilityPolicy and Graph/Twin/Impact services rather than create a
-  parallel coordinator or router.
+- ADAPT KasaneCore revision matching, truthful unavailable semantics, and bounded context behavior.
+- CONSOLIDATE observations with existing ProjectRef/TwinRevisionRef/CanonicalRef/Provenance rather
+  than porting Pydantic/Atlas DTOs.
+- NEW a dedicated Test Obsolescence engine; KasaneCore has signals but no sufficient independent
+  engine for this target.
+- DO NOT PORT Atlas runners, PlanPool/context application DTOs, or model-dependent context logic.
 
 Important invariants:
-- host-neutral packages never import OpenCode/plugin/MCP SDK types;
-- off computes nothing, shadow has no native behavior effect, advisory requires explicit use;
-- historical green evidence is never treated as fresh for a newer source revision;
-- unavailable evidence is never promoted to passed/verified.
+- a passed observation verifies only its matching source/Twin revision;
+- unavailable never becomes passed, and collector failure becomes unavailable;
+- low-confidence selection can fall back to the full suite;
+- obsolescence is evidence/revision/impact based, never file-age-only, and never deletes tests;
+- context is bounded, explains inclusion, and preserves revision/provenance/confidence.
 
-Files changed: closeout documentation only.
-Files currently being edited: `docs/CURRENT_STATUS.md`, `docs/handoff/CURRENT_HANDOFF.md`,
-`docs/handoff/NEXT_TASK.md`, and `docs/handoff/IMPLEMENTATION_LOG.md`.
+Files changed: PR-E domains/store/application, sidecar, stable plugin/MCP tools, adapter tests,
+architecture boundary, local harnesses, Python resolver, and handoff.
+Files currently being edited: compact evidence, final status/handoff, and formatter-only test layout.
 
-Exact tests executed:
-- PR-D exact substantive head: `tools/local/all-fast`; `tools/local/test-integration`;
-  `tools/local/build`; `tools/local/opencode-smoke`;
-- PR-D final publication head: `tools/local/all-fast`;
-- merged `main`: `tools/local/all-fast`; `tools/local/test-integration`.
-
-Exact results: merged-main Ruff/mypy PASS; Python unit/architecture `49 passed in 0.31s`; adapter
-`6 passed in 4.26s`; Python integration `9 passed in 0.43s`; repeated adapter `6 passed in 4.26s`.
-Benchmark results: exact PR-D smoke startup medians native 1,046 ms and plugin 1,070 ms (+24 ms),
-151 ms initial/tool/external revision observation, 1,109 ms reconnect, three stable/persisted
-revisions, and no off-mode revision change. Raw startup samples remain in `docs/evidence/pr-d/`.
+Exact tests executed: base `tools/local/all-fast`; base `tools/local/build`; focused PR-E pytest;
+post-domain `tools/local/all-fast`; focused store/application pytest; post-integration
+`tools/local/all-fast`; `tools/local/test-integration`.
+Exact results: final Ruff/format/mypy PASS; Python `64 passed in 0.41s`; adapter `9 passed in
+4.26s`; integration `12 passed in 1.21s`; build PASS. Model-free and real-local-model OpenCode
+smokes PASS when run serially.
+Benchmark results: exact `47d47cd` cold graph/symbol 2,739.11 ms; standard context p50 29.81 ms at
+100 items/2,131 tokens; weak context p50 34.15 ms at 8 items/148 tokens; test selection p50 31.33 ms
+with two candidates/no fallback; DB 5,152,768 bytes; max RSS 43,984 KiB.
 OpenCode version: 1.18.18.
-Model/provider: none used for PR-D acceptance; real-model work begins at its planned milestone.
-Routing profile: not applicable.
-Known failures: native watcher events omitted ordinary source edits and Git lock events initially
-caused a feedback loop; adapter filtering plus Chokidar fallback fixed the measured path.
-Known limitations: the three-run startup measurement is smoke evidence, not a distribution; stable
-OpenCode native watcher behavior should be retested on future versions.
-Uncommitted work: closeout documentation only.
-Temporary work: ignored build artifacts and dependency installs are reproducible; no tracked smoke
-database is present.
+Model/provider: real local `ollama/qwen3.6-27b-q5_k_m:latest` for adapter runtime-event evidence;
+8,887 input/33 output tokens, 64,528 ms, cost 0.
+Routing profile: not applicable; live routing is out of scope.
+Known failures: an initial concurrent execution of both OpenCode smokes caused one shared-database
+lock; both passed when rerun serially. The earlier session-shell hook expectation was corrected.
+Known limitations: actual stable `bash` metadata lacked exit status and remains `observed`; the
+resolver correction does not claim dynamic-import completeness; context projects Graph nodes only.
+Uncommitted work: PR-creation handoff sync only.
+Temporary work: none.
 
-Next exact action: commit/push this closeout, create and merge its docs-only PR, fast-forward main,
-run all-fast, then create `agent/pr-e-context-test-runtime` from exact updated main.
-Next files: closeout docs; then PR-E behavior tests and host-neutral contracts/services.
-Next commands: `git diff --check`; commit; push; create/merge closeout PR; `git switch main`;
-`git pull --ff-only origin main`; `tools/local/all-fast`; create the PR-E branch.
-Rollback path: revert only the closeout documentation commit/PR; PR-D implementation is already
-merged independently as `1cc7fd2`.
+Next exact action: commit and push this PR-creation handoff, verify PR #10 remote head/mergeability,
+merge, then create the small merged-state closeout.
+Next files: CURRENT_HANDOFF, then merged-state status/handoff files.
+Next commands: commit; push; `gh pr view 10`; verify; merge.
+Rollback path: revert PR-E commits or delete this branch; merged PR-D remains unaffected.

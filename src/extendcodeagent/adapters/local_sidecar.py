@@ -8,6 +8,7 @@ import secrets
 import signal
 import threading
 from collections.abc import Mapping
+from datetime import datetime
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -19,7 +20,16 @@ from extendcodeagent.service import CapabilityUnavailable, ProjectIntelligenceAp
 from extendcodeagent.service.application import INTERFACE_VERSION
 
 MAX_REQUEST_BYTES = 1_000_000
-_ACTIVE_CAPABILITIES = ("graph", "twin", "semantic", "impact", "test_selection")
+_ACTIVE_CAPABILITIES = (
+    "graph",
+    "twin",
+    "semantic",
+    "impact",
+    "test_selection",
+    "test_obsolescence",
+    "runtime",
+    "context",
+)
 
 
 class LocalApiServer(HTTPServer):
@@ -161,6 +171,29 @@ def _dispatch(
         )
     if operation == "tests":
         return application.tests(_string_tuple(params.get("changed_refs", []), "changed_refs"))
+    if operation == "context":
+        return application.context(
+            _required_string(params, "objective"),
+            _string_tuple(params.get("target_refs", []), "target_refs"),
+            profile=_optional_string(params.get("profile"), "profile") or "standard",
+            token_budget=_integer(params.get("token_budget", 2_000), "token_budget"),
+        )
+    if operation == "runtime_evidence":
+        return application.runtime_evidence(_string_tuple(params.get("refs", []), "refs"))
+    if operation == "runtime_ingest":
+        return application.ingest_runtime(
+            observation_id=_required_string(params, "observation_id"),
+            kind=_required_string(params, "kind"),
+            status=_required_string(params, "status"),
+            started_at=_datetime(params.get("started_at"), "started_at"),
+            finished_at=_datetime(params.get("finished_at"), "finished_at"),
+            observed_refs=_string_tuple(params.get("observed_refs", []), "observed_refs"),
+            command=_optional_string(params.get("command"), "command"),
+            tool=_optional_string(params.get("tool"), "tool"),
+            summary=_optional_string(params.get("summary"), "summary") or "",
+            source_revision=_optional_string(params.get("source_revision"), "source_revision"),
+            automatic=_boolean(params.get("automatic", True), "automatic"),
+        )
     raise ValueError(f"unknown operation: {operation}")
 
 
@@ -255,6 +288,23 @@ def _string_tuple(value: Any, name: str) -> tuple[str, ...]:
     if not isinstance(value, list) or any(not isinstance(item, str) for item in value):
         raise ValueError(f"{name} must be an array of strings")
     return tuple(value)
+
+
+def _optional_string(value: Any, name: str) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ValueError(f"{name} must be a string or null")
+    return value
+
+
+def _datetime(value: Any, name: str) -> datetime:
+    if not isinstance(value, str):
+        raise ValueError(f"{name} must be an ISO datetime string")
+    parsed = datetime.fromisoformat(value)
+    if parsed.tzinfo is None:
+        raise ValueError(f"{name} must include a timezone")
+    return parsed
 
 
 def _float(value: Any, name: str) -> float:

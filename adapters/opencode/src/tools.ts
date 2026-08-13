@@ -68,5 +68,24 @@ export function createTools(request: Requester): Record<string, ToolDefinition> 
         return jsonResult(await request("tests", args))
       },
     }),
+    pi_context: tool({
+      description: "Build bounded revision-aware Project Intelligence context.",
+      args: {
+        objective: z.string().min(1),
+        target_refs: z.array(z.string()).optional(),
+        profile: z.enum(["standard", "weak"]).optional(),
+        token_budget: z.number().int().positive().optional(),
+      },
+      async execute(args) {
+        return jsonResult(await request("context", args))
+      },
+    }),
+    pi_runtime_evidence: tool({
+      description: "Show bounded revision-aware runtime evidence.",
+      args: { refs: z.array(z.string()).optional() },
+      async execute(args) {
+        return jsonResult(await request("runtime_evidence", args))
+      },
+    }),
   }
 }

@@ -79,6 +79,27 @@ server.registerTool(
   },
   async (args) => result(await client.request("tests", args)),
 )
+server.registerTool(
+  "pi_context",
+  {
+    description: "Build bounded revision-aware Project Intelligence context.",
+    inputSchema: {
+      objective: z.string().min(1),
+      target_refs: z.array(z.string()).optional(),
+      profile: z.enum(["standard", "weak"]).optional(),
+      token_budget: z.number().int().positive().optional(),
+    },
+  },
+  async (args) => result(await client.request("context", args)),
+)
+server.registerTool(
+  "pi_runtime_evidence",
+  {
+    description: "Show bounded revision-aware runtime evidence.",
+    inputSchema: { refs: z.array(z.string()).optional() },
+  },
+  async (args) => result(await client.request("runtime_evidence", args)),
+)
 
 const stop = async () => {
   await client.stop()

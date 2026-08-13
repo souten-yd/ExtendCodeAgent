@@ -1,0 +1,32 @@
+{
+  "external_refresh_ms": 151,
+  "initial_revision_ms": 152,
+  "integration_startup_ms": 1079,
+  "mcp_status": "connected",
+  "native_startup_median_ms": 998,
+  "native_startup_samples_ms": [1008, 990, 998],
+  "off_observation_count_after": 0,
+  "off_observation_count_before": 0,
+  "off_revision_count_after": 3,
+  "off_revision_count_before": 3,
+  "opencode_version": "1.18.18",
+  "persisted_revision_count": 3,
+  "persisted_runtime_observation_count": 0,
+  "plugin_startup_median_ms": 1024,
+  "plugin_startup_samples_ms": [1024, 1080, 1023],
+  "plugin_tools": [
+    "pi_status",
+    "pi_symbol",
+    "pi_references",
+    "pi_path",
+    "pi_impact",
+    "pi_tests",
+    "pi_context",
+    "pi_runtime_evidence"
+  ],
+  "reconnect_mcp_status": "connected",
+  "reconnect_ms": 1079,
+  "session_shell_runtime_observation_count": 0,
+  "startup_median_overhead_ms": 26,
+  "tool_edit_refresh_ms": 151
+}

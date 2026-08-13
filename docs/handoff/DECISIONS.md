@@ -129,3 +129,59 @@ external edit as distinct immutable revisions, stabilized without a loop, preser
 through restart, and left the revision count unchanged in off mode. Alternating three-run startup
 medians were 1,046 ms native and 1,070 ms plugin-enabled (+24 ms); one native sample was a 1,609 ms
 outlier, so these values are retained as smoke evidence rather than treated as a stable distribution.
+
+## 2026-08-13 — PR-E runtime, test, and context migration boundary
+
+Classification after inspecting the PR-E plan, migration audit, KasaneCore runtime reconciliation/
+collectors, context/query tests, and current ExtendCodeAgent call paths:
+
+- ADAPT revision-matched verification, explicit unavailable/failed/observed results, collector
+  failure normalization, bounded context, inclusion reasons, and stale/contradicted labeling.
+- CONSOLIDATE observation identity, source/Twin revision, canonical refs, confidence, provenance,
+  and evidence with existing host-neutral contracts and immutable Graph snapshots.
+- NEW a dedicated Test Obsolescence engine with healthy/suspect/stale/obsolete/missing/redundant
+  states; file age alone is not evidence and no state authorizes automatic deletion.
+- DO NOT PORT KasaneCore Pydantic/Atlas DTOs, execution runners, PlanPool adapters, or application
+  context packaging.
+
+PR-E uses deterministic algorithms and the existing CapabilityPolicy. Model summarization/routing,
+Blueprint/Convergence, and JS/TS semantic expansion remain later independent milestones.
+
+## 2026-08-13 — Stable tool-result truthfulness after real-host measurement
+
+Stable OpenCode 1.18.18 `tool.execute.after` exposes tool/title/output/metadata but does not
+guarantee an exit status. A model-free session-shell API edit did not emit this hook at all. A real
+local Ollama Qwen 3.6 27B agent invocation did emit a `bash` hook, but its actual metadata contained
+no explicit exit status.
+
+Decision: the adapter records `passed`/`failed` only from explicit supported status or numeric exit
+metadata. Unknown outcomes are `observed`, output text is not persisted, and session-shell API calls
+are not claimed as runtime-hook evidence. This prevents a completed tool call from becoming false
+verification. Automatic ingest is limited to shadow/active; advisory remains explicit-query only.
+
+The temporary Ollama provider configuration follows current stable OpenCode provider documentation:
+<https://opencode.ai/docs/providers/>. Live model routing remains PR-G; this PR-E use is only a
+bounded adapter conformance check.
+
+## 2026-08-13 — PR-E test-selection recall correction from real-repository evidence
+
+The first PR-E benchmark selected the concrete implementation ref
+`py://src.extendcodeagent.runtime.service#reconcile_observations`, while tests called the public
+package re-export `py://extendcodeagent.runtime#reconcile_observations`. The generic Impact engine
+therefore found no candidate and correctly fell back to the full suite. This disproved the planning
+assumption that PR-C's existing concrete/name-only bridge covered installed-package source roots and
+re-exports.
+
+Decision: ADAPT only the Python-owned `CanonicalReferenceResolver`. Strip the conventional `src.`
+prefix and derive package aliases only from Graph `imports` edges that target the exact concrete
+definition. Do not hard-code Python aliases into Impact, equate every identical short name, or widen
+PR-E into new semantic languages/edge extraction.
+
+Alternatives rejected:
+- accept full-suite fallback: safe, but fails useful real-repository test-selection recall;
+- equate all same-named concrete functions: increases false positives across unrelated modules;
+- redesign the analyzer/import graph in PR-E: exceeds the measured gap and PR scope.
+
+Measured result before commit: the focused collision fixture passed and the real-repository
+candidate count changed from zero/full-suite fallback to two graph-linked candidates/no fallback.
+Exact-head latency and candidate refs are recorded with the PR-E evidence after commit.

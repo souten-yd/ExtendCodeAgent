@@ -43,3 +43,17 @@
 - The three-run temporary-repository startup comparison had a +24 ms median delta and one 1,609 ms
   native outlier. It is not statistically conclusive; retain broader native/extension comparisons
   for final release validation.
+
+## PR-E current limitations
+
+- Stable OpenCode 1.18.18 does not route the model-free session-shell endpoint through
+  `tool.execute.after`. Real runtime-hook evidence therefore requires an actual agent tool call.
+- The real local Qwen agent `bash` hook omitted explicit exit metadata, so its successful command is
+  truthfully stored as `observed`, not `passed`.
+- The first real-repository test-selection sample found no graph-linked candidate for
+  `reconcile_observations` and correctly selected full-suite fallback. A bounded diagnosis confirmed
+  a Python `src.`/package re-export alias gap; the language-owned resolver now uses exact import
+  evidence and a collision fixture. This repairs the measured sample without claiming general
+  dynamic-import or alias completeness.
+- OpenCode smoke processes share the host OpenCode database and must run serially; a concurrent
+  evidence attempt produced `database is locked`. Serial model-free and model-backed reruns passed.
