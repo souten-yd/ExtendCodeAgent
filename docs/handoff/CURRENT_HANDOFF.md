@@ -2,112 +2,81 @@
 
 Updated: 2026-08-13 (Asia/Tokyo)
 
-Current branch: `agent/pr-e-closeout`
-Current PR: `#11` — <https://github.com/souten-yd/ExtendCodeAgent/pull/11>
-Base commit: `fbdfcbd3864a3c46b76cc9ff10d77a57639258a6`
-Latest commit: `e02a0e3` (PR-E merged-state closeout)
-Current milestone: PR-E merged-state closeout
-Current task: verify and merge closeout PR #11
-Task status: in progress; PR-E implementation is complete
-
-Goal: add revision-aware runtime observations, deterministic test selection and obsolescence, and
-bounded context packages without introducing Blueprint, live model routing, or new semantic graphs.
-
-Scope:
-- immutable host-neutral runtime/verification observations and truthful freshness reconciliation;
-- deterministic graph-based test selection with explicit confidence/full-suite fallback;
-- evidence-based test-health states without automatic deletion;
-- bounded revision/provenance-aware context packages with smaller weak-model profiles;
-- adapter-only normalization of OpenCode tool results after core behavior is proven.
-
-Out of scope:
-- Blueprint and Convergence (PR-F);
-- live model routing and Strategy (PR-G);
-- JS/TS semantic/deep graphs (PR-H);
-- Research, requirement traceability, and project convergence (PR-I).
+Current branch: `agent/pr-f-blueprint-convergence`
+Current PR: `#12` — <https://github.com/souten-yd/ExtendCodeAgent/pull/12>
+Base commit: `f14cfb088f7f51539f3685350d0ec503ec29d7c1`
+Latest commit: `4d1d806` (final PR-F validation evidence)
+Milestone: PR-F Blueprint + task-level Convergence
+Current task: verify PR #12 remote head and mergeability, then merge
+Status: in progress
 
 Completed:
-- PR-E implementation PR #10 merged as `fbdfcbd3864a3c46b76cc9ff10d77a57639258a6`;
-- PR-D implementation PR #8 merged as `1cc7fd26`; closeout PR #9 merged as `01efc16b`;
-- post-closeout main all-fast and package/TypeScript build passed;
-- created this branch from exact `01efc16b`;
-- read the PR-E execution-plan section and runtime/test/context migration-audit slices;
-- inspected KasaneCore runtime reconciliation/collectors plus context/query behavioral tests and
-  current ExtendCodeAgent Impact/application/config call paths;
-- added immutable host-neutral runtime observations for all seven planned kinds, revision-aware
-  reconciliation, truthful unavailable/failure rollup, and collector-unavailable construction;
-- added confidence-aware deterministic test selection plus all six evidence-based test-health
-  states with an invariant that no result recommends deletion;
-- added bounded revision/provenance/confidence-aware context packages and a materially smaller weak
-  profile;
-- expanded architecture-boundary coverage to the new `runtime`, `testing`, and `context` packages.
-- added durable runtime observation storage with idempotency, payload-collision rejection, restart
-  persistence, workspace isolation, and canonical-ref reverse lookup;
-- integrated context, runtime ingest/evidence, confidence fallback, and test health into the one
-  existing Project Intelligence application/store;
-- verified a matching-revision green test becomes stale after an active source refresh, while off
-  mode remains inert and creates no database;
-- exposed strict sidecar operations for context, runtime ingest, and runtime evidence;
-- added stable plugin/MCP `pi_context` and `pi_runtime_evidence` tools plus adapter-only tool-result
-  normalization that never infers passed from output presence, never stores output text, and avoids
-  recursive evidence for `pi_*` tools;
-- measured stable real-host behavior: model-free session shell emitted no tool hook, while a real
-  local Qwen 3.6 27B agent `bash` call emitted and persisted one `observed` result with no explicit
-  exit metadata; restart retained it and off mode added none;
-- ran an initial real-repository benchmark: standard context 100 items/2,131 tokens versus weak 8
-  items/148 tokens; the selected symbol had no test candidate and safely fell back to full suite.
-- diagnosed the fallback as a Python `src.`/public-package re-export mismatch, added an
-  import-evidence-constrained language-owned resolver bridge and collision fixture, and recovered
-  two candidates with no fallback in a worktree benchmark.
+- PR-E implementation PR #10 merged as `fbdfcbd`; closeout PR #11 merged as `f14cfb0`;
+- exact closeout main passed `tools/local/all-fast` (Python 64, adapter 9, Ruff/format/mypy) and
+  `tools/local/build`;
+- created this branch from that exact clean main head;
+- read only the PR-F execution-plan and Blueprint/Convergence migration-audit sections;
+- located the directly relevant KasaneCore Blueprint/Convergence source and tests.
+- classified the slice and added behavior-first unit/integration tests for immutable lifecycle,
+  planned/actual separation, all eight states, all seven decisions, truthful evidence, restart, and
+  workspace isolation;
+- confirmed the initial focused red gate fails only because the new target modules do not yet exist.
+- implemented immutable Blueprint contracts/lifecycle with explicit validation and simple-task
+  bypass, plus SQLite restart/workspace isolation;
+- implemented schema-independent task convergence with all eight states, all seven deterministic
+  decisions, truthful unavailable/stale evidence, and generic dependency traversal;
+- integrated both capabilities through the existing application and central CapabilityPolicy;
+- proved planned targets do not become Actual Graph nodes and off mode creates no database;
+- passed focused domain/store tests, Ruff/format/strict mypy, full Python 75 tests, and adapter 9
+  tests.
+- ran the standalone exact-head 200-element benchmark: lifecycle 16.1298 ms, evaluation p50 0.2348
+  ms, restart 1.8938 ms, DB 241,664 bytes, max RSS 23,548 KiB, decision `complete`;
+- passed final all-fast, integration, and build gates.
 
 In progress:
-- canonical merged-state closeout documentation.
+- PR #12 is published; synchronize this event, verify the remote head, and merge.
 
 Not started:
-- PR-F implementation.
+- publication/merge and merged-state closeout.
 
-Important architecture decisions:
-- ADAPT KasaneCore revision matching, truthful unavailable semantics, and bounded context behavior.
-- CONSOLIDATE observations with existing ProjectRef/TwinRevisionRef/CanonicalRef/Provenance rather
-  than porting Pydantic/Atlas DTOs.
-- NEW a dedicated Test Obsolescence engine; KasaneCore has signals but no sufficient independent
-  engine for this target.
-- DO NOT PORT Atlas runners, PlanPool/context application DTOs, or model-dependent context logic.
+Architecture classification:
+- ADAPT immutable Blueprint revision/lifecycle and convergence evaluator/policy semantics;
+- CONSOLIDATE ProjectRef/TwinRevisionRef/evidence with existing contracts;
+- REPLACE raw/injected loaders with small explicit snapshot/evidence ports;
+- DO NOT PORT Atlas planners/generators/application DTOs or model dependencies.
 
-Important invariants:
-- a passed observation verifies only its matching source/Twin revision;
-- unavailable never becomes passed, and collector failure becomes unavailable;
-- low-confidence selection can fall back to the full suite;
-- obsolescence is evidence/revision/impact based, never file-age-only, and never deletes tests;
-- context is bounded, explains inclusion, and preserves revision/provenance/confidence.
+Scope:
+- immutable Blueprint revisions and proposed/reviewed/approved/active/superseded lifecycle;
+- mutable active pointer only, validation before activation, durable restart;
+- schema-independent TargetSnapshot/ActualSnapshot/VerificationEvidence projection;
+- task-level progress states and deterministic decisions;
+- optional/simple-task bypass and centralized CapabilityPolicy.
 
-Files changed: PR-E domains/store/application, sidecar, stable plugin/MCP tools, adapter tests,
-architecture boundary, local harnesses, Python resolver, and handoff.
-Files currently being edited: CURRENT_STATUS and handoff closeout documents only.
+Out of scope:
+- live model routing and Strategy (PR-G);
+- JS/TS semantic/deep graph (PR-H);
+- Research/Traceability and project-level Convergence (PR-I);
+- OpenCode/model integration changes.
 
-Exact tests executed: base `tools/local/all-fast`; base `tools/local/build`; focused PR-E pytest;
-post-domain `tools/local/all-fast`; focused store/application pytest; post-integration
-`tools/local/all-fast`; `tools/local/test-integration`.
-Exact results: final Ruff/format/mypy PASS; Python `64 passed in 0.41s`; adapter `9 passed in
-4.26s`; integration `12 passed in 1.21s`; build PASS. Model-free and real-local-model OpenCode
-smokes PASS when run serially.
-Benchmark results: exact `47d47cd` cold graph/symbol 2,739.11 ms; standard context p50 29.81 ms at
-100 items/2,131 tokens; weak context p50 34.15 ms at 8 items/148 tokens; test selection p50 31.33 ms
-with two candidates/no fallback; DB 5,152,768 bytes; max RSS 43,984 KiB.
-OpenCode version: 1.18.18.
-Model/provider: real local `ollama/qwen3.6-27b-q5_k_m:latest` for adapter runtime-event evidence;
-8,887 input/33 output tokens, 64,528 ms, cost 0.
-Routing profile: not applicable; live routing is out of scope.
-Known failures: an initial concurrent execution of both OpenCode smokes caused one shared-database
-lock; both passed when rerun serially. The earlier session-shell hook expectation was corrected.
-Known limitations: actual stable `bash` metadata lacked exit status and remains `observed`; the
-resolver correction does not claim dynamic-import completeness; context projects Graph nodes only.
+Files changed: new `blueprint/` and `convergence/` domains, shared SQLite store, application
+composition, architecture test, unit/integration tests, and handoff.
+Files currently being edited: architecture decision and handoff before substantive commit.
+Exact tests executed: base gates; focused red pytest; focused domain/store pytest; targeted
+Ruff/mypy; post-integration `tools/local/all-fast`.
+Exact results: focused 10 passed; final fast gate Ruff/format/mypy PASS, Python `75 passed in
+3.91s`, adapter 9 PASS; integration Python `13 passed in 5.85s`, adapter 9 PASS; build PASS.
+Benchmark results: standalone 200 elements; lifecycle 16.1298 ms; evaluation p50 0.2348 ms, p95
+0.3639 ms; restart 1.8938 ms; DB 241,664 bytes; max RSS 23,548 KiB; complete.
+OpenCode version: not applicable to PR-F; last verified 1.18.18 in PR-E.
+Model/provider: none; PR-F deterministic domain work does not use a model.
+Routing profile: not applicable.
+Known failures: initial red gate failed only for missing target modules; resolved by implementation.
+Known limitations: PR-F is task-level only; project-level convergence remains PR-I.
 Uncommitted work: PR-creation handoff sync only.
 Temporary work: none.
 
-Next exact action: commit/publish/merge the closeout; fast-forward main; pass all-fast/build; create
-`agent/pr-f-blueprint-convergence`; capture behavior-first Blueprint/Convergence tests.
-Next files: KasaneCore Blueprint/Convergence source/tests, then new host-neutral domain tests.
-Next commands: commit; push; create/merge closeout PR; sync main; `tools/local/all-fast`;
-`tools/local/build`; create PR-F branch; inspect exact KasaneCore sources/tests.
-Rollback path: revert the closeout documentation commit; PR-E remains merged at `fbdfcbd`.
+Next exact action: commit/push this handoff, verify PR #12 remote head/mergeability, merge, then
+create the small merged-state closeout.
+Next files: CURRENT_HANDOFF, then merged-state status/handoff.
+Next commands: commit; push; `gh pr view 12`; verify; merge.
+Rollback path: discard/revert only this branch; merged PR-E remains intact on main.

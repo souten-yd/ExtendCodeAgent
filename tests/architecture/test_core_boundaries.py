@@ -6,6 +6,8 @@ from pathlib import Path
 PACKAGE_ROOT = Path(__file__).parents[2] / "src" / "extendcodeagent"
 HOST_NEUTRAL_DIRS = (
     "analysis",
+    "blueprint",
+    "convergence",
     "context",
     "core",
     "graph",
