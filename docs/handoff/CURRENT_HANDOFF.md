@@ -3,11 +3,11 @@
 Updated: 2026-08-13 (Asia/Tokyo)
 
 Current branch: `agent/pr-e-context-test-runtime`
-Current PR: pending creation
+Current PR: `#10` — <https://github.com/souten-yd/ExtendCodeAgent/pull/10>
 Base commit: `01efc16b40c5233fc21e725beae158dc87520b8e`
-Latest commit: `47d47cd` (Python re-export test-selection correction)
+Latest commit: `b754d56` (PR-E exact-head evidence and validation handoff)
 Current milestone: PR-E Context + Test Intelligence + Runtime Ingest
-Current task: publish validated PR-E and merge after remote-head verification
+Current task: verify PR #10 remote head and mergeability, then merge
 Task status: in progress
 
 Goal: add revision-aware runtime observations, deterministic test selection and obsolescence, and
@@ -60,10 +60,10 @@ Completed:
   two candidates with no fallback in a worktree benchmark.
 
 In progress:
-- commit exact-head evidence and handoff, publish PR-E, verify the remote head, and merge.
+- PR #10 is published; synchronize this event, verify the remote head, and merge.
 
 Not started:
-- PR-E publication/merge and merged-state closeout.
+- PR-E merge and merged-state closeout.
 
 Important architecture decisions:
 - ADAPT KasaneCore revision matching, truthful unavailable semantics, and bounded context behavior.
@@ -101,11 +101,11 @@ Known failures: an initial concurrent execution of both OpenCode smokes caused o
 lock; both passed when rerun serially. The earlier session-shell hook expectation was corrected.
 Known limitations: actual stable `bash` metadata lacked exit status and remains `observed`; the
 resolver correction does not claim dynamic-import completeness; context projects Graph nodes only.
-Uncommitted work: formatting, compact evidence, final status, and handoff sync.
+Uncommitted work: PR-creation handoff sync only.
 Temporary work: none.
 
-Next exact action: commit evidence/handoff, push the branch, create PR-E, inspect remote diff/head,
+Next exact action: commit and push this PR-creation handoff, verify PR #10 remote head/mergeability,
 merge, then create the small merged-state closeout.
-Next files: `docs/evidence/pr-e/`, CURRENT_STATUS and handoff.
-Next commands: `git diff --check`; commit; push; `gh pr create`; verify; merge.
+Next files: CURRENT_HANDOFF, then merged-state status/handoff files.
+Next commands: commit; push; `gh pr view 10`; verify; merge.
 Rollback path: revert PR-E commits or delete this branch; merged PR-D remains unaffected.
