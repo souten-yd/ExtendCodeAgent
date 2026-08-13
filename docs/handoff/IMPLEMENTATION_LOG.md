@@ -160,3 +160,5 @@
   OpenCode 1.18.18 smokes passed; the real tool observation persisted as truthful `observed`.
 - Final gates: Ruff/format/mypy passed, Python 64 tests passed, adapter 9 tests passed, integration
   12 tests passed, and Python package plus TypeScript build passed.
+- PR #10 remote head `571bd86` matched the published branch and was mergeable with no GitHub CI;
+  it squash-merged to `main` as `fbdfcbd3864a3c46b76cc9ff10d77a57639258a6`.

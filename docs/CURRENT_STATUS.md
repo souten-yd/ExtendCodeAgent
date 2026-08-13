@@ -4,7 +4,7 @@ Status date: 2026-08-13
 
 ## Program state
 
-Overall: **PR-E CONTEXT/TEST/RUNTIME VALIDATED — PUBLICATION IN PROGRESS**
+Overall: **PR-E CONTEXT/TEST/RUNTIME COMPLETE — PR-F NEXT**
 
 The project now contains the strategic planning baseline plus a working Python host-neutral
 foundation. PR-A provides shared immutable contracts, centralized JSON/JSONC configuration,
@@ -46,7 +46,7 @@ adapters, local validation scripts, and architecture-boundary tests.
 | PR-B | graph revision/store/source snapshot | complete |
 | PR-C | structural/Python semantic/path/impact | complete |
 | PR-D | OpenCode adapter + MCP advisory integration | complete |
-| PR-E | context/test intelligence/runtime ingest | in progress |
+| PR-E | context/test intelligence/runtime ingest | complete |
 | PR-F | Blueprint + task-level Convergence | not started |
 | PR-G | live model routing + Strategy | not started |
 | PR-H | JS/TS/framework/deep graph expansion | not started |
@@ -54,8 +54,8 @@ adapters, local validation scripts, and architecture-boundary tests.
 
 ## Immediate next action
 
-Publish and merge the validated PR-E slice, synchronize the merged-state handoff on `main`, then
-start PR-F Blueprint and task-level Convergence from that exact closeout head. PR-C provides
+Close the merged-state PR-E handoff, then start PR-F Blueprint and task-level Convergence from that
+exact closeout head. PR-C provides
 deterministic structural/Python AST facts, analyzer-owned Python alias resolution, persisted
 dependency-aware refresh, bounded path/impact traversal, weakest-link confidence, uncertainty,
 explanations, and test-candidate projection. Curated FP/FN review and real-repository repeated-query
@@ -89,6 +89,10 @@ Exact-head evidence under `docs/evidence/pr-e/` records 100-item/2,131-token sta
 8-item/148-token weak context, two graph-linked test candidates without fallback, restart-persistent
 real OpenCode tool evidence, and truthful `observed` status when stable host metadata lacks an exit
 code. Live routing remains PR-G scope.
+
+PR #10 merged as `fbdfcbd3864a3c46b76cc9ff10d77a57639258a6`. PR-F must preserve immutable
+planned revisions and compare small `TargetSnapshot`, `ActualSnapshot`, and
+`VerificationEvidence` projections without treating planned content as existing project facts.
 
 The reproducible PR-D smoke measured alternating three-run startup medians of 1,046 ms native and
 1,070 ms plugin-enabled (+24 ms), then observed tool and external edit refreshes at 151 ms, MCP
