@@ -3,11 +3,11 @@
 Updated: 2026-08-13 (Asia/Tokyo)
 
 Current branch: `agent/pr-d-opencode-mcp`
-Current PR: not created
+Current PR: [#8](https://github.com/souten-yd/ExtendCodeAgent/pull/8) (draft)
 Base commit: `4a73c6f1a2903fb37185e3afd312c30c76c394f4`
 Latest commit: `736c2e9` (complete real OpenCode adapter evidence)
 Current milestone: PR-D OpenCode + MCP real integration
-Current task: finalize exact evidence, publish PR-D, verify remote head, and merge
+Current task: verify final remote metadata, mark PR #8 ready, and squash-merge
 Task status: in progress
 
 Goal: add a thin stable OpenCode plugin, a shared versioned local core service, and MCP fallback
@@ -48,13 +48,15 @@ Completed:
   Twin revisions, then verified no-loop stability, restart persistence, MCP reconnect, and an off
   mode negative control;
 - added a reproducible model-free real-host smoke and wired TypeScript validation into bootstrap,
-  all-fast, integration, and build scripts.
+  all-fast, integration, and build scripts;
+- published draft PR #8; published head `fb46df8c286dbf5dbb4ab4045f5e1c9a69d73758`
+  matched the exact locally verified head and was `MERGEABLE/CLEAN` with no configured checks.
 
 In progress:
-- final diff/evidence inspection and exact-head commit.
+- final remote metadata verification, ready transition, and squash merge.
 
 Not started:
-- PR publication, remote-head inspection, ready/merge, post-merge local gate, and closeout handoff.
+- post-merge local gate and closeout handoff.
 
 Important architecture decisions:
 - Target stable `@opencode-ai/plugin` 1.18.18 for PR-D; V2 is beta and remains a separate adapter.
@@ -100,13 +102,13 @@ Known limitations: V2 plugin/MCP APIs differ materially and are beta; PR-D targe
 three-run startup result is not a statistically stable distribution and includes one 1,609 ms
 native outlier. Stable OpenCode's native watcher did not emit ordinary file events in this
 environment, so the adapter fallback remains necessary.
-Uncommitted work: exact substantive-head evidence and this handoff update.
+Uncommitted work: PR publication metadata in this handoff only.
 Temporary work: preserved loop DB under `/tmp/extendcodeagent-pr-d-loop-evidence-20260813T0840JST`
 and filtered smoke DB under `/tmp/extendcodeagent-pr-d-filtered-smoke-20260813T0850JST`; current
 ignored `.extendcodeagent/graph.db` is disposable manual-smoke state.
 
-Next exact action: commit the exact substantive-head evidence, rerun final documentation-head
-all-fast/build gates, push, create PR-D, inspect remote head, and merge only if clean.
+Next exact action: commit/push this publication metadata, verify the new remote head and clean PR
+state, mark PR #8 ready, squash-merge, fast-forward main, and run post-merge gates.
 Next files: complete branch diff; `docs/evidence/pr-d/`; `docs/CURRENT_STATUS.md`; PR description.
 Next commands: `git diff --check`; `git diff 4a73c6f..HEAD`; commit; exact-head local gates; `git push`;
 create draft PR; verify mergeability and absence/presence of checks.

@@ -108,3 +108,7 @@
 - Substantive head `736c2e9` gate: Python unit/architecture `49 passed in 0.33s`; adapter
   `6 passed in 4.26s`; Python integration `9 passed in 1.45s`; repeated adapter `6 passed in 4.26s`;
   Python package and TypeScript builds passed.
+- Evidence head `fb46df8` passed final all-fast (`49 passed in 0.31s`; adapter `6 passed in 4.25s`)
+  and Python/TypeScript builds. Draft PR [#8](https://github.com/souten-yd/ExtendCodeAgent/pull/8)
+  was published with an exact matching remote head and reported `MERGEABLE/CLEAN`; no GitHub
+  Actions checks are configured.
