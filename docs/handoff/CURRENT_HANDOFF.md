@@ -2,15 +2,18 @@
 
 Updated: 2026-08-13 (Asia/Tokyo)
 
-Current branch: `agent/pr-g-routing-strategy`
-Current PR: [#14](https://github.com/souten-yd/ExtendCodeAgent/pull/14)
-Base commit: `7b1fb759365cc8dc6e57ad1da9a2870307ac60c8`
-Latest commit: `f772017fc4848cee7f6e4535ce2cbf9e06b55104` (published evidence head)
-Milestone: PR-G live Model Routing + Strategy
-Current task: verify PR #14 remote head/mergeability, merge, and closeout
-Status: implementation, evaluation, gates, and publication complete; merge in progress
+Current branch: `agent/pr-g-closeout`
+Current PR: closeout not created
+Base commit: `3386cfa429caf5b476e8abc5d52d87a8ab99c719`
+Latest commit: `3386cfa429caf5b476e8abc5d52d87a8ab99c719` (PR-G squash merge)
+Milestone: PR-G merged-state closeout
+Current task: publish/merge closeout, then start PR-H JS/TS semantic work
+Status: PR-G complete and merged; closeout in progress
 
 Completed:
+- PR #14 exact head `1189c966a71d410a42ab3f51ed35d18b4c2f5af9` was mergeable/CLEAN
+  and squash-merged as `3386cfa429caf5b476e8abc5d52d87a8ab99c719`;
+- post-merge main passed all-fast (85 Python in 0.64s, adapter 9) and Python/TypeScript builds;
 - extended the existing `PolicyModelRouter`; no parallel router was introduced;
 - added all deterministic adaptive signals, explainable endpoint decisions, execution wall time,
   escalation/locality, complete token/cache/tool/cost accounting, and fail-closed provider errors;
@@ -28,7 +31,7 @@ Completed:
 - verified frontier failure is reported unavailable for all 18 attempts, not as an empty success.
 
 In progress:
-- verify PR #14 mergeability and exact remote head, then squash-merge.
+- merged-state documentation closeout only.
 
 Not started:
 - PR-H JS/TS and on-demand deep graph;
@@ -76,10 +79,11 @@ Routing profile: deterministic fake coverage plus real native/off/advisory/activ
 Known failures: configured frontier returns OpenCode `APIError`; no frontier quality claim.
 Known limitations: local-low is stochastic; active is not made default; stable OpenCode prompt lacks
 a per-request max-output field; host cache tokens must not be conflated with new input.
-Uncommitted work: this PR-created handoff update only.
+Uncommitted work: closeout documentation only.
 Temporary work: evaluation-only Ollama `qwen3:0.6b` remains installed; no temporary repo files.
 
-Next exact action: commit/push this handoff update; verify exact PR head/mergeability; squash-merge.
+Next exact action: commit/push/merge the closeout, fast-forward main, create
+`agent/pr-h-js-ts-deep-graph`, and begin bounded PR-H inspection.
 Next files: current documentation/evidence only, then PR metadata.
 Next commands:
 

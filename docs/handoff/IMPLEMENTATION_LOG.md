@@ -188,3 +188,7 @@
   sdist/wheel and TypeScript builds, 13 Python integration tests, and repeated 9 adapter tests.
 - PR #14 was published from exact local/remote head `f772017fc4848cee7f6e4535ce2cbf9e06b55104`;
   no GitHub Actions checks are configured. Mergeability was still calculating at first query.
+- PR #14 final remote head `1189c966a71d410a42ab3f51ed35d18b4c2f5af9` matched local and was
+  `MERGEABLE/CLEAN`; it squash-merged as `3386cfa429caf5b476e8abc5d52d87a8ab99c719`.
+- Post-merge main all-fast passed with Python 85 tests in 0.64s and adapter 9 tests; Python
+  sdist/wheel and TypeScript builds passed.
