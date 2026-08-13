@@ -3,11 +3,11 @@
 Updated: 2026-08-13 (Asia/Tokyo)
 
 Current branch: `agent/pr-f-blueprint-convergence`
-Current PR: not created
+Current PR: `#12` — <https://github.com/souten-yd/ExtendCodeAgent/pull/12>
 Base commit: `f14cfb088f7f51539f3685350d0ec503ec29d7c1`
-Latest commit: `73cfff9` (PR-F benchmark harness and initial evidence)
+Latest commit: `4d1d806` (final PR-F validation evidence)
 Milestone: PR-F Blueprint + task-level Convergence
-Current task: commit final standalone evidence and gate results, then publish PR-F
+Current task: verify PR #12 remote head and mergeability, then merge
 Status: in progress
 
 Completed:
@@ -34,7 +34,7 @@ Completed:
 - passed final all-fast, integration, and build gates.
 
 In progress:
-- commit final standalone benchmark evidence/gate results, inspect diff, and publish.
+- PR #12 is published; synchronize this event, verify the remote head, and merge.
 
 Not started:
 - publication/merge and merged-state closeout.
@@ -72,11 +72,11 @@ Model/provider: none; PR-F deterministic domain work does not use a model.
 Routing profile: not applicable.
 Known failures: initial red gate failed only for missing target modules; resolved by implementation.
 Known limitations: PR-F is task-level only; project-level convergence remains PR-I.
-Uncommitted work: final evidence/gate result synchronization only.
+Uncommitted work: PR-creation handoff sync only.
 Temporary work: none.
 
-Next exact action: commit evidence sync, inspect full diff, push, create PR-F, verify remote head and
-mergeability, and merge.
-Next files: evidence/handoff, then PR metadata.
-Next commands: commit; inspect; push; create PR; verify; merge.
+Next exact action: commit/push this handoff, verify PR #12 remote head/mergeability, merge, then
+create the small merged-state closeout.
+Next files: CURRENT_HANDOFF, then merged-state status/handoff.
+Next commands: commit; push; `gh pr view 12`; verify; merge.
 Rollback path: discard/revert only this branch; merged PR-E remains intact on main.
