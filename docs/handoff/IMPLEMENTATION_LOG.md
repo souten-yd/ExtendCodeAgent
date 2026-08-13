@@ -197,3 +197,6 @@
 - PR-H classified current contracts/Twin/Impact as REUSE, KasaneCore JS/TS fixtures as ADAPT,
   tree-sitter analyzer/composite as NEW, and regex/parallel graph/always-on deep graphs as DO NOT
   PORT. Initial focused collection fails only on missing target analyzer exports, as intended.
+- Added independently configured tree-sitter JS/TS/TSX analysis, small multi-language composition,
+  and a language-owned JS ref resolver. Focused 12 tests and all-fast (90 Python, 9 adapter) pass;
+  persisted incremental refresh reanalyzes an importing TS test and removes its stale resolved call.

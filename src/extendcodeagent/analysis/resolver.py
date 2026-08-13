@@ -17,6 +17,40 @@ class IdentityReferenceResolver:
         return ()
 
 
+class CompositeCanonicalReferenceResolver:
+    def __init__(self, resolvers: tuple[CanonicalReferenceResolver, ...]) -> None:
+        self.resolvers = resolvers
+
+    def equivalents(self, canonical_ref: str, snapshot: GraphSnapshot) -> tuple[str, ...]:
+        values = {
+            value
+            for resolver in self.resolvers
+            for value in resolver.equivalents(canonical_ref, snapshot)
+        }
+        values.discard(canonical_ref)
+        return tuple(sorted(values))
+
+
+class JavaScriptTypeScriptCanonicalReferenceResolver:
+    """Bridge file-qualified JS/TS symbols and explicit name-only ambiguity nodes."""
+
+    def equivalents(self, canonical_ref: str, snapshot: GraphSnapshot) -> tuple[str, ...]:
+        if canonical_ref.startswith("js://") and "#" in canonical_ref:
+            short_name = canonical_ref.rsplit("#", 1)[-1].rsplit(".", 1)[-1]
+            return (f"jsname://{short_name}",)
+        if canonical_ref.startswith("jsname://"):
+            short_name = canonical_ref.removeprefix("jsname://")
+            return tuple(
+                sorted(
+                    node.canonical_ref.value
+                    for node in snapshot.nodes
+                    if node.canonical_ref.value.startswith("js://")
+                    and node.canonical_ref.value.rsplit("#", 1)[-1].rsplit(".", 1)[-1] == short_name
+                )
+            )
+        return ()
+
+
 class PythonCanonicalReferenceResolver:
     """Bridge concrete Python symbols and explicit name-only ambiguity nodes."""
 

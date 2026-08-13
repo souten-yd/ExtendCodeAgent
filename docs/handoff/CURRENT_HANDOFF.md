@@ -7,10 +7,17 @@ Current PR: not created
 Base commit: `fe61a16e8f7f07e760d99ca449bc09c90166a6c5`
 Latest commit: `fe61a16e8f7f07e760d99ca449bc09c90166a6c5` (PR-G closeout merge)
 Milestone: PR-H JS/TS semantic and benchmark-justified on-demand deep graph
-Current task: inspect existing analyzer contracts/callers/tests and bounded PR-H plan/audit slices
-Status: behavior-first red tests committed next; no production changes yet
+Current task: benchmark JS/TS value and decide bounded framework/deep-graph follow-up
+Status: JS/TS semantic/Twin/Impact slice implemented; measurement next
 
 Completed:
+- added official tree-sitter JavaScript/TypeScript/TSX parsing dependencies;
+- added independently selected JS/TS and composite analyzers behind existing GraphAnalyzer;
+- added file-qualified definitions, local import resolution, references, direct/inherited calls,
+  low-confidence dynamic `may_call`, decorators, inheritance, test classification, diagnostics;
+- composed language-owned Python and JS/TS canonical resolvers without changing generic Impact;
+- verified SQLite incremental dependent-importer refresh and implementation-to-test impact;
+- focused 12 tests PASS; all-fast PASS with 90 Python and 9 adapter tests;
 - PR-G closeout PR #15 squash-merged as `fe61a16e8f7f07e760d99ca449bc09c90166a6c5`;
 - created PR-H branch from exact clean closeout main;
 - PR #14 exact head `1189c966a71d410a42ab3f51ed35d18b4c2f5af9` was mergeable/CLEAN
@@ -33,7 +40,7 @@ Completed:
 - verified frontier failure is reported unavailable for all 18 attempts, not as an empty success.
 
 In progress:
-- behavior-first JS/TS/composite/config contracts.
+- real JS/TS repository benchmark and framework/deep-graph stop-gate decision.
 
 Not started:
 - PR-H behavioral tests and implementation;
@@ -47,7 +54,7 @@ Architecture classification:
 
 Files changed: `src/extendcodeagent/core/model_routing/`, `src/extendcodeagent/strategy/`, focused
 tests, `tools/local/pr-g-evaluate`, PR-G evidence, and canonical handoff/status documents.
-Files currently being edited: behavior tests and architecture decision only.
+Files currently being edited: benchmark/evidence design next.
 
 Exact tests executed:
 - repeated focused Ruff/mypy and
@@ -81,12 +88,12 @@ Routing profile: deterministic fake coverage plus real native/off/advisory/activ
 Known failures: configured frontier returns OpenCode `APIError`; no frontier quality claim.
 Known limitations: local-low is stochastic; active is not made default; stable OpenCode prompt lacks
 a per-request max-output field; host cache tokens must not be conflated with new input.
-Uncommitted work: red JS/TS semantic/config tests and architecture decision.
+Uncommitted work: coherent JS/TS semantic/composition/config implementation and tests.
 Temporary work: evaluation-only Ollama `qwen3:0.6b` remains installed; no temporary repo files.
 
-Next exact action: commit red behavior slice; add official tree-sitter dependencies; implement the
-small composite and JS/TS analyzer until focused tests pass.
-Next files: `pyproject.toml`, central config, `src/extendcodeagent/graph/analyzers/`, composition.
+Next exact action: commit this slice; benchmark a real JS/TS repository for cold/incremental/query/
+DB/memory and curated impact recall; implement only measured framework/deep relations if justified.
+Next files: `tools/local/`, `docs/evidence/pr-h/`, optional plugin-style framework analyzer.
 Next commands:
 
 ```bash

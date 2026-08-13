@@ -44,6 +44,7 @@ class CapabilityName(StrEnum):
 
 
 ALL_CAPABILITIES = tuple(CapabilityName)
+KNOWN_ANALYZERS = ("python", "javascript_typescript")
 
 
 class ModelRole(StrEnum):
@@ -158,6 +159,7 @@ class ProjectIntelligenceConfig:
     enabled: bool
     mode: RolloutMode
     capabilities: Mapping[CapabilityName, RolloutMode]
+    analyzers: tuple[str, ...]
     analysis: AnalysisBudgets
     context: ContextBudgets
 

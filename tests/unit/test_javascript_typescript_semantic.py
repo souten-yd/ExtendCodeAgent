@@ -126,16 +126,12 @@ def test_js_ts_parse_failure_is_truthful_and_composite_keeps_python(tmp_path: Pa
     _write(root, "broken.ts", "export function broken( {\n")
     _write(root, "ok.py", "def usable():\n    return 1\n")
     source = SourceSnapshotter().snapshot(_project(root))
-    analyzer = CompositeGraphAnalyzer(
-        (PythonGraphAnalyzer(), JavaScriptTypeScriptGraphAnalyzer())
-    )
+    analyzer = CompositeGraphAnalyzer((PythonGraphAnalyzer(), JavaScriptTypeScriptGraphAnalyzer()))
     result = analyzer.analyze(_project(root), source)
 
     assert any(item.canonical_ref.value == "file://broken.ts" for item in result.nodes)
     assert any(item.canonical_ref.value == "py://ok#usable" for item in result.nodes)
-    assert any(
-        item.code == "javascript_typescript_parse_error" for item in result.diagnostics
-    )
+    assert any(item.code == "javascript_typescript_parse_error" for item in result.diagnostics)
     assert dict(result.analyzer_versions).keys() >= {"python_ast", "javascript_typescript"}
 
 
