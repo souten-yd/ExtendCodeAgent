@@ -86,3 +86,22 @@ The analyzer stays deterministic and stdlib-only. Unresolved dynamic dispatch is
 an inferred `may_call` edge with low confidence; it must never be promoted to a verified call.
 GitHub Actions remain unnecessary because this slice is reproducible through local fixtures,
 integration tests, package build, and benchmark scripts.
+
+## 2026-08-13 — PR-D stable OpenCode boundary
+
+Decision: target stable OpenCode and `@opencode-ai/plugin` 1.18.18 in PR-D. Keep the documented V2
+beta plugin surface as a future adapter rather than mixing stable and beta hook/config shapes.
+
+Current stable evidence checked 2026-08-13:
+- <https://opencode.ai/docs/plugins/> — `.opencode/plugins/`, `Plugin` context, event hooks, tools;
+- <https://opencode.ai/docs/custom-tools/> — stable tool helper and execution context;
+- <https://opencode.ai/docs/mcp-servers/> — named `mcp` entries, local command, `enabled`;
+- <https://opencode.ai/docs/cli/> and <https://opencode.ai/docs/config/>;
+- <https://opencode.ai/v2/docs/build/plugins> and V2 MCP docs, explicitly treated as beta/incompatible.
+
+The stable TypeScript adapter may import OpenCode packages. Host-neutral Python packages may not.
+Plugin hooks enqueue events into a bounded local interface; they do not run graph analysis inline.
+Plugin tools and MCP tools share one Python query/application service.
+
+GitHub Actions are still unnecessary. Plugin typecheck/build, Python tests, MCP protocol tests, and
+real OpenCode smoke/reconnect evidence will run locally.

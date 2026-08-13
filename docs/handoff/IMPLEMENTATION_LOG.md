@@ -78,3 +78,12 @@
 - Final remote head `d078b3c413cbdbbcd9d9a9ef78c00122eb5b3864` was MERGEABLE/CLEAN with no
   GitHub Actions checks. PR #6 was marked ready and squash-merged as `ef6db532`.
 - Post-merge `main`: all-fast `45 passed in 0.16s`; integration `8 passed in 0.37s`.
+
+## 2026-08-13 — PR-D started
+
+- Merged PR-C docs closeout #7 as `4a73c6f1`, synced main, and created
+  `agent/pr-d-opencode-mcp`.
+- Base all-fast passed with `45 passed in 0.21s`; sdist/wheel build succeeded.
+- Confirmed OpenCode was not installed, then checked current official stable plugin/MCP/config/CLI
+  docs and V2 beta docs before choosing an adapter target.
+- Current npm versions: OpenCode/plugin 1.18.18 and MCP SDK 1.30.0.
