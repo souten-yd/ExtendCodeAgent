@@ -235,3 +235,55 @@ local-medium advisory already scored 6/6 with fewer prompt tokens. The central d
 advisory is the safe opt-in until final multi-repository distributions justify automation.
 Frontier returned OpenCode `APIError` for every attempt, so it is recorded as unavailable and cannot
 satisfy the final release gate.
+
+## 2026-08-13 — PR-H language analyzer boundary
+
+Classification after inspecting the existing GraphAnalyzer/Twin/application callers, Python
+analyzer tests, bounded PR-H plan/audit slices, and KasaneCore JavaScript/TypeScript/Vue analyzer
+fixtures:
+
+- REUSE the host-neutral `GraphAnalyzer`, immutable Graph facts, Twin refresh/invalidation, generic
+  path/impact, confidence/provenance, and centralized configuration;
+- ADAPT the useful KasaneCore behaviors: collision-free file-qualified refs, imports, definitions,
+  components, deterministic invalidation, capability versions, and truthful degradation;
+- NEW a tree-sitter-backed JavaScript/TypeScript analyzer and one small composite analyzer because
+  the current application composes only Python;
+- DO NOT PORT KasaneCore's regex-only parser, parallel `SemanticGraph`/registry DTOs, LSP wrapper,
+  or always-on behavioral/CFG/DFG/UI inference.
+
+Each language analyzer is selected only through centralized immutable configuration; feature code
+does not read environment variables. Tree-sitter is preferred to regex because syntax errors are
+observable and resolved facts can be distinguished from inferred dynamic calls. Framework
+relations remain separate plugin-style analyzers. Deeper graphs remain on-demand and require a
+measured scenario gap before implementation.
+
+The first real ControlDeck benchmark process segfaulted before producing measurements. Retaining
+each owning tree-sitter `Tree`, then replacing cross-file `Node` state with serializable descriptors,
+still reproduced the crash on one isolated ControlDeck TSX file under py-tree-sitter 0.26.0. The
+official grammar wheels expose mixed ABI 15 (JavaScript) and ABI 14 (TypeScript/TSX), both within
+the binding's declared 13–15 range, but the same isolated analyzer passed repeatedly on
+py-tree-sitter 0.25.2. Decision: pin 0.25.2, retain one parser per grammar, stream Node traversal,
+and retain only pure-Python descriptors across files. Treat every failed run only as a safety
+defect signal, never as benchmark evidence. Real-repository measurement may resume only after
+focused tests and three repetitions of the same ControlDeck cold/incremental path no longer crash.
+
+The safe run then disproved the assumption that incremental refresh is always the faster strategy:
+on the same existing baseline, an App.tsx dependency closure covered 60 of 133 JS/TS modules and
+took 4,931 ms, while explicit full refresh took 1,187 ms. Alternatives considered were persisting a
+new symbol index in PR-H, always rebuilding JS/TS, or choosing from existing graph facts. Decision:
+REUSE the Twin lifecycle and select full refresh when affected paths cover at least 40% of current
+module facts. This is language-neutral, deterministic, observable through
+`auto_full_refresh_selected`, and preserves narrow incremental behavior. Three measured automatic
+runs took 1,193 / 1,192 / 1,187 ms with identical 1,255 nodes and 3,888 edges. A persisted index is
+deferred because the measured full strategy already removes the regression without new storage.
+
+The ControlDeck ground-truth run found 92 Playwright inline tests but the initial graph represented
+none. This is a JS/TS declaration gap, not evidence for deep CFG/DFG, so inline callbacks were
+ADAPTED into stable test definitions and existing call/Impact behavior. The result represented all
+92 tests and found static evidence for 39; the other 53 depend on browser/API/dynamic behavior and
+remain unlinked rather than fabricated. Cold build was 5,789 ms, automatic refresh 1,389 ms, and 20
+impact queries averaged 0.0282 ms. Decision: do not add always-on CFG/DFG/state/event/UI graphs in
+PR-H. They add maintenance and certainty risk without closing the measured browser/runtime gap.
+Keep framework/deep analyzers independently configurable and on-demand for a future concrete UI or
+security benchmark; this follows the PR-H measurement stop gate rather than treating the plan as a
+mandatory implementation list.

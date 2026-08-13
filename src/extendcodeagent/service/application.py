@@ -8,8 +8,11 @@ from pathlib import Path
 from typing import Any
 
 from extendcodeagent.analysis import (
+    CanonicalReferenceResolver,
+    CompositeCanonicalReferenceResolver,
     GraphAnalysisService,
     ImpactQuery,
+    JavaScriptTypeScriptCanonicalReferenceResolver,
     PathQuery,
     PythonCanonicalReferenceResolver,
 )
@@ -31,11 +34,16 @@ from extendcodeagent.convergence import (
     evaluate_convergence,
 )
 from extendcodeagent.convergence.storage import SqliteConvergenceRepository
-from extendcodeagent.core.config.schema import CapabilityName, RolloutMode
+from extendcodeagent.core.config.schema import KNOWN_ANALYZERS, CapabilityName, RolloutMode
 from extendcodeagent.core.contracts import CanonicalRef, ProjectRef, Provenance, SourceRevision
 from extendcodeagent.core.policy import CapabilityPolicy
 from extendcodeagent.graph import GraphSnapshot
-from extendcodeagent.graph.analyzers import PythonGraphAnalyzer
+from extendcodeagent.graph.analyzers import (
+    CompositeGraphAnalyzer,
+    GraphAnalyzer,
+    JavaScriptTypeScriptGraphAnalyzer,
+    PythonGraphAnalyzer,
+)
 from extendcodeagent.runtime import ObservationKind, ObservationStatus, RuntimeObservation
 from extendcodeagent.storage import SqliteGraphStore
 from extendcodeagent.testing import TestHealthSignals, evaluate_test_health, select_tests
@@ -59,12 +67,14 @@ class ProjectIntelligenceApplication:
         *,
         max_items: int = 100,
         max_depth: int = 6,
+        analyzers: tuple[str, ...] = KNOWN_ANALYZERS,
     ) -> None:
         self.root = Path(root).resolve()
         self.database = Path(database)
         self.policy = policy
         self.max_items = max_items
         self.max_depth = max_depth
+        self.analyzers = analyzers
         digest = hashlib.sha256(str(self.root).encode()).hexdigest()[:12]
         self.project = ProjectRef(f"{self.root.name}-{digest}", "default", self.root.as_uri())
         self._store: SqliteGraphStore | None = None
@@ -155,7 +165,7 @@ class ProjectIntelligenceApplication:
         max_paths: int = 20,
     ) -> dict[str, Any]:
         snapshot = self._explicit_snapshot(CapabilityName.IMPACT)
-        result = GraphAnalysisService(snapshot, PythonCanonicalReferenceResolver()).trace_path(
+        result = GraphAnalysisService(snapshot, self._reference_resolver()).trace_path(
             PathQuery(
                 source_ref,
                 target_ref,
@@ -412,7 +422,7 @@ class ProjectIntelligenceApplication:
         max_depth: int | None = None,
         include_historical: bool = False,
     ) -> Any:
-        return GraphAnalysisService(snapshot, PythonCanonicalReferenceResolver()).assess_impact(
+        return GraphAnalysisService(snapshot, self._reference_resolver()).assess_impact(
             ImpactQuery(
                 changed_refs,
                 min_confidence=min_confidence,
@@ -444,8 +454,22 @@ class ProjectIntelligenceApplication:
 
     def _ensure_twin(self) -> TwinService:
         if self._twin is None:
-            self._twin = TwinService(self._ensure_store(), analyzer=PythonGraphAnalyzer())
+            selected: list[GraphAnalyzer] = []
+            if "python" in self.analyzers:
+                selected.append(PythonGraphAnalyzer())
+            if "javascript_typescript" in self.analyzers:
+                selected.append(JavaScriptTypeScriptGraphAnalyzer())
+            analyzer = CompositeGraphAnalyzer(tuple(selected)) if selected else None
+            self._twin = TwinService(self._ensure_store(), analyzer=analyzer)
         return self._twin
+
+    def _reference_resolver(self) -> CompositeCanonicalReferenceResolver:
+        resolvers: list[CanonicalReferenceResolver] = []
+        if "python" in self.analyzers:
+            resolvers.append(PythonCanonicalReferenceResolver())
+        if "javascript_typescript" in self.analyzers:
+            resolvers.append(JavaScriptTypeScriptCanonicalReferenceResolver())
+        return CompositeCanonicalReferenceResolver(tuple(resolvers))
 
     def _ensure_store(self) -> SqliteGraphStore:
         if self._store is None:

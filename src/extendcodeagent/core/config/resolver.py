@@ -12,6 +12,7 @@ from typing import Any, TypeVar, cast
 
 from .schema import (
     ALL_CAPABILITIES,
+    KNOWN_ANALYZERS,
     AnalysisBudgets,
     ConfigError,
     ContextBudgets,
@@ -36,6 +37,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "enabled": False,
         "mode": "off",
         "capabilities": {name.value: "off" for name in ALL_CAPABILITIES},
+        "analyzers": list(KNOWN_ANALYZERS),
         "analysis": {
             "max_files": 10_000,
             "max_file_bytes": 2_000_000,
@@ -231,6 +233,16 @@ def _materialize(raw: dict[str, Any], applied: tuple[str, ...]) -> ResolvedConfi
         )
         for name in ALL_CAPABILITIES
     }
+    analyzers_raw = pi["analyzers"]
+    if not isinstance(analyzers_raw, list) or not all(
+        isinstance(item, str) for item in analyzers_raw
+    ):
+        raise ConfigError("project_intelligence.analyzers must be a list of strings")
+    unknown_analyzers = sorted(set(analyzers_raw) - set(KNOWN_ANALYZERS))
+    if unknown_analyzers:
+        raise ConfigError(f"unknown analyzer: {unknown_analyzers}")
+    if len(set(analyzers_raw)) != len(analyzers_raw):
+        raise ConfigError("project_intelligence.analyzers must not contain duplicates")
 
     analysis_raw = _mapping(pi["analysis"], "project_intelligence.analysis")
     context_raw = _mapping(pi["context"], "project_intelligence.context")
@@ -296,6 +308,7 @@ def _materialize(raw: dict[str, Any], applied: tuple[str, ...]) -> ResolvedConfi
             enabled=enabled,
             mode=mode,
             capabilities=capabilities,
+            analyzers=tuple(analyzers_raw),
             analysis=analysis,
             context=context,
         ),

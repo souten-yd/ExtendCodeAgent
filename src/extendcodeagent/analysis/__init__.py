@@ -10,19 +10,23 @@ from .contracts import (
 )
 from .resolver import (
     CanonicalReferenceResolver,
+    CompositeCanonicalReferenceResolver,
     IdentityReferenceResolver,
+    JavaScriptTypeScriptCanonicalReferenceResolver,
     PythonCanonicalReferenceResolver,
 )
 from .service import GraphAnalysisService
 
 __all__ = [
     "CanonicalReferenceResolver",
+    "CompositeCanonicalReferenceResolver",
     "GraphAnalysisService",
     "GraphPath",
     "IdentityReferenceResolver",
     "ImpactItem",
     "ImpactQuery",
     "ImpactReport",
+    "JavaScriptTypeScriptCanonicalReferenceResolver",
     "PathQuery",
     "PathResult",
     "PythonCanonicalReferenceResolver",

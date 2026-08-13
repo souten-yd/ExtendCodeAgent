@@ -21,7 +21,8 @@ class GraphAnalysis:
 
 
 class GraphAnalyzer(Protocol):
-    analyzer_versions: tuple[tuple[str, str], ...]
+    @property
+    def analyzer_versions(self) -> tuple[tuple[str, str], ...]: ...
 
     def analyze(
         self,

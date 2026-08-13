@@ -1,0 +1,28 @@
+{
+  "affected_paths": 454,
+  "changed_path": "frontend/src/App.tsx",
+  "cold_ms": 5789.275,
+  "db_and_wal_size_bytes": 17438936,
+  "diagnostics": [
+    "auto_full_refresh_selected",
+    "binary_file",
+    "javascript_typescript_parse_error",
+    "unsafe_path"
+  ],
+  "graph_edges": 5597,
+  "graph_nodes": 1347,
+  "impact_latency_mean_ms": 0.0282,
+  "impact_latency_p50_ms": 0.0248,
+  "max_rss_kib": 76512,
+  "platform": "Linux-7.0.0-28-generic-x86_64-with-glibc2.39",
+  "python": "3.12.3",
+  "query_count": 20,
+  "recommended_tests_total": 49,
+  "refresh_ms": 1388.992,
+  "refresh_strategy": "full",
+  "repository": "/home/souten/ControlDeck",
+  "schema": "extendcodeagent.pr-h-benchmark.v1",
+  "source_files": 454,
+  "test_nodes": 92,
+  "tests_with_static_evidence": 39
+}

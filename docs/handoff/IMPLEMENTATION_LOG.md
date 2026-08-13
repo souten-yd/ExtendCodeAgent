@@ -192,3 +192,26 @@
   `MERGEABLE/CLEAN`; it squash-merged as `3386cfa429caf5b476e8abc5d52d87a8ab99c719`.
 - Post-merge main all-fast passed with Python 85 tests in 0.64s and adapter 9 tests; Python
   sdist/wheel and TypeScript builds passed.
+- PR-G closeout PR #15 merged as `fe61a16e8f7f07e760d99ca449bc09c90166a6c5`; created
+  `agent/pr-h-js-ts-deep-graph` from exact clean main and began bounded search-first inspection.
+- PR-H classified current contracts/Twin/Impact as REUSE, KasaneCore JS/TS fixtures as ADAPT,
+  tree-sitter analyzer/composite as NEW, and regex/parallel graph/always-on deep graphs as DO NOT
+  PORT. Initial focused collection fails only on missing target analyzer exports, as intended.
+- Added independently configured tree-sitter JS/TS/TSX analysis, small multi-language composition,
+  and a language-owned JS ref resolver. Focused 12 tests and all-fast (90 Python, 9 adapter) pass;
+  persisted incremental refresh reanalyzes an importing TS test and removes its stale resolved call.
+- The first ControlDeck measurement exposed py-tree-sitter 0.26.0 native crashes. Pinning 0.25.2,
+  streaming Node traversal, reusing parsers, and retaining only pure descriptors passed the same
+  cold/incremental path in three independent processes; full fast and build gates passed afterward.
+- Equal-baseline measurement disproved unconditional incremental preference: App.tsx affected 60
+  of 133 JS/TS modules and took 4,931 ms incrementally versus 1,187 ms full. The existing Twin now
+  deterministically selects full at 40% module coverage; three automatic runs were about 1.19s.
+- ControlDeck ground truth found 92 Playwright inline tests versus zero initial test nodes. Added
+  callback declarations behavior-first; graph recall became 92/92, with 39 tests carrying static
+  evidence and the remaining dynamic/browser cases left truthful and unlinked.
+- Final PR-H benchmark: 454 source files, 1,347 nodes, 5,597 edges, cold 5,789 ms, auto refresh
+  1,389 ms, DB+WAL 17,438,936 bytes, max RSS 76,512 KiB, impact mean 0.0282 ms. Measurement did not
+  justify always-on CFG/DFG/state/event/UI graphs; they remain independently configurable on-demand
+  future analyzers rather than being added without a task benefit.
+- PR #16 was created after final all-fast/build/integration/benchmark/diff gates; no GitHub Actions
+  checks are configured and mergeability was still calculating at the initial query.
