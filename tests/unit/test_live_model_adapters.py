@@ -42,16 +42,25 @@ def test_opencode_host_adapter_uses_stable_session_model_contract() -> None:
         if path == "/session":
             return {"id": "session-1"}
         return {
-            "info": {"tokens": {"input": 8, "output": 3}},
-            "parts": [{"type": "text", "text": "host answer"}],
+            "info": {"tokens": {"input": 8, "output": 3}, "cost": 0.012},
+            "parts": [
+                {"type": "tool"},
+                {"type": "text", "text": "host answer"},
+            ],
         }
 
     adapter = OpenCodeHostAdapter(
-        "http://127.0.0.1:4096", "opencode", "big-pickle", transport=transport
+        "http://127.0.0.1:4096",
+        "opencode",
+        "big-pickle",
+        transport=transport,
     )
     response = adapter.complete(ModelRequest(ModelRole.STRATEGY_REASONER, "bounded strategy"))
     message = calls[1][2]
     assert isinstance(message, dict)
     assert message["model"] == {"providerID": "opencode", "modelID": "big-pickle"}
+    assert message["tools"] == {}
     assert response.text == "host answer"
     assert (response.input_tokens, response.output_tokens) == (8, 3)
+    assert response.tool_calls == 1
+    assert response.cost == 0.012

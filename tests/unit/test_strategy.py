@@ -37,13 +37,20 @@ def test_strategy_scores_project_facts_deterministically_and_llm_only_proposes_t
         StrategySignals(
             impact_by_file={"a.py": 1, "b.py": 8, "c.py": 5},
             tests_by_file={"a.py": 1, "b.py": 4, "c.py": 3},
+            migration_complexity_by_file={"a.py": 1, "b.py": 4, "c.py": 3},
             compatibility_risk_by_file={"b.py": 0.8},
+            rollbackability_by_file={"a.py": 1.0, "b.py": 0.2, "c.py": 0.4},
+            performance_risk_by_file={"b.py": 0.7},
+            maintainability_benefit_by_file={"a.py": 0.5, "b.py": 0.2},
+            cost_by_file={"a.py": 1.0, "b.py": 8.0, "c.py": 5.0},
             uncertainty_by_file={"c.py": 0.6},
         ),
         synthesis,
     )
     assert result.selected_id == "narrow"
     assert result.alternatives[0].score > result.alternatives[1].score
+    assert result.alternatives[0].scope_size == 1
+    assert result.alternatives[0].rollbackability == 1.0
     assert result.alternatives[0].metric_provenance == "project_intelligence"
     assert set(synthesis.payloads[0]) == {"goal", "constraints", "candidate_files"}
 
@@ -51,6 +58,21 @@ def test_strategy_scores_project_facts_deterministically_and_llm_only_proposes_t
 def test_strategy_has_no_generic_fallback_when_synthesis_is_unavailable() -> None:
     with pytest.raises(StrategyError, match="no alternatives"):
         build_strategy(StrategyRequest("plan", ()), StrategySignals(), FakeSynthesis(()))
+
+
+def test_strategy_does_not_select_an_arbitrary_id_when_scores_tie() -> None:
+    result = build_strategy(
+        StrategyRequest("choose", ()),
+        StrategySignals(),
+        FakeSynthesis(
+            (
+                ProposedAlternative("a", ("same.py",), "first", "revert"),
+                ProposedAlternative("z", ("same.py",), "second", "revert"),
+            )
+        ),
+    )
+    assert result.selected_id is None
+    assert result.reasons[-1] == "tie_requires_decision"
 
 
 def test_model_synthesis_accepts_only_explicit_structured_alternatives() -> None:

@@ -59,6 +59,7 @@ class OpenCodeHostAdapter:
     provider_id: str
     model_id: str
     timeout_seconds: float = 180.0
+    enable_native_tools: bool = False
     transport: HostTransport | None = None
 
     def complete(self, request: ModelRequest) -> ModelResponse:
@@ -67,14 +68,16 @@ class OpenCodeHostAdapter:
         session_id = str(session.get("id", ""))
         if not session_id:
             raise ModelUnavailable("OpenCode did not create a session")
+        body: JsonObject = {
+            "model": {"providerID": self.provider_id, "modelID": self.model_id},
+            "parts": [{"type": "text", "text": request.prompt}],
+        }
+        if not self.enable_native_tools:
+            body["tools"] = {}
         raw = send(
             "POST",
             f"/session/{session_id}/message",
-            {
-                "model": {"providerID": self.provider_id, "modelID": self.model_id},
-                "tools": {},
-                "parts": [{"type": "text", "text": request.prompt}],
-            },
+            body,
         )
         try:
             parts = cast("list[JsonObject]", raw["parts"])
@@ -87,6 +90,8 @@ class OpenCodeHostAdapter:
                 text,
                 int(cast("int", tokens.get("input", 0))),
                 int(cast("int", tokens.get("output", 0))),
+                sum(1 for item in parts if item.get("type") == "tool"),
+                float(cast("float", info["cost"])) if info.get("cost") is not None else None,
             )
         except (KeyError, TypeError, ValueError) as error:
             raise ModelUnavailable("invalid OpenCode host response") from error
