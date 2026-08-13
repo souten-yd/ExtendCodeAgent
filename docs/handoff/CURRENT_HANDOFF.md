@@ -2,82 +2,67 @@
 
 Updated: 2026-08-13 (Asia/Tokyo)
 
-Current branch: `agent/pr-f-closeout`
-Current PR: `#13` — <https://github.com/souten-yd/ExtendCodeAgent/pull/13>
-Base commit: `157fd19b56db6c61e61b5f02ab81e3bf985d79fd`
-Latest commit: `da61b73` (PR-F merged-state closeout)
-Milestone: PR-F merged-state closeout
-Current task: verify and merge closeout PR #13
-Status: in progress; PR-F implementation is complete
+Current branch: `agent/pr-g-routing-strategy`
+Current PR: not created
+Base commit: `7b1fb759365cc8dc6e57ad1da9a2870307ac60c8`
+Latest commit: `7b1fb75` (PR-F closeout merge)
+Milestone: PR-G live Model Routing + Strategy
+Current task: capture behavior-first adaptive routing/live adapter/Strategy contracts
+Status: in progress
 
 Completed:
-- PR-F implementation PR #12 merged as `157fd19b56db6c61e61b5f02ab81e3bf985d79fd`;
-- PR-E implementation PR #10 merged as `fbdfcbd`; closeout PR #11 merged as `f14cfb0`;
-- exact closeout main passed `tools/local/all-fast` (Python 64, adapter 9, Ruff/format/mypy) and
-  `tools/local/build`;
-- created this branch from that exact clean main head;
-- read only the PR-F execution-plan and Blueprint/Convergence migration-audit sections;
-- located the directly relevant KasaneCore Blueprint/Convergence source and tests.
-- classified the slice and added behavior-first unit/integration tests for immutable lifecycle,
-  planned/actual separation, all eight states, all seven decisions, truthful evidence, restart, and
-  workspace isolation;
-- confirmed the initial focused red gate fails only because the new target modules do not yet exist.
-- implemented immutable Blueprint contracts/lifecycle with explicit validation and simple-task
-  bypass, plus SQLite restart/workspace isolation;
-- implemented schema-independent task convergence with all eight states, all seven deterministic
-  decisions, truthful unavailable/stale evidence, and generic dependency traversal;
-- integrated both capabilities through the existing application and central CapabilityPolicy;
-- proved planned targets do not become Actual Graph nodes and off mode creates no database;
-- passed focused domain/store tests, Ruff/format/strict mypy, full Python 75 tests, and adapter 9
-  tests.
-- ran the standalone exact-head 200-element benchmark: lifecycle 16.1298 ms, evaluation p50 0.2348
-  ms, restart 1.8938 ms, DB 241,664 bytes, max RSS 23,548 KiB, decision `complete`;
-- passed final all-fast, integration, and build gates.
+- PR-F PR #12 merged as `157fd19`; closeout PR #13 merged as `7b1fb75`;
+- exact closeout main passed all-fast (Python 75, adapter 9, Ruff/format/mypy) and build;
+- created this branch from exact clean main;
+- read the PR-G execution-plan and Strategy migration-audit slices;
+- inspected the existing PR-A `PolicyModelRouter`, contracts, fakes, config, and routing tests;
+- verified installed OpenCode 1.18.18 and current official provider/model guidance: stable V1 uses
+  `provider` plus `@ai-sdk/openai-compatible`; session prompt selects `{providerID, modelID}`.
 
 In progress:
-- canonical merged-state closeout documentation.
+- define deterministic adaptive signals, execution metrics, live adapter boundaries, and evidence-
+  based Strategy behavior before implementation.
 
 Not started:
-- PR-G implementation.
+- live OpenAI-compatible and OpenCode host adapters;
+- adaptive router extension and Strategy Core;
+- fake/privacy gates, real model A/B, evidence, publication.
 
 Architecture classification:
-- ADAPT immutable Blueprint revision/lifecycle and convergence evaluator/policy semantics;
-- CONSOLIDATE ProjectRef/TwinRevisionRef/evidence with existing contracts;
-- REPLACE raw/injected loaders with small explicit snapshot/evidence ports;
-- DO NOT PORT Atlas planners/generators/application DTOs or model dependencies.
+- REUSE/EXTEND the existing `PolicyModelRouter` and ModelRequest/Response contracts;
+- NEW transport adapters only behind existing ModelAdapter;
+- NEW Strategy Core with deterministic metrics and optional synthesis port;
+- DO NOT PORT KasaneCore DeepPlanner, Atlas/Nexus schemas, or fixed A/B/C fallbacks.
 
 Scope:
-- immutable Blueprint revisions and proposed/reviewed/approved/active/superseded lifecycle;
-- mutable active pointer only, validation before activation, durable restart;
-- schema-independent TargetSnapshot/ActualSnapshot/VerificationEvidence projection;
-- task-level progress states and deterministic decisions;
-- optional/simple-task bypass and centralized CapabilityPolicy.
+- deterministic routing signals/selection/escalation/fallback accounting;
+- OpenAI-compatible local path and current OpenCode host-model path;
+- local-only and remote-code privacy enforcement;
+- bounded weak-model structured requests;
+- deterministic StrategyAlternative metrics/provenance plus LLM proposal/explanation;
+- real local-low/local-medium/host/frontier evaluation where available.
 
 Out of scope:
-- live model routing and Strategy (PR-G);
-- JS/TS semantic/deep graph (PR-H);
-- Research/Traceability and project-level Convergence (PR-I);
-- OpenCode/model integration changes.
+- JS/TS/deep graph (PR-H);
+- Research/Traceability/project convergence (PR-I);
+- replacing OpenCode Plan/runtime or adding GitHub CI.
 
-Files changed: new `blueprint/` and `convergence/` domains, shared SQLite store, application
-composition, architecture test, unit/integration tests, and handoff.
-Files currently being edited: CURRENT_STATUS and handoff closeout documents only.
-Exact tests executed: base gates; focused red pytest; focused domain/store pytest; targeted
-Ruff/mypy; post-integration `tools/local/all-fast`.
-Exact results: focused 10 passed; final fast gate Ruff/format/mypy PASS, Python `75 passed in
-3.91s`, adapter 9 PASS; integration Python `13 passed in 5.85s`, adapter 9 PASS; build PASS.
-Benchmark results: standalone 200 elements; lifecycle 16.1298 ms; evaluation p50 0.2348 ms, p95
-0.3639 ms; restart 1.8938 ms; DB 241,664 bytes; max RSS 23,548 KiB; complete.
-OpenCode version: not applicable to PR-F; last verified 1.18.18 in PR-E.
-Model/provider: none; PR-F deterministic domain work does not use a model.
-Routing profile: not applicable.
-Known failures: initial red gate failed only for missing target modules; resolved by implementation.
-Known limitations: PR-F is task-level only; project-level convergence remains PR-I.
-Uncommitted work: PR-creation handoff sync only.
+Files changed: handoff task-start update only.
+Files currently being edited: behavior-first PR-G tests next.
+Exact tests executed: base `tools/local/all-fast`; base `tools/local/build`.
+Exact results: PASS; Python 75 passed in 0.60s, adapter 9 passed, Ruff/format/mypy and builds PASS.
+Benchmark results: not started.
+OpenCode version: 1.18.18.
+Model/provider: none yet in PR-G.
+Routing profile: to be exercised across configured modes; existing fake tests cover baseline modes.
+Known failures: none in PR-G.
+Known limitations: current router treats adaptive as local-first and has no live adapters or metrics;
+Strategy Core does not exist yet.
+Uncommitted work: task-start handoff update only.
 Temporary work: none.
 
-Next exact action: commit/publish/merge closeout; sync main; pass all-fast/build; create
-`agent/pr-g-routing-strategy`; inspect existing ModelRouter and target live interfaces.
-Next files: existing model-routing contracts/router, PR-G tests, Strategy behavior tests.
-Next commands: commit; publish/merge closeout; sync main; gates; create PR-G branch.
-Rollback path: revert closeout documentation; PR-F remains merged at `157fd19`.
+Next exact action: inspect stable SDK request/response payloads and local endpoint availability, then
+add behavior-first adaptive routing/live adapter/Strategy tests before production implementation.
+Next files: `tests/unit/test_model_routing.py`, new Strategy tests, existing model-routing package.
+Next commands: inspect official SDK/current local service; add tests; run focused red pytest.
+Rollback path: discard/revert only this branch; merged PR-F remains intact on main.
