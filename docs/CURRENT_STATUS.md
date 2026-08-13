@@ -4,7 +4,7 @@ Status date: 2026-08-14
 
 ## Program state
 
-Overall: **PR-I RESEARCH/TRACEABILITY COMPLETE LOCALLY — MERGE GATES IN PROGRESS**
+Overall: **PR-I RESEARCH/TRACEABILITY MERGED — RELEASE VALIDATION NEXT**
 
 The project now contains the strategic planning baseline plus a working Python host-neutral
 foundation. PR-A provides shared immutable contracts, centralized JSON/JSONC configuration,
@@ -50,12 +50,12 @@ adapters, local validation scripts, and architecture-boundary tests.
 | PR-F | Blueprint + task-level Convergence | complete |
 | PR-G | live model routing + Strategy | complete |
 | PR-H | JS/TS/framework/deep graph expansion | complete; deeper graphs deferred by measurement |
-| PR-I | Research/evidence + project-level convergence | implementation and evidence complete locally |
+| PR-I | Research/evidence + project-level convergence | complete |
 
 ## Immediate next action
 
-Finish PR-I merge gates and publish its bounded domain/port/durability slice. Reuse host/MCP search
-ports and do not copy Nexus infrastructure wholesale. PR-C provides
+Start the integration-only Release Validation PR from exact PR-I closeout main. Do not add new
+features or hide known unavailable model paths. PR-C provides
 deterministic structural/Python AST facts, analyzer-owned Python alias resolution, persisted
 dependency-aware refresh, bounded path/impact traversal, weakest-link confidence, uncertainty,
 explanations, and test-candidate projection. Curated FP/FN review and real-repository repeated-query

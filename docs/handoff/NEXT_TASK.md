@@ -1,18 +1,18 @@
 # Next Task
 
-Start PR-I Research/Evidence/Traceability/project convergence without adding Release Validation.
+Start the integration-only final Release Validation PR after merging this PR-I closeout.
 
-1. Merge this PR-H closeout, fast-forward main, and create `agent/pr-i-research-traceability`.
-2. Read only the PR-I plan/audit slices and inspect current Provenance, EvidenceRef, Runtime,
-   Blueprint, Convergence, sidecar/MCP, SQLite, CapabilityPolicy callers and tests.
-3. Inspect only the matching KasaneCore Nexus domain contracts/tests. Classify each behavior as
-   REUSE, ADAPT, CONSOLIDATE, REPLACE, NEW, or DO NOT PORT before production code.
-4. Move behavioral tests first for `ResearchRequest`, `ResearchPlan`, `SourceCandidate`, `Evidence`,
-   `Claim`, `CoverageGap`, `RetrievalDeficit`, ports, and project-level requirement traceability.
-5. Reuse OpenCode web/MCP retrieval through ports; external evidence must never become verified
-   project fact. Keep provider/application infrastructure and raw large logs out.
-6. Add project-level convergence through existing target/actual/evidence projections, then run
-   focused gates, all-fast/build, relevant integration and benchmark evidence.
+1. Fast-forward main and create `agent/release-validation`.
+2. Audit every Release Gate against current code and evidence; classify PASS, FAIL, UNAVAILABLE, or
+   NOT TESTED. Do not convert prior milestone evidence into a new pass without checking drift.
+3. Compare native/off/advisory/active on small Python, medium Python, JS/TS, and a real mixed
+   project across available weak-local, practical-local, host/default, and frontier paths.
+4. Record correctness, task success, impact/test recall, calls, tokens, latency, memory, DB size,
+   startup overhead, unnecessary edits, stale-context prevention, and completion correctness under
+   `docs/evidence/final/`. Keep raw large logs out.
+5. Re-run real OpenCode plugin/edit/external-edit/MCP/restart/reconnect and current local builds.
+6. If a required path is unavailable (including frontier credentials/provider), record the failed
+   gate and do not mark `PRODUCTION-CAPABLE BASELINE COMPLETE`.
 
 Resume:
 
@@ -21,7 +21,5 @@ cd /home/souten/ExtendCodeAgent
 git switch main
 git pull --ff-only origin main
 git status --short
-git switch -c agent/pr-i-research-traceability
+git switch -c agent/release-validation
 ```
-
-Keep final multi-repository/model Release Validation in a separate PR after PR-I merge/closeout.

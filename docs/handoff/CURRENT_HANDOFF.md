@@ -2,13 +2,13 @@
 
 Updated: 2026-08-14 (Asia/Tokyo)
 
-Current branch: `agent/pr-i-research-traceability`
-Current PR: #18 `https://github.com/souten-yd/ExtendCodeAgent/pull/18`
-Base commit: `f3d8016b30b0d7fa1972a1ee5bcb108f8f1148c8`
-Latest commit: `2e8e409cf9027bf9d4ab6c487569190805478679`
-Milestone: PR-I Research/Evidence/Traceability/project convergence
-Current task: publish and merge PR-I, then leave closeout before Release Validation
-Status: PR #18 open; implementation/evidence and final local gates PASS
+Current branch: `agent/pr-i-closeout`
+Current PR: PR-I #18 merged; closeout PR not created
+Base commit: `c2f2dc77700eb38291816d758e43aa27cd2ff06c`
+Latest commit: `c2f2dc77700eb38291816d758e43aa27cd2ff06c` (PR-I squash merge)
+Milestone: PR-I closeout; Release Validation next
+Current task: merge documentation-only closeout, then start Release Validation
+Status: PR-I merged and post-merge main gates PASS
 
 Completed:
 - added bounded research request/plan/source/evidence/claim/gap/deficit contracts and ports;
@@ -70,7 +70,7 @@ Completed:
 - verified frontier failure is reported unavailable for all 18 attempts, not as an empty success.
 
 In progress:
-- PR-I publication and merge.
+- documentation-only PR-I closeout.
 
 Not started:
 - PR-I Research/Evidence/Traceability/project convergence;
@@ -137,12 +137,11 @@ Known limitations: local-low is stochastic; active is not made default; stable O
 a per-request max-output field; host cache tokens must not be conflated with new input. PR-H's
 current JS/TS analyzer builds a transient cross-file index; broad dependency closures therefore
 select full refresh. A persisted symbol index remains a future optimization, not a PR-H requirement.
-Uncommitted work: this final gate handoff update only.
+Uncommitted work: PR-I closeout documentation only.
 Temporary work: evaluation-only Ollama `qwen3:0.6b` remains installed; no temporary repo files.
 
-Next exact action: commit/push this PR event, verify exact remote head and CLEAN, merge PR #18, run
-post-merge main gates, then publish a documentation-only closeout before Release Validation.
-Next files: PR metadata and closeout handoff only.
+Next exact action: merge closeout, create `agent/release-validation`, then audit/execute final matrix.
+Next files: `docs/evidence/final/`, validation tools only; no new feature implementation.
 Next commands:
 
 ```bash
