@@ -3,9 +3,9 @@
 Updated: 2026-08-13 (Asia/Tokyo)
 
 Current branch: `agent/pr-b-graph-twin-store`
-Current PR: not created
+Current PR: [#4](https://github.com/souten-yd/ExtendCodeAgent/pull/4) (draft; exact-head review pending)
 Base commit: `40602d3ad8f147c9166e32919f7005da1c11279e`
-Latest implementation commit: `907c5bfb4bd0790d6d19c5159b4b43e88e560e20`
+Latest commit: `ad2175bf5b2f893c025fc4f48db846f9516a238f`
 Current milestone: PR-B Graph / Digital Twin Foundation
 Current task: behavior-first Graph contracts, immutable revisions, SQLite store, source snapshot, full/file-level incremental refresh, persistence and benchmark
 Task status: implementation and required local evidence complete; review/publication pending
@@ -92,11 +92,11 @@ Known failures: none in required local gates.
 Known limitations: PR-B graph is file-level only by design; fingerprint scanning dominates small-repo
 incremental latency; import restores current facts as a new local revision rather than preserving
 foreign revision IDs; semantic/impact/OpenCode/model features remain out of scope.
-Uncommitted work: this handoff-only publication update; implementation is committed.
+Uncommitted work: this PR-state handoff update only.
 Temporary files: none.
 Experimental code: none.
 
-Next exact action: commit this handoff update, rerun exact-head gates, push and open PR-B.
+Next exact action: commit/push this update, verify PR #4 exact head/diff and local gates, mark ready and merge.
 Next files: `../KasaneCore/agent/project_twin/store.py` relevant schema/apply/snapshot slices and `module.py` refresh slices; then `tests/unit/test_graph_contracts.py` and PR-B component tests.
 Next commands: targeted `sed` of those slices; `git status --short`; focused pytest after tests exist.
 Rollback path: remove/revert only PR-B branch commits; PR-A on `main` remains authoritative.

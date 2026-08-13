@@ -40,3 +40,5 @@
 - Added integrity-checked snapshot export/import and bounded retention tests.
 - Real repository benchmark recorded under `docs/evidence/pr-b/`; incremental fact behavior passed,
   while small-repo latency remained near full-build latency and is documented as a limitation.
+- Published draft PR [#4](https://github.com/souten-yd/ExtendCodeAgent/pull/4); initial published head
+  `ad2175bf5b2f893c025fc4f48db846f9516a238f` was mergeable with no GitHub Actions checks.
