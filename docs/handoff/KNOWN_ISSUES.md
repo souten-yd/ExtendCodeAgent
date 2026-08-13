@@ -57,3 +57,18 @@
   dynamic-import or alias completeness.
 - OpenCode smoke processes share the host OpenCode database and must run serially; a concurrent
   evidence attempt produced `database is locked`. Serial model-free and model-backed reruns passed.
+
+## PR-G current limitations
+
+- The configured `llama/llama-3.3-70b-instruct` frontier path returned OpenCode `APIError` for all
+  18 mode/scenario attempts. Provider failures now fail closed, but no real frontier quality result
+  exists; the final release gate remains unmet until a usable frontier credential/path is available.
+- Qwen3 0.6B varied across repeated six-case runs. Bounded Project Intelligence consistently beat
+  off, but advisory versus active was not stable enough to justify an active default. The central
+  default remains off and active must stay explicit until multi-repository distributions exist.
+- OpenCode's host token report separates cache reads from new input. Evidence records both; adding
+  them as if billed identically would be misleading. Host big-pickle was free in the measured setup
+  (`cost: 0`) but that does not generalize to other providers.
+- Stable session prompt does not expose a per-request output-token bound. The OpenAI-compatible path
+  is bounded; the host path relies on focused prompts and a transport timeout. Final validation
+  should reassess this against the then-current stable OpenCode API.

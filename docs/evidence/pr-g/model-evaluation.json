@@ -1,0 +1,36 @@
+{
+  "successful_path_commit": "7023585a45d1a77cd6d8e0c71240bf7b5dd59197",
+  "frontier_failure_commit": "30bac66a08e1d1364d4c226bbfca69ccbd48e647",
+  "opencode_version": "1.18.18",
+  "scenario_count": 6,
+  "worktree_mutated": false,
+  "models": {
+    "local-low": "ollama/qwen3:0.6b",
+    "local-medium": "ollama/qwen3.6-27b-q5_k_m:latest",
+    "host": "opencode/big-pickle",
+    "frontier": "llama/llama-3.3-70b-instruct"
+  },
+  "results": {
+    "local-low:off": {"successes": 1, "input_tokens": 236, "output_tokens": 89, "tool_calls": 0, "wall_ms": 1949},
+    "local-low:advisory": {"successes": 4, "input_tokens": 840, "output_tokens": 96, "tool_calls": 0, "wall_ms": 1082},
+    "local-low:active": {"successes": 6, "input_tokens": 888, "output_tokens": 95, "tool_calls": 0, "wall_ms": 1061},
+    "local-medium:off": {"successes": 1, "input_tokens": 218, "output_tokens": 92, "tool_calls": 0, "wall_ms": 15840},
+    "local-medium:advisory": {"successes": 6, "input_tokens": 828, "output_tokens": 83, "tool_calls": 0, "wall_ms": 6340},
+    "local-medium:active": {"successes": 6, "input_tokens": 876, "output_tokens": 82, "tool_calls": 0, "wall_ms": 6327},
+    "host:native": {"successes": 6, "input_tokens": 39606, "cached_input_tokens": 352000, "output_tokens": 2431, "tool_calls": 40, "wall_ms": 78016},
+    "host:off": {"successes": 2, "input_tokens": 753, "cached_input_tokens": 12288, "output_tokens": 417, "tool_calls": 0, "wall_ms": 13064},
+    "host:advisory": {"successes": 4, "input_tokens": 1434, "cached_input_tokens": 12288, "output_tokens": 192, "tool_calls": 0, "wall_ms": 16565},
+    "host:active": {"successes": 6, "input_tokens": 1226, "cached_input_tokens": 12544, "output_tokens": 182, "tool_calls": 0, "wall_ms": 14509},
+    "frontier:off": {"available": false, "attempts": 6, "error": "OpenCode APIError"},
+    "frontier:advisory": {"available": false, "attempts": 6, "error": "OpenCode APIError"},
+    "frontier:active": {"available": false, "attempts": 6, "error": "OpenCode APIError"}
+  },
+  "human_corrections": 0,
+  "unnecessary_edits": 0,
+  "notes": [
+    "Tool-call counts are complete-session OpenCode tool parts.",
+    "Cached input is separate from new input because OpenCode reports them separately.",
+    "Success is exact expected-substring scoring against curated answers, not subjective grading.",
+    "Raw transcripts are not committed."
+  ]
+}

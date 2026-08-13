@@ -5,81 +5,93 @@ Updated: 2026-08-13 (Asia/Tokyo)
 Current branch: `agent/pr-g-routing-strategy`
 Current PR: not created
 Base commit: `7b1fb759365cc8dc6e57ad1da9a2870307ac60c8`
-Latest commit: `e575dc1` (adaptive routing and Strategy Core)
+Latest commit: `30bac66a08e1d1364d4c226bbfca69ccbd48e647`
 Milestone: PR-G live Model Routing + Strategy
-Current task: build reproducible multi-scenario real-model A/B evaluation harness
-Status: in progress
+Current task: evidence commit, publication, merge, and closeout
+Status: implementation, real evaluation, and final local gates complete; publication in progress
 
 Completed:
-- PR-F PR #12 merged as `157fd19`; closeout PR #13 merged as `7b1fb75`;
-- exact closeout main passed all-fast (Python 75, adapter 9, Ruff/format/mypy) and build;
-- created this branch from exact clean main;
-- read the PR-G execution-plan and Strategy migration-audit slices;
-- inspected the existing PR-A `PolicyModelRouter`, contracts, fakes, config, and routing tests;
-- verified installed OpenCode 1.18.18 and current official provider/model guidance: stable V1 uses
-  `provider` plus `@ai-sdk/openai-compatible`; session prompt selects `{providerID, modelID}`.
-- added behavior-first tests for deterministic adaptive risk/privacy routing, OpenAI-compatible
-  structured chat completions, stable OpenCode session/model payloads, evidence-derived Strategy
-  scoring, bounded synthesis payload, and absence of generic fallback alternatives;
-- confirmed the initial focused red gate fails only for the not-yet-implemented target contracts.
-- extended the existing router with deterministic adaptive signals and explainable required tier;
-- added transport-injected OpenAI-compatible and stable OpenCode host adapters with token parsing;
-- added Strategy Core where synthesis proposes text/scope and deterministic project signals own all
-  scoring/provenance; empty synthesis fails instead of fabricating fallback alternatives;
-- focused Ruff/mypy and 15 routing/adapter/Strategy tests pass.
-- added routed wall-time/escalation/locality metrics and strict model-backed Strategy synthesis;
-- installed evaluation-only `qwen3:0.6b` (522 MB) in Ollama; repository unchanged by the model;
-- real local-low conformance passed: Qwen3 0.6B returned correct JSON, 209 input/7 output tokens,
-  2,205.4 ms;
-- real local-medium conformance passed: Qwen 3.6 27B returned correct JSON, 26 input/262 output
-  tokens, 13,068.0 ms;
-- real OpenCode host conformance passed on 1.18.18 with `opencode/big-pickle`: exact `host-ok`,
-  8,250 input/4 output tokens, 2,311.3 ms; large native system context is recorded as a limitation;
-- focused routing/adapter/Strategy suite now passes 17 tests with Ruff/mypy PASS.
+- extended the existing `PolicyModelRouter`; no parallel router was introduced;
+- added all deterministic adaptive signals, explainable endpoint decisions, execution wall time,
+  escalation/locality, complete token/cache/tool/cost accounting, and fail-closed provider errors;
+- added OpenAI-compatible local and stable OpenCode 1.18.18 host adapters behind `ModelAdapter`;
+- preserved local-only and remote-source privacy enforcement in focused tests;
+- added bounded output/reasoning control after an unbounded 27B run exceeded ten minutes;
+- corrected OpenCode tool disabling from `{}` to `{"*": false}` after complete-session metrics
+  proved that an empty map still allowed tools;
+- added Strategy with deterministic scope/impact/test/migration/compatibility/rollbackability/
+  performance/maintainability/cost/uncertainty metrics and provenance;
+- model synthesis only proposes scope/explanation/rollback; no A/B/C fallback exists; tied scores
+  produce no selection and require a decision;
+- ran six same-repository scenarios across local-low/local-medium and host native/off/advisory/
+  active; compact results are under `docs/evidence/pr-g/` and no run changed the worktree;
+- verified frontier failure is reported unavailable for all 18 attempts, not as an empty success.
 
 In progress:
-- build same-repository/same-task native/off/advisory/active evaluation and compact evidence.
+- commit documentation/evidence, then PR publication.
 
 Not started:
-- real local/host/frontier conformance, A/B metrics/evidence, final gates/publication.
+- PR-H JS/TS and on-demand deep graph;
+- PR-I Research/Evidence/Traceability/project convergence;
+- final multi-repository Release Validation.
 
 Architecture classification:
-- REUSE/EXTEND the existing `PolicyModelRouter` and ModelRequest/Response contracts;
-- NEW transport adapters only behind existing ModelAdapter;
-- NEW Strategy Core with deterministic metrics and optional synthesis port;
-- DO NOT PORT KasaneCore DeepPlanner, Atlas/Nexus schemas, or fixed A/B/C fallbacks.
+- REUSE/EXTEND `PolicyModelRouter`, routing/config/privacy contracts, Graph evidence, and policy;
+- NEW only the live transport implementations and Strategy domain behind existing boundaries;
+- DO NOT PORT KasaneCore DeepPlanner, Atlas/Nexus schemas, or fixed fallback alternatives.
 
-Scope:
-- deterministic routing signals/selection/escalation/fallback accounting;
-- OpenAI-compatible local path and current OpenCode host-model path;
-- local-only and remote-code privacy enforcement;
-- bounded weak-model structured requests;
-- deterministic StrategyAlternative metrics/provenance plus LLM proposal/explanation;
-- real local-low/local-medium/host/frontier evaluation where available.
+Files changed: `src/extendcodeagent/core/model_routing/`, `src/extendcodeagent/strategy/`, focused
+tests, `tools/local/pr-g-evaluate`, PR-G evidence, and canonical handoff/status documents.
+Files currently being edited: documentation/evidence only.
 
-Out of scope:
-- JS/TS/deep graph (PR-H);
-- Research/Traceability/project convergence (PR-I);
-- replacing OpenCode Plan/runtime or adding GitHub CI.
+Exact tests executed:
+- repeated focused Ruff/mypy and
+  `.venv/bin/pytest -q tests/unit/test_model_routing.py tests/unit/test_live_model_adapters.py tests/unit/test_strategy.py`;
+- latest focused result: 19 passed;
+- final all-fast: Ruff/format/strict mypy PASS, Python 85 passed in 0.57s, adapter 9 passed;
+- final build: Python sdist/wheel and TypeScript build PASS;
+- final integration: Python 13 passed in 0.88s, adapter 9 passed;
+- `tools/local/pr-g-evaluate --tiers local-low,local-medium --modes off,advisory,active`;
+- `tools/local/pr-g-evaluate --tiers host --modes off,advisory,active`;
+- `tools/local/pr-g-evaluate --tiers frontier --modes off,advisory,active`.
 
-Files changed: model-routing contracts/router/adapters, Strategy package, architecture and unit tests.
-Files currently being edited: handoff before substantive implementation commit.
-Exact tests executed: base gates; focused red; focused Ruff/mypy/pytest; three real model adapter
-conformance calls.
-Exact results: PASS; Python 75 passed in 0.60s, adapter 9 passed, Ruff/format/mypy and builds PASS.
-Benchmark results: local-low 2,205.4 ms; local-medium 13,068.0 ms; host 2,311.3 ms. These are one
-bounded conformance sample each, not quality distributions.
+Exact results:
+- focused Ruff and strict mypy PASS; focused pytest 19 passed;
+- local-low off/advisory/active: 1/4/6 successes, 0 tool calls, 325/936/983 input+output tokens;
+- local-medium off/advisory/active: 1/6/6, 0 calls, 310/911/958 tokens;
+- host native/off/advisory/active: 6/2/4/6 successes; 40/0/0/0 tool calls;
+- frontier: 0/18 available; all failed closed as OpenCode `APIError`;
+- worktree mutation: false for every evaluation process.
+
+Benchmark results:
+- host native: 78,016 ms, 39,606 new input, 352,000 cached input, 2,431 output, 40 calls;
+- host active: 14,509 ms, 1,226 new input, 12,544 cached input, 182 output, 0 calls;
+- local-low active: 1,061 ms total for six cases; local-medium active: 6,327 ms.
+
 OpenCode version: 1.18.18.
-Model/provider: Ollama Qwen3 0.6B; Ollama Qwen 3.6 27B Q5; OpenCode `opencode/big-pickle`.
-Routing profile: to be exercised across configured modes; existing fake tests cover baseline modes.
-Known failures: initial red collection failure resolved by implementation.
-Known limitations: OpenCode host adds 8,250 input tokens to a trivial prompt; frontier tier not yet
-confirmed; full scenario A/B not yet run.
-Uncommitted work: routing metrics, strict live Strategy synthesis, tests, and handoff update.
-Temporary work: none.
+Model/provider: Ollama Qwen3 0.6B; Ollama Qwen 3.6 27B Q5; OpenCode
+`opencode/big-pickle`; unavailable `llama/llama-3.3-70b-instruct` frontier path.
+Routing profile: deterministic fake coverage plus real native/off/advisory/active controlled runs.
 
-Next exact action: commit this slice; add a reproducible real-model evaluation harness with six
-required scenarios and native/off/advisory/active modes; run tiers serially and record failures.
-Next files: model-routing response metrics, `tools/local/`, `docs/evidence/pr-g/`.
-Next commands: commit; implement harness; run local-low/local-medium/host/frontier evaluation.
-Rollback path: discard/revert only this branch; merged PR-F remains intact on main.
+Known failures: configured frontier returns OpenCode `APIError`; no frontier quality claim.
+Known limitations: local-low is stochastic; active is not made default; stable OpenCode prompt lacks
+a per-request max-output field; host cache tokens must not be conflated with new input.
+Uncommitted work: PR-G evidence and canonical documentation updates only; all final gates passed.
+Temporary work: evaluation-only Ollama `qwen3:0.6b` remains installed; no temporary repo files.
+
+Next exact action: commit evidence; publish PR-G and verify exact remote head/mergeability.
+Next files: current documentation/evidence only, then PR metadata.
+Next commands:
+
+```bash
+cd /home/souten/ExtendCodeAgent
+.venv/bin/python -m json.tool docs/evidence/pr-g/model-evaluation.json >/dev/null
+tools/local/all-fast
+tools/local/build
+tools/local/test-integration
+git diff --check
+git status --short
+```
+
+Rollback path: revert only PR-G commits on this branch; merged PR-F closeout `7b1fb75` remains the
+clean base. Do not remove or rewrite PR-B through PR-F implementations.
