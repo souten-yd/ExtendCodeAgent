@@ -21,3 +21,6 @@
   wheel-archive smoke passed.
 - Published draft PR [#2](https://github.com/souten-yd/ExtendCodeAgent/pull/2); initial remote head
   `43ada0d4dd5ddf4d11a9100a17143b957ee2a0c8` was mergeable with no GitHub Actions checks configured.
+- Verified final PR head `ce251a5c0273e4bbb5fcd126d0bbffd10defed64`, marked it ready, and
+  squash-merged as `49db5bac7084fc3df444dc8b3c5f18cc7f79a0f8`.
+- Fast local gates on merged `main`: Ruff and strict mypy passed; `25 passed in 0.04s`.
