@@ -40,13 +40,19 @@ Completed:
 - added bounded revision/provenance/confidence-aware context packages and a materially smaller weak
   profile;
 - expanded architecture-boundary coverage to the new `runtime`, `testing`, and `context` packages.
+- added durable runtime observation storage with idempotency, payload-collision rejection, restart
+  persistence, workspace isolation, and canonical-ref reverse lookup;
+- integrated context, runtime ingest/evidence, confidence fallback, and test health into the one
+  existing Project Intelligence application/store;
+- verified a matching-revision green test becomes stale after an active source refresh, while off
+  mode remains inert and creates no database.
 
 In progress:
-- review/commit the first pure-domain slice, then add durable observation ingest and integrate the
-  existing application service without duplicating business logic.
+- review/commit durable application integration, then add versioned sidecar operations and the
+  stable OpenCode tool-result normalization adapter.
 
 Not started:
-- observation persistence, application/sidecar/plugin integration, benchmarks, A/B, publication.
+- sidecar/plugin integration, real OpenCode PR-E evidence, benchmarks, A/B, publication.
 
 Important architecture decisions:
 - ADAPT KasaneCore revision matching, truthful unavailable semantics, and bounded context behavior.
@@ -63,28 +69,30 @@ Important invariants:
 - obsolescence is evidence/revision/impact based, never file-age-only, and never deletes tests;
 - context is bounded, explains inclusion, and preserves revision/provenance/confidence.
 
-Files changed: new `runtime`, `testing`, and `context` packages; their behavior tests; architecture
-boundary; PR-E handoff.
-Files currently being edited: first vertical-slice handoff before commit.
+Files changed: PR-E domain packages/tests, observation schema/store, application integration,
+architecture boundary, and handoff.
+Files currently being edited: durable application slice handoff before commit.
 
 Exact tests executed: base `tools/local/all-fast`; base `tools/local/build`; focused PR-E pytest;
-post-slice `tools/local/all-fast`.
-Exact results: focused `12 passed`; Ruff/mypy PASS; Python `61 passed in 0.48s`; adapter
-`6 passed in 4.25s`; base Python sdist/wheel and TypeScript build PASS.
+post-domain `tools/local/all-fast`; focused store/application pytest; post-integration
+`tools/local/all-fast`; `tools/local/test-integration`.
+Exact results: pure-domain focused `12 passed`; store/application focused `8 passed`; Ruff/mypy
+PASS; Python `63 passed in 0.43s`; adapter `6 passed in 4.27s`; Python integration `11 passed in
+0.60s`; repeated adapter `6 passed in 4.27s`; base build PASS.
 Benchmark results: none yet for PR-E.
 OpenCode version: 1.18.18 (carried from verified PR-D install; not yet exercised for PR-E).
 Model/provider: none.
 Routing profile: not applicable; live routing is out of scope.
 Known failures: none yet.
-Known limitations: the pure services are not yet persisted or exposed through the application/
-adapter, and context currently projects Graph nodes only.
-Uncommitted work: coherent first PR-E pure-domain vertical slice and this handoff update.
+Known limitations: sidecar/OpenCode cannot yet submit/query PR-E operations; context currently
+projects Graph nodes only and Test Obsolescence has no persisted report cache (it is recomputed).
+Uncommitted work: coherent durable observation/application slice and this handoff update.
 Temporary work: none.
 
-Next exact action: commit the pure-domain slice, then add behavior-first persistence and
-application-integration tests before changing SQLite/application code.
-Next files: `src/extendcodeagent/storage/sqlite.py`, `service/application.py`, new integration tests,
-then adapter normalization only after the host-neutral path passes.
-Next commands: `git diff --check`; commit; inspect store schema/migrations and sidecar request path;
-add failing durable-ingest/application query tests; implement; run focused pytest and all-fast.
+Next exact action: commit the durable integration slice, then add sidecar request tests for runtime
+ingest/evidence/context and adapter conformance tests for stable tool-result normalization.
+Next files: `src/extendcodeagent/adapters/local_sidecar.py`, `tests/integration/test_local_sidecar.py`,
+then `adapters/opencode/src/` and adapter tests.
+Next commands: `git diff --check`; commit; add failing sidecar tests; implement strict parsing;
+inspect stable hook metadata and normalize unknown outcomes as observed, never passed.
 Rollback path: revert PR-E commits or delete this branch; merged PR-D remains unaffected.

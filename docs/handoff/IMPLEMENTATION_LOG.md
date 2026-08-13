@@ -133,3 +133,9 @@
   confidence-aware test selection, six-state test health, and bounded weak/standard context.
 - Expanded architecture boundaries to the new host-neutral packages. Focused `12 passed`; all-fast
   passed with Python `61 passed in 0.48s` and adapter `6 passed in 4.25s`.
+- Added SQLite runtime observations with idempotent restart-safe storage, collision rejection,
+  workspace isolation, and ref lookup; integrated runtime/context/test health into the existing
+  application/store rather than adding a parallel coordinator.
+- Verified fresh green to stale after source refresh and off-mode inertness. Focused `8 passed`;
+  all-fast Python `63 passed in 0.43s`, adapter `6 passed in 4.27s`; integration `11 passed in
+  0.60s`, repeated adapter `6 passed in 4.27s`.

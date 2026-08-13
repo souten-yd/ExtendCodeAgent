@@ -31,8 +31,13 @@ from extendcodeagent.graph import (
     GraphRevision,
     GraphSnapshot,
 )
+from extendcodeagent.runtime import (
+    ObservationKind,
+    ObservationStatus,
+    RuntimeObservation,
+)
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 
 class StoreError(RuntimeError):
@@ -197,6 +202,64 @@ class SqliteGraphStore:
         ).fetchall()
         return tuple(_load_edge(row["payload"]) for row in rows)
 
+    def put_observation(self, observation: RuntimeObservation) -> bool:
+        scope = _scope(observation.project)
+        payload = _dump(observation)
+        existing = self._connection.execute(
+            "SELECT payload FROM runtime_observations WHERE scope=? AND observation_id=?",
+            (scope, observation.observation_id),
+        ).fetchone()
+        if existing:
+            if existing["payload"] != payload:
+                raise StoreError(
+                    f"observation_id collision with different payload: {observation.observation_id}"
+                )
+            return False
+        with self._transaction():
+            self._connection.execute(
+                "INSERT INTO runtime_observations(scope,observation_id,source_revision,kind,status,finished_at,payload) VALUES(?,?,?,?,?,?,?)",
+                (
+                    scope,
+                    observation.observation_id,
+                    observation.source_revision.value,
+                    observation.kind.value,
+                    observation.status.value,
+                    observation.finished_at.isoformat(),
+                    payload,
+                ),
+            )
+            self._connection.executemany(
+                "INSERT INTO runtime_observation_refs(scope,observation_id,canonical_ref) VALUES(?,?,?)",
+                [
+                    (scope, observation.observation_id, item.value)
+                    for item in observation.observed_refs
+                ],
+            )
+        return True
+
+    def observations(
+        self,
+        project: ProjectRef,
+        *,
+        refs: tuple[CanonicalRef, ...] = (),
+        limit: int = 1_000,
+    ) -> tuple[RuntimeObservation, ...]:
+        if limit <= 0:
+            raise ValueError("limit must be positive")
+        scope = _scope(project)
+        if refs:
+            placeholders = ",".join("?" for _ in refs)
+            rows = self._connection.execute(
+                f"SELECT DISTINCT o.payload,o.finished_at,o.observation_id FROM runtime_observations o JOIN runtime_observation_refs r ON r.scope=o.scope AND r.observation_id=o.observation_id WHERE o.scope=? AND r.canonical_ref IN ({placeholders}) ORDER BY o.finished_at DESC,o.observation_id LIMIT ?",
+                (scope, *(item.value for item in refs), limit),
+            ).fetchall()
+        else:
+            rows = self._connection.execute(
+                "SELECT payload,finished_at,observation_id FROM runtime_observations WHERE scope=? ORDER BY finished_at DESC,observation_id LIMIT ?",
+                (scope, limit),
+            ).fetchall()
+        return tuple(_load_observation(row["payload"]) for row in rows)
+
     def prune(self, project: ProjectRef, *, keep: int) -> int:
         if keep <= 0:
             raise ValueError("keep must be positive")
@@ -334,6 +397,11 @@ class SqliteGraphStore:
             CREATE INDEX IF NOT EXISTS edges_reverse ON edges(scope,target_ref,valid_to);
             CREATE INDEX IF NOT EXISTS edges_source ON edges(scope,fact_source_ref,valid_to);
             CREATE TABLE IF NOT EXISTS evidence(row_id INTEGER PRIMARY KEY,scope TEXT NOT NULL,evidence_id TEXT NOT NULL,payload TEXT NOT NULL,revision_sequence INTEGER NOT NULL);
+            CREATE TABLE IF NOT EXISTS runtime_observations(scope TEXT NOT NULL,observation_id TEXT NOT NULL,source_revision TEXT NOT NULL,kind TEXT NOT NULL,status TEXT NOT NULL,finished_at TEXT NOT NULL,payload TEXT NOT NULL,PRIMARY KEY(scope,observation_id));
+            CREATE INDEX IF NOT EXISTS runtime_observations_revision ON runtime_observations(scope,source_revision,status);
+            CREATE TABLE IF NOT EXISTS runtime_observation_refs(scope TEXT NOT NULL,observation_id TEXT NOT NULL,canonical_ref TEXT NOT NULL,PRIMARY KEY(scope,observation_id,canonical_ref),FOREIGN KEY(scope,observation_id) REFERENCES runtime_observations(scope,observation_id) ON DELETE CASCADE);
+            CREATE INDEX IF NOT EXISTS runtime_observation_refs_reverse ON runtime_observation_refs(scope,canonical_ref,observation_id);
+            UPDATE schema_meta SET version=2 WHERE version<2;
             """
         )
 
@@ -454,4 +522,23 @@ def _load_revision(payload: str) -> GraphRevision:
         raw["analyzer_versions"],
         datetime.fromisoformat(raw["created_at"]),
         raw["parent_revision_id"],
+    )
+
+
+def _load_observation(payload: str) -> RuntimeObservation:
+    raw = json.loads(payload)
+    return RuntimeObservation(
+        str(raw["observation_id"]),
+        ObservationKind(raw["kind"]),
+        _project(raw["project"]),
+        _source(raw["source_revision"]),
+        ObservationStatus(raw["status"]),
+        datetime.fromisoformat(raw["started_at"]),
+        datetime.fromisoformat(raw["finished_at"]),
+        _provenance(raw["provenance"]),
+        tuple(CanonicalRef(item["value"]) for item in raw["observed_refs"]),
+        raw["command"],
+        raw["tool"],
+        tuple(_evidence_ref(item) for item in raw["artifacts"]),
+        str(raw["summary"]),
     )
