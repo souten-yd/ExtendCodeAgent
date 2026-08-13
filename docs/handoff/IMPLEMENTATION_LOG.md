@@ -19,3 +19,5 @@
 - Added reproducible local bootstrap/lint/typecheck/unit/build scripts.
 - Local evidence: Ruff passed; strict mypy passed; `25 passed in 0.04s`; sdist/wheel build and
   wheel-archive smoke passed.
+- Published draft PR [#2](https://github.com/souten-yd/ExtendCodeAgent/pull/2); initial remote head
+  `43ada0d4dd5ddf4d11a9100a17143b957ee2a0c8` was mergeable with no GitHub Actions checks configured.

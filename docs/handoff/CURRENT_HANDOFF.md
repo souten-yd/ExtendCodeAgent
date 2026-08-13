@@ -3,12 +3,12 @@
 Updated: 2026-08-13 (Asia/Tokyo)
 
 Current branch: `agent/pr-a-foundation`
-Current PR: not created yet; publication is the next action
+Current PR: [#2](https://github.com/souten-yd/ExtendCodeAgent/pull/2) (draft; ready/merge pending)
 Base commit: `9623282d00ef98490d5c36ea16256f6fcde260af`
-Latest commit: `9623282d00ef98490d5c36ea16256f6fcde260af`
+Latest implementation commit: `43ada0d4dd5ddf4d11a9100a17143b957ee2a0c8`
 Current milestone: PR-A Foundation
 Current task: host-neutral contracts, centralized configuration/capability policy, model-routing contracts and fake adapters, local validation harness, architecture tests
-Task status: implementation and local validation complete; commit/PR/merge pending
+Task status: implementation/local validation/publication complete; exact-head review and merge pending
 
 Goal: Establish the smallest working host-neutral foundation that later KasaneCore migrations and OpenCode adapters can depend on without leaking Atlas or OpenCode types into core.
 
@@ -36,7 +36,7 @@ Completed:
   generated-wheel archive smoke.
 
 In progress:
-- committing, publishing, verifying the PR head, and merging PR-A.
+- finalizing the handoff on PR #2, verifying its exact head, and merging PR-A.
 
 Not started:
 - PR-B Graph/Twin revision/store/source snapshot work.
@@ -80,11 +80,11 @@ LLM/provider tested: deterministic fake local/host/remote adapters only; no real
 Model routing profile: manual/local-first/frontier-first/cost/latency/quality/adaptive/host-only/local-only contracts; focused tests exercised local-only, host-only, fallback/retry, capability filters, and remote-code policy.
 Known failures: none in required local gates.
 Known limitations: no Graph/Twin, OpenCode/MCP, or live provider implementation exists in PR-A by design.
-Uncommitted work: all staged PR-A files pending the first commit.
+Uncommitted work: this handoff-only PR-state update; no implementation changes.
 Temporary files: none.
 Experimental code: none.
 
-Next exact action: commit the staged PR-A scope, push, open a draft PR, verify exact remote head/diff, then merge after local evidence review.
+Next exact action: commit/push this handoff update, verify PR #2 exact head and diff, mark ready, then merge.
 Next files to inspect after merge: `../KasaneCore/agent/project_twin/contracts.py`, `store.py`, `source_adapter.py`, `module.py`, plus store/source-refresh/durability tests.
-Next commands to run: `git diff --cached --check`; `tools/local/all-fast`; `git commit`; `git push`.
+Next commands to run: `git diff --check`; `git push`; `gh pr view 2`; after merge, switch/pull `main` and verify its head.
 Rollback path: before commits, remove only PR-A-created files; after commit, revert the PR-A commit. Do not reset unrelated work.
