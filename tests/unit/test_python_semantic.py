@@ -30,6 +30,7 @@ class Base:
 class Service(Base):
     @route('/items')
     def handler(self, value):
+        selected = run_helper
         run_helper(value)
         self.save()
         client.unknown(value)
@@ -59,6 +60,7 @@ class Service(Base):
     assert ("test", "py://tests.test_service#test_handler") in nodes
     assert ("dependency", "dependency://framework") in nodes
     assert ("imports", "module://pkg.service", "dependency://framework", 1.0) in edges
+    assert ("depends_on", "module://pkg.service", "dependency://framework", 1.0) in edges
     assert ("inherits", "py://pkg.service#Service", "py://pkg.service#Base", 1.0) in edges
     assert (
         "calls",
@@ -77,6 +79,18 @@ class Service(Base):
         "py://pkg.service#Service.handler",
         "pyname://unknown",
         0.35,
+    ) in edges
+    assert (
+        "references",
+        "py://pkg.service#Service.handler",
+        "py://pkg.util#helper",
+        0.9,
+    ) in edges
+    assert (
+        "decorated_by",
+        "py://pkg.service#Service.handler",
+        "py://framework#route",
+        1.0,
     ) in edges
 
 

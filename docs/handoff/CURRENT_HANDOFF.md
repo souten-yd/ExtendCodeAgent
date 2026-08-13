@@ -5,9 +5,9 @@ Updated: 2026-08-13 (Asia/Tokyo)
 Current branch: `agent/pr-c-semantic-impact`
 Current PR: not created
 Base commit: `faf307dbff00f8f33671a8cb885bfe8593b5725f`
-Latest commit: `faf307dbff00f8f33671a8cb885bfe8593b5725f`
+Latest commit: `40587d7` (Python semantic/path/impact implementation)
 Current milestone: PR-C Structural/Python Semantic + Path/Impact
-Current task: capture behavioral ground truth before implementing host-neutral analysis
+Current task: final diff/evidence review before PR-C publication
 Task status: in progress
 
 Goal: extend the PR-B graph/twin foundation with deterministic structural and Python semantic facts,
@@ -31,13 +31,18 @@ Completed:
 - created this branch from exact `origin/main`;
 - reviewed the PR-C execution-plan and migration-audit slices;
 - inspected KasaneCore static/Python analyzers, path/impact service, and direct tests.
+- added structural/Python AST facts and analyzer-owned canonical reference resolution;
+- added bounded path and confidence-aware impact contracts/service;
+- integrated optional analysis into Twin full/incremental persistence without changing file-only use;
+- added seven focused ground-truth tests plus semantic persistence/invalidation integration.
+- added dependency-aware importer refresh, an end-to-end persisted impact/test-candidate fixture,
+  expanded host-neutral architecture coverage, a human FP/FN report, and real-repository benchmark.
 
 In progress:
-- recording migration classification and curated ground-truth tests.
+- final documentation, diff, and exact-head gate review.
 
 Not started:
-- production analyzer/resolver/path/impact implementation;
-- focused/all-fast/build gates, benchmark/report, PR publication and merge.
+- PR publication, remote exact-head verification, merge, and closeout.
 
 Important architecture decisions:
 - ADAPT the newer deterministic Python semantic analyzer behavior and graph analysis algorithms.
@@ -51,23 +56,36 @@ Important invariants:
 - Path and impact queries are revision-aware, bounded, read-only, and preserve weakest-link confidence.
 - Structural containers do not become behavioral impact items.
 
-Files changed: handoff/decision/implementation documentation only at task start.
-Files currently being edited: PR-C behavioral tests and graph analysis design.
+Files changed: `src/extendcodeagent/{analysis,graph/analyzers,twin/lifecycle.py}`; focused unit and
+integration tests; handoff documentation.
+Files currently being edited: final PR-C documentation and evidence metadata.
 
-Exact tests executed: none on this branch yet; base `main` was verified during PR-B closeout.
-Exact results: not applicable yet.
-Benchmark results: none for PR-C yet.
+Exact tests executed:
+- `.venv/bin/pytest -q tests/unit/test_python_semantic.py tests/unit/test_graph_analysis.py tests/integration/test_twin_lifecycle.py`
+- `tools/local/all-fast`
+- `tools/local/test-integration`
+- `tools/local/build`
+- `tools/local/benchmark-pr-c`
+Exact results: focused `15 passed`; final pre-publication all-fast Ruff PASS, strict mypy PASS,
+`45 passed in 0.14s`; integration `8 passed in 0.35s`; sdist/wheel build success.
+Benchmark results: 64 files, 423 nodes, 2,194 edges; cold semantic index 637.215 ms;
+dependency-aware two-file incremental refresh 280.653 ms; DB+WAL 3,975,808 bytes; max RSS
+44,932 KiB; 100 impact queries p50 0.0652 ms/p95 0.3078 ms; 100 lexical `rg` baseline queries
+p50 2.2526 ms/p95 3.308 ms. The baselines are not quality-equivalent.
 OpenCode version: not tested; PR-D acceptance.
 Model/provider: none; PR-C is deterministic.
 Routing profile: not applicable.
 Known failures: none.
 Known limitations: LSP enrichment is optional in the plan and deferred because no host-neutral LSP
-consumer exists; Python analysis will intentionally report unresolved dynamic dispatch as uncertain.
-Uncommitted work: this PR-C start documentation until committed.
+consumer exists; Python analysis intentionally reports unresolved dynamic dispatch as uncertain;
+incremental semantic refresh parses all Python ASTs to build a correct symbol index before emitting
+only affected facts, so its scaling advantage is not yet proven.
+Uncommitted work: dependency-aware refresh, evidence scripts/reports, architecture-test expansion,
+and final documentation since substantive commit `40587d7`.
 Temporary work: none.
 
-Next exact action: add curated analyzer/path/impact tests before production code.
-Next files: `tests/unit/test_python_semantic.py`, `tests/unit/test_graph_analysis.py`, then
-`src/extendcodeagent/analysis/*` and `src/extendcodeagent/graph/analyzers/python.py`.
-Next commands: run focused pytest for the new tests, implement the smallest behavior slice, rerun focused tests.
+Next exact action: commit the completed PR-C evidence slice, rerun exact-head gates, create the PR.
+Next files: current branch diff and PR-C evidence documents.
+Next commands: `git diff --check`; commit; `tools/local/all-fast`; `tools/local/test-integration`;
+`tools/local/build`; `tools/local/benchmark-pr-c`; publish PR.
 Rollback path: delete this unpushed branch or revert its coherent commits; do not reset unrelated work.

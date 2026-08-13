@@ -19,3 +19,13 @@
 - Snapshot import validates integrity and restores current facts, but deliberately creates a new
   local revision instead of importing foreign revision identity. Cross-store lineage preservation
   remains future work.
+
+## PR-C current limitations
+
+- Dependency-aware semantic refresh repairs unchanged importers of a removed/renamed symbol, but it
+  currently parses every Python AST to build the symbol index before emitting only affected facts.
+  The 64-file sample improved from 637.215 ms cold to 280.653 ms incremental; larger-repository
+  scaling and a persisted symbol index remain future measurements.
+- Dynamic receiver calls are deliberately emitted as inferred `may_call` edges at confidence 0.35.
+  This avoids false certainty but can produce name-collision false positives through alias bridging;
+  the PR-C FP/FN report must quantify representative cases.

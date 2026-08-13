@@ -54,3 +54,17 @@
   analysis service, and behavioral tests.
 - Kept OpenCode/MCP, runtime/context/test obsolescence, live models, and deep graphs out of scope.
 - Chose behavior-first curated tests before adding production analysis code.
+- Added deterministic structural/Python AST nodes and edges with explicit low-confidence `may_call`.
+- Added analyzer-owned Python alias resolution plus generic bounded path/reverse-impact traversal.
+- Added weakest-link confidence, direct/transitive classification, requirements, side effects,
+  recommended tests, historical risk, uncertainty, and explanation paths.
+- Integrated the analyzer as an optional Twin lifecycle dependency; file-only PR-B behavior remains
+  available when no analyzer is supplied.
+- Substantive commit `40587d7`; focused tests `13 passed`, all-fast `45 passed in 0.18s`.
+- Added dependency-aware importer refresh and verified a removed target downgrades the unchanged
+  caller from resolved `calls` to inferred `may_call` instead of retaining a stale edge.
+- Added persisted end-to-end leaf/caller/test and ambiguous-call impact evidence.
+- Final pre-publication gates: all-fast `45 passed in 0.14s`; integration `8 passed in 0.35s`;
+  sdist/wheel build succeeded.
+- Real-repository benchmark: 64 files, 423 nodes, 2,194 edges; cold 637.215 ms; dependency-aware
+  incremental 280.653 ms; impact p50 0.0652 ms; lexical `rg` p50 2.2526 ms.

@@ -68,16 +68,15 @@ class PythonGraphAnalyzer:
         modules: list[_ModuleInfo] = []
         diagnostics: list[Diagnostic] = []
         for item in snapshot.files:
-            if not item.path.endswith(".py") or (
-                selected is not None and item.path not in selected
-            ):
+            if not item.path.endswith(".py"):
                 continue
             try:
                 tree = ast.parse((root / item.path).read_text(encoding="utf-8"), item.path)
             except (OSError, UnicodeError, SyntaxError) as exc:
-                diagnostics.append(
-                    Diagnostic("python_parse_error", f"could not parse {item.path}: {exc}")
-                )
+                if selected is None or item.path in selected:
+                    diagnostics.append(
+                        Diagnostic("python_parse_error", f"could not parse {item.path}: {exc}")
+                    )
                 continue
             dotted = _module_dotted(item.path)
             modules.append(_ModuleInfo(item.path, dotted, tree, _imports(tree, dotted, item.path)))
@@ -167,6 +166,8 @@ class PythonGraphAnalyzer:
             add_edge(parent_ref, file_ref, "contains", path)
 
         for module in modules:
+            if selected is not None and module.path not in selected:
+                continue
             module_ref = f"module://{module.dotted}"
             file_ref = f"file://{module.path}"
             add_node(module_ref, "module", module.path)
@@ -188,6 +189,8 @@ class PythonGraphAnalyzer:
                     module.path,
                     properties={"bound_name": bound},
                 )
+                if target.startswith("dependency://"):
+                    add_edge(module_ref, target, "depends_on", module.path)
 
         for definition in definitions.values():
             if selected is not None and definition.path not in selected:
@@ -217,7 +220,10 @@ class PythonGraphAnalyzer:
             for item in definitions.values()
             if item.kind == "method"
         }
+        local_modules = frozenset(all_modules)
         for module in modules:
+            if selected is not None and module.path not in selected:
+                continue
             for definition in definitions.values():
                 if definition.module != module.dotted or definition.path != module.path:
                     continue
@@ -228,6 +234,7 @@ class PythonGraphAnalyzer:
                     by_module_name,
                     classes,
                     methods,
+                    local_modules,
                     add_edge,
                 )
 
@@ -246,6 +253,7 @@ def _emit_semantic_edges(
     by_module_name: dict[tuple[str, str], _Definition],
     classes: dict[str, _Definition],
     methods: dict[tuple[str, str, str], _Definition],
+    local_modules: frozenset[str],
     add_edge: object,
 ) -> None:
     emit = add_edge
@@ -255,7 +263,7 @@ def _emit_semantic_edges(
         expression = decorator.func if isinstance(decorator, ast.Call) else decorator
         name = _expression_name(expression)
         if name:
-            target, resolved = _resolve_expression(name, module, by_module_name)
+            target, resolved = _resolve_expression(name, module, by_module_name, local_modules)
             emit(
                 definition.ref,
                 target,
@@ -269,7 +277,7 @@ def _emit_semantic_edges(
             name = _expression_name(base_node)
             if not name:
                 continue
-            target, resolved = _resolve_expression(name, module, by_module_name)
+            target, resolved = _resolve_expression(name, module, by_module_name, local_modules)
             emit(
                 definition.ref,
                 target,
@@ -291,7 +299,14 @@ def _emit_semantic_edges(
         if not name:
             continue
         call_target, confidence = _resolve_call(
-            name, owner_class, module, definitions, by_module_name, classes, methods
+            name,
+            owner_class,
+            module,
+            definitions,
+            by_module_name,
+            classes,
+            methods,
+            local_modules,
         )
         resolved = call_target is not None
         emit(
@@ -307,7 +322,7 @@ def _emit_semantic_edges(
             continue
         if id(child) in call_nodes or child.id in _BUILTINS:
             continue
-        target, resolved = _resolve_expression(child.id, module, by_module_name)
+        target, resolved = _resolve_expression(child.id, module, by_module_name, local_modules)
         if resolved:
             emit(definition.ref, target, "references", definition.path, confidence=0.9)
 
@@ -320,6 +335,7 @@ def _resolve_call(
     by_module_name: dict[tuple[str, str], _Definition],
     classes: dict[str, _Definition],
     methods: dict[tuple[str, str, str], _Definition],
+    local_modules: frozenset[str],
 ) -> tuple[str | None, float]:
     if name.startswith("self.") and owner_class:
         method_name = name.split(".")[-1]
@@ -337,7 +353,7 @@ def _resolve_call(
                 if inherited:
                     return inherited.ref, 0.9
         return None, 0.35
-    target, resolved = _resolve_expression(name, module, by_module_name)
+    target, resolved = _resolve_expression(name, module, by_module_name, local_modules)
     if resolved and target in definitions:
         return target, 1.0
     if resolved and target.startswith("py://"):
@@ -349,6 +365,7 @@ def _resolve_expression(
     name: str,
     module: _ModuleInfo,
     by_module_name: dict[tuple[str, str], _Definition],
+    local_modules: frozenset[str],
 ) -> tuple[str, bool]:
     first, _, rest = name.partition(".")
     imported = module.imports.get(first)
@@ -356,6 +373,11 @@ def _resolve_expression(
         imported_module, imported_name = imported
         symbol = imported_name or rest
         if symbol:
+            known = by_module_name.get((imported_module, symbol))
+            if known:
+                return known.ref, True
+            if imported_module in local_modules:
+                return f"pyname://{symbol.rsplit('.', 1)[-1]}", False
             return f"py://{imported_module}#{symbol}", True
         return f"module://{imported_module}", True
     local = by_module_name.get((module.dotted, first))

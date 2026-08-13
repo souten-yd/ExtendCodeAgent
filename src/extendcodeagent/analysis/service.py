@@ -22,6 +22,7 @@ _SIDE_EFFECT_TYPES = frozenset({"side_effect", "resource", "api_call", "db_effec
 _REQUIREMENT_TYPES = frozenset({"requirement"})
 _TEST_TYPES = frozenset({"test"})
 _HISTORICAL_TYPES = frozenset({"incident", "risk"})
+_EXECUTABLE_TYPES = frozenset({"function", "method", "api_route", "handler"})
 _UNCERTAIN_CONFIDENCE = 0.7
 
 
@@ -201,9 +202,12 @@ class GraphAnalysisService:
             or item.path_confidence < _UNCERTAIN_CONFIDENCE
         )
 
-        side_effects = self._side_effects(
-            traversal_seeds | set(depth), query.min_confidence, query.max_depth
-        )
+        effect_roots = traversal_seeds | {
+            ref
+            for ref in depth
+            if ref in self.nodes and self.nodes[ref].node_type in _EXECUTABLE_TYPES
+        }
+        side_effects = self._side_effects(effect_roots, query.min_confidence, query.max_depth)
         explanations = tuple(
             _reverse_path(*paths[item.canonical_ref])
             for _, item in items

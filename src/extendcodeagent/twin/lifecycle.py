@@ -105,6 +105,11 @@ class TwinService:
         current = self.store.current_revision(project)
         previous_id = current.revision_id if current else None
         paths = tuple(item.path for item in source.files) if full else source.changed_paths
+        previous_snapshot = (
+            self.store.snapshot(project) if current else GraphSnapshot(project, None)
+        )
+        if self.analyzer is not None and not full:
+            paths = _dependent_paths(previous_snapshot, paths, source)
         selected = {item.path: item for item in source.files if item.path in set(paths)}
         node_by_ref = {
             f"file://{item.path}": _file_node(project, source, item) for item in selected.values()
@@ -119,9 +124,6 @@ class TwinService:
             analyzer_versions.update(analysis.analyzer_versions)
             diagnostics.extend(analysis.diagnostics)
         nodes = tuple(node_by_ref[key] for key in sorted(node_by_ref))
-        previous_snapshot = (
-            self.store.snapshot(project) if current else GraphSnapshot(project, None)
-        )
         generated_node_ids = {node.node_id for node in nodes}
         invalidations = tuple(
             node.node_id
@@ -183,6 +185,29 @@ def _matches(
         and revision.worktree_fingerprint == source.worktree_fingerprint
         and dict(revision.analyzer_versions) == analyzer_versions
     )
+
+
+def _dependent_paths(
+    snapshot: GraphSnapshot, changed_paths: tuple[str, ...], source: SourceSnapshot
+) -> tuple[str, ...]:
+    affected = set(changed_paths)
+    available = {item.path for item in source.files}
+    nodes_by_ref = {node.canonical_ref.value: node for node in snapshot.nodes}
+    while True:
+        affected_refs = {
+            node.canonical_ref.value for node in snapshot.nodes if node.source_ref in affected
+        }
+        dependents = {
+            nodes_by_ref[edge.source.value].source_ref
+            for edge in snapshot.edges
+            if edge.target.value in affected_refs
+            and edge.source.value in nodes_by_ref
+            and nodes_by_ref[edge.source.value].source_ref in available
+        }
+        additions = dependents - affected
+        if not additions:
+            return tuple(sorted(affected))
+        affected.update(additions)
 
 
 def _file_node(
