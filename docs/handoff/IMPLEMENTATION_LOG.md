@@ -46,3 +46,11 @@
   and squash-merged as `0618cd29da2e695f7babaccd931727e214f96217`.
 - Post-merge main: Ruff and strict mypy passed; unit/architecture `38 passed in 0.17s`;
   integration `5 passed in 0.21s`.
+
+## 2026-08-13 — PR-C started
+
+- Created `agent/pr-c-semantic-impact` from exact `origin/main` at `faf307d`.
+- Reviewed only the PR-C planning/migration slices and the directly relevant KasaneCore analyzers,
+  analysis service, and behavioral tests.
+- Kept OpenCode/MCP, runtime/context/test obsolescence, live models, and deep graphs out of scope.
+- Chose behavior-first curated tests before adding production analysis code.
