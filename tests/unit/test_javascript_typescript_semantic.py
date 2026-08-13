@@ -164,8 +164,7 @@ test('saves the record', async () => { save() });
 
     test_ref = "js://tests/service.spec.ts#test@2"
     assert any(
-        node.canonical_ref.value == test_ref and node.node_type == "test"
-        for node in result.nodes
+        node.canonical_ref.value == test_ref and node.node_type == "test" for node in result.nodes
     )
     assert any(
         edge.source.value == test_ref

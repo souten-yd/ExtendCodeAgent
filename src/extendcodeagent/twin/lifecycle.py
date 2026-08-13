@@ -190,9 +190,7 @@ class TwinService:
 
 
 def _prefer_full_refresh(snapshot: GraphSnapshot, affected_paths: tuple[str, ...]) -> bool:
-    module_paths = {
-        node.source_ref for node in snapshot.nodes if node.node_type == "module"
-    }
+    module_paths = {node.source_ref for node in snapshot.nodes if node.node_type == "module"}
     if not module_paths:
         return False
     affected_modules = module_paths.intersection(affected_paths)
