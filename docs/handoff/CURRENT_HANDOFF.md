@@ -2,13 +2,13 @@
 
 Updated: 2026-08-14 (Asia/Tokyo)
 
-Current branch: `agent/pr-h-closeout`
-Current PR: PR-H #16 merged; closeout PR not created
-Base commit: `fdeeb4e694fa7f416bb3ac7e92f49952d31e1767`
-Latest commit: `fdeeb4e694fa7f416bb3ac7e92f49952d31e1767` (PR-H squash merge)
-Milestone: PR-H closeout; PR-I next
-Current task: merge documentation-only closeout, then start PR-I
-Status: PR-H merged and post-merge main gates PASS
+Current branch: `agent/pr-i-research-traceability`
+Current PR: not created
+Base commit: `f3d8016b30b0d7fa1972a1ee5bcb108f8f1148c8`
+Latest commit: `f3d8016b30b0d7fa1972a1ee5bcb108f8f1148c8` (PR-H closeout merge)
+Milestone: PR-I Research/Evidence/Traceability/project convergence
+Current task: inspect existing contracts/callers/tests and KasaneCore domain behavior
+Status: PR-I started; search-first classification in progress
 
 Completed:
 - added official tree-sitter JavaScript/TypeScript/TSX parsing dependencies;
@@ -55,7 +55,7 @@ Completed:
 - verified frontier failure is reported unavailable for all 18 attempts, not as an empty success.
 
 In progress:
-- documentation-only PR-H closeout publication/merge.
+- bounded PR-I design delta and behavior inventory.
 
 Not started:
 - PR-I Research/Evidence/Traceability/project convergence;
@@ -119,19 +119,20 @@ Known limitations: local-low is stochastic; active is not made default; stable O
 a per-request max-output field; host cache tokens must not be conflated with new input. PR-H's
 current JS/TS analyzer builds a transient cross-file index; broad dependency closures therefore
 select full refresh. A persisted symbol index remains a future optimization, not a PR-H requirement.
-Uncommitted work: PR-H closeout documentation only.
+Uncommitted work: this PR-I task-start handoff update only.
 Temporary work: evaluation-only Ollama `qwen3:0.6b` remains installed; no temporary repo files.
 
-Next exact action: commit/push/create/merge PR-H closeout, fast-forward main, create
-`agent/pr-i-research-traceability`, update handoff at task start, then inspect bounded PR-I sources.
+Next exact action: commit this task-start update, inspect bounded PR-I sources/tests and corresponding
+KasaneCore domain behavior, record REUSE/ADAPT/CONSOLIDATE/NEW/DO NOT PORT, then add red tests.
 Next files: PR-I plan/audit slices, current evidence/convergence/storage/adapter contracts and tests.
 Next commands:
 
 ```bash
 cd /home/souten/ExtendCodeAgent
 git status --short
-git push -u origin agent/pr-h-closeout
+git status --short
+rg -n "Evidence|Claim|Research|Traceability|Requirement" src tests
 ```
 
-Rollback path: closeout is documentation-only; PR-H implementation is merged at `fdeeb4e`. Revert
-the closeout commit only if its status metadata is wrong. Do not rewrite PR-B through PR-H.
+Rollback path: switch to main; PR-H closeout is `f3d8016`. PR-I changes stay isolated on this branch.
+Do not rewrite PR-B through PR-H.
