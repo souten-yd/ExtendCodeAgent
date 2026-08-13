@@ -129,3 +129,20 @@ external edit as distinct immutable revisions, stabilized without a loop, preser
 through restart, and left the revision count unchanged in off mode. Alternating three-run startup
 medians were 1,046 ms native and 1,070 ms plugin-enabled (+24 ms); one native sample was a 1,609 ms
 outlier, so these values are retained as smoke evidence rather than treated as a stable distribution.
+
+## 2026-08-13 — PR-E runtime, test, and context migration boundary
+
+Classification after inspecting the PR-E plan, migration audit, KasaneCore runtime reconciliation/
+collectors, context/query tests, and current ExtendCodeAgent call paths:
+
+- ADAPT revision-matched verification, explicit unavailable/failed/observed results, collector
+  failure normalization, bounded context, inclusion reasons, and stale/contradicted labeling.
+- CONSOLIDATE observation identity, source/Twin revision, canonical refs, confidence, provenance,
+  and evidence with existing host-neutral contracts and immutable Graph snapshots.
+- NEW a dedicated Test Obsolescence engine with healthy/suspect/stale/obsolete/missing/redundant
+  states; file age alone is not evidence and no state authorizes automatic deletion.
+- DO NOT PORT KasaneCore Pydantic/Atlas DTOs, execution runners, PlanPool adapters, or application
+  context packaging.
+
+PR-E uses deterministic algorithms and the existing CapabilityPolicy. Model summarization/routing,
+Blueprint/Convergence, and JS/TS semantic expansion remain later independent milestones.

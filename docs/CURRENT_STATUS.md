@@ -4,7 +4,7 @@ Status date: 2026-08-13
 
 ## Program state
 
-Overall: **PR-D OPENCode/MCP COMPLETE — PR-E NOT STARTED**
+Overall: **PR-E CONTEXT/TEST/RUNTIME IN PROGRESS**
 
 The project now contains the strategic planning baseline plus a working Python host-neutral
 foundation. PR-A provides shared immutable contracts, centralized JSON/JSONC configuration,
@@ -46,7 +46,7 @@ adapters, local validation scripts, and architecture-boundary tests.
 | PR-B | graph revision/store/source snapshot | complete |
 | PR-C | structural/Python semantic/path/impact | complete |
 | PR-D | OpenCode adapter + MCP advisory integration | complete |
-| PR-E | context/test intelligence/runtime ingest | not started |
+| PR-E | context/test intelligence/runtime ingest | in progress |
 | PR-F | Blueprint + task-level Convergence | not started |
 | PR-G | live model routing + Strategy | not started |
 | PR-H | JS/TS/framework/deep graph expansion | not started |
@@ -54,7 +54,8 @@ adapters, local validation scripts, and architecture-boundary tests.
 
 ## Immediate next action
 
-Begin PR-E only after the PR-D docs closeout is merged. PR-C provides
+Implement the behavior-first PR-E runtime freshness, test selection/health, and bounded context
+slice from exact closeout main. PR-C provides
 deterministic structural/Python AST facts, analyzer-owned Python alias resolution, persisted
 dependency-aware refresh, bounded path/impact traversal, weakest-link confidence, uncertainty,
 explanations, and test-candidate projection. Curated FP/FN review and real-repository repeated-query

@@ -119,3 +119,13 @@
   `6 passed in 4.26s`; Python integration `9 passed in 0.43s`; repeated adapter `6 passed in 4.26s`.
 - PR-D closeout documentation worktree: all-fast passed with Python `49 passed in 0.34s` and
   adapter `6 passed in 4.26s`.
+
+## 2026-08-13 — PR-E started
+
+- PR-D closeout PR #9 merged as `01efc16b`; post-closeout main all-fast passed with Python
+  `49 passed in 0.28s` and adapter `6 passed in 4.26s`; package and TypeScript builds passed.
+- Created `agent/pr-e-context-test-runtime` from exact `01efc16b`.
+- Read the bounded PR-E plan/audit sections and inspected KasaneCore runtime reconciliation,
+  collectors, context broker/query behavior, and direct tests before writing production code.
+- Chose ADAPT for truthful revision-aware runtime/context behavior, CONSOLIDATE for existing target
+  contracts, NEW for Test Obsolescence, and DO NOT PORT for Atlas runners/application DTOs.
