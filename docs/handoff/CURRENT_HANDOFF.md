@@ -7,7 +7,7 @@ Current PR: not created
 Base commit: `7b1fb759365cc8dc6e57ad1da9a2870307ac60c8`
 Latest commit: `7b1fb75` (PR-F closeout merge)
 Milestone: PR-G live Model Routing + Strategy
-Current task: capture behavior-first adaptive routing/live adapter/Strategy contracts
+Current task: implement the adaptive routing/live adapter/Strategy contracts fixed by red tests
 Status: in progress
 
 Completed:
@@ -18,10 +18,13 @@ Completed:
 - inspected the existing PR-A `PolicyModelRouter`, contracts, fakes, config, and routing tests;
 - verified installed OpenCode 1.18.18 and current official provider/model guidance: stable V1 uses
   `provider` plus `@ai-sdk/openai-compatible`; session prompt selects `{providerID, modelID}`.
+- added behavior-first tests for deterministic adaptive risk/privacy routing, OpenAI-compatible
+  structured chat completions, stable OpenCode session/model payloads, evidence-derived Strategy
+  scoring, bounded synthesis payload, and absence of generic fallback alternatives;
+- confirmed the initial focused red gate fails only for the not-yet-implemented target contracts.
 
 In progress:
-- define deterministic adaptive signals, execution metrics, live adapter boundaries, and evidence-
-  based Strategy behavior before implementation.
+- implement the minimum contracts/adapters/Strategy service behind the committed tests.
 
 Not started:
 - live OpenAI-compatible and OpenCode host adapters;
@@ -47,22 +50,22 @@ Out of scope:
 - Research/Traceability/project convergence (PR-I);
 - replacing OpenCode Plan/runtime or adding GitHub CI.
 
-Files changed: handoff task-start update only.
-Files currently being edited: behavior-first PR-G tests next.
-Exact tests executed: base `tools/local/all-fast`; base `tools/local/build`.
+Files changed: handoff plus behavior-first routing/live-adapter/Strategy tests.
+Files currently being edited: model-routing contracts/router/adapters and new Strategy package.
+Exact tests executed: base gates; focused PR-G red pytest.
 Exact results: PASS; Python 75 passed in 0.60s, adapter 9 passed, Ruff/format/mypy and builds PASS.
 Benchmark results: not started.
 OpenCode version: 1.18.18.
 Model/provider: none yet in PR-G.
 Routing profile: to be exercised across configured modes; existing fake tests cover baseline modes.
-Known failures: none in PR-G.
+Known failures: focused PR-G tests fail collection for expected missing target contracts/modules.
 Known limitations: current router treats adaptive as local-first and has no live adapters or metrics;
 Strategy Core does not exist yet.
-Uncommitted work: task-start handoff update only.
+Uncommitted work: behavior-first tests and red-gate handoff update.
 Temporary work: none.
 
-Next exact action: inspect stable SDK request/response payloads and local endpoint availability, then
-add behavior-first adaptive routing/live adapter/Strategy tests before production implementation.
-Next files: `tests/unit/test_model_routing.py`, new Strategy tests, existing model-routing package.
-Next commands: inspect official SDK/current local service; add tests; run focused red pytest.
+Next exact action: implement AdaptiveSignals/router ordering, transport-injected live adapters, and
+deterministic Strategy contracts/service; run focused tests before real endpoints.
+Next files: existing model-routing package and new `src/extendcodeagent/strategy/`.
+Next commands: implement; run Ruff/mypy/focused pytest; then real adapter conformance.
 Rollback path: discard/revert only this branch; merged PR-F remains intact on main.

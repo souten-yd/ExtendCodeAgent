@@ -1,0 +1,61 @@
+from __future__ import annotations
+
+from extendcodeagent.core.config.schema import ModelRole
+from extendcodeagent.core.model_routing import (
+    ModelRequest,
+    OpenAICompatibleAdapter,
+    OpenCodeHostAdapter,
+)
+
+
+def test_openai_compatible_adapter_uses_bounded_chat_completion_contract() -> None:
+    calls: list[tuple[str, dict[str, object], dict[str, str]]] = []
+
+    def transport(
+        url: str, payload: dict[str, object], headers: dict[str, str]
+    ) -> dict[str, object]:
+        calls.append((url, payload, headers))
+        return {
+            "choices": [{"message": {"content": '{"answer":"ok"}'}}],
+            "usage": {"prompt_tokens": 12, "completion_tokens": 4},
+        }
+
+    adapter = OpenAICompatibleAdapter(
+        "http://127.0.0.1:11434/v1", "qwen", transport=transport
+    )
+    response = adapter.complete(
+        ModelRequest(
+            ModelRole.SMALL_STRUCTURED,
+            "one focused question",
+            requires_structured_output=True,
+        )
+    )
+    assert calls[0][0].endswith("/chat/completions")
+    assert calls[0][1]["response_format"] == {"type": "json_object"}
+    assert response.text == '{"answer":"ok"}'
+    assert (response.input_tokens, response.output_tokens) == (12, 4)
+
+
+def test_opencode_host_adapter_uses_stable_session_model_contract() -> None:
+    calls: list[tuple[str, str, dict[str, object] | None]] = []
+
+    def transport(
+        method: str, path: str, payload: dict[str, object] | None
+    ) -> dict[str, object]:
+        calls.append((method, path, payload))
+        if path == "/session":
+            return {"id": "session-1"}
+        return {
+            "info": {"tokens": {"input": 8, "output": 3}},
+            "parts": [{"type": "text", "text": "host answer"}],
+        }
+
+    adapter = OpenCodeHostAdapter(
+        "http://127.0.0.1:4096", "opencode", "big-pickle", transport=transport
+    )
+    response = adapter.complete(ModelRequest(ModelRole.STRATEGY_REASONER, "bounded strategy"))
+    message = calls[1][2]
+    assert isinstance(message, dict)
+    assert message["model"] == {"providerID": "opencode", "modelID": "big-pickle"}
+    assert response.text == "host answer"
+    assert (response.input_tokens, response.output_tokens) == (8, 3)
