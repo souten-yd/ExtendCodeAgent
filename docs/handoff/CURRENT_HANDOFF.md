@@ -5,9 +5,9 @@ Updated: 2026-08-13 (Asia/Tokyo)
 Current branch: `agent/pr-f-blueprint-convergence`
 Current PR: not created
 Base commit: `f14cfb088f7f51539f3685350d0ec503ec29d7c1`
-Latest commit: `1a657ba` (PR-F behavior-first tests)
+Latest commit: `eebf823` (Blueprint and task convergence implementation)
 Milestone: PR-F Blueprint + task-level Convergence
-Current task: commit the passing Blueprint/Convergence domain, durability, and policy integration
+Current task: commit benchmark/evidence, then run exact-head final gates
 Status: in progress
 
 Completed:
@@ -29,12 +29,14 @@ Completed:
 - proved planned targets do not become Actual Graph nodes and off mode creates no database;
 - passed focused domain/store tests, Ruff/format/strict mypy, full Python 75 tests, and adapter 9
   tests.
+- ran the reproducible 200-element benchmark: lifecycle 16.0006 ms, evaluation p50 0.2452 ms,
+  restart 1.9422 ms, DB 241,664 bytes, max RSS 23,772 KiB, decision `complete`.
 
 In progress:
-- record the architecture decision and commit the passing vertical slice.
+- commit reproducible benchmark/evidence and status, then run final gates on that head.
 
 Not started:
-- bounded deterministic benchmark, exact-head integration/build evidence, publication.
+- exact-head integration/build evidence and publication.
 
 Architecture classification:
 - ADAPT immutable Blueprint revision/lifecycle and convergence evaluator/policy semantics;
@@ -62,17 +64,19 @@ Exact tests executed: base gates; focused red pytest; focused domain/store pytes
 Ruff/mypy; post-integration `tools/local/all-fast`.
 Exact results: focused 10 passed; final fast gate Ruff/format/mypy PASS, Python `75 passed in
 0.95s`, adapter `9 passed` in 4.56s.
-Benchmark results: not started.
+Benchmark results: 200 elements; lifecycle 16.0006 ms; evaluation p50 0.2452 ms, p95 0.3129 ms;
+restart 1.9422 ms; DB 241,664 bytes; max RSS 23,772 KiB; complete.
 OpenCode version: not applicable to PR-F; last verified 1.18.18 in PR-E.
 Model/provider: none; PR-F deterministic domain work does not use a model.
 Routing profile: not applicable.
 Known failures: initial red gate failed only for missing target modules; resolved by implementation.
 Known limitations: PR-F is task-level only; project-level convergence remains PR-I.
-Uncommitted work: passing domain/store/application implementation and documentation update.
+Uncommitted work: benchmark harness, compact evidence, status and handoff update.
 Temporary work: none.
 
-Next exact action: commit this passing slice, add a bounded reproducible PR-F benchmark, record
-compact evidence, then run integration/build/final gates.
-Next files: `tools/local/pr_f_benchmark.py`, `docs/evidence/pr-f/`, handoff/status.
-Next commands: commit; implement benchmark; run benchmark, integration, all-fast, build.
+Next exact action: commit benchmark/evidence, then run integration, all-fast, build, inspect diff,
+publish PR-F, verify remote head, and merge.
+Next files: evidence/handoff, then PR metadata.
+Next commands: commit; `tools/local/test-integration`; `tools/local/all-fast`; `tools/local/build`;
+push; create PR; verify; merge.
 Rollback path: discard/revert only this branch; merged PR-E remains intact on main.

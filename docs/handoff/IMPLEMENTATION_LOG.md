@@ -162,3 +162,8 @@
   12 tests passed, and Python package plus TypeScript build passed.
 - PR #10 remote head `571bd86` matched the published branch and was mergeable with no GitHub CI;
   it squash-merged to `main` as `fbdfcbd3864a3c46b76cc9ff10d77a57639258a6`.
+- PR-F behavior-first contracts were committed red, then implemented as immutable Blueprint
+  payload/lifecycle plus schema-independent task Convergence, shared SQLite durability, application
+  projection, and centralized policy guards. Full fast gate passed 75 Python and 9 adapter tests.
+- PR-F 200-element benchmark: lifecycle 16.0006 ms, convergence p50 0.2452 ms/p95 0.3129 ms,
+  restart 1.9422 ms, DB 241,664 bytes, max RSS 23,772 KiB, decision `complete`.

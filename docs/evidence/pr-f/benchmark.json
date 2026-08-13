@@ -1,0 +1,19 @@
+{
+  "commit": "eebf823aa8c61a291156109bd46d2e05d8fee5b6",
+  "database_bytes": 241664,
+  "decision": "complete",
+  "elements": 200,
+  "environment": {
+    "os": "Linux 7.0.0-28-generic x86_64",
+    "python": "3.12.3"
+  },
+  "evaluation": {
+    "max_ms": 0.6245,
+    "min_ms": 0.2203,
+    "p50_ms": 0.2452,
+    "p95_ms": 0.3129
+  },
+  "lifecycle_ms": 16.0006,
+  "max_rss_kib": 23772,
+  "restart_ms": 1.9422
+}
