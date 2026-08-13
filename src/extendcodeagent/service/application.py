@@ -246,8 +246,14 @@ class ProjectIntelligenceApplication:
         tool: str | None = None,
         summary: str = "",
         source_revision: str | None = None,
+        automatic: bool = True,
     ) -> dict[str, Any]:
-        if not self.policy.is_enabled(CapabilityName.RUNTIME):
+        allowed = (
+            self.policy.computes_automatically(CapabilityName.RUNTIME)
+            if automatic
+            else self.policy.allows_explicit_use(CapabilityName.RUNTIME)
+        )
+        if not allowed:
             return {"accepted": False, "observation_id": observation_id}
         current_revision = self._current_source_revision()
         revision = (

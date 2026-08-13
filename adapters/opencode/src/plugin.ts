@@ -2,6 +2,7 @@ import { join, resolve } from "node:path"
 import type { Plugin } from "@opencode-ai/plugin"
 
 import { SidecarClient } from "./client.js"
+import { ToolObservationNormalizer } from "./observations.js"
 import { workspacePath } from "./paths.js"
 import { CoalescingEventQueue } from "./queue.js"
 import { createTools } from "./tools.js"
@@ -24,6 +25,7 @@ const ExtendCodeAgentPlugin: Plugin = async ({ directory, worktree }) => {
       // Expected adapter errors must not break native OpenCode behavior.
     }
   })
+  const observations = new ToolObservationNormalizer()
   const watcher = startWatcher(client, root, queue)
 
   return {
@@ -40,10 +42,17 @@ const ExtendCodeAgentPlugin: Plugin = async ({ directory, worktree }) => {
       }
     },
     "tool.execute.before": async (input) => {
+      observations.before(input)
       queue.enqueue("tool.execute.before")
     },
-    "tool.execute.after": async (input) => {
+    "tool.execute.after": async (input, output) => {
       queue.enqueue("tool.execute.after")
+      const observation = observations.after(input, output)
+      if (observation) {
+        void client.request("runtime_ingest", observation).catch(() => {
+          // Runtime evidence capture must not break native tool execution.
+        })
+      }
     },
     tool: createTools((operation, params) => client.request(operation, params)),
     dispose: async () => {

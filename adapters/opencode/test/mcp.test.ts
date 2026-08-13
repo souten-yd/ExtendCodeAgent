@@ -27,7 +27,16 @@ test("MCP stdio handshake lists and calls the shared tools", async () => {
     const tools = await client.listTools()
     assert.deepEqual(
       tools.tools.map((item) => item.name).sort(),
-      ["pi_impact", "pi_path", "pi_references", "pi_status", "pi_symbol", "pi_tests"],
+      [
+        "pi_context",
+        "pi_impact",
+        "pi_path",
+        "pi_references",
+        "pi_runtime_evidence",
+        "pi_status",
+        "pi_symbol",
+        "pi_tests",
+      ],
     )
     const response = (await client.callTool({
       name: "pi_symbol",

@@ -45,14 +45,18 @@ Completed:
 - integrated context, runtime ingest/evidence, confidence fallback, and test health into the one
   existing Project Intelligence application/store;
 - verified a matching-revision green test becomes stale after an active source refresh, while off
-  mode remains inert and creates no database.
+  mode remains inert and creates no database;
+- exposed strict sidecar operations for context, runtime ingest, and runtime evidence;
+- added stable plugin/MCP `pi_context` and `pi_runtime_evidence` tools plus adapter-only tool-result
+  normalization that never infers passed from output presence, never stores output text, and avoids
+  recursive evidence for `pi_*` tools.
 
 In progress:
-- review/commit durable application integration, then add versioned sidecar operations and the
-  stable OpenCode tool-result normalization adapter.
+- commit the sidecar/adapter slice, then extend the model-free real OpenCode smoke and add
+  deterministic real-project context/test benchmarks.
 
 Not started:
-- sidecar/plugin integration, real OpenCode PR-E evidence, benchmarks, A/B, publication.
+- real OpenCode PR-E evidence, benchmarks/A-B report, publication.
 
 Important architecture decisions:
 - ADAPT KasaneCore revision matching, truthful unavailable semantics, and bounded context behavior.
@@ -69,30 +73,30 @@ Important invariants:
 - obsolescence is evidence/revision/impact based, never file-age-only, and never deletes tests;
 - context is bounded, explains inclusion, and preserves revision/provenance/confidence.
 
-Files changed: PR-E domain packages/tests, observation schema/store, application integration,
+Files changed: PR-E domains/store/application, sidecar, stable plugin/MCP tools, adapter tests,
 architecture boundary, and handoff.
-Files currently being edited: durable application slice handoff before commit.
+Files currently being edited: sidecar/adapter slice handoff before commit.
 
 Exact tests executed: base `tools/local/all-fast`; base `tools/local/build`; focused PR-E pytest;
 post-domain `tools/local/all-fast`; focused store/application pytest; post-integration
 `tools/local/all-fast`; `tools/local/test-integration`.
 Exact results: pure-domain focused `12 passed`; store/application focused `8 passed`; Ruff/mypy
 PASS; Python `63 passed in 0.43s`; adapter `6 passed in 4.27s`; Python integration `11 passed in
-0.60s`; repeated adapter `6 passed in 4.27s`; base build PASS.
+0.60s`; sidecar/adapter all-fast Python `63 passed in 0.43s`, adapter `9 passed in 4.27s`;
+integration `12 passed in 1.18s`, repeated adapter `9 passed in 4.27s`; base build PASS.
 Benchmark results: none yet for PR-E.
 OpenCode version: 1.18.18 (carried from verified PR-D install; not yet exercised for PR-E).
 Model/provider: none.
 Routing profile: not applicable; live routing is out of scope.
 Known failures: none yet.
-Known limitations: sidecar/OpenCode cannot yet submit/query PR-E operations; context currently
-projects Graph nodes only and Test Obsolescence has no persisted report cache (it is recomputed).
-Uncommitted work: coherent durable observation/application slice and this handoff update.
+Known limitations: stable `tool.execute.after` has no guaranteed explicit exit status, so unknown
+outcomes remain `observed`; context currently projects Graph nodes only and health is recomputed.
+Uncommitted work: coherent sidecar/stable-adapter slice and this handoff update.
 Temporary work: none.
 
-Next exact action: commit the durable integration slice, then add sidecar request tests for runtime
-ingest/evidence/context and adapter conformance tests for stable tool-result normalization.
-Next files: `src/extendcodeagent/adapters/local_sidecar.py`, `tests/integration/test_local_sidecar.py`,
-then `adapters/opencode/src/` and adapter tests.
-Next commands: `git diff --check`; commit; add failing sidecar tests; implement strict parsing;
-inspect stable hook metadata and normalize unknown outcomes as observed, never passed.
+Next exact action: commit the adapter slice, extend the real OpenCode smoke to assert eight tools
+and persisted stable-host runtime observation semantics, then add a reproducible PR-E benchmark.
+Next files: `tools/local/opencode_smoke.py`, `docs/evidence/pr-e/`, and a bounded benchmark script.
+Next commands: `git diff --check`; commit; patch smoke assertions; run real OpenCode; inspect actual
+observation status/revision; record compact evidence; benchmark context/test selection.
 Rollback path: revert PR-E commits or delete this branch; merged PR-D remains unaffected.

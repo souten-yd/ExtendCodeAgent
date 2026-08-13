@@ -139,3 +139,8 @@
 - Verified fresh green to stale after source refresh and off-mode inertness. Focused `8 passed`;
   all-fast Python `63 passed in 0.43s`, adapter `6 passed in 4.27s`; integration `11 passed in
   0.60s`, repeated adapter `6 passed in 4.27s`.
+- Added strict sidecar context/runtime operations, two stable plugin/MCP query tools, and adapter-only
+  tool observation normalization. Unknown stable-host outcomes remain observed, explicit exit
+  metadata controls pass/fail, output text is not persisted, and `pi_*` calls do not recurse.
+- Sidecar/adapter gate: all-fast Python `63 passed in 0.43s`, adapter `9 passed in 4.27s`;
+  integration `12 passed in 1.18s`, repeated adapter `9 passed in 4.27s`.

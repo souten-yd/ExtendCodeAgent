@@ -16,17 +16,28 @@ from extendcodeagent.service import ProjectIntelligenceApplication
 from extendcodeagent.service.application import INTERFACE_VERSION
 
 
-def _application(root: Path, database: Path) -> ProjectIntelligenceApplication:
+def _application(
+    root: Path, database: Path, *, mode: str = "advisory"
+) -> ProjectIntelligenceApplication:
     resolved = ConfigResolver().resolve(
         ConfigLayer(
             "test",
             {
                 "project_intelligence": {
                     "enabled": True,
-                    "mode": "advisory",
+                    "mode": mode,
                     "capabilities": {
-                        name: "advisory"
-                        for name in ("graph", "twin", "semantic", "impact", "test_selection")
+                        name: mode
+                        for name in (
+                            "graph",
+                            "twin",
+                            "semantic",
+                            "impact",
+                            "test_selection",
+                            "test_obsolescence",
+                            "runtime",
+                            "context",
+                        )
                     },
                 }
             },
@@ -87,3 +98,59 @@ def test_sidecar_round_trip_and_interface_rejection(tmp_path: Path) -> None:
         server.shutdown()
         server.server_close()
         thread.join(timeout=5)
+
+
+def test_sidecar_context_runtime_ingest_and_evidence_round_trip(tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / "service.py").write_text("def leaf():\n    return 1\n", encoding="utf-8")
+    server = LocalApiServer(_application(root, tmp_path / "graph.db", mode="active"), "secret")
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        context = _request(
+            server,
+            "secret",
+            {
+                "interface": INTERFACE_VERSION,
+                "operation": "context",
+                "params": {
+                    "objective": "inspect leaf",
+                    "target_refs": ["py://service#leaf"],
+                    "profile": "weak",
+                },
+            },
+        )
+        ingest = _request(
+            server,
+            "secret",
+            {
+                "interface": INTERFACE_VERSION,
+                "operation": "runtime_ingest",
+                "params": {
+                    "observation_id": "tool-call-1",
+                    "kind": "runtime",
+                    "status": "observed",
+                    "started_at": "2026-08-13T00:00:00+00:00",
+                    "finished_at": "2026-08-13T00:00:01+00:00",
+                    "observed_refs": ["py://service#leaf"],
+                    "tool": "shell",
+                },
+            },
+        )
+        evidence = _request(
+            server,
+            "secret",
+            {
+                "interface": INTERFACE_VERSION,
+                "operation": "runtime_evidence",
+                "params": {"refs": ["py://service#leaf"]},
+            },
+        )
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+    assert context["result"]["items"][0]["why_included"] == "target_ref"
+    assert ingest["result"]["accepted"] is True
+    assert evidence["result"]["items"][0]["status"] == "observed"
