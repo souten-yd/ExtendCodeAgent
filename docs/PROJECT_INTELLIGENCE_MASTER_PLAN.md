@@ -11,6 +11,8 @@ Extend OpenCode without forking or deeply modifying OpenCode core by adding a po
 
 OpenCode remains the agent runtime. ExtendCodeAgent supplies project understanding and decision intelligence.
 
+The extension must work across a wide model spectrum: weak/low-context local LLMs, practical local coding models, OpenCode's configured host model, and frontier reasoning/coding models. Project Intelligence must therefore move as much work as practical into deterministic analysis and provide a configurable model-routing layer rather than assuming one model tier.
+
 ```text
 OpenCode
   ├─ models / providers
@@ -35,7 +37,8 @@ Project Intelligence Core (host-independent)
   ├─ Strategy Planner
   ├─ Execution Planning support
   ├─ Convergence / Replanning
-  └─ Requirement / Evidence Traceability
+  ├─ Requirement / Evidence Traceability
+  └─ Model Routing / Capability Policy
 ```
 
 The project MUST NOT become an OpenCode fork. Any OpenCode-specific API use belongs behind a thin adapter package.
@@ -43,7 +46,7 @@ The project MUST NOT become an OpenCode fork. Any OpenCode-specific API use belo
 ## 2. Architectural principles
 
 1. **Host independence** — Core packages do not import OpenCode APIs.
-2. **Ports and adapters** — OpenCode, MCP, CLI, Git, LSP, test runners, research, memory, and storage integrate through explicit ports.
+2. **Ports and adapters** — OpenCode, MCP, CLI, Git, LSP, test runners, research, memory, storage, and LLM providers integrate through explicit ports.
 3. **Revision-aware truth** — every Project Graph/Twin result identifies the source/worktree revision from which it was derived.
 4. **Actual versus planned separation** — planned Blueprint objects never masquerade as existing code facts.
 5. **Evidence over inference** — static inference, runtime observation, tests, external research, and user decisions retain distinct provenance and confidence.
@@ -52,6 +55,8 @@ The project MUST NOT become an OpenCode fork. Any OpenCode-specific API use belo
 8. **Compatibility isolation** — OpenCode API changes are absorbed in `adapters/opencode/*`; core schemas remain stable.
 9. **Truthful degradation** — unavailable analysis is `unavailable/degraded`, never silently treated as passed or verified.
 10. **Measured rollout** — off -> shadow -> advisory -> active gates, with parity/regression measurement and rollback.
+11. **Model-tier independence** — no core capability requires a frontier model; weak local models receive smaller structured tasks and deterministic evidence.
+12. **Explainable routing** — model/provider escalation and fallback are policy-driven, configurable, observable, and privacy-aware.
 
 ## 3. OpenCode integration strategy
 
@@ -73,12 +78,14 @@ packages/
   convergence-core/        # actual-vs-target matching, progress, recovery decisions
   research-core/           # research plans, evidence, claim/source quality
   traceability-core/       # requirement -> evidence chain
+  model-routing/           # provider-independent logical roles and policies
   storage-sqlite/          # initial durable storage adapter
   analyzers-python/
   analyzers-js-ts/
   analyzers-frameworks/
   adapters-opencode-v1/
   adapters-opencode-v2/
+  adapters-llm/
   mcp-server/
   cli/
 ```
@@ -112,6 +119,7 @@ Scoring: 100 = highest strategic value for extending OpenCode. Priority also con
 | Test coverage/evidence graph | 90 | A+ | Basis of stale-test detection and confidence. |
 | Runtime Intelligence | 89 | A+ | Converts tool/test execution into durable project evidence. |
 | Dependency-aware plan compiler | 89 | A+ | Orders execution using real dependencies while retaining OpenCode planning UX. |
+| Model routing / tier adaptation | 89 | A+ | Makes the same intelligence usable with weak local models and frontier models without hard-coding providers. |
 | State/event/recovery graph | 88 | A | Critical for workflow/job/session/retry-heavy systems. |
 | Requirement traceability | 87 | A | Preserves intent through planning, code, tests, and evidence. |
 | Risk Intelligence | 86 | A | Combines impact, uncertainty, history, and runtime evidence. |
@@ -212,157 +220,37 @@ Keep four responsibilities distinct:
 
 Strategy alternatives should be scored using project impact, test burden, compatibility, migration complexity, rollbackability, performance, maintainability, uncertainty, runtime evidence and optional external research.
 
+Model use in Strategy is tier-aware. Weak local models should receive smaller bounded decisions and deterministic metrics; frontier models may perform broader synthesis. The deterministic evidence and scoring inputs remain the same across model tiers so evaluation is comparable.
+
 Convergence states should include absent/partial/materialized/observed/verified/divergent/blocked/stale and return bounded decisions such as continue, complete, repair current scope, replan downstream, revise blueprint, request decision, or halt unsafe.
 
 ## 9. Research Intelligence
 
-Do not duplicate OpenCode's basic web tools. Add a research orchestration/evidence layer with:
+Do not duplicate OpenCode's basic web tools. Add a research orchestration/evidence layer with provider-independent Search/Fetch/Evidence ports. Search/fetch and synthesis model routing are separate concerns. Research may use local synthesis, host models, or frontier models according to configuration and privacy policy.
 
-- research intent and query planning;
-- quick/standard/deep/exhaustive budgets;
-- official/primary-source preference policies;
-- source type/quality scoring;
-- claim-level evidence and citation records;
-- adaptive retrieval when source/evidence targets are not met;
-- duplicate/failure/replenishment handling;
-- explicit unavailable/insufficient state;
-- reusable evidence store;
-- optional project relevance links into the graph.
+## 10. Model routing target
 
-External claims never automatically become verified code truth.
+Define logical model roles rather than hard-coded names:
 
-## 10. OpenCode-specific adapter responsibilities
+```text
+fast_classifier
+small_structured
+summarizer
+code_reasoner
+strategy_reasoner
+research_synthesizer
+verification_reviewer
+fallback
+```
 
-The adapter owns all host-specific knowledge:
+Roles map to configured endpoints such as OpenCode host models, OpenAI-compatible local endpoints, or remote/frontier providers. Required routing modes include manual, local-first, frontier-first, cost-optimized, latency-optimized, quality-optimized, adaptive, host-only, and local-only.
 
-- map worktree/project/session identity to generic `HostProjectRef`;
-- subscribe to file/watcher/LSP/session/tool events;
-- capture test/build/tool outcomes into generic runtime observations;
-- expose Project Intelligence queries as OpenCode tools and/or MCP tools;
-- optionally augment the model request/context using supported hooks;
-- expose commands for status, impact, tests, research, blueprint, strategy, convergence;
-- map OpenCode permissions to generic capability/authority checks;
-- never let plugin failures corrupt OpenCode session/tool results;
-- support both current stable plugin APIs and V2 beta through separate adapters/compatibility tests.
+Routing must consider endpoint capabilities, context limits, privacy rules, task complexity, uncertainty, cost/latency budgets, and user policy. Escalation/fallback decisions must be observable and explainable. No silent remote escalation is allowed when policy forbids it.
 
-Important OpenCode API risk: V2 plugin APIs are beta and explicitly subject to entrypoint/hook/shape changes. The V2 adapter therefore MUST be replaceable and version-gated. Core contracts MUST NOT import `@opencode-ai/plugin` types.
+Weak local-model mode emphasizes deterministic graph queries, small structured context, explicit schemas, and single-purpose calls. Frontier mode may use richer synthesis but cannot bypass deterministic evidence/verification rules.
 
-## 11. Initial public tool surface
+## 11. Implementation and validation governance
 
-Prefer coarse, task-oriented tools rather than exposing internal graph tables:
+The detailed implementation order, local-only validation strategy, real OpenCode/LLM A/B matrix, configuration model, CI restrictions, PR boundaries, and Codex token-efficiency rules are defined in `docs/IMPLEMENTATION_EXECUTION_LOCAL_VALIDATION_PLAN.md` and `docs/CODEX_IMPLEMENTATION_GUIDE.md`.
 
-- `pi.status`
-- `pi.context`
-- `pi.symbol`
-- `pi.references`
-- `pi.path`
-- `pi.impact`
-- `pi.tests`
-- `pi.test_health`
-- `pi.runtime_evidence`
-- `pi.blueprint`
-- `pi.strategy`
-- `pi.convergence`
-- `pi.research`
-
-Detailed graph traversal remains available through bounded query options but should not force the model to understand internal storage schemas.
-
-## 12. Migration / implementation waves
-
-### Wave 0 — Contracts and compatibility harness
-
-- define host-neutral IDs, revisions, provenance, diagnostics and evidence contracts;
-- define ports for filesystem/git/LSP/runtime/research/memory/clock/storage;
-- build OpenCode stable + V2 adapter smoke tests;
-- establish benchmark repositories and latency/token baselines.
-
-Exit: core packages compile/test without OpenCode installed.
-
-### Wave 1 — Project Graph + Twin foundation
-
-- port/adapt KasaneCore graph/store/source snapshot concepts;
-- structural + Python semantic graph;
-- immutable revisions and incremental file invalidation;
-- `pi.status`, `pi.symbol`, `pi.references`.
-
-Exit: changing a file produces a new Twin revision and stale prior context is detectable.
-
-### Wave 2 — Impact, context and test selection
-
-- path/impact engine;
-- bounded context packaging;
-- related/recommended tests with explanation/provenance;
-- OpenCode tools and request integration.
-
-Exit: impact/test/context results outperform baseline grep/LSP-only workflow on benchmark tasks.
-
-### Wave 3 — Runtime + Test Intelligence
-
-- normalize test/build/tool observations;
-- coverage/trace adapters;
-- static/runtime reconciliation;
-- stale/obsolete/missing/redundant test health.
-
-Exit: test evidence is revision-aware and stale-test scenarios are detected.
-
-### Wave 4 — Blueprint + Strategy + Convergence
-
-- host-neutral Blueprint revisions;
-- strategy alternatives/tradeoff scoring;
-- dependency-aware execution envelope;
-- convergence/replan decisions;
-- requirement/evidence trace.
-
-Exit: existing-project feature E2E proves requirement -> target -> plan support -> code -> verification -> evidence -> convergence.
-
-### Wave 5 — Deep graphs and full-stack analysis
-
-- CFG/DFG;
-- state/event/recovery;
-- side-effect/resource;
-- API/schema/DB;
-- UI/rendering;
-- analyzer capability declarations and on-demand scheduling.
-
-Exit: deep graph benchmarks prove useful precision without unacceptable latency/storage growth.
-
-### Wave 6 — Research and ecosystem adapters
-
-- generic ResearchPort and evidence model;
-- OpenCode web-backed adapter and optional external research backend;
-- generic MemoryPort and optional providers;
-- CLI/MCP polish;
-- package publishing/version compatibility matrix.
-
-## 13. Quality gates
-
-Every capability needs evidence at four levels where applicable:
-
-1. contract/unit correctness;
-2. real-repository analysis;
-3. OpenCode adapter integration;
-4. comparative user-level benchmark.
-
-Track at minimum precision/recall for resolvable graph edges, impact false-positive/false-negative rate, test-selection safety, refresh latency, cold-build latency, storage growth, context token reduction, completion accuracy, plugin overhead, and compatibility across supported OpenCode versions.
-
-No feature is considered complete solely because focused unit tests pass.
-
-## 14. Non-goals
-
-- maintaining a permanent OpenCode fork;
-- replacing OpenCode model/provider/session/TUI/permission systems;
-- replacing OpenCode Plan Agent/Todo wholesale;
-- treating LLM inference as graph truth;
-- synchronously running heavy analysis inside latency-sensitive plugin hooks;
-- copying Atlas names/contracts when they encode Atlas-specific execution semantics.
-
-## 15. Immediate next work
-
-The next document in this PR audits KasaneCore implementation completeness and defines, component by component, what can be reused, what must be generalized, what must be redesigned, and how Atlas/Nexus/Memory/Skill/Plan/Verification couplings map to generic ports and OpenCode adapters.
-
-## References
-
-- KasaneCore: `docs/atlas_project_intelligence_architecture.md`, `docs/atlas_project_intelligence_recovery_current_status.md`, `agent/project_twin/`, `agent/project_intelligence/`, `agent/architecture_blueprint/`, `agent/project_convergence/`, `app/nexus/`.
-- OpenCode stable plugin docs: `https://opencode.ai/docs/plugins/`
-- OpenCode V2 plugin docs (beta): `https://opencode.ai/v2/docs/build/plugins`
-- OpenCode V2 MCP docs: `https://opencode.ai/v2/docs/mcp-servers`
+The baseline policy is local-first validation. GitHub CI is exceptional. Real LLM evaluations are milestone-gated and include weak local, practical local, OpenCode host/default, and frontier profiles when available.
