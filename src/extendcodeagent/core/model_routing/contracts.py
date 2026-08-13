@@ -15,6 +15,28 @@ class ModelUnavailable(RuntimeError):
 
 
 @dataclass(frozen=True, slots=True)
+class AdaptiveSignals:
+    impact_size: int = 0
+    file_count: int = 0
+    language_count: int = 1
+    uncertainty: float = 0.0
+    strategy_scope: int = 0
+    evidence_conflict: bool = False
+    context_requirement: int = 0
+    security_sensitive: bool = False
+
+    def required_reasoning_strength(self) -> int:
+        values = [0]
+        if self.impact_size >= 20 or self.file_count >= 10 or self.language_count >= 3:
+            values.append(3)
+        if self.strategy_scope >= 3 or self.evidence_conflict or self.uncertainty >= 0.75:
+            values.append(4)
+        if self.security_sensitive or self.context_requirement >= 50_000:
+            values.append(5)
+        return max(values)
+
+
+@dataclass(frozen=True, slots=True)
 class ModelRequest:
     role: ModelRole
     prompt: str
@@ -25,6 +47,7 @@ class ModelRequest:
     requires_tools: bool = False
     minimum_reasoning_strength: int = 0
     requested_endpoint: str | None = None
+    adaptive_signals: AdaptiveSignals | None = None
 
     def __post_init__(self) -> None:
         if not self.prompt.strip():

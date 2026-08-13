@@ -14,6 +14,7 @@ HOST_NEUTRAL_DIRS = (
     "runtime",
     "service",
     "storage",
+    "strategy",
     "testing",
     "twin",
 )

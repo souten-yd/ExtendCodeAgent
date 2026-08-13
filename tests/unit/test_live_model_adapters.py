@@ -20,9 +20,7 @@ def test_openai_compatible_adapter_uses_bounded_chat_completion_contract() -> No
             "usage": {"prompt_tokens": 12, "completion_tokens": 4},
         }
 
-    adapter = OpenAICompatibleAdapter(
-        "http://127.0.0.1:11434/v1", "qwen", transport=transport
-    )
+    adapter = OpenAICompatibleAdapter("http://127.0.0.1:11434/v1", "qwen", transport=transport)
     response = adapter.complete(
         ModelRequest(
             ModelRole.SMALL_STRUCTURED,
@@ -39,9 +37,7 @@ def test_openai_compatible_adapter_uses_bounded_chat_completion_contract() -> No
 def test_opencode_host_adapter_uses_stable_session_model_contract() -> None:
     calls: list[tuple[str, str, dict[str, object] | None]] = []
 
-    def transport(
-        method: str, path: str, payload: dict[str, object] | None
-    ) -> dict[str, object]:
+    def transport(method: str, path: str, payload: dict[str, object] | None) -> dict[str, object]:
         calls.append((method, path, payload))
         if path == "/session":
             return {"id": "session-1"}

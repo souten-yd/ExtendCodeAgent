@@ -5,9 +5,9 @@ Updated: 2026-08-13 (Asia/Tokyo)
 Current branch: `agent/pr-g-routing-strategy`
 Current PR: not created
 Base commit: `7b1fb759365cc8dc6e57ad1da9a2870307ac60c8`
-Latest commit: `7b1fb75` (PR-F closeout merge)
+Latest commit: `b4548c7` (PR-G behavior-first tests)
 Milestone: PR-G live Model Routing + Strategy
-Current task: implement the adaptive routing/live adapter/Strategy contracts fixed by red tests
+Current task: commit passing adaptive routing/live adapter/Strategy core slice
 Status: in progress
 
 Completed:
@@ -22,14 +22,17 @@ Completed:
   structured chat completions, stable OpenCode session/model payloads, evidence-derived Strategy
   scoring, bounded synthesis payload, and absence of generic fallback alternatives;
 - confirmed the initial focused red gate fails only for the not-yet-implemented target contracts.
+- extended the existing router with deterministic adaptive signals and explainable required tier;
+- added transport-injected OpenAI-compatible and stable OpenCode host adapters with token parsing;
+- added Strategy Core where synthesis proposes text/scope and deterministic project signals own all
+  scoring/provenance; empty synthesis fails instead of fabricating fallback alternatives;
+- focused Ruff/mypy and 15 routing/adapter/Strategy tests pass.
 
 In progress:
-- implement the minimum contracts/adapters/Strategy service behind the committed tests.
+- commit the passing core slice, then exercise real local/host transports and add metrics harness.
 
 Not started:
-- live OpenAI-compatible and OpenCode host adapters;
-- adaptive router extension and Strategy Core;
-- fake/privacy gates, real model A/B, evidence, publication.
+- real local/host/frontier conformance, A/B metrics/evidence, final gates/publication.
 
 Architecture classification:
 - REUSE/EXTEND the existing `PolicyModelRouter` and ModelRequest/Response contracts;
@@ -50,22 +53,22 @@ Out of scope:
 - Research/Traceability/project convergence (PR-I);
 - replacing OpenCode Plan/runtime or adding GitHub CI.
 
-Files changed: handoff plus behavior-first routing/live-adapter/Strategy tests.
-Files currently being edited: model-routing contracts/router/adapters and new Strategy package.
-Exact tests executed: base gates; focused PR-G red pytest.
+Files changed: model-routing contracts/router/adapters, Strategy package, architecture and unit tests.
+Files currently being edited: handoff before substantive implementation commit.
+Exact tests executed: base gates; focused red; focused Ruff/mypy/pytest.
 Exact results: PASS; Python 75 passed in 0.60s, adapter 9 passed, Ruff/format/mypy and builds PASS.
 Benchmark results: not started.
 OpenCode version: 1.18.18.
 Model/provider: none yet in PR-G.
 Routing profile: to be exercised across configured modes; existing fake tests cover baseline modes.
-Known failures: focused PR-G tests fail collection for expected missing target contracts/modules.
+Known failures: initial red collection failure resolved by implementation.
 Known limitations: current router treats adaptive as local-first and has no live adapters or metrics;
 Strategy Core does not exist yet.
-Uncommitted work: behavior-first tests and red-gate handoff update.
+Uncommitted work: passing adaptive/live-adapter/Strategy implementation and handoff update.
 Temporary work: none.
 
-Next exact action: implement AdaptiveSignals/router ordering, transport-injected live adapters, and
-deterministic Strategy contracts/service; run focused tests before real endpoints.
-Next files: existing model-routing package and new `src/extendcodeagent/strategy/`.
-Next commands: implement; run Ruff/mypy/focused pytest; then real adapter conformance.
+Next exact action: commit this slice; add execution wall-time/tier accounting and a reproducible real
+adapter/model evaluation harness; exercise Ollama local and OpenCode host paths serially.
+Next files: model-routing response metrics, `tools/local/`, `docs/evidence/pr-g/`.
+Next commands: commit; implement harness; run local/host conformance; record unavailable tiers.
 Rollback path: discard/revert only this branch; merged PR-F remains intact on main.
