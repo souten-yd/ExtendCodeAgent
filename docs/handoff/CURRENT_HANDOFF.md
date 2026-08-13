@@ -2,13 +2,13 @@
 
 Updated: 2026-08-13 (Asia/Tokyo)
 
-Current branch: `agent/pr-e-context-test-runtime`
-Current PR: `#10` — <https://github.com/souten-yd/ExtendCodeAgent/pull/10>
-Base commit: `01efc16b40c5233fc21e725beae158dc87520b8e`
-Latest commit: `b754d56` (PR-E exact-head evidence and validation handoff)
-Current milestone: PR-E Context + Test Intelligence + Runtime Ingest
-Current task: verify PR #10 remote head and mergeability, then merge
-Task status: in progress
+Current branch: `agent/pr-e-closeout`
+Current PR: not created (closeout)
+Base commit: `fbdfcbd3864a3c46b76cc9ff10d77a57639258a6`
+Latest commit: `fbdfcbd` (PR-E squash merge)
+Current milestone: PR-E merged-state closeout
+Current task: synchronize canonical status/handoff and publish the closeout
+Task status: in progress; PR-E implementation is complete
 
 Goal: add revision-aware runtime observations, deterministic test selection and obsolescence, and
 bounded context packages without introducing Blueprint, live model routing, or new semantic graphs.
@@ -27,6 +27,7 @@ Out of scope:
 - Research, requirement traceability, and project convergence (PR-I).
 
 Completed:
+- PR-E implementation PR #10 merged as `fbdfcbd3864a3c46b76cc9ff10d77a57639258a6`;
 - PR-D implementation PR #8 merged as `1cc7fd26`; closeout PR #9 merged as `01efc16b`;
 - post-closeout main all-fast and package/TypeScript build passed;
 - created this branch from exact `01efc16b`;
@@ -60,10 +61,10 @@ Completed:
   two candidates with no fallback in a worktree benchmark.
 
 In progress:
-- PR #10 is published; synchronize this event, verify the remote head, and merge.
+- canonical merged-state closeout documentation.
 
 Not started:
-- PR-E merge and merged-state closeout.
+- PR-F implementation.
 
 Important architecture decisions:
 - ADAPT KasaneCore revision matching, truthful unavailable semantics, and bounded context behavior.
@@ -82,7 +83,7 @@ Important invariants:
 
 Files changed: PR-E domains/store/application, sidecar, stable plugin/MCP tools, adapter tests,
 architecture boundary, local harnesses, Python resolver, and handoff.
-Files currently being edited: compact evidence, final status/handoff, and formatter-only test layout.
+Files currently being edited: CURRENT_STATUS and handoff closeout documents only.
 
 Exact tests executed: base `tools/local/all-fast`; base `tools/local/build`; focused PR-E pytest;
 post-domain `tools/local/all-fast`; focused store/application pytest; post-integration
@@ -101,11 +102,12 @@ Known failures: an initial concurrent execution of both OpenCode smokes caused o
 lock; both passed when rerun serially. The earlier session-shell hook expectation was corrected.
 Known limitations: actual stable `bash` metadata lacked exit status and remains `observed`; the
 resolver correction does not claim dynamic-import completeness; context projects Graph nodes only.
-Uncommitted work: PR-creation handoff sync only.
+Uncommitted work: merged-state closeout documents only.
 Temporary work: none.
 
-Next exact action: commit and push this PR-creation handoff, verify PR #10 remote head/mergeability,
-merge, then create the small merged-state closeout.
-Next files: CURRENT_HANDOFF, then merged-state status/handoff files.
-Next commands: commit; push; `gh pr view 10`; verify; merge.
-Rollback path: revert PR-E commits or delete this branch; merged PR-D remains unaffected.
+Next exact action: commit/publish/merge the closeout; fast-forward main; pass all-fast/build; create
+`agent/pr-f-blueprint-convergence`; capture behavior-first Blueprint/Convergence tests.
+Next files: KasaneCore Blueprint/Convergence source/tests, then new host-neutral domain tests.
+Next commands: commit; push; create/merge closeout PR; sync main; `tools/local/all-fast`;
+`tools/local/build`; create PR-F branch; inspect exact KasaneCore sources/tests.
+Rollback path: revert the closeout documentation commit; PR-E remains merged at `fbdfcbd`.
