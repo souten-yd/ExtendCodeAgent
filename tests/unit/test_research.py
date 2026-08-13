@@ -24,7 +24,10 @@ def test_research_plan_is_deterministically_bounded() -> None:
     plan = build_research_plan(request, ("official docs", "release notes", "duplicate"))
 
     assert plan.request_id == "r1"
-    assert plan.queries == ("SQLite atomic migration official docs", "SQLite atomic migration release notes")
+    assert plan.queries == (
+        "SQLite atomic migration official docs",
+        "SQLite atomic migration release notes",
+    )
     assert plan.max_queries == 2
     assert plan.max_sources == 4
 
