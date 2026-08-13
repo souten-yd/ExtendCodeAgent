@@ -3,12 +3,12 @@
 Updated: 2026-08-14 (Asia/Tokyo)
 
 Current branch: `agent/pr-i-research-traceability`
-Current PR: not created
+Current PR: #18 `https://github.com/souten-yd/ExtendCodeAgent/pull/18`
 Base commit: `f3d8016b30b0d7fa1972a1ee5bcb108f8f1148c8`
 Latest commit: `2e8e409cf9027bf9d4ab6c487569190805478679`
 Milestone: PR-I Research/Evidence/Traceability/project convergence
 Current task: publish and merge PR-I, then leave closeout before Release Validation
-Status: PR-I implementation/evidence and final local gates PASS
+Status: PR #18 open; implementation/evidence and final local gates PASS
 
 Completed:
 - added bounded research request/plan/source/evidence/claim/gap/deficit contracts and ports;
@@ -25,6 +25,7 @@ Completed:
 - recorded PR-I benchmark/evidence under `docs/evidence/pr-i/`;
 - final build, 16 Python integration tests, repeated 9 adapter tests, benchmark, diff check, and
   Core boundary grep PASS.
+- created PR #18; no GitHub Actions checks are configured.
 - added official tree-sitter JavaScript/TypeScript/TSX parsing dependencies;
 - added independently selected JS/TS and composite analyzers behind existing GraphAnalyzer;
 - added file-qualified definitions, local import resolution, references, direct/inherited calls,
@@ -139,8 +140,8 @@ select full refresh. A persisted symbol index remains a future optimization, not
 Uncommitted work: this final gate handoff update only.
 Temporary work: evaluation-only Ollama `qwen3:0.6b` remains installed; no temporary repo files.
 
-Next exact action: commit/push PR-I, create/inspect/merge its PR, run post-merge main gates, then
-publish a documentation-only closeout before starting Release Validation.
+Next exact action: commit/push this PR event, verify exact remote head and CLEAN, merge PR #18, run
+post-merge main gates, then publish a documentation-only closeout before Release Validation.
 Next files: PR metadata and closeout handoff only.
 Next commands:
 

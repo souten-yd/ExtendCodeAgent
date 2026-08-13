@@ -226,3 +226,5 @@
 - PR-I benchmark on ExtendCodeAgent: 200-requirement Convergence mean 0.5424 ms/p50 0.5290 ms,
   1,000 research plans mean 0.0020 ms, 200 evidence inserts 196.650 ms, restart PASS, DB+WAL
   17,771,744 bytes, max RSS 59,644 KiB.
+- PR #18 was created after final all-fast/build/integration/benchmark/diff/boundary gates; no GitHub
+  Actions checks are configured and mergeability was calculating at the first query.
