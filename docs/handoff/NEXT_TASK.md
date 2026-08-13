@@ -1,33 +1,26 @@
 # Next Task
 
-Start PR-F Blueprint + task-level Convergence only after the PR-E closeout is merged.
+Start PR-G live Model Routing + Strategy only after the PR-F closeout is merged.
 
 1. Fast-forward `main`, pass `tools/local/all-fast` and `tools/local/build`, then create
-   `agent/pr-f-blueprint-convergence` from the exact updated head.
-2. Read only the PR-F section of `IMPLEMENTATION_EXECUTION_LOCAL_VALIDATION_PLAN.md`, Blueprint and
-   Convergence sections of `KASANECORE_MIGRATION_AUDIT.md`, and directly relevant KasaneCore
-   Blueprint/Convergence source and tests.
-3. Classify before implementation: ADAPT immutable Blueprint revision/lifecycle and convergence
-   evaluator/policy semantics; CONSOLIDATE refs/evidence with existing core and PR-E runtime
-   contracts; REPLACE injected loaders with explicit small ports; DO NOT PORT Atlas planners,
-   generators, application DTOs, or model dependencies.
-4. Add behavior-first tests proving create/revise immutability, reviewed/approved/active/superseded
-   transitions, validation before activation, mutable active pointer only, and durable restart.
-5. Keep planned and actual namespaces separate. Planned files/symbols must never enter ProjectGraph
-   as existing facts merely because a Blueprint names them.
-6. Project Blueprint content into a small immutable `TargetSnapshot`; Convergence must consume
-   `TargetSnapshot`, `ActualSnapshot`, and `VerificationEvidence`, not Blueprint implementation
-   models.
-7. Implement task states `absent`, `partial`, `materialized`, `observed`, `verified`, `divergent`,
-   `blocked`, and `stale`, plus deterministic decisions `continue`, `complete`, `repair_current`,
-   `replan_downstream`, `revise_target`, `request_decision`, and `halt`.
-8. Prove unavailable/missing evidence cannot produce `verified` or `complete`; stale revision
-   evidence must remain stale. Simple tasks must be able to bypass durable Blueprint.
-9. Use the centralized CapabilityPolicy for off/shadow/advisory/active. Do not add independent env
-   switches inside feature code.
-10. Run focused lifecycle/evaluator/store tests, all-fast, build, restart/integration cases, and a
-    bounded deterministic benchmark. PR-F has no OpenCode/model acceptance gate; do not widen it.
-11. Publish/merge PR-F and a separate merged-state closeout before PR-G.
+   `agent/pr-g-routing-strategy` from the exact updated head.
+2. Read only PR-G/model-routing/Strategy sections of the execution plan and migration audit; inspect
+   existing PR-A ModelRouter/contracts/fakes and current stable OpenCode host model interfaces.
+3. Extend the existing router. Do not create a parallel router. Add OpenAI-compatible local and
+   OpenCode host adapters behind the provider-neutral port; preserve local-only and remote-code deny.
+4. Add deterministic adaptive signals: impact/file/language counts, uncertainty, strategy scope,
+   evidence conflict, context requirement, and security sensitivity. Record explainable selection,
+   escalation, fallback, token/time, and model tier.
+5. Build Strategy Core anew: deterministic metrics and provenance; LLM only proposes alternatives
+   and explains tradeoffs. Never invent A/B/C fallback choices or treat LLM output as verified fact.
+6. Keep weak-local payloads bounded: graph facts, candidate filtering, one focused structured
+   question. Do not send whole repositories.
+7. Prove fake routing, privacy, failures, and structured-output behavior first; then run real
+   local-low, local-medium, host/default, and frontier evaluations where available.
+8. Compare the same tasks across native/off/advisory/active and record success, calls, tokens, wall
+   time, unnecessary reads/edits, selected tests, escalations, and correction. Do not make active the
+   default if weak local performance regresses.
+9. Publish/merge PR-G and a separate closeout before PR-H.
 
 Resume:
 
@@ -38,8 +31,7 @@ git pull --ff-only origin main
 git status --short
 tools/local/all-fast
 tools/local/build
-git switch -c agent/pr-f-blueprint-convergence
+git switch -c agent/pr-g-routing-strategy
 ```
 
-Keep live model routing/Strategy (PR-G), JS/TS semantic/deep graphs (PR-H), and
-Research/Traceability/project-level Convergence (PR-I) outside PR-F.
+Keep JS/TS/deep graph (PR-H) and Research/Traceability/project convergence (PR-I) outside PR-G.

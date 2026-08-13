@@ -4,7 +4,7 @@ Status date: 2026-08-13
 
 ## Program state
 
-Overall: **PR-F BLUEPRINT/TASK CONVERGENCE VALIDATION IN PROGRESS**
+Overall: **PR-F BLUEPRINT/TASK CONVERGENCE COMPLETE — PR-G NEXT**
 
 The project now contains the strategic planning baseline plus a working Python host-neutral
 foundation. PR-A provides shared immutable contracts, centralized JSON/JSONC configuration,
@@ -47,15 +47,15 @@ adapters, local validation scripts, and architecture-boundary tests.
 | PR-C | structural/Python semantic/path/impact | complete |
 | PR-D | OpenCode adapter + MCP advisory integration | complete |
 | PR-E | context/test intelligence/runtime ingest | complete |
-| PR-F | Blueprint + task-level Convergence | in progress |
+| PR-F | Blueprint + task-level Convergence | complete |
 | PR-G | live model routing + Strategy | not started |
 | PR-H | JS/TS/framework/deep graph expansion | not started |
 | PR-I | Research/evidence + project-level convergence | not started |
 
 ## Immediate next action
 
-Complete exact-head PR-F gates and publish the bounded Blueprint/task-level Convergence slice.
-PR-C provides
+Close the merged-state PR-F handoff, then start PR-G live Model Routing and Strategy from that exact
+closeout head. PR-C provides
 deterministic structural/Python AST facts, analyzer-owned Python alias resolution, persisted
 dependency-aware refresh, bounded path/impact traversal, weakest-link confidence, uncertainty,
 explanations, and test-candidate projection. Curated FP/FN review and real-repository repeated-query
@@ -99,6 +99,9 @@ planned and Actual namespaces are guarded, all eight task states and seven bound
 deterministic, stale/unavailable evidence cannot complete, and SQLite restart/workspace isolation
 is covered. The standalone 200-element benchmark under `docs/evidence/pr-f/` measured evaluation
 p50 0.2348 ms and restart 1.8938 ms. Exact-head local gates passed; publication remains.
+
+PR #12 merged as `157fd19b56db6c61e61b5f02ab81e3bf985d79fd`. Live adapters and model-backed
+Strategy remain PR-G scope and must extend the existing PR-A ModelRouter.
 
 The reproducible PR-D smoke measured alternating three-run startup medians of 1,046 ms native and
 1,070 ms plugin-enabled (+24 ms), then observed tool and external edit refreshes at 151 ms, MCP

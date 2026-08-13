@@ -2,15 +2,16 @@
 
 Updated: 2026-08-13 (Asia/Tokyo)
 
-Current branch: `agent/pr-f-blueprint-convergence`
-Current PR: `#12` — <https://github.com/souten-yd/ExtendCodeAgent/pull/12>
-Base commit: `f14cfb088f7f51539f3685350d0ec503ec29d7c1`
-Latest commit: `4d1d806` (final PR-F validation evidence)
-Milestone: PR-F Blueprint + task-level Convergence
-Current task: verify PR #12 remote head and mergeability, then merge
-Status: in progress
+Current branch: `agent/pr-f-closeout`
+Current PR: `#13` — <https://github.com/souten-yd/ExtendCodeAgent/pull/13>
+Base commit: `157fd19b56db6c61e61b5f02ab81e3bf985d79fd`
+Latest commit: `da61b73` (PR-F merged-state closeout)
+Milestone: PR-F merged-state closeout
+Current task: verify and merge closeout PR #13
+Status: in progress; PR-F implementation is complete
 
 Completed:
+- PR-F implementation PR #12 merged as `157fd19b56db6c61e61b5f02ab81e3bf985d79fd`;
 - PR-E implementation PR #10 merged as `fbdfcbd`; closeout PR #11 merged as `f14cfb0`;
 - exact closeout main passed `tools/local/all-fast` (Python 64, adapter 9, Ruff/format/mypy) and
   `tools/local/build`;
@@ -34,10 +35,10 @@ Completed:
 - passed final all-fast, integration, and build gates.
 
 In progress:
-- PR #12 is published; synchronize this event, verify the remote head, and merge.
+- canonical merged-state closeout documentation.
 
 Not started:
-- publication/merge and merged-state closeout.
+- PR-G implementation.
 
 Architecture classification:
 - ADAPT immutable Blueprint revision/lifecycle and convergence evaluator/policy semantics;
@@ -60,7 +61,7 @@ Out of scope:
 
 Files changed: new `blueprint/` and `convergence/` domains, shared SQLite store, application
 composition, architecture test, unit/integration tests, and handoff.
-Files currently being edited: architecture decision and handoff before substantive commit.
+Files currently being edited: CURRENT_STATUS and handoff closeout documents only.
 Exact tests executed: base gates; focused red pytest; focused domain/store pytest; targeted
 Ruff/mypy; post-integration `tools/local/all-fast`.
 Exact results: focused 10 passed; final fast gate Ruff/format/mypy PASS, Python `75 passed in
@@ -75,8 +76,8 @@ Known limitations: PR-F is task-level only; project-level convergence remains PR
 Uncommitted work: PR-creation handoff sync only.
 Temporary work: none.
 
-Next exact action: commit/push this handoff, verify PR #12 remote head/mergeability, merge, then
-create the small merged-state closeout.
-Next files: CURRENT_HANDOFF, then merged-state status/handoff.
-Next commands: commit; push; `gh pr view 12`; verify; merge.
-Rollback path: discard/revert only this branch; merged PR-E remains intact on main.
+Next exact action: commit/publish/merge closeout; sync main; pass all-fast/build; create
+`agent/pr-g-routing-strategy`; inspect existing ModelRouter and target live interfaces.
+Next files: existing model-routing contracts/router, PR-G tests, Strategy behavior tests.
+Next commands: commit; publish/merge closeout; sync main; gates; create PR-G branch.
+Rollback path: revert closeout documentation; PR-F remains merged at `157fd19`.
