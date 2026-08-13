@@ -235,3 +235,24 @@ local-medium advisory already scored 6/6 with fewer prompt tokens. The central d
 advisory is the safe opt-in until final multi-repository distributions justify automation.
 Frontier returned OpenCode `APIError` for every attempt, so it is recorded as unavailable and cannot
 satisfy the final release gate.
+
+## 2026-08-13 — PR-H language analyzer boundary
+
+Classification after inspecting the existing GraphAnalyzer/Twin/application callers, Python
+analyzer tests, bounded PR-H plan/audit slices, and KasaneCore JavaScript/TypeScript/Vue analyzer
+fixtures:
+
+- REUSE the host-neutral `GraphAnalyzer`, immutable Graph facts, Twin refresh/invalidation, generic
+  path/impact, confidence/provenance, and centralized configuration;
+- ADAPT the useful KasaneCore behaviors: collision-free file-qualified refs, imports, definitions,
+  components, deterministic invalidation, capability versions, and truthful degradation;
+- NEW a tree-sitter-backed JavaScript/TypeScript analyzer and one small composite analyzer because
+  the current application composes only Python;
+- DO NOT PORT KasaneCore's regex-only parser, parallel `SemanticGraph`/registry DTOs, LSP wrapper,
+  or always-on behavioral/CFG/DFG/UI inference.
+
+Each language analyzer is selected only through centralized immutable configuration; feature code
+does not read environment variables. Tree-sitter is preferred to regex because syntax errors are
+observable and resolved facts can be distinguished from inferred dynamic calls. Framework
+relations remain separate plugin-style analyzers. Deeper graphs remain on-demand and require a
+measured scenario gap before implementation.

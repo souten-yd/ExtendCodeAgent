@@ -54,6 +54,24 @@ def test_resolved_configuration_is_immutable() -> None:
         resolved.project_intelligence.capabilities[CapabilityName.GRAPH] = RolloutMode.ACTIVE  # type: ignore[index]
 
 
+def test_language_analyzers_are_selected_independently_in_central_config() -> None:
+    resolved = ConfigResolver().resolve(
+        ConfigLayer(
+            "project",
+            {"project_intelligence": {"analyzers": ["javascript_typescript"]}},
+        )
+    )
+    assert resolved.project_intelligence.analyzers == ("javascript_typescript",)
+
+    with pytest.raises(ConfigError, match="unknown analyzer"):
+        ConfigResolver().resolve(
+            ConfigLayer(
+                "project",
+                {"project_intelligence": {"analyzers": ["unknown"]}},
+            )
+        )
+
+
 def test_invalid_and_unknown_values_fail_closed() -> None:
     resolver = ConfigResolver()
     with pytest.raises(ConfigError, match="unknown keys"):

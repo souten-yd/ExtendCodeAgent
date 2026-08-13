@@ -194,3 +194,6 @@
   sdist/wheel and TypeScript builds passed.
 - PR-G closeout PR #15 merged as `fe61a16e8f7f07e760d99ca449bc09c90166a6c5`; created
   `agent/pr-h-js-ts-deep-graph` from exact clean main and began bounded search-first inspection.
+- PR-H classified current contracts/Twin/Impact as REUSE, KasaneCore JS/TS fixtures as ADAPT,
+  tree-sitter analyzer/composite as NEW, and regex/parallel graph/always-on deep graphs as DO NOT
+  PORT. Initial focused collection fails only on missing target analyzer exports, as intended.

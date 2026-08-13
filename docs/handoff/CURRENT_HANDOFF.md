@@ -8,7 +8,7 @@ Base commit: `fe61a16e8f7f07e760d99ca449bc09c90166a6c5`
 Latest commit: `fe61a16e8f7f07e760d99ca449bc09c90166a6c5` (PR-G closeout merge)
 Milestone: PR-H JS/TS semantic and benchmark-justified on-demand deep graph
 Current task: inspect existing analyzer contracts/callers/tests and bounded PR-H plan/audit slices
-Status: started; no production changes yet
+Status: behavior-first red tests committed next; no production changes yet
 
 Completed:
 - PR-G closeout PR #15 squash-merged as `fe61a16e8f7f07e760d99ca449bc09c90166a6c5`;
@@ -33,7 +33,7 @@ Completed:
 - verified frontier failure is reported unavailable for all 18 attempts, not as an empty success.
 
 In progress:
-- search-first inspection and REUSE/ADAPT/NEW/DO NOT PORT classification.
+- behavior-first JS/TS/composite/config contracts.
 
 Not started:
 - PR-H behavioral tests and implementation;
@@ -47,7 +47,7 @@ Architecture classification:
 
 Files changed: `src/extendcodeagent/core/model_routing/`, `src/extendcodeagent/strategy/`, focused
 tests, `tools/local/pr-g-evaluate`, PR-G evidence, and canonical handoff/status documents.
-Files currently being edited: handoff task-start checkpoint only.
+Files currently being edited: behavior tests and architecture decision only.
 
 Exact tests executed:
 - repeated focused Ruff/mypy and
@@ -81,12 +81,12 @@ Routing profile: deterministic fake coverage plus real native/off/advisory/activ
 Known failures: configured frontier returns OpenCode `APIError`; no frontier quality claim.
 Known limitations: local-low is stochastic; active is not made default; stable OpenCode prompt lacks
 a per-request max-output field; host cache tokens must not be conflated with new input.
-Uncommitted work: PR-H task-start handoff only.
+Uncommitted work: red JS/TS semantic/config tests and architecture decision.
 Temporary work: evaluation-only Ollama `qwen3:0.6b` remains installed; no temporary repo files.
 
-Next exact action: commit task-start handoff; read exact PR-H plan/audit sections; inspect analyzer
-contracts, Python analyzer, discovery/refresh callers, and tests before writing behavior tests.
-Next files: `src/extendcodeagent/graph/analyzers/`, `src/extendcodeagent/twin/`, relevant tests.
+Next exact action: commit red behavior slice; add official tree-sitter dependencies; implement the
+small composite and JS/TS analyzer until focused tests pass.
+Next files: `pyproject.toml`, central config, `src/extendcodeagent/graph/analyzers/`, composition.
 Next commands:
 
 ```bash
