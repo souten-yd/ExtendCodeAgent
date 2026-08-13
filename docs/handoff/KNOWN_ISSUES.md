@@ -40,6 +40,6 @@
   environment. The adapter-only Chokidar fallback passed both OpenCode-tool and external-edit
   evidence, but future stable OpenCode releases should be retested so the extra watcher can be
   removed when the native contract is reliable.
-- The three-run temporary-repository startup comparison had a +26 ms median delta and one 3,229 ms
-  plugin outlier. It is not statistically conclusive; retain broader native/extension comparisons
+- The three-run temporary-repository startup comparison had a +24 ms median delta and one 1,609 ms
+  native outlier. It is not statistically conclusive; retain broader native/extension comparisons
   for final release validation.

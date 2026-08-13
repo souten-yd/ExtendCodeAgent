@@ -127,5 +127,5 @@ Alternatives rejected:
 Measured result: the reproducible smoke observed both an OpenCode session-tool format edit and an
 external edit as distinct immutable revisions, stabilized without a loop, preserved three revisions
 through restart, and left the revision count unchanged in off mode. Alternating three-run startup
-medians were 1,043 ms native and 1,069 ms plugin-enabled (+26 ms); one plugin sample was a 3,229 ms
+medians were 1,046 ms native and 1,070 ms plugin-enabled (+24 ms); one native sample was a 1,609 ms
 outlier, so these values are retained as smoke evidence rather than treated as a stable distribution.

@@ -81,10 +81,11 @@ PR-C's current real-repository sample indexed 64 files into 423 nodes and 2,194 
 impact queries had p50 0.0649 ms; the separate lexical `rg` candidate baseline had p50 2.2538 ms.
 These are latency measurements, not a claim that graph impact and lexical search have equal quality.
 
-The reproducible PR-D smoke measured alternating three-run startup medians of 1,043 ms native and
-1,069 ms plugin-enabled (+26 ms), then observed tool and external edit refreshes at 151 ms, MCP
-connection/reconnection, three durable revisions, and no off-mode revision change. The raw plugin
-samples include a 3,229 ms outlier; this is functional smoke evidence, not a stable distribution.
+The reproducible PR-D smoke measured alternating three-run startup medians of 1,046 ms native and
+1,070 ms plugin-enabled (+24 ms), then observed tool and external edit refreshes at 151 ms, MCP
+connection/reconnection, three durable revisions, and no off-mode revision change. The raw
+comparison includes a 1,609 ms native outlier; this is functional smoke evidence, not a stable
+distribution.
 
 ## Evidence policy
 

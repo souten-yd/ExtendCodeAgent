@@ -102,9 +102,9 @@
 - Because stable native watcher events still omitted ordinary source changes, added a Chokidar
   fallback solely in the adapter and documented the measured design change.
 - Reproducible real OpenCode smoke passed without a model: alternating three-run startup medians
-  were 1,043 ms native and 1,069 ms plugin-enabled (+26 ms; raw plugin samples include a 3,229 ms
+  were 1,046 ms native and 1,070 ms plugin-enabled (+24 ms; raw native samples include a 1,609 ms
   outlier), tool/external refreshes were 151 ms each, MCP connected/reconnected, three revisions
   persisted, no refresh loop formed, and off mode caused no revision.
-- Final pre-publication local gate: Python unit/architecture `49 passed in 0.31s`; adapter
-  `6 passed in 4.36s`; Python integration `9 passed in 0.43s`; repeated adapter `6 passed in 7.51s`;
+- Substantive head `736c2e9` gate: Python unit/architecture `49 passed in 0.33s`; adapter
+  `6 passed in 4.26s`; Python integration `9 passed in 1.45s`; repeated adapter `6 passed in 4.26s`;
   Python package and TypeScript builds passed.

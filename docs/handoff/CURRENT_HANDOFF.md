@@ -5,7 +5,7 @@ Updated: 2026-08-13 (Asia/Tokyo)
 Current branch: `agent/pr-d-opencode-mcp`
 Current PR: not created
 Base commit: `4a73c6f1a2903fb37185e3afd312c30c76c394f4`
-Latest commit: `b4cc45d` (watcher hardening and MCP protocol test)
+Latest commit: `736c2e9` (complete real OpenCode adapter evidence)
 Current milestone: PR-D OpenCode + MCP real integration
 Current task: finalize exact evidence, publish PR-D, verify remote head, and merge
 Task status: in progress
@@ -83,12 +83,12 @@ Exact tests executed:
 - `tools/local/all-fast` after watcher-filter fix
 - `tools/local/opencode-smoke`
 - final `tools/local/all-fast`; `tools/local/test-integration`; `tools/local/build`
-Exact results: final Ruff/mypy PASS; Python unit/architecture `49 passed in 0.31s`; adapter
-`6 passed in 4.36s`; Python integration `9 passed in 0.43s`; repeated adapter `6 passed in 7.51s`;
+Exact results: substantive-head Ruff/mypy PASS; Python unit/architecture `49 passed in 0.33s`;
+adapter `6 passed in 4.26s`; Python integration `9 passed in 1.45s`; repeated adapter `6 passed in 4.26s`;
 Python sdist/wheel and TypeScript build PASS.
-Benchmark results: alternating three-run startup medians: native 1,043 ms, plugin 1,069 ms (+26
-ms; plugin samples 3,229/1,069/1,062 ms); integration startup 1,072 ms; initial revision 151 ms;
-OpenCode tool edit refresh 151 ms; external edit refresh 151 ms; reconnect 1,069 ms; three revisions
+Benchmark results: alternating three-run startup medians: native 1,046 ms, plugin 1,070 ms (+24
+ms; native samples 1,609/1,044/1,046 ms); integration startup 1,062 ms; initial revision 151 ms;
+OpenCode tool edit refresh 151 ms; external edit refresh 151 ms; reconnect 1,109 ms; three revisions
 stable and persisted; off remained three revisions.
 OpenCode version: 1.18.18; real plugin load/tool discovery/MCP connection verified.
 Model/provider: none required for initial plugin/MCP load; real model use is not a PR-D capability.
@@ -97,16 +97,16 @@ Known failures: initial watcher run formed a `.git/index.lock` feedback loop; fi
 path-filter test. Exporting `workspacePath` from the plugin entry caused real loader failure; fixed
 by separating it into `paths.ts`.
 Known limitations: V2 plugin/MCP APIs differ materially and are beta; PR-D targets stable only. The
-three-run startup result is not a statistically stable distribution and includes one 3,229 ms
-plugin outlier. Stable OpenCode's native watcher did not emit ordinary file events in this
+three-run startup result is not a statistically stable distribution and includes one 1,609 ms
+native outlier. Stable OpenCode's native watcher did not emit ordinary file events in this
 environment, so the adapter fallback remains necessary.
-Uncommitted work: fallback watcher, local smoke/script wiring, docs/evidence, and this handoff update.
+Uncommitted work: exact substantive-head evidence and this handoff update.
 Temporary work: preserved loop DB under `/tmp/extendcodeagent-pr-d-loop-evidence-20260813T0840JST`
 and filtered smoke DB under `/tmp/extendcodeagent-pr-d-filtered-smoke-20260813T0850JST`; current
 ignored `.extendcodeagent/graph.db` is disposable manual-smoke state.
 
-Next exact action: inspect the complete diff, commit the fallback/evidence slice, rerun exact-head
-all-fast/build/OpenCode smoke, push, create PR-D, inspect remote head, and merge only if clean.
+Next exact action: commit the exact substantive-head evidence, rerun final documentation-head
+all-fast/build gates, push, create PR-D, inspect remote head, and merge only if clean.
 Next files: complete branch diff; `docs/evidence/pr-d/`; `docs/CURRENT_STATUS.md`; PR description.
 Next commands: `git diff --check`; `git diff 4a73c6f..HEAD`; commit; exact-head local gates; `git push`;
 create draft PR; verify mergeability and absence/presence of checks.
