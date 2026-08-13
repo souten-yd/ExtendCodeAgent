@@ -4,7 +4,7 @@ Status date: 2026-08-13
 
 ## Program state
 
-Overall: **PR-A FOUNDATION COMPLETE — PR-B NOT STARTED**
+Overall: **PR-B GRAPH/TWIN FOUNDATION COMPLETE — PR-C NOT STARTED**
 
 The project now contains the strategic planning baseline plus a working Python host-neutral
 foundation. PR-A provides shared immutable contracts, centralized JSON/JSONC configuration,
@@ -43,7 +43,7 @@ adapters, local validation scripts, and architecture-boundary tests.
 |---|---|---|
 | Planning PR | architecture, migration audit, implementation/validation/model-routing plan | complete |
 | PR-A | foundation contracts, config/capability policy, model-router contracts, local harness | complete |
-| PR-B | graph revision/store/source snapshot | not started |
+| PR-B | graph revision/store/source snapshot | complete |
 | PR-C | structural/Python semantic/path/impact | not started |
 | PR-D | OpenCode adapter + MCP advisory integration | not started |
 | PR-E | context/test intelligence/runtime ingest | not started |
@@ -54,14 +54,20 @@ adapters, local validation scripts, and architecture-boundary tests.
 
 ## Immediate next action
 
-Begin PR-B from updated `main`. Re-read only the Graph/Twin revision, store, source snapshot,
-invalidation, and persistence sections plus the matching KasaneCore files/tests. Capture target
-behavior before adapting implementation. Do not add semantic/impact algorithms, OpenCode/MCP,
-or real model adapters in PR-B.
+Begin PR-C from updated `main`. Capture curated structural/Python semantic/path/impact behavior
+before adapting KasaneCore analyzers and GraphAnalysisService. Keep language-specific canonical
+reference resolution outside the generic path/impact engine, preserve weakest-link confidence,
+and report false-positive/false-negative ground truth explicitly.
 
 PR-A intentionally has no real OpenCode or real-LLM claim. Live host integration remains PR-D;
 live model routing remains PR-G. The local PR-A gates passed on Python 3.12.3: Ruff lint/format,
 strict mypy, 25 unit/architecture tests, sdist/wheel build, and wheel-archive import smoke.
+
+PR-B adds file-level Graph facts, immutable Twin revisions, atomic/restart-safe SQLite persistence,
+historical snapshots, workspace isolation, expected-head conflicts, bounded source fingerprints,
+file-level refresh/invalidation, retention and integrity-checked export/import. Semantic/Impact and
+host/model integration remain deliberately absent. The recorded real-repository benchmark shows
+correct incremental behavior but only a 1.9% latency advantage on a 50-file repository.
 
 ## Evidence policy
 

@@ -9,3 +9,13 @@
 - PR-A has fake model evidence only. Live local/host/frontier routing remains a PR-G gate.
 - `timeout_seconds` is validated configuration but the synchronous fake adapter does not simulate
   wall-clock timeout enforcement; live adapters must implement that contract in PR-G.
+
+## PR-B measured limitation
+
+- On the 50-source-file ExtendCodeAgent repository, file-level refresh took 182.145 ms versus
+  185.638 ms cold build. The fact update is incremental, but workspace fingerprint scanning
+  dominates. Before claiming scale benefit, benchmark a Git-status fast path and automatic
+  full-rebuild selection for small repositories.
+- Snapshot import validates integrity and restores current facts, but deliberately creates a new
+  local revision instead of importing foreign revision identity. Cross-store lineage preservation
+  remains future work.

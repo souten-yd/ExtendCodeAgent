@@ -2,28 +2,26 @@
 
 Updated: 2026-08-13 (Asia/Tokyo)
 
-Current branch: `main` (PR-A merged; create a new branch for PR-B)
-Current PR: [#2](https://github.com/souten-yd/ExtendCodeAgent/pull/2) (merged)
-Base commit: `9623282d00ef98490d5c36ea16256f6fcde260af`
-Latest commit: `49db5bac7084fc3df444dc8b3c5f18cc7f79a0f8` (PR-A squash merge)
-Current milestone: PR-A Foundation
-Current task: host-neutral contracts, centralized configuration/capability policy, model-routing contracts and fake adapters, local validation harness, architecture tests
-Task status: complete and merged
+Current branch: `agent/pr-b-graph-twin-store`
+Current PR: [#4](https://github.com/souten-yd/ExtendCodeAgent/pull/4) (draft; exact-head review pending)
+Base commit: `40602d3ad8f147c9166e32919f7005da1c11279e`
+Latest commit: `ad2175bf5b2f893c025fc4f48db846f9516a238f`
+Current milestone: PR-B Graph / Digital Twin Foundation
+Current task: behavior-first Graph contracts, immutable revisions, SQLite store, source snapshot, full/file-level incremental refresh, persistence and benchmark
+Task status: implementation and required local evidence complete; review/publication pending
 
-Goal: Establish the smallest working host-neutral foundation that later KasaneCore migrations and OpenCode adapters can depend on without leaking Atlas or OpenCode types into core.
+Goal: Adapt KasaneCore's proven revision/store/source lifecycle into the existing host-neutral PR-A foundation without importing semantic, impact, OpenCode/MCP, runtime, or model behavior.
 
 Scope:
-- repository/package bootstrap;
-- shared host-neutral contracts and diagnostics;
-- immutable centralized configuration resolution;
-- feature capability policy with off/shadow/advisory/active modes;
-- provider-neutral model router contracts and fake adapters;
-- offline local test/build/lint/typecheck harness;
-- architecture dependency boundary tests.
+- GraphNode/GraphEdge/GraphEvidence/GraphRevision/GraphDelta/GraphSnapshot contracts;
+- atomic SQLite revision store, current pointer, historical reads, isolation/conflict handling;
+- bounded source snapshots and Git/non-Git fingerprints including untracked state;
+- full build and file-level changed/deleted refresh;
+- restart/retention/export-import foundation and local real-repository benchmark.
 
 Out of scope:
-- Graph/Twin persistence, indexing, semantic analysis, impact analysis, MCP server, OpenCode plugin implementation, real model provider calls, real OpenCode/LLM evaluation;
-- bulk copying KasaneCore or importing Atlas/Nexus DTOs.
+- semantic/call graph, path/impact, OpenCode/MCP, runtime/test/context, Blueprint/Convergence,
+  live model routing, research, and Atlas/Nexus application infrastructure.
 
 Completed:
 - fetched and fast-forward checked `origin/main` (already current);
@@ -36,10 +34,11 @@ Completed:
   generated-wheel archive smoke.
 - published and squash-merged PR #2; post-merge `main` fast gates passed again.
 
-In progress: none.
+In progress:
+- final diff review, status/handoff completion, PR creation and merge.
 
 Not started:
-- PR-B Graph/Twin revision/store/source snapshot work.
+- PR publication/merge/closeout; PR-C.
 
 Important architecture decisions:
 - Use the planning baseline's recommended Python-first staged core for PR-A; no TypeScript OpenCode adapter is introduced in this slice.
@@ -60,31 +59,44 @@ Files changed:
 - `tools/local/*`;
 - required handoff files.
 
-Files currently being edited: PR-A foundation tests and validation documentation.
+Files currently being edited: PR-B behavioral test design and handoff documentation.
 
-Tests executed:
+Tests executed at PR-B start:
 - `tools/local/all-fast`
-- wheel archive import smoke against `dist/extendcodeagent-0.1.0-py3-none-any.whl`
+- `tools/local/build`
+- `.venv/bin/pytest -q tests/unit/test_graph_contracts.py tests/unit/test_source_snapshot.py`
+- `.venv/bin/pytest -q tests/unit/test_sqlite_store.py`
+- `tools/local/all-fast` after SQLite implementation
+- `tools/local/test-integration`
+- `tools/local/benchmark-pr-b`
 Exact results:
 - Ruff lint: `All checks passed!`
 - Ruff format: `17 files already formatted`
 - mypy 1.17.1 strict: `Success: no issues found in 17 source files`
 - pytest 8.4.1: `25 passed in 0.04s`
-- wheel archive smoke: `PASS (version=0.1.0, default_enabled=False)`
-Benchmarks executed: none; PR-A has no graph/runtime or live-model performance path to benchmark.
-Exact results: not applicable; unit suite runtime was 0.04 seconds.
+- sdist/wheel build: success
+- PR-B focused contracts/source snapshot: `6 passed`
+- SQLite store focused: `5 passed`
+- all-fast: Ruff PASS; strict mypy PASS; `36 passed in 0.09s`
+- final all-fast: Ruff PASS; strict mypy PASS; `38 passed in 0.13s`
+- Twin lifecycle integration: `5 passed in 0.21s`
+Benchmarks executed: `tools/local/benchmark-pr-b` against this real repository (50 source files).
+Exact results: cold 185.638 ms; incremental 182.145 ms; query 0.302 ms; DB+WAL 255,448 bytes;
+max RSS 28,472 KiB. Incremental correctness passed, but latency advantage was only 1.9%.
 OpenCode version tested: unavailable; `opencode` is not installed locally. Real integration is deferred to PR-D.
 ExtendCodeAgent config tested: defaults plus user/project/runtime/session/command overrides; JSONC,
 strict validation, immutability, capability off/shadow/advisory/active bounds, endpoint/role config.
 LLM/provider tested: deterministic fake local/host/remote adapters only; no real LLM is required for PR-A.
 Model routing profile: manual/local-first/frontier-first/cost/latency/quality/adaptive/host-only/local-only contracts; focused tests exercised local-only, host-only, fallback/retry, capability filters, and remote-code policy.
 Known failures: none in required local gates.
-Known limitations: no Graph/Twin, OpenCode/MCP, or live provider implementation exists in PR-A by design.
-Uncommitted work: none after this docs-only closeout is merged.
+Known limitations: PR-B graph is file-level only by design; fingerprint scanning dominates small-repo
+incremental latency; import restores current facts as a new local revision rather than preserving
+foreign revision IDs; semantic/impact/OpenCode/model features remain out of scope.
+Uncommitted work: this PR-state handoff update only.
 Temporary files: none.
 Experimental code: none.
 
-Next exact action: create a PR-B branch from updated `main` and capture Graph/Twin store behavior from the listed KasaneCore tests before implementation.
-Next files to inspect after merge: `../KasaneCore/agent/project_twin/contracts.py`, `store.py`, `source_adapter.py`, `module.py`, plus store/source-refresh/durability tests.
-Next commands to run: `git switch main`; `git pull --ff-only origin main`; `git switch -c agent/pr-b-graph-twin-store`; `tools/local/all-fast`.
-Rollback path: revert merge commit `49db5bac7084fc3df444dc8b3c5f18cc7f79a0f8`; do not reset or discard unrelated work.
+Next exact action: commit/push this update, verify PR #4 exact head/diff and local gates, mark ready and merge.
+Next files: `../KasaneCore/agent/project_twin/store.py` relevant schema/apply/snapshot slices and `module.py` refresh slices; then `tests/unit/test_graph_contracts.py` and PR-B component tests.
+Next commands: targeted `sed` of those slices; `git status --short`; focused pytest after tests exist.
+Rollback path: remove/revert only PR-B branch commits; PR-A on `main` remains authoritative.

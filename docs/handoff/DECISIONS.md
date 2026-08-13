@@ -34,3 +34,35 @@ Sources checked 2026-08-13:
 - <https://opencode.ai/docs/plugins/>
 - <https://opencode.ai/v2/docs/build/plugins>
 - <https://opencode.ai/docs/cli/>
+
+## 2026-08-13 — PR-B migration classification
+
+- ADAPT: immutable revision lineage, optimistic expected-head rejection, transaction atomicity,
+  idempotency, historical snapshots, invalidation, restart persistence, and bounded source scans.
+- CONSOLIDATE: KasaneCore project and workspace identity into PR-A `ProjectRef`; source/analyzer
+  metadata into `SourceRevision`, `Provenance`, and Graph-domain contracts.
+- REPLACE: Atlas/Pydantic DTOs, `project_id`-only store keys, `ca_data` defaults, and synchronous
+  module orchestration with small host-neutral dataclasses/services and `(project, workspace)` scope.
+- NEW: non-Git deterministic fingerprint fallback, explicit retention/export-import foundation,
+  and real-repository local benchmark reporting.
+- DO NOT PORT: semantic/static analyzers, impact/path, runtime observations, Atlas events/context,
+  OpenCode/MCP, or model routing into PR-B.
+
+GitHub CI remains unnecessary: all PR-B behavior, restart, benchmark, and packaging gates are locally reproducible.
+
+## 2026-08-13 — PR-B persistence shape and incremental measurement
+
+Decision: Persist immutable Graph contract payloads with normalized revision validity and
+canonical/source/target indexes. Do not copy KasaneCore's semantic/runtime columns before their
+consumers exist. PR-C may normalize additional query fields only when path/impact measurements
+justify them.
+
+Real-repository measurement (50 source files) showed cold build 185.638 ms and file-level refresh
+182.145 ms. The refresh updates only selected facts, but the bounded workspace fingerprint scan
+dominates at this size, so the latency improvement is only 1.9%. Snapshot query was 0.302 ms,
+DB+WAL 255,448 bytes, max RSS 28,472 KiB.
+
+Consequence: do not claim incremental speed superiority yet. Preserve correct incremental fact
+semantics, and evaluate a Git-status fingerprint fast path plus an automatic full-rebuild choice
+for small repositories in the next performance slice. The current behavior remains deterministic
+and bounded.
