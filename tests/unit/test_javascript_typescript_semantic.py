@@ -145,3 +145,31 @@ def test_same_name_js_functions_are_not_collapsed(tmp_path: Path) -> None:
     )
     refs = {item.canonical_ref.value for item in result.nodes if item.node_type == "function"}
     assert {"js://a.js#handler", "js://b.ts#handler"} <= refs
+
+
+def test_playwright_inline_test_callback_is_a_test_definition(tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    root.mkdir()
+    _write(root, "src/service.ts", "export function save() { return true }\n")
+    _write(
+        root,
+        "tests/service.spec.ts",
+        """import { save } from '../src/service';
+test('saves the record', async () => { save() });
+""",
+    )
+    result = JavaScriptTypeScriptGraphAnalyzer().analyze(
+        _project(root), SourceSnapshotter().snapshot(_project(root))
+    )
+
+    test_ref = "js://tests/service.spec.ts#test@2"
+    assert any(
+        node.canonical_ref.value == test_ref and node.node_type == "test"
+        for node in result.nodes
+    )
+    assert any(
+        edge.source.value == test_ref
+        and edge.target.value == "js://src/service.ts#save"
+        and edge.edge_type == "calls"
+        for edge in result.edges
+    )

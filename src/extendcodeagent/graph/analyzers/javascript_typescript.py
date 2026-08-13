@@ -379,6 +379,35 @@ def _collect_module_definitions(
         decorators = (*pending_decorators, *decorators)
         pending_decorators.clear()
         _collect_declaration(result, module, declaration, decorators)
+    if _is_test_file(module.path):
+        for node in _walk(root):
+            if node.type != "call_expression":
+                continue
+            function = node.child_by_field_name("function")
+            if function is None or _text(module.source, function) not in {"test", "it"}:
+                continue
+            arguments = node.child_by_field_name("arguments")
+            callback = (
+                next(
+                    (
+                        child
+                        for child in reversed(arguments.named_children)
+                        if child.type in {"arrow_function", "function_expression"}
+                    ),
+                    None,
+                )
+                if arguments is not None
+                else None
+            )
+            if callback is not None:
+                _store_definition(
+                    result,
+                    module,
+                    callback,
+                    f"{_text(module.source, function)}@{node.start_point.row + 1}",
+                    "test",
+                    (),
+                )
 
 
 def _collect_declaration(
@@ -732,10 +761,14 @@ def _string_value(source: bytes, node: Node) -> str:
 
 
 def _is_test(path: str, name: str) -> bool:
-    filename = PurePosixPath(path).name.lower()
-    return (".test." in filename or ".spec." in filename or "__tests__" in path.lower()) and (
+    return _is_test_file(path) and (
         name.lower().startswith("test") or name.lower().startswith("it")
     )
+
+
+def _is_test_file(path: str) -> bool:
+    filename = PurePosixPath(path).name.lower()
+    return ".test." in filename or ".spec." in filename or "__tests__" in path.lower()
 
 
 def _stable_id(kind: str, value: str) -> str:

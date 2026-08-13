@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+target_root="${1:-/home/souten/ControlDeck}"
+changed_path="${2:-frontend/src/App.tsx}"
+cd "${repo_root}"
+"${repo_root}/.venv/bin/python" tools/local/benchmark_pr_h.py "${target_root}" "${changed_path}"

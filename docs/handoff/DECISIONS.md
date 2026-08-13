@@ -276,3 +276,14 @@ module facts. This is language-neutral, deterministic, observable through
 `auto_full_refresh_selected`, and preserves narrow incremental behavior. Three measured automatic
 runs took 1,193 / 1,192 / 1,187 ms with identical 1,255 nodes and 3,888 edges. A persisted index is
 deferred because the measured full strategy already removes the regression without new storage.
+
+The ControlDeck ground-truth run found 92 Playwright inline tests but the initial graph represented
+none. This is a JS/TS declaration gap, not evidence for deep CFG/DFG, so inline callbacks were
+ADAPTED into stable test definitions and existing call/Impact behavior. The result represented all
+92 tests and found static evidence for 39; the other 53 depend on browser/API/dynamic behavior and
+remain unlinked rather than fabricated. Cold build was 5,789 ms, automatic refresh 1,389 ms, and 20
+impact queries averaged 0.0282 ms. Decision: do not add always-on CFG/DFG/state/event/UI graphs in
+PR-H. They add maintenance and certainty risk without closing the measured browser/runtime gap.
+Keep framework/deep analyzers independently configurable and on-demand for a future concrete UI or
+security benchmark; this follows the PR-H measurement stop gate rather than treating the plan as a
+mandatory implementation list.

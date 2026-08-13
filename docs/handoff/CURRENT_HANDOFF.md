@@ -7,8 +7,8 @@ Current PR: not created
 Base commit: `fe61a16e8f7f07e760d99ca449bc09c90166a6c5`
 Latest commit: `c6e4326` (PR-H JS/TS semantic implementation)
 Milestone: PR-H JS/TS semantic and benchmark-justified on-demand deep graph
-Current task: benchmark JS/TS ground truth and decide bounded deep-graph follow-up
-Status: JS/TS semantic and measured auto refresh strategy implemented
+Current task: run final PR-H gates, inspect diff, publish PR
+Status: PR-H implementation and real-repository evidence complete locally
 
 Completed:
 - added official tree-sitter JavaScript/TypeScript/TSX parsing dependencies;
@@ -24,6 +24,11 @@ Completed:
   crash and stable 1,255 nodes / 3,888 edges;
 - added language-neutral auto full refresh when the dependency closure covers at least 40% of
   current module facts; three ControlDeck runs improved from about 5.0s to about 1.19s;
+- represented all 92 ControlDeck Playwright inline tests; 39 have static evidence and dynamic cases
+  remain unlinked rather than falsely verified;
+- recorded a reproducible benchmark and human-reviewable FP/FN report under `docs/evidence/pr-h/`;
+- rejected always-on CFG/DFG/state/event/UI work because it does not close the measured browser/API
+  evidence gap; deeper analyzers stay on-demand pending a concrete benchmark.
 - PR-G closeout PR #15 squash-merged as `fe61a16e8f7f07e760d99ca449bc09c90166a6c5`;
 - created PR-H branch from exact clean closeout main;
 - PR #14 exact head `1189c966a71d410a42ab3f51ed35d18b4c2f5af9` was mergeable/CLEAN
@@ -46,10 +51,9 @@ Completed:
 - verified frontier failure is reported unavailable for all 18 attempts, not as an empty success.
 
 In progress:
-- real JS/TS repository ground-truth benchmark and framework/deep-graph stop-gate decision.
+- final all-fast/build/integration/diff gates and PR publication.
 
 Not started:
-- PR-H on-demand framework/deep graph, pending measured scenario gap;
 - PR-I Research/Evidence/Traceability/project convergence;
 - final multi-repository Release Validation.
 
