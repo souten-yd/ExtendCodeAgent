@@ -25,12 +25,14 @@ The project currently contains the strategic architecture, KasaneCore migration 
 - Reuse/adaptation is preferred over parallel reimplementation.
 - Project Graph/Digital Twin/Impact are the first functional foundation.
 - Major capabilities are independently configurable and support off/shadow/advisory/active rollout.
-- Low-performance local LLMs and frontier models are both first-class targets.
-- Model calls use role-based routing and provider-independent adapters.
-- Deterministic analysis is preferred before model reasoning.
+- Low-performance local LLMs, practical local coding models, OpenCode host/default models, and frontier models are all first-class targets.
+- Model calls use role-based routing and provider-independent adapters; exact model names are configuration, not domain constants.
+- Routing supports local-first/frontier-first/host-only/local-only and adaptive/cost/latency/quality policies with explainable escalation/fallback.
+- Weak local models receive smaller structured evidence and deterministic candidate sets rather than large repository dumps.
+- Privacy policy can forbid remote model/source-code use and remote escalation.
+- Deterministic analysis is preferred before model reasoning at every model tier.
 - Local tests/E2E/benchmarks are primary evidence; GitHub CI is exceptional.
 - Real OpenCode and real-LLM A/B evaluation is required at milestone gates, not on every edit.
-- Privacy policy can forbid remote model/source-code use.
 
 ## Implementation sequence
 
@@ -50,6 +52,8 @@ The project currently contains the strategic architecture, KasaneCore migration 
 ## Immediate next action
 
 After the planning PR is merged, create PR-A from current `main`. Codex must first inspect the merged repository and KasaneCore reference implementations, then implement only the foundation slice defined in the execution plan.
+
+PR-A must not depend on a real LLM for correctness. It establishes provider-neutral routing contracts, fake endpoints, config precedence, feature flags, local harness, and architecture boundary tests. Live local/frontier routing is deliberately deferred until the underlying Project Intelligence flow provides meaningful work to route.
 
 ## Evidence policy
 
