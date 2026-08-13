@@ -4,7 +4,7 @@ Status date: 2026-08-13
 
 ## Program state
 
-Overall: **PR-E CONTEXT/TEST/RUNTIME IN PROGRESS**
+Overall: **PR-E CONTEXT/TEST/RUNTIME VALIDATED — PUBLICATION IN PROGRESS**
 
 The project now contains the strategic planning baseline plus a working Python host-neutral
 foundation. PR-A provides shared immutable contracts, centralized JSON/JSONC configuration,
@@ -54,8 +54,8 @@ adapters, local validation scripts, and architecture-boundary tests.
 
 ## Immediate next action
 
-Implement the behavior-first PR-E runtime freshness, test selection/health, and bounded context
-slice from exact closeout main. PR-C provides
+Publish and merge the validated PR-E slice, synchronize the merged-state handoff on `main`, then
+start PR-F Blueprint and task-level Convergence from that exact closeout head. PR-C provides
 deterministic structural/Python AST facts, analyzer-owned Python alias resolution, persisted
 dependency-aware refresh, bounded path/impact traversal, weakest-link confidence, uncertainty,
 explanations, and test-candidate projection. Curated FP/FN review and real-repository repeated-query
@@ -82,6 +82,13 @@ PR-C's current real-repository sample indexed 64 files into 423 nodes and 2,194 
 623.969 ms. A dependency-aware two-file incremental refresh took 282.761 ms. One hundred repeated
 impact queries had p50 0.0649 ms; the separate lexical `rg` candidate baseline had p50 2.2538 ms.
 These are latency measurements, not a claim that graph impact and lexical search have equal quality.
+
+PR-E adds immutable runtime observations, revision-aware freshness, deterministic graph-based test
+selection, evidence-based Test Obsolescence states, and bounded revision-aware context packages.
+Exact-head evidence under `docs/evidence/pr-e/` records 100-item/2,131-token standard context versus
+8-item/148-token weak context, two graph-linked test candidates without fallback, restart-persistent
+real OpenCode tool evidence, and truthful `observed` status when stable host metadata lacks an exit
+code. Live routing remains PR-G scope.
 
 The reproducible PR-D smoke measured alternating three-run startup medians of 1,046 ms native and
 1,070 ms plugin-enabled (+24 ms), then observed tool and external edit refreshes at 151 ms, MCP

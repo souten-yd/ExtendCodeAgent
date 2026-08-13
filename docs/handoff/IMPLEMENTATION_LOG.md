@@ -155,3 +155,8 @@
   not missing tests. Added an import-evidence-constrained Python resolver bridge and a name-collision
   fixture; the focused graph analysis suite passed and the worktree benchmark recovered two
   candidates with no fallback. Kept the correction out of generic Impact and out of other languages.
+- Exact `47d47cd` PR-E evidence: benchmark found two test candidates/no fallback; standard context
+  was 100 items/2,131 tokens and weak context 8 items/148 tokens. Serial model-free and real-Qwen
+  OpenCode 1.18.18 smokes passed; the real tool observation persisted as truthful `observed`.
+- Final gates: Ruff/format/mypy passed, Python 64 tests passed, adapter 9 tests passed, integration
+  12 tests passed, and Python package plus TypeScript build passed.

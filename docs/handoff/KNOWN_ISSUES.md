@@ -55,3 +55,5 @@
   a Python `src.`/package re-export alias gap; the language-owned resolver now uses exact import
   evidence and a collision fixture. This repairs the measured sample without claiming general
   dynamic-import or alias completeness.
+- OpenCode smoke processes share the host OpenCode database and must run serially; a concurrent
+  evidence attempt produced `database is locked`. Serial model-free and model-backed reruns passed.

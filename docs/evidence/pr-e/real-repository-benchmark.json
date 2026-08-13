@@ -1,0 +1,45 @@
+{
+  "cold_graph_and_symbol_ms": 2739.1062,
+  "commit": "47d47cde2520d872787fb6307213c0fd716840dd",
+  "database_bytes": 5152768,
+  "environment": {
+    "os": "Linux 7.0.0-28-generic x86_64",
+    "python": "3.12.3"
+  },
+  "max_rss_kib": 43984,
+  "repository": "/home/souten/ExtendCodeAgent",
+  "standard_context": {
+    "items": 100,
+    "max_ms": 35.0074,
+    "min_ms": 27.1205,
+    "p50_ms": 29.8105,
+    "p95_ms": 34.0871,
+    "token_budget": 8192,
+    "truncated": true,
+    "used_tokens": 2131
+  },
+  "target_ref": "py://src.extendcodeagent.runtime.service#reconcile_observations",
+  "test_selection": {
+    "candidate_count": 2,
+    "candidate_refs": [
+      "py://tests.unit.test_runtime_intelligence#test_only_matching_revision_pass_verifies_a_ref",
+      "py://tests.unit.test_runtime_intelligence#test_unavailable_and_collector_failure_never_roll_up_to_success"
+    ],
+    "fallback": null,
+    "health_states": ["suspect", "suspect"],
+    "max_ms": 35.5356,
+    "min_ms": 29.1503,
+    "p50_ms": 31.3321,
+    "p95_ms": 34.258
+  },
+  "weak_context": {
+    "items": 8,
+    "max_ms": 43.425,
+    "min_ms": 29.7101,
+    "p50_ms": 34.1485,
+    "p95_ms": 43.2029,
+    "token_budget": 512,
+    "truncated": true,
+    "used_tokens": 148
+  }
+}

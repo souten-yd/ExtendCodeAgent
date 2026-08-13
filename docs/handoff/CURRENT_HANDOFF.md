@@ -3,11 +3,11 @@
 Updated: 2026-08-13 (Asia/Tokyo)
 
 Current branch: `agent/pr-e-context-test-runtime`
-Current PR: not created
+Current PR: pending creation
 Base commit: `01efc16b40c5233fc21e725beae158dc87520b8e`
-Latest commit: `c689b7e` (real PR-E host and benchmark harness)
+Latest commit: `47d47cd` (Python re-export test-selection correction)
 Current milestone: PR-E Context + Test Intelligence + Runtime Ingest
-Current task: correct measured Python re-export selection recall, then capture exact-head evidence
+Current task: publish validated PR-E and merge after remote-head verification
 Task status: in progress
 
 Goal: add revision-aware runtime observations, deterministic test selection and obsolescence, and
@@ -60,11 +60,10 @@ Completed:
   two candidates with no fallback in a worktree benchmark.
 
 In progress:
-- commit the bounded resolver correction, rerun all real-host/benchmark gates on exact head, and
-  record compact PR-E evidence.
+- commit exact-head evidence and handoff, publish PR-E, verify the remote head, and merge.
 
 Not started:
-- exact-head evidence commit, final gates, publication.
+- PR-E publication/merge and merged-state closeout.
 
 Important architecture decisions:
 - ADAPT KasaneCore revision matching, truthful unavailable semantics, and bounded context behavior.
@@ -83,32 +82,30 @@ Important invariants:
 
 Files changed: PR-E domains/store/application, sidecar, stable plugin/MCP tools, adapter tests,
 architecture boundary, local harnesses, Python resolver, and handoff.
-Files currently being edited: Python resolver collision test, benchmark gate, and decision/handoff.
+Files currently being edited: compact evidence, final status/handoff, and formatter-only test layout.
 
 Exact tests executed: base `tools/local/all-fast`; base `tools/local/build`; focused PR-E pytest;
 post-domain `tools/local/all-fast`; focused store/application pytest; post-integration
 `tools/local/all-fast`; `tools/local/test-integration`.
-Exact results: pure-domain focused `12 passed`; store/application focused `8 passed`; Ruff/mypy
-PASS; Python `63 passed in 0.43s`; adapter `6 passed in 4.27s`; Python integration `11 passed in
-0.60s`; sidecar/adapter all-fast Python `63 passed in 0.43s`, adapter `9 passed in 4.27s`;
-integration `12 passed in 1.18s`, repeated adapter `9 passed in 4.27s`; base build PASS.
-Benchmark results: initial worktree sample cold graph/symbol 2,164 ms; standard context p50 28.56 ms
-at 100 items/2,131 tokens; weak context p50 28.55 ms at 8 items/148 tokens; test selection p50 30.90
-ms with full-suite fallback; DB 5,111,808 bytes; max RSS 45,172 KiB. Exact-head rerun required.
-OpenCode version: 1.18.18 (carried from verified PR-D install; not yet exercised for PR-E).
-Model/provider: none.
+Exact results: final Ruff/format/mypy PASS; Python `64 passed in 0.41s`; adapter `9 passed in
+4.26s`; integration `12 passed in 1.21s`; build PASS. Model-free and real-local-model OpenCode
+smokes PASS when run serially.
+Benchmark results: exact `47d47cd` cold graph/symbol 2,739.11 ms; standard context p50 29.81 ms at
+100 items/2,131 tokens; weak context p50 34.15 ms at 8 items/148 tokens; test selection p50 31.33 ms
+with two candidates/no fallback; DB 5,152,768 bytes; max RSS 43,984 KiB.
+OpenCode version: 1.18.18.
+Model/provider: real local `ollama/qwen3.6-27b-q5_k_m:latest` for adapter runtime-event evidence;
+8,887 input/33 output tokens, 64,528 ms, cost 0.
 Routing profile: not applicable; live routing is out of scope.
-Known failures: the first runtime smoke incorrectly expected session-shell to emit a stable tool
-hook and timed out after 20 seconds; corrected after real-host diagnosis.
+Known failures: an initial concurrent execution of both OpenCode smokes caused one shared-database
+lock; both passed when rerun serially. The earlier session-shell hook expectation was corrected.
 Known limitations: actual stable `bash` metadata lacked exit status and remains `observed`; the
 resolver correction does not claim dynamic-import completeness; context projects Graph nodes only.
-Uncommitted work: bounded resolver correction, benchmark candidate gate, and measured-decision docs.
+Uncommitted work: formatting, compact evidence, final status, and handoff sync.
 Temporary work: none.
 
-Next exact action: commit the resolver correction, rerun model-free/model-backed OpenCode smoke and
-the PR-E benchmark on exact head, then record compact evidence and final gates.
-Next files: `tools/local/`, `docs/evidence/pr-e/`, CURRENT_STATUS and handoff.
-Next commands: `git diff --check`; commit; `tools/local/opencode-smoke`;
-`EXTENDCODEAGENT_SMOKE_MODEL=ollama/qwen3.6-27b-q5_k_m:latest tools/local/opencode-runtime-smoke`;
-`tools/local/pr-e-benchmark`; record exact outputs; run all-fast/integration/build.
+Next exact action: commit evidence/handoff, push the branch, create PR-E, inspect remote diff/head,
+merge, then create the small merged-state closeout.
+Next files: `docs/evidence/pr-e/`, CURRENT_STATUS and handoff.
+Next commands: `git diff --check`; commit; push; `gh pr create`; verify; merge.
 Rollback path: revert PR-E commits or delete this branch; merged PR-D remains unaffected.

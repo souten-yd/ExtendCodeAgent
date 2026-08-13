@@ -200,9 +200,9 @@ def test_source_root_package_reexport_resolves_to_calling_test_without_name_coll
             _edge("py://other#caller", unrelated, "calls"),
         ),
     )
-    report = GraphAnalysisService(
-        snapshot, PythonCanonicalReferenceResolver()
-    ).assess_impact(ImpactQuery((definition,), max_depth=3))
+    report = GraphAnalysisService(snapshot, PythonCanonicalReferenceResolver()).assess_impact(
+        ImpactQuery((definition,), max_depth=3)
+    )
 
     assert {item.canonical_ref for item in report.recommended_tests} == {test_ref}
     assert all(
