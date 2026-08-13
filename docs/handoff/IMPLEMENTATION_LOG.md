@@ -129,3 +129,7 @@
   collectors, context broker/query behavior, and direct tests before writing production code.
 - Chose ADAPT for truthful revision-aware runtime/context behavior, CONSOLIDATE for existing target
   contracts, NEW for Test Obsolescence, and DO NOT PORT for Atlas runners/application DTOs.
+- Added behavior-first pure-domain slices for immutable runtime observations/reconciliation,
+  confidence-aware test selection, six-state test health, and bounded weak/standard context.
+- Expanded architecture boundaries to the new host-neutral packages. Focused `12 passed`; all-fast
+  passed with Python `61 passed in 0.48s` and adapter `6 passed in 4.25s`.
