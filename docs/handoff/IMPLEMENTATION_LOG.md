@@ -170,3 +170,5 @@
   A concurrent gate run was slower from host contention and was not used as the reference value.
 - PR-F final gates: Ruff/format/mypy PASS, Python 75 passed, adapter 9 passed, integration Python 13
   passed plus adapter 9 passed, and Python package/TypeScript build PASS.
+- PR #12 remote head `44d123b` matched and was mergeable with no GitHub CI; it squash-merged to
+  `main` as `157fd19b56db6c61e61b5f02ab81e3bf985d79fd`.
