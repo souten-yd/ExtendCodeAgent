@@ -1,21 +1,18 @@
 # Next Task
 
-Finish PR-H JS/TS/deep-graph scope without mixing Research/Traceability.
+Start PR-I Research/Evidence/Traceability/project convergence without adding Release Validation.
 
-1. Publish/merge the current documentation-only closeout with PR #14 merge hashes, post-merge gates,
-   and the frontier limitation.
-2. Fast-forward main and create `agent/pr-h-js-ts-deep-graph` from the exact closeout head.
-3. Inspect the measured ControlDeck affected path ratio and add a minimal auto full-build selection
-   path to the existing Twin lifecycle; do not add a parallel refresh engine.
-4. Run focused Twin and JS/TS tests, then repeat the ControlDeck comparison.
-5. Add compact benchmark and curated FP/FN evidence, then decide whether any on-demand framework or
-   deep graph closes a measured task gap.
-6. Read only PR-H and JS/TS analyzer slices, inspect current analyzer plugin contracts/callers/tests,
-   and classify REUSE/ADAPT/NEW before implementation.
-4. Implement JS/TS semantic analysis first. Use PR-G evidence to keep deeper CFG/DFG/framework
-   graphs on-demand; do not add Research/Evidence/Traceability from PR-I.
-5. Build curated JS/TS ground truth and real measurements before deciding which deep graph is worth
-   its maintenance/query cost.
+1. Merge this PR-H closeout, fast-forward main, and create `agent/pr-i-research-traceability`.
+2. Read only the PR-I plan/audit slices and inspect current Provenance, EvidenceRef, Runtime,
+   Blueprint, Convergence, sidecar/MCP, SQLite, CapabilityPolicy callers and tests.
+3. Inspect only the matching KasaneCore Nexus domain contracts/tests. Classify each behavior as
+   REUSE, ADAPT, CONSOLIDATE, REPLACE, NEW, or DO NOT PORT before production code.
+4. Move behavioral tests first for `ResearchRequest`, `ResearchPlan`, `SourceCandidate`, `Evidence`,
+   `Claim`, `CoverageGap`, `RetrievalDeficit`, ports, and project-level requirement traceability.
+5. Reuse OpenCode web/MCP retrieval through ports; external evidence must never become verified
+   project fact. Keep provider/application infrastructure and raw large logs out.
+6. Add project-level convergence through existing target/actual/evidence projections, then run
+   focused gates, all-fast/build, relevant integration and benchmark evidence.
 
 Resume:
 
@@ -24,7 +21,7 @@ cd /home/souten/ExtendCodeAgent
 git switch main
 git pull --ff-only origin main
 git status --short
-git switch -c agent/pr-h-js-ts-deep-graph
+git switch -c agent/pr-i-research-traceability
 ```
 
-Keep Research/Traceability/project convergence (PR-I) outside PR-H.
+Keep final multi-repository/model Release Validation in a separate PR after PR-I merge/closeout.

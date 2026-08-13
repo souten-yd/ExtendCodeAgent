@@ -2,13 +2,13 @@
 
 Updated: 2026-08-14 (Asia/Tokyo)
 
-Current branch: `agent/pr-h-js-ts-deep-graph`
-Current PR: #16 `https://github.com/souten-yd/ExtendCodeAgent/pull/16`
-Base commit: `fe61a16e8f7f07e760d99ca449bc09c90166a6c5`
-Latest commit: `9222fa08a58bd4c97eaddb34cff7afbe1a8998eb`
-Milestone: PR-H JS/TS semantic and benchmark-justified on-demand deep graph
-Current task: verify and merge PR-H, then leave closeout on main
-Status: PR #16 open; final local gates PASS; mergeability recalculating after handoff push
+Current branch: `agent/pr-h-closeout`
+Current PR: PR-H #16 merged; closeout PR not created
+Base commit: `fdeeb4e694fa7f416bb3ac7e92f49952d31e1767`
+Latest commit: `fdeeb4e694fa7f416bb3ac7e92f49952d31e1767` (PR-H squash merge)
+Milestone: PR-H closeout; PR-I next
+Current task: merge documentation-only closeout, then start PR-I
+Status: PR-H merged and post-merge main gates PASS
 
 Completed:
 - added official tree-sitter JavaScript/TypeScript/TSX parsing dependencies;
@@ -30,6 +30,9 @@ Completed:
 - rejected always-on CFG/DFG/state/event/UI work because it does not close the measured browser/API
   evidence gap; deeper analyzers stay on-demand pending a concrete benchmark.
 - created PR #16; no GitHub Actions checks are configured.
+- PR #16 exact head `46306bf225035f2c40798a81992ac9f525eed5c0` was repeatedly
+  `MERGEABLE/CLEAN` and squash-merged as `fdeeb4e694fa7f416bb3ac7e92f49952d31e1767`;
+- post-merge main all-fast passed with 91 Python and 9 adapter tests; Python/TypeScript builds pass.
 - PR-G closeout PR #15 squash-merged as `fe61a16e8f7f07e760d99ca449bc09c90166a6c5`;
 - created PR-H branch from exact clean closeout main;
 - PR #14 exact head `1189c966a71d410a42ab3f51ed35d18b4c2f5af9` was mergeable/CLEAN
@@ -52,7 +55,7 @@ Completed:
 - verified frontier failure is reported unavailable for all 18 attempts, not as an empty success.
 
 In progress:
-- PR publication and merge.
+- documentation-only PR-H closeout publication/merge.
 
 Not started:
 - PR-I Research/Evidence/Traceability/project convergence;
@@ -116,19 +119,19 @@ Known limitations: local-low is stochastic; active is not made default; stable O
 a per-request max-output field; host cache tokens must not be conflated with new input. PR-H's
 current JS/TS analyzer builds a transient cross-file index; broad dependency closures therefore
 select full refresh. A persisted symbol index remains a future optimization, not a PR-H requirement.
-Uncommitted work: this handoff gate update only.
+Uncommitted work: PR-H closeout documentation only.
 Temporary work: evaluation-only Ollama `qwen3:0.6b` remains installed; no temporary repo files.
 
-Next exact action: commit/push this PR event, verify exact remote head and CLEAN mergeability, squash
-merge PR #16, then switch/pull main and run all-fast/build before closeout.
-Next files: PR metadata, then canonical closeout handoff only.
+Next exact action: commit/push/create/merge PR-H closeout, fast-forward main, create
+`agent/pr-i-research-traceability`, update handoff at task start, then inspect bounded PR-I sources.
+Next files: PR-I plan/audit slices, current evidence/convergence/storage/adapter contracts and tests.
 Next commands:
 
 ```bash
 cd /home/souten/ExtendCodeAgent
 git status --short
-git push -u origin agent/pr-h-js-ts-deep-graph
+git push -u origin agent/pr-h-closeout
 ```
 
-Rollback path: switch to `main`; PR-G closeout `fe61a16` is the clean base. PR-H commits are
-isolated on this branch. Do not remove or rewrite PR-B through PR-G implementations.
+Rollback path: closeout is documentation-only; PR-H implementation is merged at `fdeeb4e`. Revert
+the closeout commit only if its status metadata is wrong. Do not rewrite PR-B through PR-H.
