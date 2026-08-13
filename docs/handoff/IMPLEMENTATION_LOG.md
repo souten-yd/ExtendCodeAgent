@@ -218,3 +218,11 @@
 - PR #16 exact remote head `46306bf225035f2c40798a81992ac9f525eed5c0` was repeatedly
   `MERGEABLE/CLEAN` and squash-merged as `fdeeb4e694fa7f416bb3ac7e92f49952d31e1767`.
   Post-merge main passed all-fast (91 Python, 9 adapter) and both package builds.
+- PR-I extracted bounded research/evidence/claim/gap/deficit behavior behind provider-neutral ports,
+  added immutable evidence durability to shared SQLite, and projected explicit requirement IDs
+  through the existing Convergence engine. External evidence remains observed and cannot complete.
+- Added centrally policy-gated application behavior and MCP `pi_research_plan`; all-fast passed with
+  99 Python and 9 adapter tests.
+- PR-I benchmark on ExtendCodeAgent: 200-requirement Convergence mean 0.5424 ms/p50 0.5290 ms,
+  1,000 research plans mean 0.0020 ms, 200 evidence inserts 196.650 ms, restart PASS, DB+WAL
+  17,771,744 bytes, max RSS 59,644 KiB.
