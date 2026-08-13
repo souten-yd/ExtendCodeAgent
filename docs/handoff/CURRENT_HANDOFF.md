@@ -2,15 +2,17 @@
 
 Updated: 2026-08-13 (Asia/Tokyo)
 
-Current branch: `agent/pr-g-closeout`
-Current PR: closeout not created
-Base commit: `3386cfa429caf5b476e8abc5d52d87a8ab99c719`
-Latest commit: `3386cfa429caf5b476e8abc5d52d87a8ab99c719` (PR-G squash merge)
-Milestone: PR-G merged-state closeout
-Current task: publish/merge closeout, then start PR-H JS/TS semantic work
-Status: PR-G complete and merged; closeout in progress
+Current branch: `agent/pr-h-js-ts-deep-graph`
+Current PR: not created
+Base commit: `fe61a16e8f7f07e760d99ca449bc09c90166a6c5`
+Latest commit: `fe61a16e8f7f07e760d99ca449bc09c90166a6c5` (PR-G closeout merge)
+Milestone: PR-H JS/TS semantic and benchmark-justified on-demand deep graph
+Current task: inspect existing analyzer contracts/callers/tests and bounded PR-H plan/audit slices
+Status: started; no production changes yet
 
 Completed:
+- PR-G closeout PR #15 squash-merged as `fe61a16e8f7f07e760d99ca449bc09c90166a6c5`;
+- created PR-H branch from exact clean closeout main;
 - PR #14 exact head `1189c966a71d410a42ab3f51ed35d18b4c2f5af9` was mergeable/CLEAN
   and squash-merged as `3386cfa429caf5b476e8abc5d52d87a8ab99c719`;
 - post-merge main passed all-fast (85 Python in 0.64s, adapter 9) and Python/TypeScript builds;
@@ -31,10 +33,10 @@ Completed:
 - verified frontier failure is reported unavailable for all 18 attempts, not as an empty success.
 
 In progress:
-- merged-state documentation closeout only.
+- search-first inspection and REUSE/ADAPT/NEW/DO NOT PORT classification.
 
 Not started:
-- PR-H JS/TS and on-demand deep graph;
+- PR-H behavioral tests and implementation;
 - PR-I Research/Evidence/Traceability/project convergence;
 - final multi-repository Release Validation.
 
@@ -45,7 +47,7 @@ Architecture classification:
 
 Files changed: `src/extendcodeagent/core/model_routing/`, `src/extendcodeagent/strategy/`, focused
 tests, `tools/local/pr-g-evaluate`, PR-G evidence, and canonical handoff/status documents.
-Files currently being edited: documentation/evidence only.
+Files currently being edited: handoff task-start checkpoint only.
 
 Exact tests executed:
 - repeated focused Ruff/mypy and
@@ -79,12 +81,12 @@ Routing profile: deterministic fake coverage plus real native/off/advisory/activ
 Known failures: configured frontier returns OpenCode `APIError`; no frontier quality claim.
 Known limitations: local-low is stochastic; active is not made default; stable OpenCode prompt lacks
 a per-request max-output field; host cache tokens must not be conflated with new input.
-Uncommitted work: closeout documentation only.
+Uncommitted work: PR-H task-start handoff only.
 Temporary work: evaluation-only Ollama `qwen3:0.6b` remains installed; no temporary repo files.
 
-Next exact action: commit/push/merge the closeout, fast-forward main, create
-`agent/pr-h-js-ts-deep-graph`, and begin bounded PR-H inspection.
-Next files: current documentation/evidence only, then PR metadata.
+Next exact action: commit task-start handoff; read exact PR-H plan/audit sections; inspect analyzer
+contracts, Python analyzer, discovery/refresh callers, and tests before writing behavior tests.
+Next files: `src/extendcodeagent/graph/analyzers/`, `src/extendcodeagent/twin/`, relevant tests.
 Next commands:
 
 ```bash

@@ -192,3 +192,5 @@
   `MERGEABLE/CLEAN`; it squash-merged as `3386cfa429caf5b476e8abc5d52d87a8ab99c719`.
 - Post-merge main all-fast passed with Python 85 tests in 0.64s and adapter 9 tests; Python
   sdist/wheel and TypeScript builds passed.
+- PR-G closeout PR #15 merged as `fe61a16e8f7f07e760d99ca449bc09c90166a6c5`; created
+  `agent/pr-h-js-ts-deep-graph` from exact clean main and began bounded search-first inspection.
