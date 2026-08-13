@@ -13,6 +13,19 @@ from datetime import datetime
 from pathlib import Path
 from typing import cast
 
+from extendcodeagent.blueprint.contracts import (
+    BlueprintElement,
+    BlueprintRevision,
+    BlueprintScope,
+    BlueprintStatus,
+)
+from extendcodeagent.convergence.contracts import (
+    ConvergenceDecision,
+    ConvergenceRecommendation,
+    ConvergenceReport,
+    ElementConvergence,
+    ElementState,
+)
 from extendcodeagent.core.contracts import (
     CanonicalRef,
     Confidence,
@@ -21,6 +34,7 @@ from extendcodeagent.core.contracts import (
     ProjectRef,
     Provenance,
     SourceRevision,
+    TwinRevisionRef,
 )
 from extendcodeagent.graph import (
     FactStatus,
@@ -37,7 +51,7 @@ from extendcodeagent.runtime import (
     RuntimeObservation,
 )
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 
 class StoreError(RuntimeError):
@@ -260,6 +274,111 @@ class SqliteGraphStore:
             ).fetchall()
         return tuple(_load_observation(row["payload"]) for row in rows)
 
+    def put_blueprint_revision(self, revision: BlueprintRevision) -> bool:
+        scope = _scope(revision.project)
+        payload = _dump(revision)
+        existing = self._connection.execute(
+            "SELECT payload FROM blueprint_revisions WHERE scope=? AND revision_id=?",
+            (scope, revision.revision_id),
+        ).fetchone()
+        if existing:
+            if existing["payload"] != payload:
+                raise StoreError(f"immutable blueprint revision collision: {revision.revision_id}")
+            return False
+        with self._transaction():
+            self._connection.execute(
+                "INSERT INTO blueprint_revisions(scope,revision_id,blueprint_id,status,created_at,payload) VALUES(?,?,?,?,?,?)",
+                (
+                    scope,
+                    revision.revision_id,
+                    revision.blueprint_id,
+                    revision.status.value,
+                    revision.created_at.isoformat(),
+                    payload,
+                ),
+            )
+        return True
+
+    def blueprint_revision(self, project: ProjectRef, revision_id: str) -> BlueprintRevision | None:
+        row = self._connection.execute(
+            "SELECT payload FROM blueprint_revisions WHERE scope=? AND revision_id=?",
+            (_scope(project), revision_id),
+        ).fetchone()
+        return _load_blueprint_revision(row["payload"]) if row else None
+
+    def blueprint_revisions(self, project: ProjectRef) -> tuple[BlueprintRevision, ...]:
+        rows = self._connection.execute(
+            "SELECT payload FROM blueprint_revisions WHERE scope=? ORDER BY created_at,revision_id",
+            (_scope(project),),
+        ).fetchall()
+        return tuple(_load_blueprint_revision(row["payload"]) for row in rows)
+
+    def blueprint_status(self, project: ProjectRef, revision_id: str) -> BlueprintStatus | None:
+        row = self._connection.execute(
+            "SELECT status FROM blueprint_revisions WHERE scope=? AND revision_id=?",
+            (_scope(project), revision_id),
+        ).fetchone()
+        return BlueprintStatus(row["status"]) if row else None
+
+    def set_blueprint_status(
+        self, project: ProjectRef, revision_id: str, status: BlueprintStatus
+    ) -> None:
+        with self._transaction():
+            cursor = self._connection.execute(
+                "UPDATE blueprint_revisions SET status=? WHERE scope=? AND revision_id=?",
+                (status.value, _scope(project), revision_id),
+            )
+            if cursor.rowcount != 1:
+                raise StoreError(f"blueprint revision not found: {revision_id}")
+
+    def set_active_blueprint(self, project: ProjectRef, revision_id: str) -> None:
+        if self.blueprint_revision(project, revision_id) is None:
+            raise StoreError(f"blueprint revision not found: {revision_id}")
+        with self._transaction():
+            self._connection.execute(
+                "INSERT INTO active_blueprints(scope,revision_id) VALUES(?,?) ON CONFLICT(scope) DO UPDATE SET revision_id=excluded.revision_id",
+                (_scope(project), revision_id),
+            )
+
+    def active_blueprint_revision_id(self, project: ProjectRef) -> str | None:
+        row = self._connection.execute(
+            "SELECT revision_id FROM active_blueprints WHERE scope=?", (_scope(project),)
+        ).fetchone()
+        return str(row["revision_id"]) if row else None
+
+    def put_convergence(
+        self,
+        report: ConvergenceReport,
+        recommendation: ConvergenceRecommendation,
+    ) -> None:
+        if report.project is None:
+            raise StoreError("cannot persist an unscoped convergence report")
+        with self._transaction():
+            self._connection.execute(
+                "INSERT INTO convergence_reports(scope,report_id,generated_at,report_payload,recommendation_payload) VALUES(?,?,?,?,?)",
+                (
+                    _scope(report.project),
+                    report.report_id,
+                    report.generated_at.isoformat(),
+                    _dump(report),
+                    _dump(recommendation),
+                ),
+            )
+
+    def latest_convergence(
+        self, project: ProjectRef
+    ) -> tuple[ConvergenceReport, ConvergenceRecommendation] | None:
+        row = self._connection.execute(
+            "SELECT report_payload,recommendation_payload FROM convergence_reports WHERE scope=? ORDER BY generated_at DESC,row_id DESC LIMIT 1",
+            (_scope(project),),
+        ).fetchone()
+        if not row:
+            return None
+        return (
+            _load_convergence_report(row["report_payload"]),
+            _load_convergence_recommendation(row["recommendation_payload"]),
+        )
+
     def prune(self, project: ProjectRef, *, keep: int) -> int:
         if keep <= 0:
             raise ValueError("keep must be positive")
@@ -401,7 +520,13 @@ class SqliteGraphStore:
             CREATE INDEX IF NOT EXISTS runtime_observations_revision ON runtime_observations(scope,source_revision,status);
             CREATE TABLE IF NOT EXISTS runtime_observation_refs(scope TEXT NOT NULL,observation_id TEXT NOT NULL,canonical_ref TEXT NOT NULL,PRIMARY KEY(scope,observation_id,canonical_ref),FOREIGN KEY(scope,observation_id) REFERENCES runtime_observations(scope,observation_id) ON DELETE CASCADE);
             CREATE INDEX IF NOT EXISTS runtime_observation_refs_reverse ON runtime_observation_refs(scope,canonical_ref,observation_id);
+            CREATE TABLE IF NOT EXISTS blueprint_revisions(scope TEXT NOT NULL,revision_id TEXT NOT NULL,blueprint_id TEXT NOT NULL,status TEXT NOT NULL,created_at TEXT NOT NULL,payload TEXT NOT NULL,PRIMARY KEY(scope,revision_id));
+            CREATE INDEX IF NOT EXISTS blueprint_revisions_blueprint ON blueprint_revisions(scope,blueprint_id,created_at);
+            CREATE TABLE IF NOT EXISTS active_blueprints(scope TEXT PRIMARY KEY,revision_id TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS convergence_reports(row_id INTEGER PRIMARY KEY,scope TEXT NOT NULL,report_id TEXT NOT NULL,generated_at TEXT NOT NULL,report_payload TEXT NOT NULL,recommendation_payload TEXT NOT NULL,UNIQUE(scope,report_id));
+            CREATE INDEX IF NOT EXISTS convergence_reports_latest ON convergence_reports(scope,generated_at,row_id);
             UPDATE schema_meta SET version=2 WHERE version<2;
+            UPDATE schema_meta SET version=3 WHERE version<3;
             """
         )
 
@@ -541,4 +666,77 @@ def _load_observation(payload: str) -> RuntimeObservation:
         raw["tool"],
         tuple(_evidence_ref(item) for item in raw["artifacts"]),
         str(raw["summary"]),
+    )
+
+
+def _load_blueprint_revision(payload: str) -> BlueprintRevision:
+    raw = json.loads(payload)
+    twin = raw.get("source_twin_revision")
+    return BlueprintRevision(
+        str(raw["blueprint_id"]),
+        str(raw["revision_id"]),
+        _project(raw["project"]),
+        BlueprintScope(raw["scope"]),
+        tuple(
+            BlueprintElement(
+                str(item["element_id"]),
+                CanonicalRef(item["planned_ref"]["value"]),
+                str(item["element_type"]),
+                bool(item["mandatory"]),
+                tuple(CanonicalRef(value["value"]) for value in item["expected_actual_refs"]),
+                tuple(str(value) for value in item["acceptance_criteria"]),
+                tuple(str(value) for value in item["depends_on_element_ids"]),
+                bool(item["requires_verification"]),
+            )
+            for item in raw["elements"]
+        ),
+        datetime.fromisoformat(raw["created_at"]),
+        BlueprintStatus(raw["status"]),
+        raw["parent_revision_id"],
+        TwinRevisionRef(str(twin["revision_id"]), _source(twin["source_revision"]))
+        if isinstance(twin, dict)
+        else None,
+    )
+
+
+def _load_convergence_report(payload: str) -> ConvergenceReport:
+    raw = json.loads(payload)
+    twin = raw.get("actual_twin_revision")
+    project = raw.get("project")
+    return ConvergenceReport(
+        str(raw["report_id"]),
+        _project(project) if isinstance(project, dict) else None,
+        raw["target_revision_id"],
+        TwinRevisionRef(str(twin["revision_id"]), _source(twin["source_revision"]))
+        if isinstance(twin, dict)
+        else None,
+        tuple(
+            ElementConvergence(
+                str(item["element_id"]),
+                ElementState(item["state"]),
+                tuple(CanonicalRef(value["value"]) for value in item["matched_actual_refs"]),
+                tuple(CanonicalRef(value["value"]) for value in item["missing_actual_refs"]),
+                tuple(_evidence_ref(value) for value in item["evidence"]),
+                tuple(str(value) for value in item["diagnostics"]),
+            )
+            for item in raw["elements"]
+        ),
+        bool(raw["available"]),
+        datetime.fromisoformat(raw["generated_at"]),
+        tuple(str(value) for value in raw["diagnostics"]),
+        tuple(
+            (str(item[0]), tuple(str(value) for value in item[1]))
+            for item in raw.get("dependencies", [])
+        ),
+        bool(raw.get("target_valid", True)),
+        bool(raw.get("decision_required", False)),
+    )
+
+
+def _load_convergence_recommendation(payload: str) -> ConvergenceRecommendation:
+    raw = json.loads(payload)
+    return ConvergenceRecommendation(
+        ConvergenceDecision(raw["decision"]),
+        tuple(str(value) for value in raw["reason_codes"]),
+        tuple(str(value) for value in raw["affected_element_ids"]),
     )

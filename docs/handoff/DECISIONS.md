@@ -185,3 +185,24 @@ Alternatives rejected:
 Measured result before commit: the focused collision fixture passed and the real-repository
 candidate count changed from zero/full-suite fallback to two graph-linked candidates/no fallback.
 Exact-head latency and candidate refs are recorded with the PR-E evidence after commit.
+
+## 2026-08-13 — PR-F immutable payloads and schema-independent convergence projection
+
+KasaneCore confirms useful lifecycle/evaluator behavior, but its Blueprint module mixes immutable
+content with generator/planner DTOs and its Convergence evaluator imports Blueprint implementation
+models. Direct porting would violate the target's host-neutral and schema-independent boundaries.
+
+Decision: ADAPT the behavior onto two small domains. Blueprint revision payloads are immutable rows;
+review/approve/active/superseded status and the active pointer are operational metadata. Planned
+elements require `bp://` or `planned://`, while expected Actual refs remain separate. Convergence
+consumes only immutable `TargetSnapshot`, `ActualSnapshot`, and `VerificationEvidence` projections.
+The persisted report carries only the dependency projection needed for deterministic downstream
+decisions, not a Blueprint implementation model.
+
+The existing shared SQLite store owns durability and workspace isolation. The existing
+`ProjectIntelligenceApplication` owns projection and central CapabilityPolicy checks. No OpenCode
+adapter, model call, Atlas planner, or new feature-specific environment switch is introduced.
+
+Measured test evidence before commit: focused domain/store tests passed (10 tests), then the full
+local fast gate passed Ruff/format/strict mypy, 75 Python tests, and 9 adapter tests. The application
+test also proves creating a planned target does not change the Actual Graph node count.

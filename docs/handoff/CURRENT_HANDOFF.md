@@ -5,9 +5,9 @@ Updated: 2026-08-13 (Asia/Tokyo)
 Current branch: `agent/pr-f-blueprint-convergence`
 Current PR: not created
 Base commit: `f14cfb088f7f51539f3685350d0ec503ec29d7c1`
-Latest commit: `f14cfb0` (PR-E closeout merge)
+Latest commit: `1a657ba` (PR-F behavior-first tests)
 Milestone: PR-F Blueprint + task-level Convergence
-Current task: implement the host-neutral contracts/services required by the committed red tests
+Current task: commit the passing Blueprint/Convergence domain, durability, and policy integration
 Status: in progress
 
 Completed:
@@ -21,14 +21,20 @@ Completed:
   planned/actual separation, all eight states, all seven decisions, truthful evidence, restart, and
   workspace isolation;
 - confirmed the initial focused red gate fails only because the new target modules do not yet exist.
+- implemented immutable Blueprint contracts/lifecycle with explicit validation and simple-task
+  bypass, plus SQLite restart/workspace isolation;
+- implemented schema-independent task convergence with all eight states, all seven deterministic
+  decisions, truthful unavailable/stale evidence, and generic dependency traversal;
+- integrated both capabilities through the existing application and central CapabilityPolicy;
+- proved planned targets do not become Actual Graph nodes and off mode creates no database;
+- passed focused domain/store tests, Ruff/format/strict mypy, full Python 75 tests, and adapter 9
+  tests.
 
 In progress:
-- implement the minimum host-neutral Blueprint and Convergence domains behind those tests.
+- record the architecture decision and commit the passing vertical slice.
 
 Not started:
-- host-neutral Blueprint/Convergence contracts and services;
-- durable store/application integration;
-- focused/final gates, benchmark, evidence, publication.
+- bounded deterministic benchmark, exact-head integration/build evidence, publication.
 
 Architecture classification:
 - ADAPT immutable Blueprint revision/lifecycle and convergence evaluator/policy semantics;
@@ -49,23 +55,24 @@ Out of scope:
 - Research/Traceability and project-level Convergence (PR-I);
 - OpenCode/model integration changes.
 
-Files changed: handoff plus behavior-first Blueprint/Convergence unit and integration tests.
-Files currently being edited: new host-neutral `blueprint/` and `convergence/` packages.
-Exact tests executed: base `tools/local/all-fast`; base `tools/local/build`; focused PR-F red pytest.
-Exact results: PASS; Python 64 passed in 0.45s, adapter 9 passed, Ruff/format/mypy PASS, Python and
-TypeScript builds PASS.
+Files changed: new `blueprint/` and `convergence/` domains, shared SQLite store, application
+composition, architecture test, unit/integration tests, and handoff.
+Files currently being edited: architecture decision and handoff before substantive commit.
+Exact tests executed: base gates; focused red pytest; focused domain/store pytest; targeted
+Ruff/mypy; post-integration `tools/local/all-fast`.
+Exact results: focused 10 passed; final fast gate Ruff/format/mypy PASS, Python `75 passed in
+0.95s`, adapter `9 passed` in 4.56s.
 Benchmark results: not started.
 OpenCode version: not applicable to PR-F; last verified 1.18.18 in PR-E.
 Model/provider: none; PR-F deterministic domain work does not use a model.
 Routing profile: not applicable.
-Known failures: focused PR-F tests currently fail collection with expected missing
-`extendcodeagent.blueprint` and `extendcodeagent.convergence` modules.
+Known failures: initial red gate failed only for missing target modules; resolved by implementation.
 Known limitations: PR-F is task-level only; project-level convergence remains PR-I.
-Uncommitted work: behavior-first tests and this test-gate handoff update.
+Uncommitted work: passing domain/store/application implementation and documentation update.
 Temporary work: none.
 
-Next exact action: implement immutable contracts, in-memory lifecycle service, pure convergence
-evaluator/policy, then run unit tests before SQLite integration.
-Next files: `src/extendcodeagent/blueprint/`, `src/extendcodeagent/convergence/`.
-Next commands: implement; run focused unit pytest; then add durable repository adapters.
+Next exact action: commit this passing slice, add a bounded reproducible PR-F benchmark, record
+compact evidence, then run integration/build/final gates.
+Next files: `tools/local/pr_f_benchmark.py`, `docs/evidence/pr-f/`, handoff/status.
+Next commands: commit; implement benchmark; run benchmark, integration, all-fast, build.
 Rollback path: discard/revert only this branch; merged PR-E remains intact on main.

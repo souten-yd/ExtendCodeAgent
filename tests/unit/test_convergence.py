@@ -51,7 +51,9 @@ def _actual(*refs: str) -> ActualSnapshot:
     )
 
 
-def _evidence(ref: str, status: EvidenceStatus, revision: SourceRevision = SOURCE) -> VerificationEvidence:
+def _evidence(
+    ref: str, status: EvidenceStatus, revision: SourceRevision = SOURCE
+) -> VerificationEvidence:
     return VerificationEvidence(
         CanonicalRef(ref),
         status,
@@ -159,6 +161,25 @@ def test_decision_policy_is_deterministic_and_scoped() -> None:
     assert decision.decision is ConvergenceDecision.REPLAN_DOWNSTREAM
     assert decision.affected_element_ids == ("base", "dependent")
     assert decide_convergence(divergent).decision is ConvergenceDecision.REPAIR_CURRENT
-    assert decide_convergence(divergent, target_invalid=True).decision is ConvergenceDecision.REVISE_TARGET
-    assert decide_convergence(divergent, decision_required=True).decision is ConvergenceDecision.REQUEST_DECISION
+    assert (
+        decide_convergence(divergent, target_invalid=True).decision
+        is ConvergenceDecision.REVISE_TARGET
+    )
+    assert (
+        decide_convergence(divergent, decision_required=True).decision
+        is ConvergenceDecision.REQUEST_DECISION
+    )
     assert decide_convergence(divergent, unsafe=True).decision is ConvergenceDecision.HALT
+
+    invalid = evaluate_convergence(
+        TargetSnapshot(PROJECT, "invalid", (_target("service"),), valid=False),
+        _actual("file://service.py"),
+        (),
+    )
+    undecided = evaluate_convergence(
+        TargetSnapshot(PROJECT, "undecided", (_target("service"),), decision_required=True),
+        _actual("file://service.py"),
+        (),
+    )
+    assert decide_convergence(invalid).decision is ConvergenceDecision.REVISE_TARGET
+    assert decide_convergence(undecided).decision is ConvergenceDecision.REQUEST_DECISION

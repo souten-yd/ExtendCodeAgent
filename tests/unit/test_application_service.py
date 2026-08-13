@@ -5,7 +5,10 @@ from pathlib import Path
 
 import pytest
 
+from extendcodeagent.blueprint import BlueprintElement
+from extendcodeagent.convergence import ActualElement, ActualSnapshot, ConvergenceDecision
 from extendcodeagent.core.config import ConfigLayer, ConfigResolver
+from extendcodeagent.core.contracts import CanonicalRef, SourceRevision, TwinRevisionRef
 from extendcodeagent.core.policy import CapabilityPolicy
 from extendcodeagent.service import CapabilityUnavailable, ProjectIntelligenceApplication
 
@@ -28,6 +31,8 @@ def _policy(mode: str) -> CapabilityPolicy:
             "test_obsolescence",
             "runtime",
             "context",
+            "blueprint",
+            "convergence",
         )
     }
     resolved = ConfigResolver().resolve(
@@ -170,3 +175,47 @@ def test_active_event_refresh_invalidates_removed_symbol(tmp_path: Path) -> None
             "py://service#replacement"
         }
     assert refreshed["accepted"] is True
+
+
+def test_blueprint_and_convergence_use_policy_without_polluting_actual_graph(
+    tmp_path: Path,
+) -> None:
+    root = _repo(tmp_path)
+    database = tmp_path / "graph.db"
+    with ProjectIntelligenceApplication(root, database, _policy("advisory")) as application:
+        before = application.status()
+        created = application.create_blueprint(
+            (
+                BlueprintElement(
+                    "planned",
+                    CanonicalRef("bp://planned"),
+                    "file",
+                    expected_actual_refs=(CanonicalRef("file://planned.py"),),
+                    requires_verification=False,
+                ),
+            )
+        )
+        assert created is not None
+        after = application.status()
+        actual = ActualSnapshot(
+            application.project,
+            TwinRevisionRef("twin-1", SourceRevision(application.source_revision())),
+            (ActualElement(CanonicalRef("file://planned.py"), "file"),),
+        )
+        _, recommendation = application.evaluate_task_convergence(
+            created.revision.revision_id, actual
+        )
+
+    assert before["nodes"] == after["nodes"]
+    assert recommendation.decision is ConvergenceDecision.COMPLETE
+
+
+def test_blueprint_off_is_inert(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    database = tmp_path / "graph.db"
+    with (
+        ProjectIntelligenceApplication(root, database, _policy("off")) as application,
+        pytest.raises(CapabilityUnavailable),
+    ):
+        application.create_blueprint(())
+    assert not database.exists()

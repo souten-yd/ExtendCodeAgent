@@ -13,7 +13,24 @@ from extendcodeagent.analysis import (
     PathQuery,
     PythonCanonicalReferenceResolver,
 )
+from extendcodeagent.blueprint import (
+    BlueprintElement,
+    BlueprintService,
+    BlueprintView,
+)
+from extendcodeagent.blueprint.storage import SqliteBlueprintRepository
 from extendcodeagent.context import ContextProfile, ContextRequest, build_context
+from extendcodeagent.convergence import (
+    ActualSnapshot,
+    ConvergenceRecommendation,
+    ConvergenceReport,
+    TargetElement,
+    TargetSnapshot,
+    VerificationEvidence,
+    decide_convergence,
+    evaluate_convergence,
+)
+from extendcodeagent.convergence.storage import SqliteConvergenceRepository
 from extendcodeagent.core.config.schema import CapabilityName, RolloutMode
 from extendcodeagent.core.contracts import CanonicalRef, ProjectRef, Provenance, SourceRevision
 from extendcodeagent.core.policy import CapabilityPolicy
@@ -52,6 +69,7 @@ class ProjectIntelligenceApplication:
         self.project = ProjectRef(f"{self.root.name}-{digest}", "default", self.root.as_uri())
         self._store: SqliteGraphStore | None = None
         self._twin: TwinService | None = None
+        self._blueprints: BlueprintService | None = None
 
     def __enter__(self) -> ProjectIntelligenceApplication:
         return self
@@ -64,6 +82,7 @@ class ProjectIntelligenceApplication:
             self._store.close()
             self._store = None
             self._twin = None
+            self._blueprints = None
 
     def status(self) -> dict[str, Any]:
         mode = self.policy.mode(CapabilityName.GRAPH)
@@ -323,6 +342,67 @@ class ProjectIntelligenceApplication:
             excluded_count=package.excluded_count,
         )
 
+    def create_blueprint(
+        self,
+        elements: tuple[BlueprintElement, ...],
+        *,
+        durable: bool = True,
+    ) -> BlueprintView | None:
+        if not self.policy.allows_explicit_use(CapabilityName.BLUEPRINT):
+            raise CapabilityUnavailable("blueprint is not available for explicit use")
+        return self._ensure_blueprints().create(self.project, elements, durable=durable)
+
+    def review_blueprint(self, revision_id: str) -> BlueprintView:
+        self._require_explicit(CapabilityName.BLUEPRINT)
+        return self._ensure_blueprints().review(self.project, revision_id)
+
+    def approve_blueprint(self, revision_id: str) -> BlueprintView:
+        self._require_explicit(CapabilityName.BLUEPRINT)
+        return self._ensure_blueprints().approve(self.project, revision_id)
+
+    def activate_blueprint(self, revision_id: str) -> BlueprintView:
+        self._require_explicit(CapabilityName.BLUEPRINT)
+        return self._ensure_blueprints().activate(self.project, revision_id)
+
+    def evaluate_task_convergence(
+        self,
+        blueprint_revision_id: str,
+        actual: ActualSnapshot,
+        verification: tuple[VerificationEvidence, ...] = (),
+        *,
+        unsafe: bool = False,
+        decision_required: bool = False,
+        target_invalid: bool = False,
+        interface_changed: tuple[str, ...] = (),
+    ) -> tuple[ConvergenceReport, ConvergenceRecommendation]:
+        self._require_explicit(CapabilityName.CONVERGENCE)
+        view = self._ensure_blueprints().get(self.project, blueprint_revision_id)
+        target = TargetSnapshot(
+            self.project,
+            view.revision.revision_id,
+            tuple(
+                TargetElement(
+                    item.element_id,
+                    item.planned_ref,
+                    item.expected_actual_refs,
+                    item.mandatory,
+                    item.requires_verification,
+                    item.depends_on_element_ids,
+                )
+                for item in view.revision.elements
+            ),
+        )
+        report = evaluate_convergence(target, actual, verification)
+        recommendation = decide_convergence(
+            report,
+            unsafe=unsafe,
+            decision_required=decision_required,
+            target_invalid=target_invalid,
+            interface_changed=interface_changed,
+        )
+        SqliteConvergenceRepository(self._ensure_store()).put(report, recommendation)
+        return report, recommendation
+
     def _impact_report(
         self,
         snapshot: GraphSnapshot,
@@ -342,9 +422,12 @@ class ProjectIntelligenceApplication:
         )
 
     def _explicit_snapshot(self, capability: CapabilityName) -> GraphSnapshot:
+        self._require_explicit(capability)
+        return self._snapshot(open_if_missing=True)
+
+    def _require_explicit(self, capability: CapabilityName) -> None:
         if not self.policy.allows_explicit_use(capability):
             raise CapabilityUnavailable(f"{capability.value} is not available for explicit use")
-        return self._snapshot(open_if_missing=True)
 
     def _snapshot(self, *, open_if_missing: bool) -> GraphSnapshot:
         if self._twin is None:
@@ -369,6 +452,11 @@ class ProjectIntelligenceApplication:
             self.database.parent.mkdir(parents=True, exist_ok=True)
             self._store = SqliteGraphStore(self.database)
         return self._store
+
+    def _ensure_blueprints(self) -> BlueprintService:
+        if self._blueprints is None:
+            self._blueprints = BlueprintService(SqliteBlueprintRepository(self._ensure_store()))
+        return self._blueprints
 
 
 def _result(snapshot: GraphSnapshot, **values: Any) -> dict[str, Any]:
