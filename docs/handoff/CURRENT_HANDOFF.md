@@ -5,7 +5,7 @@ Updated: 2026-08-13 (Asia/Tokyo)
 Current branch: `agent/pr-c-semantic-impact`
 Current PR: not created
 Base commit: `faf307dbff00f8f33671a8cb885bfe8593b5725f`
-Latest commit: `40587d7` (Python semantic/path/impact implementation)
+Latest commit: `e3a65b7` (completed PR-C implementation and evidence)
 Current milestone: PR-C Structural/Python Semantic + Path/Impact
 Current task: final diff/evidence review before PR-C publication
 Task status: in progress
@@ -66,12 +66,12 @@ Exact tests executed:
 - `tools/local/test-integration`
 - `tools/local/build`
 - `tools/local/benchmark-pr-c`
-Exact results: focused `15 passed`; final pre-publication all-fast Ruff PASS, strict mypy PASS,
-`45 passed in 0.14s`; integration `8 passed in 0.35s`; sdist/wheel build success.
-Benchmark results: 64 files, 423 nodes, 2,194 edges; cold semantic index 637.215 ms;
-dependency-aware two-file incremental refresh 280.653 ms; DB+WAL 3,975,808 bytes; max RSS
-44,932 KiB; 100 impact queries p50 0.0652 ms/p95 0.3078 ms; 100 lexical `rg` baseline queries
-p50 2.2526 ms/p95 3.308 ms. The baselines are not quality-equivalent.
+Exact results: focused `15 passed`; substantive-head all-fast Ruff PASS, strict mypy PASS,
+`45 passed in 0.18s`; integration `8 passed in 3.30s`; sdist/wheel build success.
+Benchmark results: 64 files, 423 nodes, 2,194 edges; cold semantic index 623.969 ms;
+dependency-aware two-file incremental refresh 282.761 ms; DB+WAL 3,975,808 bytes; max RSS
+44,720 KiB; 100 impact queries p50 0.0649 ms/p95 0.3118 ms; 100 lexical `rg` baseline queries
+p50 2.2538 ms/p95 3.3223 ms. The baselines are not quality-equivalent.
 OpenCode version: not tested; PR-D acceptance.
 Model/provider: none; PR-C is deterministic.
 Routing profile: not applicable.
@@ -80,8 +80,7 @@ Known limitations: LSP enrichment is optional in the plan and deferred because n
 consumer exists; Python analysis intentionally reports unresolved dynamic dispatch as uncertain;
 incremental semantic refresh parses all Python ASTs to build a correct symbol index before emitting
 only affected facts, so its scaling advantage is not yet proven.
-Uncommitted work: dependency-aware refresh, evidence scripts/reports, architecture-test expansion,
-and final documentation since substantive commit `40587d7`.
+Uncommitted work: final exact-evidence metadata only; production/evidence implementation is committed.
 Temporary work: none.
 
 Next exact action: commit the completed PR-C evidence slice, rerun exact-head gates, create the PR.

@@ -68,3 +68,6 @@
   sdist/wheel build succeeded.
 - Real-repository benchmark: 64 files, 423 nodes, 2,194 edges; cold 637.215 ms; dependency-aware
   incremental 280.653 ms; impact p50 0.0652 ms; lexical `rg` p50 2.2526 ms.
+- Substantive commit `e3a65b7`; exact substantive-head gates: all-fast `45 passed in 0.18s`,
+  integration `8 passed in 3.30s`, sdist/wheel build success. Repeated benchmark: cold 623.969 ms,
+  incremental 282.761 ms, impact p50 0.0649 ms, lexical `rg` p50 2.2538 ms.

@@ -24,7 +24,7 @@
 
 - Dependency-aware semantic refresh repairs unchanged importers of a removed/renamed symbol, but it
   currently parses every Python AST to build the symbol index before emitting only affected facts.
-  The 64-file sample improved from 637.215 ms cold to 280.653 ms incremental; larger-repository
+  The 64-file sample improved from 623.969 ms cold to 282.761 ms incremental; larger-repository
   scaling and a persisted symbol index remain future measurements.
 - Dynamic receiver calls are deliberately emitted as inferred `may_call` edges at confidence 0.35.
   This avoids false certainty but can produce name-collision false positives through alias bridging;

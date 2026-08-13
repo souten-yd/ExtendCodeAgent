@@ -71,8 +71,8 @@ host/model integration remain deliberately absent. The recorded real-repository 
 correct incremental behavior but only a 1.9% latency advantage on a 50-file repository.
 
 PR-C's current real-repository sample indexed 64 files into 423 nodes and 2,194 edges in
-637.215 ms. A dependency-aware two-file incremental refresh took 280.653 ms. One hundred repeated
-impact queries had p50 0.0652 ms; the separate lexical `rg` candidate baseline had p50 2.2526 ms.
+623.969 ms. A dependency-aware two-file incremental refresh took 282.761 ms. One hundred repeated
+impact queries had p50 0.0649 ms; the separate lexical `rg` candidate baseline had p50 2.2538 ms.
 These are latency measurements, not a claim that graph impact and lexical search have equal quality.
 
 ## Evidence policy

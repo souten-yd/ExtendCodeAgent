@@ -1,7 +1,7 @@
 # PR-C Ground-Truth Review
 
 Date: 2026-08-13  
-Revision: pending final PR-C head
+Substantive revision: `e3a65b7`
 
 The curated fixtures are deliberately small enough to inspect without trusting the analyzer. They
 exercise deterministic AST facts and typed graph facts separately so route/resource conventions do
