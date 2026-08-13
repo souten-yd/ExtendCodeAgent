@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import pytest
+
 from extendcodeagent.core.config.schema import ModelRole
 from extendcodeagent.core.model_routing import (
     ModelRequest,
+    ModelUnavailable,
     OpenAICompatibleAdapter,
     OpenCodeHostAdapter,
 )
@@ -84,3 +87,20 @@ def test_opencode_host_adapter_uses_stable_session_model_contract() -> None:
     assert (response.cache_read_tokens, response.cache_write_tokens) == (20, 4)
     assert response.reasoning_tokens == 2
     assert calls[-1][:2] == ("DELETE", "/session/session-1")
+
+
+def test_opencode_host_adapter_rejects_provider_failure_and_cleans_up() -> None:
+    calls: list[tuple[str, str, dict[str, object] | None]] = []
+
+    def transport(method: str, path: str, payload: dict[str, object] | None) -> object:
+        calls.append((method, path, payload))
+        if path == "/session":
+            return {"id": "failed-session"}
+        return {"info": {"error": {"name": "ProviderAuthError"}}, "parts": []}
+
+    adapter = OpenCodeHostAdapter(
+        "http://127.0.0.1:4096", "remote", "frontier", transport=transport
+    )
+    with pytest.raises(ModelUnavailable, match="ProviderAuthError"):
+        adapter.complete(ModelRequest(ModelRole.STRATEGY_REASONER, "plan"))
+    assert calls[-1][:2] == ("DELETE", "/session/failed-session")

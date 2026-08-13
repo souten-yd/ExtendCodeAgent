@@ -89,10 +89,23 @@ class OpenCodeHostAdapter:
         try:
             if not isinstance(raw, dict):
                 raise TypeError
+            raw_info = raw.get("info")
+            if not isinstance(raw_info, dict):
+                raise TypeError
+            provider_error = raw_info.get("error")
+            if provider_error is not None:
+                error_name = (
+                    str(provider_error.get("name", "unknown"))
+                    if isinstance(provider_error, dict)
+                    else "unknown"
+                )
+                raise ModelUnavailable(f"OpenCode model failed: {error_name}")
             parts = cast("list[JsonObject]", raw["parts"])
             text = "\n".join(
                 str(item["text"]) for item in parts if item.get("type") == "text" and "text" in item
             )
+            if not text.strip():
+                raise ModelUnavailable("OpenCode host returned no text")
             history = send("GET", message_path, None)
             if not isinstance(history, list):
                 raise TypeError
@@ -123,11 +136,12 @@ class OpenCodeHostAdapter:
                     _message_token_count(item, "reasoning") for item in assistant_messages
                 ),
             )
-            with suppress(ModelUnavailable):
-                send("DELETE", f"/session/{session_id}", None)
             return response
         except (KeyError, TypeError, ValueError) as error:
             raise ModelUnavailable("invalid OpenCode host response") from error
+        finally:
+            with suppress(ModelUnavailable):
+                send("DELETE", f"/session/{session_id}", None)
 
     def _send(self, method: str, path: str, payload: JsonObject | None) -> object:
         return _request_value(
