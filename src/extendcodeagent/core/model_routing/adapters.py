@@ -79,7 +79,7 @@ class OpenCodeHostAdapter:
             "parts": [{"type": "text", "text": request.prompt}],
         }
         if not self.enable_native_tools:
-            body["tools"] = {}
+            body["tools"] = {"*": False}
         message_path = f"/session/{session_id}/message"
         raw = send("POST", message_path, body)
         try:

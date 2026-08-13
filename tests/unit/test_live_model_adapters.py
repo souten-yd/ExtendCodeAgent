@@ -61,7 +61,7 @@ def test_opencode_host_adapter_uses_stable_session_model_contract() -> None:
     message = calls[1][2]
     assert isinstance(message, dict)
     assert message["model"] == {"providerID": "opencode", "modelID": "big-pickle"}
-    assert message["tools"] == {}
+    assert message["tools"] == {"*": False}
     assert response.text == "host answer"
     assert (response.input_tokens, response.output_tokens) == (8, 3)
     assert response.tool_calls == 1

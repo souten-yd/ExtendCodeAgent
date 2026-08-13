@@ -46,11 +46,15 @@ def main() -> None:
         help="comma-separated local-low,local-medium,host,frontier",
     )
     parser.add_argument("--modes", default="off,advisory,active", help="comma-separated modes")
+    parser.add_argument("--scenarios", default="", help="optional comma-separated scenario names")
     args = parser.parse_args()
     tiers = tuple(item for item in args.tiers.split(",") if item)
     modes = tuple(item for item in args.modes.split(",") if item)
     before = _worktree_state()
     scenarios = _scenarios()
+    if args.scenarios:
+        selected = set(args.scenarios.split(","))
+        scenarios = tuple(item for item in scenarios if item.name in selected)
     server: subprocess.Popen[str] | None = None
     base_url: str | None = None
     results: list[dict[str, object]] = []
