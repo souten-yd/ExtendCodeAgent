@@ -65,4 +65,6 @@ A work package is not complete merely because source files exist or mocked tests
 - real LLM/model-routing evidence;
 - unavailable checks.
 
+Planning documents are design evidence only. They do not count as implementation, build, test, real-host, or real-model evidence.
+
 Do not mark unavailable evidence as passed.
