@@ -5,10 +5,10 @@ Updated: 2026-08-14 (Asia/Tokyo)
 Current branch: `agent/pr-i-research-traceability`
 Current PR: not created
 Base commit: `f3d8016b30b0d7fa1972a1ee5bcb108f8f1148c8`
-Latest commit: `f3d8016b30b0d7fa1972a1ee5bcb108f8f1148c8` (PR-H closeout merge)
+Latest commit: `2e8e409cf9027bf9d4ab6c487569190805478679`
 Milestone: PR-I Research/Evidence/Traceability/project convergence
-Current task: inspect existing contracts/callers/tests and KasaneCore domain behavior
-Status: PR-I domain/durability/application/MCP slice PASS; benchmark/evidence next
+Current task: publish and merge PR-I, then leave closeout before Release Validation
+Status: PR-I implementation/evidence and final local gates PASS
 
 Completed:
 - added bounded research request/plan/source/evidence/claim/gap/deficit contracts and ports;
@@ -22,6 +22,9 @@ Completed:
   application; reports persist through the existing Convergence repository;
 - added `pi_research_plan` to the shared OpenCode/MCP sidecar path; adapter integration passes;
 - all-fast PASS with 99 Python and 9 adapter tests.
+- recorded PR-I benchmark/evidence under `docs/evidence/pr-i/`;
+- final build, 16 Python integration tests, repeated 9 adapter tests, benchmark, diff check, and
+  Core boundary grep PASS.
 - added official tree-sitter JavaScript/TypeScript/TSX parsing dependencies;
 - added independently selected JS/TS and composite analyzers behind existing GraphAnalyzer;
 - added file-qualified definitions, local import resolution, references, direct/inherited calls,
@@ -66,7 +69,7 @@ Completed:
 - verified frontier failure is reported unavailable for all 18 attempts, not as an empty success.
 
 In progress:
-- PR-I benchmark/evidence and final integration review.
+- PR-I publication and merge.
 
 Not started:
 - PR-I Research/Evidence/Traceability/project convergence;
@@ -112,6 +115,9 @@ Exact results:
 - final PR-H gate: 91 Python tests, 9 adapter tests, 15 Python integration tests, both builds PASS.
 
 Benchmark results:
+- PR-I: 200-requirement Convergence mean 0.5424 ms/p50 0.5290 ms; 1,000 research plans
+  mean 0.0020 ms; 200 evidence inserts 196.650 ms; restart PASS; DB+WAL 17,771,744 bytes;
+  max RSS 59,644 KiB.
 - host native: 78,016 ms, 39,606 new input, 352,000 cached input, 2,431 output, 40 calls;
 - host active: 14,509 ms, 1,226 new input, 12,544 cached input, 182 output, 0 calls;
 - local-low active: 1,061 ms total for six cases; local-medium active: 6,327 ms.
@@ -130,19 +136,18 @@ Known limitations: local-low is stochastic; active is not made default; stable O
 a per-request max-output field; host cache tokens must not be conflated with new input. PR-H's
 current JS/TS analyzer builds a transient cross-file index; broad dependency closures therefore
 select full refresh. A persisted symbol index remains a future optimization, not a PR-H requirement.
-Uncommitted work: coherent PR-I durability/application/MCP integration and tests.
+Uncommitted work: this final gate handoff update only.
 Temporary work: evaluation-only Ollama `qwen3:0.6b` remains installed; no temporary repo files.
 
-Next exact action: commit integration slice; add reproducible research/traceability/convergence
-benchmark and evidence report; then final all-fast/build/integration/diff gates.
-Next files: PR-I plan/audit slices, current evidence/convergence/storage/adapter contracts and tests.
+Next exact action: commit/push PR-I, create/inspect/merge its PR, run post-merge main gates, then
+publish a documentation-only closeout before starting Release Validation.
+Next files: PR metadata and closeout handoff only.
 Next commands:
 
 ```bash
 cd /home/souten/ExtendCodeAgent
 git status --short
-git status --short
-rg -n "Evidence|Claim|Research|Traceability|Requirement" src tests
+git push -u origin agent/pr-i-research-traceability
 ```
 
 Rollback path: switch to main; PR-H closeout is `f3d8016`. PR-I changes stay isolated on this branch.

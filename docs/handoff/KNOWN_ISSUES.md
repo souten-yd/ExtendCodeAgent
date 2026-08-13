@@ -80,3 +80,13 @@
   pins 0.25.2, reuses one `Parser` per grammar, streams traversal, and retains only descriptors
   across files. This remains open until three repetitions of the real-repository cold/incremental
   path and full local gates pass; a recurrence requires replacing the Python binding path.
+
+## PR-I current limitations
+
+- PR-I defines and exercises provider-neutral Search/Fetch/Extract/Synthesis ports and exposes the
+  shared bounded plan through MCP, but does not claim a new standalone web provider. OpenCode/web or
+  MCP retrieval adapters supply those ports; live cross-provider research quality belongs in final
+  Release Validation.
+- External evidence is deliberately never promoted to verified project fact. A claim needing both
+  external truth and implementation verification must carry separate external and current project
+  evidence; this may leave more explicit coverage gaps but prevents false completion.
