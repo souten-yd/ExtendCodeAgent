@@ -42,3 +42,7 @@
   while small-repo latency remained near full-build latency and is documented as a limitation.
 - Published draft PR [#4](https://github.com/souten-yd/ExtendCodeAgent/pull/4); initial published head
   `ad2175bf5b2f893c025fc4f48db846f9516a238f` was mergeable with no GitHub Actions checks.
+- Verified final PR head `33889aa89b9d0b4ba97032be581390b97cce3adf`, marked it ready,
+  and squash-merged as `0618cd29da2e695f7babaccd931727e214f96217`.
+- Post-merge main: Ruff and strict mypy passed; unit/architecture `38 passed in 0.17s`;
+  integration `5 passed in 0.21s`.

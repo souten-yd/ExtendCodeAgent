@@ -2,13 +2,13 @@
 
 Updated: 2026-08-13 (Asia/Tokyo)
 
-Current branch: `agent/pr-b-graph-twin-store`
-Current PR: [#4](https://github.com/souten-yd/ExtendCodeAgent/pull/4) (draft; exact-head review pending)
+Current branch: `main` (PR-B merged; create a new branch for PR-C)
+Current PR: [#4](https://github.com/souten-yd/ExtendCodeAgent/pull/4) (merged)
 Base commit: `40602d3ad8f147c9166e32919f7005da1c11279e`
-Latest commit: `ad2175bf5b2f893c025fc4f48db846f9516a238f`
+Latest commit: `0618cd29da2e695f7babaccd931727e214f96217` (PR-B squash merge)
 Current milestone: PR-B Graph / Digital Twin Foundation
 Current task: behavior-first Graph contracts, immutable revisions, SQLite store, source snapshot, full/file-level incremental refresh, persistence and benchmark
-Task status: implementation and required local evidence complete; review/publication pending
+Task status: complete and merged
 
 Goal: Adapt KasaneCore's proven revision/store/source lifecycle into the existing host-neutral PR-A foundation without importing semantic, impact, OpenCode/MCP, runtime, or model behavior.
 
@@ -34,8 +34,7 @@ Completed:
   generated-wheel archive smoke.
 - published and squash-merged PR #2; post-merge `main` fast gates passed again.
 
-In progress:
-- final diff review, status/handoff completion, PR creation and merge.
+In progress: none.
 
 Not started:
 - PR publication/merge/closeout; PR-C.
@@ -92,11 +91,11 @@ Known failures: none in required local gates.
 Known limitations: PR-B graph is file-level only by design; fingerprint scanning dominates small-repo
 incremental latency; import restores current facts as a new local revision rather than preserving
 foreign revision IDs; semantic/impact/OpenCode/model features remain out of scope.
-Uncommitted work: this PR-state handoff update only.
+Uncommitted work: none after this docs-only closeout is merged.
 Temporary files: none.
 Experimental code: none.
 
-Next exact action: commit/push this update, verify PR #4 exact head/diff and local gates, mark ready and merge.
+Next exact action: create `agent/pr-c-semantic-impact` from updated main and capture curated ground-truth tests before implementation.
 Next files: `../KasaneCore/agent/project_twin/store.py` relevant schema/apply/snapshot slices and `module.py` refresh slices; then `tests/unit/test_graph_contracts.py` and PR-B component tests.
 Next commands: targeted `sed` of those slices; `git status --short`; focused pytest after tests exist.
-Rollback path: remove/revert only PR-B branch commits; PR-A on `main` remains authoritative.
+Rollback path: revert merge commit `0618cd29da2e695f7babaccd931727e214f96217`; do not reset unrelated work.
