@@ -5,8 +5,9 @@ import { SidecarClient } from "./client.js"
 import { workspacePath } from "./paths.js"
 import { CoalescingEventQueue } from "./queue.js"
 import { createTools } from "./tools.js"
+import { startWorkspaceWatcher, type WorkspaceWatcher } from "./watcher.js"
 
-export const ExtendCodeAgentPlugin: Plugin = async ({ directory, worktree }) => {
+const ExtendCodeAgentPlugin: Plugin = async ({ directory, worktree }) => {
   const root = resolve(worktree || directory)
   const client = new SidecarClient({
     root,
@@ -23,6 +24,7 @@ export const ExtendCodeAgentPlugin: Plugin = async ({ directory, worktree }) => 
       // Expected adapter errors must not break native OpenCode behavior.
     }
   })
+  const watcher = startWatcher(client, root, queue)
 
   return {
     event: async ({ event }) => {
@@ -45,9 +47,26 @@ export const ExtendCodeAgentPlugin: Plugin = async ({ directory, worktree }) => 
     },
     tool: createTools((operation, params) => client.request(operation, params)),
     dispose: async () => {
+      await (await watcher)?.close()
       await queue.close()
       await client.stop()
     },
+  }
+}
+
+async function startWatcher(
+  client: SidecarClient,
+  root: string,
+  queue: CoalescingEventQueue,
+): Promise<WorkspaceWatcher | undefined> {
+  try {
+    const status = (await client.request("status")) as { mode?: string }
+    if (status.mode === "off") return undefined
+    return await startWorkspaceWatcher(root, (path) =>
+      queue.enqueue("file.watcher.updated", [path]),
+    )
+  } catch {
+    return undefined
   }
 }
 

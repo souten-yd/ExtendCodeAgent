@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./dist/plugin.js",
-    "./mcp": "./dist/mcp.js"
+    ".": "./dist/src/plugin.js",
+    "./mcp": "./dist/src/mcp.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -15,6 +15,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.30.0",
     "@opencode-ai/plugin": "1.18.18",
+    "chokidar": "4.0.3",
     "zod": "4.1.8"
   },
   "devDependencies": {

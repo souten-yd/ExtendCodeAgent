@@ -27,3 +27,14 @@ test("filters paths that cannot affect the source snapshot", () => {
   assert.equal(workspacePath(root, `${root}/node_modules/pkg/index.js`), undefined)
   assert.equal(workspacePath(root, `${root}/../outside.py`), undefined)
 })
+
+test("falls back to a full refresh when a path batch exceeds its bound", async () => {
+  const observed: ProjectEvent[] = []
+  const queue = new CoalescingEventQueue(async (event) => {
+    observed.push(event)
+  }, 10_000, 2)
+  queue.enqueue("file.watcher.updated", ["a.py", "b.py", "c.py"])
+  queue.enqueue("file.watcher.updated", ["d.py"])
+  await queue.flush()
+  assert.deepEqual(observed, [{ kind: "file.watcher.updated", paths: [] }])
+})

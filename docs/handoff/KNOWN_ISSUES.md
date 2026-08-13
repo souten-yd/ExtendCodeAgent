@@ -36,6 +36,10 @@
   fingerprint. Unfiltered handling caused a self-sustaining refresh loop. The plugin now discards
   `.git`, `.extendcodeagent`, dependency, cache, and build paths before enqueue; the final real-host
   smoke must retain explicit no-loop evidence.
-- A first external-edit attempt made through the Codex `apply_patch` mechanism was not observed by
-  OpenCode's inotify watcher, although session and `.git/index.lock` events were observed. Repeat
-  using a tracked smoke fixture and an ordinary formatter write before closing the acceptance gate.
+- Stable OpenCode's native event stream did not expose ordinary tracked edits in the tested Linux
+  environment. The adapter-only Chokidar fallback passed both OpenCode-tool and external-edit
+  evidence, but future stable OpenCode releases should be retested so the extra watcher can be
+  removed when the native contract is reliable.
+- The three-run temporary-repository startup comparison had a +26 ms median delta and one 3,229 ms
+  plugin outlier. It is not statistically conclusive; retain broader native/extension comparisons
+  for final release validation.

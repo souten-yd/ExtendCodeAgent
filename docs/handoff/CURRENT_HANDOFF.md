@@ -5,9 +5,9 @@ Updated: 2026-08-13 (Asia/Tokyo)
 Current branch: `agent/pr-d-opencode-mcp`
 Current PR: not created
 Base commit: `4a73c6f1a2903fb37185e3afd312c30c76c394f4`
-Latest commit: `4ac0d12` (stable OpenCode and MCP adapters)
+Latest commit: `b4cc45d` (watcher hardening and MCP protocol test)
 Current milestone: PR-D OpenCode + MCP real integration
-Current task: complete real OpenCode watcher/mode evidence and local validation integration
+Current task: finalize exact evidence, publish PR-D, verify remote head, and merge
 Task status: in progress
 
 Goal: add a thin stable OpenCode plugin, a shared versioned local core service, and MCP fallback
@@ -41,21 +41,28 @@ Completed:
 - caught and fixed a real watcher feedback loop caused by `.git/index.lock` and
   `.extendcodeagent` events; ignored paths are filtered before enqueue;
 - caught the stable loader behavior that treats every exported plugin-module function as a plugin
-  factory; moved testable path normalization to a separate module.
+  factory; moved testable path normalization to a separate module;
+- added a Chokidar adapter fallback after the stable native watcher did not emit ordinary source
+  changes in the real Linux run;
+- verified an OpenCode session-shell format edit and a separate external edit produced distinct
+  Twin revisions, then verified no-loop stability, restart persistence, MCP reconnect, and an off
+  mode negative control;
+- added a reproducible model-free real-host smoke and wired TypeScript validation into bootstrap,
+  all-fast, integration, and build scripts.
 
 In progress:
-- repeat the real watcher edit after committing the tracked smoke fixture, then verify revision
-  change, no self-generated event loop, off/shadow/advisory behavior, and restart.
+- final diff/evidence inspection and exact-head commit.
 
 Not started:
-- reproducible OpenCode smoke/benchmark scripts, final PR-D evidence report, local script wiring,
-  publication and merge.
+- PR publication, remote-head inspection, ready/merge, post-merge local gate, and closeout handoff.
 
 Important architecture decisions:
 - Target stable `@opencode-ai/plugin` 1.18.18 for PR-D; V2 is beta and remains a separate adapter.
 - Stable project plugins load from `.opencode/plugins/` and expose event/tool hook objects.
 - Stable local MCP config is a named entry under `mcp` with `type: local`, command array, and
   `enabled`; do not use the incompatible V2 `mcp.servers`/`disabled` shape.
+- Native and fallback file events share one adapter queue; Chokidar is an adapter-only ADAPT caused
+  by measured stable-host behavior and is never imported by the Python core.
 
 Important invariants:
 - `analysis`, `core`, `graph`, `service`, `storage`, and `twin` never import OpenCode/plugin/MCP SDK
@@ -66,7 +73,7 @@ Important invariants:
 
 Files changed: shared application service/sidecar, TypeScript plugin/MCP package, adapter tests,
 architecture boundary, smoke fixture, ignore policy, and PR-D handoff.
-Files currently being edited: watcher path filtering, real-host evidence, local validation scripts.
+Files currently being edited: final evidence/status/handoff and publication metadata.
 
 Exact tests executed:
 - `tools/local/all-fast` on merged PR-C closeout main
@@ -74,31 +81,34 @@ Exact tests executed:
 - `.venv/bin/pytest tests/unit/test_application_service.py tests/integration/test_local_sidecar.py`
 - `npm run typecheck`; `npm test` in `adapters/opencode`
 - `tools/local/all-fast` after watcher-filter fix
-Exact results: Python focused `5 passed`; TypeScript typecheck PASS; adapter `4 passed` including
-real MCP stdio call in 4.25 s and sidecar reconnect in 1.17 s; Ruff/mypy PASS and Python
-`49 passed in 0.28s`.
-Benchmark results: real `debug config` plugin initialization approximately 2.7 s and MCP connection
-approximately 0.75 s during manual smoke; exact reproducible measurements still required.
+- `tools/local/opencode-smoke`
+- final `tools/local/all-fast`; `tools/local/test-integration`; `tools/local/build`
+Exact results: final Ruff/mypy PASS; Python unit/architecture `49 passed in 0.31s`; adapter
+`6 passed in 4.36s`; Python integration `9 passed in 0.43s`; repeated adapter `6 passed in 7.51s`;
+Python sdist/wheel and TypeScript build PASS.
+Benchmark results: alternating three-run startup medians: native 1,043 ms, plugin 1,069 ms (+26
+ms; plugin samples 3,229/1,069/1,062 ms); integration startup 1,072 ms; initial revision 151 ms;
+OpenCode tool edit refresh 151 ms; external edit refresh 151 ms; reconnect 1,069 ms; three revisions
+stable and persisted; off remained three revisions.
 OpenCode version: 1.18.18; real plugin load/tool discovery/MCP connection verified.
 Model/provider: none required for initial plugin/MCP load; real model use is not a PR-D capability.
 Routing profile: not applicable.
 Known failures: initial watcher run formed a `.git/index.lock` feedback loop; fixed and covered by a
 path-filter test. Exporting `workspacePath` from the plugin entry caused real loader failure; fixed
 by separating it into `paths.ts`.
-Known limitations: V2 plugin/MCP APIs differ materially and are beta; PR-D targets stable only.
-The Codex `apply_patch` rewrite path did not produce an observed OpenCode watcher event in the first
-manual attempt; repeat with a tracked fixture and formatter/native host path.
-Uncommitted work: watcher-filter fix, MCP integration test, architecture expansion, tracked smoke
-fixture, and this handoff update.
+Known limitations: V2 plugin/MCP APIs differ materially and are beta; PR-D targets stable only. The
+three-run startup result is not a statistically stable distribution and includes one 3,229 ms
+plugin outlier. Stable OpenCode's native watcher did not emit ordinary file events in this
+environment, so the adapter fallback remains necessary.
+Uncommitted work: fallback watcher, local smoke/script wiring, docs/evidence, and this handoff update.
 Temporary work: preserved loop DB under `/tmp/extendcodeagent-pr-d-loop-evidence-20260813T0840JST`
 and filtered smoke DB under `/tmp/extendcodeagent-pr-d-filtered-smoke-20260813T0850JST`; current
-ignored `.extendcodeagent/graph.db` is disposable smoke state.
+ignored `.extendcodeagent/graph.db` is disposable manual-smoke state.
 
-Next exact action: commit the coherent watcher-filter/MCP-test slice, run OpenCode 1.18.18 with the
-tracked fixture, trigger an external formatter edit, and record pre/post Twin revision and latency.
-Next files: `adapters/opencode/src/plugin.ts`, `paths.ts`, adapter tests,
-`tests/fixtures/opencode_smoke/sample.py`, then `tools/local/*` and `docs/evidence/pr-d/`.
-Next commands: `git diff --check`; commit; start OpenCode with `EXTENDCODEAGENT_MODE=shadow`; create
-a session; format the tracked fixture; inspect `.extendcodeagent/graph.db`; repeat off/advisory.
+Next exact action: inspect the complete diff, commit the fallback/evidence slice, rerun exact-head
+all-fast/build/OpenCode smoke, push, create PR-D, inspect remote head, and merge only if clean.
+Next files: complete branch diff; `docs/evidence/pr-d/`; `docs/CURRENT_STATUS.md`; PR description.
+Next commands: `git diff --check`; `git diff 4a73c6f..HEAD`; commit; exact-head local gates; `git push`;
+create draft PR; verify mergeability and absence/presence of checks.
 Rollback path: stop OpenCode/SSE sessions, move ignored smoke DB to `/tmp`, revert PR-D commits, and
 delete the branch; OpenCode can be uninstalled independently without changing core code.
