@@ -4,21 +4,27 @@ Status date: 2026-08-14
 
 ## Program state
 
-Overall: **PR-I RESEARCH/TRACEABILITY MERGED — RELEASE VALIDATION NEXT**
+Overall: **A-I IMPLEMENTATION COMPLETE — PRODUCTIZATION ACTIVE — RV-0 NEXT**
 
-The project now contains the strategic planning baseline plus a working Python host-neutral
-foundation. PR-A provides shared immutable contracts, centralized JSON/JSONC configuration,
-capability rollout policy, provider-neutral model-routing contracts and deterministic fake
-adapters, local validation scripts, and architecture-boundary tests.
+PRs A-I are merged and the implementation baseline is complete. Planning PRs
+[#20](https://github.com/souten-yd/ExtendCodeAgent/pull/20) and
+[#21](https://github.com/souten-yd/ExtendCodeAgent/pull/21) are also merged, defining the active
+evidence-driven productization phase and the planned transparent task-aware Project Intelligence
+sequence. The latest synchronized `main` is
+`a87d2fc6453c2f0d7bb9d1ccb8e48e16e2b7f1a7`.
+
+This is not a production-capable designation. RV-0 Baseline Release Validation is next and must
+establish current real OpenCode, model-tier, repository, lifecycle, performance, privacy, and
+verified-task evidence before any task-aware implementation begins.
 
 ## Canonical read order
 
-1. `docs/PROJECT_INTELLIGENCE_MASTER_PLAN.md`
-2. `docs/KASANECORE_MIGRATION_AUDIT.md`
-3. `docs/IMPLEMENTATION_EXECUTION_LOCAL_VALIDATION_PLAN.md`
-4. `docs/CODEX_IMPLEMENTATION_GUIDE.md`
+1. `docs/PRODUCTIZATION_AND_MODEL_EVALUATION_PLAN.md`
+2. `docs/TRANSPARENT_PI_ORCHESTRATION_PLAN.md`
+3. `docs/CODEX_PRODUCTIZATION_EXECUTION_GUIDE.md`
+4. `docs/handoff/NEXT_TASK.md`
 5. this file
-6. active PR/task source and tests
+6. earlier plans, implementation/evidence, and tests only as needed for the active slice
 
 ## Accepted architectural baseline
 
@@ -54,8 +60,15 @@ adapters, local validation scripts, and architecture-boundary tests.
 
 ## Immediate next action
 
-Start the integration-only Release Validation PR from exact PR-I closeout main. Do not add new
-features or hide known unavailable model paths. PR-C provides
+Merge the documentation-only productization closeout, synchronize `main`, and create
+`agent/release-validation-baseline` for RV-0. Do not add production features or hide unavailable
+model paths. The current installed and npm-stable OpenCode version is still `1.18.18` as of
+2026-08-14 and must be re-evaluated rather than assumed compatible from PR-D evidence. The known
+frontier route remains unavailable (`0/18`, OpenCode `APIError`) until native-provider diagnosis
+proves otherwise. Qwen3 0.6B local-low results remain stochastic and require repeated distributions,
+not a best-run claim.
+
+PR-C provides
 deterministic structural/Python AST facts, analyzer-owned Python alias resolution, persisted
 dependency-aware refresh, bounded path/impact traversal, weakest-link confidence, uncertainty,
 explanations, and test-candidate projection. Curated FP/FN review and real-repository repeated-query

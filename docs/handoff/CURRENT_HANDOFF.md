@@ -2,153 +2,91 @@
 
 Updated: 2026-08-14 (Asia/Tokyo)
 
-Current branch: `agent/pr-i-closeout`
-Current PR: PR-I #18 merged; closeout PR not created
-Base commit: `c2f2dc77700eb38291816d758e43aa27cd2ff06c`
-Latest commit: `c2f2dc77700eb38291816d758e43aa27cd2ff06c` (PR-I squash merge)
-Milestone: PR-I closeout; Release Validation next
-Current task: merge documentation-only closeout, then start Release Validation
-Status: PR-I merged and post-merge main gates PASS
+Current branch: `agent/productization-phase-closeout`
+Current PR: documentation-only productization closeout; not yet published
+Base commit: `a87d2fc6453c2f0d7bb9d1ccb8e48e16e2b7f1a7`
+Latest synchronized main: `a87d2fc6453c2f0d7bb9d1ccb8e48e16e2b7f1a7`
+Milestone: A-I implementation complete; evidence-driven Productization active
+Current task: merge this docs-only closeout, then start RV-0 Baseline Release Validation
+Status: PR #20 and PR #21 merged; Transparent Task-aware PI planned; RV-0 next
 
-Completed:
-- added bounded research request/plan/source/evidence/claim/gap/deficit contracts and ports;
-- added claim evaluation with weakest confidence and external/project fact separation;
-- added explicit-ID project requirement projection through the existing Convergence engine;
-- verified external, stale, missing, or unmapped evidence cannot produce completion;
-- focused Ruff/mypy PASS and 10 research/traceability/convergence tests PASS;
-- added immutable research evidence persistence in the shared SQLite store with restart,
-  idempotency, collision rejection, and workspace isolation;
-- added centrally policy-gated research plans and project requirement evaluation to the existing
-  application; reports persist through the existing Convergence repository;
-- added `pi_research_plan` to the shared OpenCode/MCP sidecar path; adapter integration passes;
-- all-fast PASS with 99 Python and 9 adapter tests.
-- recorded PR-I benchmark/evidence under `docs/evidence/pr-i/`;
-- final build, 16 Python integration tests, repeated 9 adapter tests, benchmark, diff check, and
-  Core boundary grep PASS.
-- created PR #18; no GitHub Actions checks are configured.
-- added official tree-sitter JavaScript/TypeScript/TSX parsing dependencies;
-- added independently selected JS/TS and composite analyzers behind existing GraphAnalyzer;
-- added file-qualified definitions, local import resolution, references, direct/inherited calls,
-  low-confidence dynamic `may_call`, decorators, inheritance, test classification, diagnostics;
-- composed language-owned Python and JS/TS canonical resolvers without changing generic Impact;
-- verified SQLite incremental dependent-importer refresh and implementation-to-test impact;
-- focused 12 tests PASS; all-fast PASS with 90 Python and 9 adapter tests;
-- corrected py-tree-sitter 0.26.0 native crashes by pinning 0.25.2, retaining one parser per grammar,
-  streaming Node traversal, and retaining only pure-Python descriptors across files;
-- repeated the exact ControlDeck cold/incremental Twin path in three independent processes with no
-  crash and stable 1,255 nodes / 3,888 edges;
-- added language-neutral auto full refresh when the dependency closure covers at least 40% of
-  current module facts; three ControlDeck runs improved from about 5.0s to about 1.19s;
-- represented all 92 ControlDeck Playwright inline tests; 39 have static evidence and dynamic cases
-  remain unlinked rather than falsely verified;
-- recorded a reproducible benchmark and human-reviewable FP/FN report under `docs/evidence/pr-h/`;
-- rejected always-on CFG/DFG/state/event/UI work because it does not close the measured browser/API
-  evidence gap; deeper analyzers stay on-demand pending a concrete benchmark.
-- created PR #16; no GitHub Actions checks are configured.
-- PR #16 exact head `46306bf225035f2c40798a81992ac9f525eed5c0` was repeatedly
-  `MERGEABLE/CLEAN` and squash-merged as `fdeeb4e694fa7f416bb3ac7e92f49952d31e1767`;
-- post-merge main all-fast passed with 91 Python and 9 adapter tests; Python/TypeScript builds pass.
-- PR-G closeout PR #15 squash-merged as `fe61a16e8f7f07e760d99ca449bc09c90166a6c5`;
-- created PR-H branch from exact clean closeout main;
-- PR #14 exact head `1189c966a71d410a42ab3f51ed35d18b4c2f5af9` was mergeable/CLEAN
-  and squash-merged as `3386cfa429caf5b476e8abc5d52d87a8ab99c719`;
-- post-merge main passed all-fast (85 Python in 0.64s, adapter 9) and Python/TypeScript builds;
-- extended the existing `PolicyModelRouter`; no parallel router was introduced;
-- added all deterministic adaptive signals, explainable endpoint decisions, execution wall time,
-  escalation/locality, complete token/cache/tool/cost accounting, and fail-closed provider errors;
-- added OpenAI-compatible local and stable OpenCode 1.18.18 host adapters behind `ModelAdapter`;
-- preserved local-only and remote-source privacy enforcement in focused tests;
-- added bounded output/reasoning control after an unbounded 27B run exceeded ten minutes;
-- corrected OpenCode tool disabling from `{}` to `{"*": false}` after complete-session metrics
-  proved that an empty map still allowed tools;
-- added Strategy with deterministic scope/impact/test/migration/compatibility/rollbackability/
-  performance/maintainability/cost/uncertainty metrics and provenance;
-- model synthesis only proposes scope/explanation/rollback; no A/B/C fallback exists; tied scores
-  produce no selection and require a decision;
-- ran six same-repository scenarios across local-low/local-medium and host native/off/advisory/
-  active; compact results are under `docs/evidence/pr-g/` and no run changed the worktree;
-- verified frontier failure is reported unavailable for all 18 attempts, not as an empty success.
+## Current source of truth
 
-In progress:
-- documentation-only PR-I closeout.
+- PR #20 merged as `731f587d600d5a563a26231d801e248f5f176c32`.
+- PR #21 merged as `a87d2fc6453c2f0d7bb9d1ccb8e48e16e2b7f1a7`.
+- The active sequence is RV-0, blocking defect fixes, TA-0, TA-1, TA-2, TA-3, conditional
+  Runtime Bridge/deep analysis, TA-FINAL, then the production-capable decision.
+- No later stage may start before the preceding acceptance evidence passes.
+- Current installed and npm-stable OpenCode: `1.18.18` (checked 2026-08-14).
+- Known frontier result: `0/18` available; OpenCode `APIError`; diagnose native provider/auth/model
+  before changing the adapter or Project Intelligence Core.
+- Known local-low limitation: Qwen3 0.6B is stochastic; use repeated distributions.
 
-Not started:
-- PR-I Research/Evidence/Traceability/project convergence;
-- final multi-repository Release Validation.
+Canonical execution order:
 
-Architecture classification:
-- REUSE/EXTEND `PolicyModelRouter`, routing/config/privacy contracts, Graph evidence, and policy;
-- NEW only the live transport implementations and Strategy domain behind existing boundaries;
-- DO NOT PORT KasaneCore DeepPlanner, Atlas/Nexus schemas, or fixed fallback alternatives.
+1. `docs/PRODUCTIZATION_AND_MODEL_EVALUATION_PLAN.md`
+2. `docs/TRANSPARENT_PI_ORCHESTRATION_PLAN.md`
+3. `docs/CODEX_PRODUCTIZATION_EXECUTION_GUIDE.md`
+4. `docs/handoff/NEXT_TASK.md`
 
-Files changed: `src/extendcodeagent/core/model_routing/`, `src/extendcodeagent/strategy/`, focused
-tests, `tools/local/pr-g-evaluate`, PR-G evidence, and canonical handoff/status documents.
-Files currently being edited: benchmark/evidence design next.
+## Exact baseline gates on synchronized main
 
-Exact tests executed:
-- repeated focused Ruff/mypy and
-  `.venv/bin/pytest -q tests/unit/test_model_routing.py tests/unit/test_live_model_adapters.py tests/unit/test_strategy.py`;
-- latest focused result: 19 passed;
-- final all-fast: Ruff/format/strict mypy PASS, Python 85 passed in 0.57s, adapter 9 passed;
-- final build: Python sdist/wheel and TypeScript build PASS;
-- final integration: Python 13 passed in 0.88s, adapter 9 passed;
-- PR-H parser safety focused gate: Ruff PASS, strict mypy PASS, 5 focused tests PASS;
-- auto refresh focused gate: Ruff PASS, strict mypy PASS, 18 focused tests PASS;
-- three independent `PYTHONFAULTHANDLER=1` ControlDeck cold plus App.tsx refresh processes.
-- final all-fast: Ruff/format/strict mypy PASS, Python 91 passed, adapter 9 passed;
-- final build: Python sdist/wheel and TypeScript build PASS;
-- final integration: Python 15 passed and adapter 9 passed;
-- final benchmark rerun PASS; `git diff --check origin/main...HEAD` PASS; boundary grep found no
-  OpenCode/model/research dependency in Graph/Twin implementation.
-- `tools/local/pr-g-evaluate --tiers local-low,local-medium --modes off,advisory,active`;
-- `tools/local/pr-g-evaluate --tiers host --modes off,advisory,active`;
-- `tools/local/pr-g-evaluate --tiers frontier --modes off,advisory,active`.
+- `tools/local/all-fast`: PASS; Ruff/format/strict mypy, Python 99 passed, adapter 9 passed.
+- `tools/local/test-integration`: PASS; Python 16 passed, adapter 9 passed.
+- `tools/local/build`: PASS; Python sdist/wheel and TypeScript build.
+- Two pre-existing untracked validation helpers are preserved and must not enter the docs-only PR:
+  `tools/local/release-validation-matrix` and `tools/local/release_validation_matrix.py`.
 
-Exact results:
-- focused Ruff and strict mypy PASS; focused pytest 19 passed;
-- local-low off/advisory/active: 1/4/6 successes, 0 tool calls, 325/936/983 input+output tokens;
-- local-medium off/advisory/active: 1/6/6, 0 calls, 310/911/958 tokens;
-- host native/off/advisory/active: 6/2/4/6 successes; 40/0/0/0 tool calls;
-- frontier: 0/18 available; all failed closed as OpenCode `APIError`;
-- worktree mutation: false for every evaluation process.
-- PR-H ControlDeck parser safety: 3/3 PASS without native crash; each snapshot contained 1,255
-  nodes and 3,888 edges before and after refresh.
-- final PR-H gate: 91 Python tests, 9 adapter tests, 15 Python integration tests, both builds PASS.
+## Current environment/model continuity
 
-Benchmark results:
-- PR-I: 200-requirement Convergence mean 0.5424 ms/p50 0.5290 ms; 1,000 research plans
-  mean 0.0020 ms; 200 evidence inserts 196.650 ms; restart PASS; DB+WAL 17,771,744 bytes;
-  max RSS 59,644 KiB.
-- host native: 78,016 ms, 39,606 new input, 352,000 cached input, 2,431 output, 40 calls;
-- host active: 14,509 ms, 1,226 new input, 12,544 cached input, 182 output, 0 calls;
-- local-low active: 1,061 ms total for six cases; local-medium active: 6,327 ms.
-- ControlDeck cold: 3,064 / 3,083 / 3,027 ms; incremental: 5,000 / 5,052 / 4,964 ms;
-  DB 6,569,984 bytes; max RSS 69,544 / 69,032 / 69,276 KiB.
-- equal-baseline ControlDeck explicit full: 1,187 ms versus incremental 4,931 ms; automatic full
-  selection: 1,193 / 1,192 / 1,187 ms, identical fact counts.
+- OpenCode: installed `1.18.18`; npm stable `1.18.18`.
+- Local-low continuity: Ollama Qwen3 0.6B; repeated behavior is stochastic.
+- Local-practical continuity: Ollama Qwen 3.6 27B Q5.
+- Host continuity: OpenCode `opencode/big-pickle` from the PR-G evidence; RV-0 must discover and
+  record the current default rather than assume it is unchanged.
+- Frontier continuity: `llama/llama-3.3-70b-instruct` returned OpenCode `APIError` in all 18 prior
+  attempts. RV-0 starts with PI completely off and a native minimal provider smoke.
+- Exact current OpenCode configuration, endpoint availability, context sizes, privacy profiles,
+  repository commits, CPU/RAM/GPU, and process lifecycle evidence remain RV-0 work.
 
-OpenCode version: 1.18.18.
-Model/provider: Ollama Qwen3 0.6B; Ollama Qwen 3.6 27B Q5; OpenCode
-`opencode/big-pickle`; unavailable `llama/llama-3.3-70b-instruct` frontier path.
-Routing profile: deterministic fake coverage plus real native/off/advisory/active controlled runs.
+## RV-0 scope and required outputs
 
-Known failures: configured frontier returns OpenCode `APIError`; no frontier quality claim.
-Known limitations: local-low is stochastic; active is not made default; stable OpenCode prompt lacks
-a per-request max-output field; host cache tokens must not be conflated with new input. PR-H's
-current JS/TS analyzer builds a transient cross-file index; broad dependency closures therefore
-select full refresh. A persisted symbol index remains a future optimization, not a PR-H requirement.
-Uncommitted work: PR-I closeout documentation only.
-Temporary work: evaluation-only Ollama `qwen3:0.6b` remains installed; no temporary repo files.
+RV-0 is validation-first and adds no production feature by default. It must revalidate plugin load,
+automatic sidecar lifecycle, MCP/tool calls, edits and refresh, restart/reopen/reconnect, all rollout
+modes, native fallback, and current model tiers across fixed repositories and repeated versioned
+tasks. Failures receive one required primary classification and are ranked by frequency, severity,
+and user value.
 
-Next exact action: merge closeout, create `agent/release-validation`, then audit/execute final matrix.
-Next files: `docs/evidence/final/`, validation tools only; no new feature implementation.
-Next commands:
+Required outputs under `docs/evidence/final/`:
+
+- `environment.md`
+- `baseline-gap-report.md`
+- `model-matrix.json`
+- `task-results.json`
+- `opencode-integration.json`
+- `performance.json`
+
+Blocking defects may be fixed only after measured failure, root cause, insufficiency of existing
+configuration/capability, minimal change, retest, and before/after evidence. TA-0 cannot start until
+RV-0 and blocking defect acceptance are complete.
+
+## Next exact commands
 
 ```bash
 cd /home/souten/ExtendCodeAgent
 git status --short
-git push -u origin agent/pr-i-research-traceability
+git diff --check
+tools/local/all-fast
+# publish and merge the docs-only PR, then:
+git switch main
+git pull --ff-only origin main
+git status --short
+git rev-parse HEAD
+git switch -c agent/release-validation-baseline
 ```
 
-Rollback path: switch to main; PR-H closeout is `f3d8016`. PR-I changes stay isolated on this branch.
-Do not rewrite PR-B through PR-H.
+After creating the RV-0 branch, first write `docs/evidence/final/environment.md`; do not import the
+pre-existing untracked validation helpers until their provenance, scope, and correctness have been
+reviewed against the new RV-0 requirements.
+
+Rollback path: switch to synchronized `main`. The docs-only branch changes no production code.

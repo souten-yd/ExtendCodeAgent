@@ -231,3 +231,19 @@
 - PR #18 exact remote head `dab1969e2c6bd3fa93957af70d5c5dfe9428a8ce` was repeatedly CLEAN
   and squash-merged as `c2f2dc77700eb38291816d758e43aa27cd2ff06c`. Post-merge main passed
   all-fast (99 Python, 9 adapter) and both builds.
+
+## 2026-08-14 — Productization phase activated
+
+- PR #20 merged as `731f587d600d5a563a26231d801e248f5f176c32`, defining the
+  evidence-driven productization and multi-model evaluation phase.
+- PR #21 merged as `a87d2fc6453c2f0d7bb9d1ccb8e48e16e2b7f1a7`, defining the staged
+  transparent task-aware Project Intelligence rollout.
+- Synchronized `main` to exact `a87d2fc6453c2f0d7bb9d1ccb8e48e16e2b7f1a7`.
+- Verified the pre-RV-0 baseline: all-fast PASS (99 Python, 9 adapter), integration PASS
+  (16 Python, 9 adapter), and Python/TypeScript build PASS.
+- Rechecked installed and npm-stable OpenCode as `1.18.18`.
+- Preserved two pre-existing untracked release-validation helpers without including them in this
+  docs-only closeout.
+- Recorded A-I implementation complete, Productization active, Transparent Task-aware PI planned,
+  and RV-0 next. The known frontier `0/18` OpenCode `APIError` and local-low stochasticity remain
+  open evidence items, not implementation-complete claims.
