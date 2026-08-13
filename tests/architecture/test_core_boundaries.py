@@ -4,7 +4,7 @@ import ast
 from pathlib import Path
 
 PACKAGE_ROOT = Path(__file__).parents[2] / "src" / "extendcodeagent"
-HOST_NEUTRAL_DIRS = ("analysis", "core", "graph", "storage", "twin")
+HOST_NEUTRAL_DIRS = ("analysis", "core", "graph", "service", "storage", "twin")
 FORBIDDEN_IMPORT_PREFIXES = (
     "opencode",
     "atlas",

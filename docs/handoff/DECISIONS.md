@@ -86,3 +86,46 @@ The analyzer stays deterministic and stdlib-only. Unresolved dynamic dispatch is
 an inferred `may_call` edge with low confidence; it must never be promoted to a verified call.
 GitHub Actions remain unnecessary because this slice is reproducible through local fixtures,
 integration tests, package build, and benchmark scripts.
+
+## 2026-08-13 — PR-D stable OpenCode boundary
+
+Decision: target stable OpenCode and `@opencode-ai/plugin` 1.18.18 in PR-D. Keep the documented V2
+beta plugin surface as a future adapter rather than mixing stable and beta hook/config shapes.
+
+Current stable evidence checked 2026-08-13:
+- <https://opencode.ai/docs/plugins/> — `.opencode/plugins/`, `Plugin` context, event hooks, tools;
+- <https://opencode.ai/docs/custom-tools/> — stable tool helper and execution context;
+- <https://opencode.ai/docs/mcp-servers/> — named `mcp` entries, local command, `enabled`;
+- <https://opencode.ai/docs/cli/> and <https://opencode.ai/docs/config/>;
+- <https://opencode.ai/v2/docs/build/plugins> and V2 MCP docs, explicitly treated as beta/incompatible.
+
+The stable TypeScript adapter may import OpenCode packages. Host-neutral Python packages may not.
+Plugin hooks enqueue events into a bounded local interface; they do not run graph analysis inline.
+Plugin tools and MCP tools share one Python query/application service.
+
+GitHub Actions are still unnecessary. Plugin typecheck/build, Python tests, MCP protocol tests, and
+real OpenCode smoke/reconnect evidence will run locally.
+
+## 2026-08-13 — PR-D watcher fallback after real-host measurement
+
+Real stable OpenCode 1.18.18 testing on Linux initialized its inotify backend and watched the
+fixture directories, but the documented `file.watcher.updated` stream exposed `.git/index.lock`
+events and did not expose ordinary tracked source rewrites. Consuming the Git lock events caused a
+self-sustaining loop because Twin fingerprinting invokes Git.
+
+Decision: reject the same managed/dependency/cache/build paths as the source snapshot before event
+enqueue, and ADAPT a small Chokidar 4.0.3 fallback inside `adapters/opencode`. Native and fallback
+file events use the same coalescing queue. The watcher starts only after the central sidecar reports
+a non-off mode and closes with the plugin. Do not move filesystem watching into the host-neutral
+core and do not patch OpenCode.
+
+Alternatives rejected:
+- Trust the native watcher despite missing real source events: fails external-edit acceptance.
+- Poll the entire repository: adds avoidable scan latency and delayed refresh.
+- Implement recursive platform watchers in-house: less maintainable than a bounded existing library.
+
+Measured result: the reproducible smoke observed both an OpenCode session-tool format edit and an
+external edit as distinct immutable revisions, stabilized without a loop, preserved three revisions
+through restart, and left the revision count unchanged in off mode. Alternating three-run startup
+medians were 1,046 ms native and 1,070 ms plugin-enabled (+24 ms); one native sample was a 1,609 ms
+outlier, so these values are retained as smoke evidence rather than treated as a stable distribution.

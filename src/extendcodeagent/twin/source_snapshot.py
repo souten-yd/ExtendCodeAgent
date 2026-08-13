@@ -24,6 +24,7 @@ IGNORED_NAMES = frozenset(
         ".pytest_cache",
         ".mypy_cache",
         ".ruff_cache",
+        ".extendcodeagent",
     }
 )
 

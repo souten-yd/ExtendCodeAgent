@@ -1,0 +1,42 @@
+{
+  "date": "2026-08-13",
+  "environment": {
+    "os": "Linux 7.0.0-28-generic x86_64",
+    "node": "22.23.2",
+    "opencode": "1.18.18",
+    "python": "3.12.3"
+  },
+  "command": "tools/local/opencode-smoke",
+  "mode": {
+    "plugin": "shadow",
+    "mcp": "advisory",
+    "negative_control": "off"
+  },
+  "result": {
+    "native_startup_samples_ms": [1609, 1044, 1046],
+    "plugin_startup_samples_ms": [1069, 1070, 1072],
+    "native_startup_median_ms": 1046,
+    "plugin_startup_median_ms": 1070,
+    "startup_median_overhead_ms": 24,
+    "integration_startup_ms": 1062,
+    "initial_revision_ms": 151,
+    "tool_edit_refresh_ms": 151,
+    "external_edit_refresh_ms": 151,
+    "reconnect_ms": 1109,
+    "revision_count_after_edits": 3,
+    "revision_count_after_stability_window": 3,
+    "persisted_revision_count_after_restart": 3,
+    "off_revision_count_before": 3,
+    "off_revision_count_after": 3,
+    "mcp_status": "connected",
+    "reconnect_mcp_status": "connected",
+    "plugin_tool_count": 6
+  },
+  "notes": [
+    "Three alternating-order samples and their median are smoke evidence, not a statistically stable startup benchmark.",
+    "One native startup sample was a 1609 ms outlier; the raw samples are retained rather than discarded.",
+    "The tool edit used OpenCode's model-free session shell endpoint to run Ruff on a temporary fixture.",
+    "The external edit was performed by the smoke harness in a separate temporary repository process path.",
+    "No model or remote source-code transmission was used."
+  ]
+}

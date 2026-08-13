@@ -78,3 +78,37 @@
 - Final remote head `d078b3c413cbdbbcd9d9a9ef78c00122eb5b3864` was MERGEABLE/CLEAN with no
   GitHub Actions checks. PR #6 was marked ready and squash-merged as `ef6db532`.
 - Post-merge `main`: all-fast `45 passed in 0.16s`; integration `8 passed in 0.37s`.
+
+## 2026-08-13 — PR-D started
+
+- Merged PR-C docs closeout #7 as `4a73c6f1`, synced main, and created
+  `agent/pr-d-opencode-mcp`.
+- Base all-fast passed with `45 passed in 0.21s`; sdist/wheel build succeeded.
+- Confirmed OpenCode was not installed, then checked current official stable plugin/MCP/config/CLI
+  docs and V2 beta docs before choosing an adapter target.
+- Current npm versions: OpenCode/plugin 1.18.18 and MCP SDK 1.30.0.
+- Added the host-neutral application service plus authenticated local v1 sidecar, with off/shadow/
+  advisory behavior tests and persisted restart behavior.
+- Added the stable TypeScript OpenCode plugin, coalescing background event queue, six tools, and MCP
+  stdio server sharing the same sidecar/service.
+- Adapter typecheck passed; four adapter tests passed, including real MCP protocol call and sidecar
+  stop/reconnect.
+- Real OpenCode 1.18.18 loaded the plugin, exposed all six tools through its server, and reported the
+  configured MCP connected.
+- Real watcher testing exposed a `.git/index.lock`/Git-fingerprint feedback loop. Added adapter-side
+  filtering matching source snapshot exclusions before events enter the queue.
+- Real plugin loading also showed that helper functions must not be exported from the entry module;
+  moved path normalization to a dedicated module and reverified loader success.
+- Because stable native watcher events still omitted ordinary source changes, added a Chokidar
+  fallback solely in the adapter and documented the measured design change.
+- Reproducible real OpenCode smoke passed without a model: alternating three-run startup medians
+  were 1,046 ms native and 1,070 ms plugin-enabled (+24 ms; raw native samples include a 1,609 ms
+  outlier), tool/external refreshes were 151 ms each, MCP connected/reconnected, three revisions
+  persisted, no refresh loop formed, and off mode caused no revision.
+- Substantive head `736c2e9` gate: Python unit/architecture `49 passed in 0.33s`; adapter
+  `6 passed in 4.26s`; Python integration `9 passed in 1.45s`; repeated adapter `6 passed in 4.26s`;
+  Python package and TypeScript builds passed.
+- Evidence head `fb46df8` passed final all-fast (`49 passed in 0.31s`; adapter `6 passed in 4.25s`)
+  and Python/TypeScript builds. Draft PR [#8](https://github.com/souten-yd/ExtendCodeAgent/pull/8)
+  was published with an exact matching remote head and reported `MERGEABLE/CLEAN`; no GitHub
+  Actions checks are configured.

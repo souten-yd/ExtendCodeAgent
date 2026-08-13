@@ -1,0 +1,49 @@
+import assert from "node:assert/strict"
+import { mkdtemp, rm, writeFile } from "node:fs/promises"
+import { tmpdir } from "node:os"
+import { join, resolve } from "node:path"
+import test from "node:test"
+import { Client } from "@modelcontextprotocol/sdk/client/index.js"
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
+
+test("MCP stdio handshake lists and calls the shared tools", async () => {
+  const root = await mkdtemp(join(tmpdir(), "extendcodeagent-mcp-"))
+  await writeFile(join(root, "service.py"), "def leaf():\n    return 1\n", "utf8")
+  const transport = new StdioClientTransport({
+    command: process.execPath,
+    args: [resolve("dist/src/mcp.js")],
+    cwd: resolve("../.."),
+    env: {
+      PATH: process.env.PATH ?? "",
+      PYTHONPATH: resolve("../../src"),
+      EXTENDCODEAGENT_ROOT: root,
+      EXTENDCODEAGENT_PYTHON: resolve("../../.venv/bin/python"),
+    },
+    stderr: "pipe",
+  })
+  const client = new Client({ name: "integration-test", version: "1.0.0" })
+  try {
+    await client.connect(transport)
+    const tools = await client.listTools()
+    assert.deepEqual(
+      tools.tools.map((item) => item.name).sort(),
+      ["pi_impact", "pi_path", "pi_references", "pi_status", "pi_symbol", "pi_tests"],
+    )
+    const response = (await client.callTool({
+      name: "pi_symbol",
+      arguments: { query: "leaf" },
+    })) as {
+      isError?: boolean
+      content: Array<{ type: string; text?: string }>
+    }
+    assert.equal(response.isError, undefined)
+    const content = response.content[0]
+    assert.equal(content?.type, "text")
+    if (content?.type !== "text" || !content.text) throw new Error("expected text content")
+    const result = JSON.parse(content.text) as { items: Array<{ canonical_ref: string }> }
+    assert.equal(result.items[0]?.canonical_ref, "py://service#leaf")
+  } finally {
+    await client.close()
+    await rm(root, { recursive: true, force: true })
+  }
+})
