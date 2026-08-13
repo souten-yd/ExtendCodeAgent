@@ -153,14 +153,14 @@ def _changes(
     root: Path, status: str | None, requested: tuple[str, ...] | None
 ) -> tuple[tuple[str, ...], tuple[str, ...]]:
     if requested is not None:
-        deleted = tuple(sorted(path for path in requested if not (root / path).exists()))
-        return tuple(sorted(set(requested))), deleted
+        requested_deleted = tuple(sorted(path for path in requested if not (root / path).exists()))
+        return tuple(sorted(set(requested))), requested_deleted
     changed: set[str] = set()
-    deleted: set[str] = set()
+    git_deleted: set[str] = set()
     for line in (status or "").splitlines():
         raw = line[3:].split(" -> ")[-1].strip('"')
         rel = _safe_rel(root, raw)
         changed.add(rel)
         if "D" in line[:2]:
-            deleted.add(rel)
-    return tuple(sorted(changed)), tuple(sorted(deleted))
+            git_deleted.add(rel)
+    return tuple(sorted(changed)), tuple(sorted(git_deleted))

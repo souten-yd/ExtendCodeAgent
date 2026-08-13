@@ -8,7 +8,7 @@ Base commit: `40602d3ad8f147c9166e32919f7005da1c11279e`
 Latest commit: `40602d3ad8f147c9166e32919f7005da1c11279e`
 Current milestone: PR-B Graph / Digital Twin Foundation
 Current task: behavior-first Graph contracts, immutable revisions, SQLite store, source snapshot, full/file-level incremental refresh, persistence and benchmark
-Task status: contracts/source snapshot behavior implemented; SQLite store not started
+Task status: contracts/source snapshot/SQLite store implemented; Twin lifecycle not started
 
 Goal: Adapt KasaneCore's proven revision/store/source lifecycle into the existing host-neutral PR-A foundation without importing semantic, impact, OpenCode/MCP, runtime, or model behavior.
 
@@ -35,10 +35,10 @@ Completed:
 - published and squash-merged PR #2; post-merge `main` fast gates passed again.
 
 In progress:
-- implementing the SQLite revision store against the new host-neutral Graph contracts.
+- implementing full and file-level Twin refresh over SourceSnapshot and SQLite revisions.
 
 Not started:
-- SQLite/store and Twin refresh tests/implementation, benchmark, PR publication and merge.
+- Twin refresh integration, retention/export-import completion, benchmark, PR publication and merge.
 
 Important architecture decisions:
 - Use the planning baseline's recommended Python-first staged core for PR-A; no TypeScript OpenCode adapter is introduced in this slice.
@@ -65,6 +65,8 @@ Tests executed at PR-B start:
 - `tools/local/all-fast`
 - `tools/local/build`
 - `.venv/bin/pytest -q tests/unit/test_graph_contracts.py tests/unit/test_source_snapshot.py`
+- `.venv/bin/pytest -q tests/unit/test_sqlite_store.py`
+- `tools/local/all-fast` after SQLite implementation
 Exact results:
 - Ruff lint: `All checks passed!`
 - Ruff format: `17 files already formatted`
@@ -72,6 +74,8 @@ Exact results:
 - pytest 8.4.1: `25 passed in 0.04s`
 - sdist/wheel build: success
 - PR-B focused contracts/source snapshot: `6 passed`
+- SQLite store focused: `5 passed`
+- all-fast: Ruff PASS; strict mypy PASS; `36 passed in 0.09s`
 Benchmarks executed: none; PR-A has no graph/runtime or live-model performance path to benchmark.
 Exact results: not applicable; unit suite runtime was 0.04 seconds.
 OpenCode version tested: unavailable; `opencode` is not installed locally. Real integration is deferred to PR-D.
@@ -85,7 +89,7 @@ Uncommitted work: PR-B start handoff update only.
 Temporary files: none.
 Experimental code: none.
 
-Next exact action: add SQLite store behavioral tests and implement atomic revision persistence.
+Next exact action: add Twin lifecycle integration tests, then implement full/incremental/deletion refresh.
 Next files: `../KasaneCore/agent/project_twin/store.py` relevant schema/apply/snapshot slices and `module.py` refresh slices; then `tests/unit/test_graph_contracts.py` and PR-B component tests.
 Next commands: targeted `sed` of those slices; `git status --short`; focused pytest after tests exist.
 Rollback path: remove/revert only PR-B branch commits; PR-A on `main` remains authoritative.

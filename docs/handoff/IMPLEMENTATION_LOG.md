@@ -31,3 +31,7 @@
 - Created `agent/pr-b-graph-twin-store`.
 - Inspected the four required KasaneCore sources and their store/source/refresh/durability tests.
 - Kept PR-B scope explicitly limited to Graph/Twin persistence, source snapshot, and file-level refresh.
+- Added immutable Graph contracts and bounded Git/non-Git source snapshots; focused tests passed.
+- Added atomic SQLite revision persistence with workspace scope, idempotency, expected-head conflict,
+  historical snapshots, reverse-edge index, retention hook and snapshot export foundation.
+- Post-store local gate: Ruff and strict mypy passed; `36 passed in 0.09s`.
