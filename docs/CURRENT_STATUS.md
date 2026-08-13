@@ -4,9 +4,12 @@ Status date: 2026-08-13
 
 ## Program state
 
-Overall: **PLANNING BASELINE COMPLETE — IMPLEMENTATION NOT STARTED**
+Overall: **PR-A FOUNDATION COMPLETE — PR-B NOT STARTED**
 
-The project currently contains the strategic architecture, KasaneCore migration audit, implementation/local-validation/model-routing plan, and Codex implementation guide. No production Project Intelligence code has been implemented yet.
+The project now contains the strategic planning baseline plus a working Python host-neutral
+foundation. PR-A provides shared immutable contracts, centralized JSON/JSONC configuration,
+capability rollout policy, provider-neutral model-routing contracts and deterministic fake
+adapters, local validation scripts, and architecture-boundary tests.
 
 ## Canonical read order
 
@@ -39,7 +42,7 @@ The project currently contains the strategic architecture, KasaneCore migration 
 | PR | Scope | Status |
 |---|---|---|
 | Planning PR | architecture, migration audit, implementation/validation/model-routing plan | complete |
-| PR-A | foundation contracts, config/capability policy, model-router contracts, local harness | not started |
+| PR-A | foundation contracts, config/capability policy, model-router contracts, local harness | complete |
 | PR-B | graph revision/store/source snapshot | not started |
 | PR-C | structural/Python semantic/path/impact | not started |
 | PR-D | OpenCode adapter + MCP advisory integration | not started |
@@ -51,9 +54,14 @@ The project currently contains the strategic architecture, KasaneCore migration 
 
 ## Immediate next action
 
-After the planning PR is merged, create PR-A from current `main`. Codex must first inspect the merged repository and KasaneCore reference implementations, then implement only the foundation slice defined in the execution plan.
+Begin PR-B from updated `main`. Re-read only the Graph/Twin revision, store, source snapshot,
+invalidation, and persistence sections plus the matching KasaneCore files/tests. Capture target
+behavior before adapting implementation. Do not add semantic/impact algorithms, OpenCode/MCP,
+or real model adapters in PR-B.
 
-PR-A must not depend on a real LLM for correctness. It establishes provider-neutral routing contracts, fake endpoints, config precedence, feature flags, local harness, and architecture boundary tests. Live local/frontier routing is deliberately deferred until the underlying Project Intelligence flow provides meaningful work to route.
+PR-A intentionally has no real OpenCode or real-LLM claim. Live host integration remains PR-D;
+live model routing remains PR-G. The local PR-A gates passed on Python 3.12.3: Ruff lint/format,
+strict mypy, 25 unit/architecture tests, sdist/wheel build, and wheel-archive import smoke.
 
 ## Evidence policy
 

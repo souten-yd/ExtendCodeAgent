@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+"${repo_root}/.venv/bin/ruff" check "${repo_root}/src" "${repo_root}/tests"
+"${repo_root}/.venv/bin/ruff" format --check "${repo_root}/src" "${repo_root}/tests"
