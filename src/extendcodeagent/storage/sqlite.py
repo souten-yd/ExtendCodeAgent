@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sqlite3
 import uuid
@@ -239,9 +240,40 @@ class SqliteGraphStore:
             "edges": [_dump(item) for item in snapshot.edges],
             "evidence": [_dump(item) for item in snapshot.evidence],
         }
+        canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+        envelope = {"content": payload, "sha256": hashlib.sha256(canonical.encode()).hexdigest()}
         Path(path).write_text(
-            json.dumps(payload, sort_keys=True, separators=(",", ":")), encoding="utf-8"
+            json.dumps(envelope, sort_keys=True, separators=(",", ":")), encoding="utf-8"
         )
+
+    def import_snapshot(self, project: ProjectRef, path: str | Path) -> GraphRevision:
+        envelope = json.loads(Path(path).read_text(encoding="utf-8"))
+        content = envelope.get("content")
+        if not isinstance(content, dict):
+            raise StoreError("invalid snapshot envelope")
+        canonical = json.dumps(content, sort_keys=True, separators=(",", ":"))
+        digest = hashlib.sha256(canonical.encode()).hexdigest()
+        if envelope.get("sha256") != digest:
+            raise StoreError("snapshot integrity check failed")
+        if content.get("format") != "extendcodeagent.graph-snapshot.v1":
+            raise StoreError("unsupported snapshot format")
+        revision_payload = content.get("revision")
+        if not isinstance(revision_payload, str):
+            raise StoreError("snapshot has no revision")
+        exported_revision = _load_revision(revision_payload)
+        current = self.current_revision(project)
+        delta = GraphDelta(
+            project,
+            exported_revision.source_revision,
+            exported_revision.worktree_fingerprint,
+            f"import:{digest}",
+            exported_revision.analyzer_versions,
+            tuple(_load_node(item) for item in content.get("nodes", [])),
+            tuple(_load_edge(item) for item in content.get("edges", [])),
+            tuple(_load_evidence(item) for item in content.get("evidence", [])),
+            expected_revision_id=current.revision_id if current else None,
+        )
+        return self.apply(delta)
 
     def _validate_scope(self, delta: GraphDelta) -> None:
         revisions = [item.revision for item in delta.nodes]

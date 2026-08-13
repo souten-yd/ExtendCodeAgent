@@ -8,7 +8,7 @@ Base commit: `40602d3ad8f147c9166e32919f7005da1c11279e`
 Latest commit: `40602d3ad8f147c9166e32919f7005da1c11279e`
 Current milestone: PR-B Graph / Digital Twin Foundation
 Current task: behavior-first Graph contracts, immutable revisions, SQLite store, source snapshot, full/file-level incremental refresh, persistence and benchmark
-Task status: contracts/source snapshot/SQLite store implemented; Twin lifecycle not started
+Task status: implementation and required local evidence complete; review/publication pending
 
 Goal: Adapt KasaneCore's proven revision/store/source lifecycle into the existing host-neutral PR-A foundation without importing semantic, impact, OpenCode/MCP, runtime, or model behavior.
 
@@ -35,10 +35,10 @@ Completed:
 - published and squash-merged PR #2; post-merge `main` fast gates passed again.
 
 In progress:
-- implementing full and file-level Twin refresh over SourceSnapshot and SQLite revisions.
+- final diff review, status/handoff completion, PR creation and merge.
 
 Not started:
-- Twin refresh integration, retention/export-import completion, benchmark, PR publication and merge.
+- PR publication/merge/closeout; PR-C.
 
 Important architecture decisions:
 - Use the planning baseline's recommended Python-first staged core for PR-A; no TypeScript OpenCode adapter is introduced in this slice.
@@ -67,6 +67,8 @@ Tests executed at PR-B start:
 - `.venv/bin/pytest -q tests/unit/test_graph_contracts.py tests/unit/test_source_snapshot.py`
 - `.venv/bin/pytest -q tests/unit/test_sqlite_store.py`
 - `tools/local/all-fast` after SQLite implementation
+- `tools/local/test-integration`
+- `tools/local/benchmark-pr-b`
 Exact results:
 - Ruff lint: `All checks passed!`
 - Ruff format: `17 files already formatted`
@@ -76,20 +78,25 @@ Exact results:
 - PR-B focused contracts/source snapshot: `6 passed`
 - SQLite store focused: `5 passed`
 - all-fast: Ruff PASS; strict mypy PASS; `36 passed in 0.09s`
-Benchmarks executed: none; PR-A has no graph/runtime or live-model performance path to benchmark.
-Exact results: not applicable; unit suite runtime was 0.04 seconds.
+- final all-fast: Ruff PASS; strict mypy PASS; `38 passed in 0.13s`
+- Twin lifecycle integration: `5 passed in 0.21s`
+Benchmarks executed: `tools/local/benchmark-pr-b` against this real repository (50 source files).
+Exact results: cold 185.638 ms; incremental 182.145 ms; query 0.302 ms; DB+WAL 255,448 bytes;
+max RSS 28,472 KiB. Incremental correctness passed, but latency advantage was only 1.9%.
 OpenCode version tested: unavailable; `opencode` is not installed locally. Real integration is deferred to PR-D.
 ExtendCodeAgent config tested: defaults plus user/project/runtime/session/command overrides; JSONC,
 strict validation, immutability, capability off/shadow/advisory/active bounds, endpoint/role config.
 LLM/provider tested: deterministic fake local/host/remote adapters only; no real LLM is required for PR-A.
 Model routing profile: manual/local-first/frontier-first/cost/latency/quality/adaptive/host-only/local-only contracts; focused tests exercised local-only, host-only, fallback/retry, capability filters, and remote-code policy.
 Known failures: none in required local gates.
-Known limitations: no Graph/Twin, OpenCode/MCP, or live provider implementation exists in PR-A by design.
+Known limitations: PR-B graph is file-level only by design; fingerprint scanning dominates small-repo
+incremental latency; import restores current facts as a new local revision rather than preserving
+foreign revision IDs; semantic/impact/OpenCode/model features remain out of scope.
 Uncommitted work: PR-B start handoff update only.
 Temporary files: none.
 Experimental code: none.
 
-Next exact action: add Twin lifecycle integration tests, then implement full/incremental/deletion refresh.
+Next exact action: run build and diff review, update CURRENT_STATUS/NEXT_TASK, commit, publish and merge PR-B.
 Next files: `../KasaneCore/agent/project_twin/store.py` relevant schema/apply/snapshot slices and `module.py` refresh slices; then `tests/unit/test_graph_contracts.py` and PR-B component tests.
 Next commands: targeted `sed` of those slices; `git status --short`; focused pytest after tests exist.
 Rollback path: remove/revert only PR-B branch commits; PR-A on `main` remains authoritative.

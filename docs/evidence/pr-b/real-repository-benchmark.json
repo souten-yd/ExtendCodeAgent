@@ -1,0 +1,15 @@
+{
+  "cold_revision": true,
+  "cold_snapshot_ms": 185.638,
+  "db_and_wal_size_bytes": 255448,
+  "incremental_refresh_ms": 182.145,
+  "incremental_revision_changed": true,
+  "limitation": "File-level graph refresh still performs a bounded workspace fingerprint scan.",
+  "max_rss_kib": 28472,
+  "platform": "Linux-7.0.0-28-generic-x86_64-with-glibc2.39",
+  "python": "3.12.3",
+  "repository": "/home/souten/ExtendCodeAgent",
+  "schema": "extendcodeagent.pr-b-benchmark.v1",
+  "snapshot_query_ms": 0.302,
+  "source_files": 50
+}

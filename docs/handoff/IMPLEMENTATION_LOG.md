@@ -35,3 +35,8 @@
 - Added atomic SQLite revision persistence with workspace scope, idempotency, expected-head conflict,
   historical snapshots, reverse-edge index, retention hook and snapshot export foundation.
 - Post-store local gate: Ruff and strict mypy passed; `36 passed in 0.09s`.
+- Added full/reopen/incremental/deletion/conflict/restart/workspace Twin lifecycle integration;
+  `5 passed in 0.21s`.
+- Added integrity-checked snapshot export/import and bounded retention tests.
+- Real repository benchmark recorded under `docs/evidence/pr-b/`; incremental fact behavior passed,
+  while small-repo latency remained near full-build latency and is documented as a limitation.

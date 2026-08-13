@@ -11,7 +11,20 @@ from extendcodeagent.core.contracts import Diagnostic, ProjectRef, SourceRevisio
 
 SOURCE_SNAPSHOT_VERSION = "source_snapshot.v1"
 IGNORED_NAMES = frozenset(
-    {".git", ".hg", ".svn", ".venv", "venv", "node_modules", "dist", "build", "__pycache__"}
+    {
+        ".git",
+        ".hg",
+        ".svn",
+        ".venv",
+        "venv",
+        "node_modules",
+        "dist",
+        "build",
+        "__pycache__",
+        ".pytest_cache",
+        ".mypy_cache",
+        ".ruff_cache",
+    }
 )
 
 
@@ -65,7 +78,10 @@ class SourceSnapshotter:
             except ValueError:
                 diagnostics.append(Diagnostic("unsafe_path", f"skipped path outside root: {path}"))
                 continue
-            if any(part.lower() in IGNORED_NAMES for part in relative.parts):
+            if any(
+                part.lower() in IGNORED_NAMES or part.lower().endswith(".egg-info")
+                for part in relative.parts
+            ):
                 continue
             if len(files) >= self.max_files:
                 diagnostics.append(Diagnostic("file_limit", "source file count limit reached"))

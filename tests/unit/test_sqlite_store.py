@@ -109,6 +109,34 @@ def test_restart_persistence_and_export(tmp_path: Path) -> None:
     assert "extendcodeagent.graph-snapshot.v1" in output.read_text(encoding="utf-8")
     reopened.close()
 
+    imported = SqliteGraphStore(tmp_path / "imported.db")
+    imported.import_snapshot(_project(), output)
+    assert imported.snapshot(_project()).nodes[0].canonical_ref == CanonicalRef("file://app.py")
+    imported.close()
+
+
+def test_import_rejects_corrupt_snapshot(tmp_path: Path) -> None:
+    output = tmp_path / "snapshot.json"
+    with SqliteGraphStore(":memory:") as store:
+        store.apply(_delta("one"))
+        store.export_snapshot(_project(), output)
+        output.write_text(
+            output.read_text(encoding="utf-8").replace("app.py", "bad.py"), encoding="utf-8"
+        )
+        with pytest.raises(StoreError, match="integrity"):
+            SqliteGraphStore(":memory:").import_snapshot(_project(), output)
+
+
+def test_retention_prunes_closed_history_but_keeps_recent_revisions() -> None:
+    with SqliteGraphStore(":memory:") as store:
+        first = store.apply(_delta("one", label="v1"))
+        second = store.apply(_delta("two", source="s2", expected=first.revision_id, label="v2"))
+        store.apply(_delta("three", source="s3", expected=second.revision_id, label="v3"))
+        assert store.prune(_project(), keep=2) == 1
+        with pytest.raises(StoreError, match="revision not found"):
+            store.get_revision(_project(), first.revision_id)
+        assert store.snapshot(_project()).nodes[0].properties["label"] == "v3"
+
 
 def test_fact_revision_mismatch_rolls_back_atomically() -> None:
     delta = _delta("bad")
