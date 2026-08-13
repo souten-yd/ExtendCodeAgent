@@ -108,8 +108,13 @@ class TwinService:
         previous_snapshot = (
             self.store.snapshot(project) if current else GraphSnapshot(project, None)
         )
+        auto_full = False
         if self.analyzer is not None and not full:
             paths = _dependent_paths(previous_snapshot, paths, source)
+            auto_full = _prefer_full_refresh(previous_snapshot, paths)
+            if auto_full:
+                full = True
+                paths = tuple(item.path for item in source.files)
         selected = {item.path: item for item in source.files if item.path in set(paths)}
         node_by_ref = {
             f"file://{item.path}": _file_node(project, source, item) for item in selected.values()
@@ -117,6 +122,13 @@ class TwinService:
         edges: tuple[GraphEdge, ...] = ()
         analyzer_versions = dict(source.analyzer_versions)
         diagnostics = list(source.diagnostics)
+        if auto_full:
+            diagnostics.append(
+                Diagnostic(
+                    "auto_full_refresh_selected",
+                    "dependency closure covered at least 40% of analyzed modules",
+                )
+            )
         if self.analyzer is not None:
             analysis = self.analyzer.analyze(project, source, paths=None if full else paths)
             node_by_ref.update({item.canonical_ref.value: item for item in analysis.nodes})
@@ -175,6 +187,16 @@ class TwinService:
             paths,
             tuple(diagnostics),
         )
+
+
+def _prefer_full_refresh(snapshot: GraphSnapshot, affected_paths: tuple[str, ...]) -> bool:
+    module_paths = {
+        node.source_ref for node in snapshot.nodes if node.node_type == "module"
+    }
+    if not module_paths:
+        return False
+    affected_modules = module_paths.intersection(affected_paths)
+    return len(affected_modules) / len(module_paths) >= 0.4
 
 
 def _matches(

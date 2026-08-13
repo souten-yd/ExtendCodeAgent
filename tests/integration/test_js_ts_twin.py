@@ -62,3 +62,31 @@ export function testHandler() { return handler() }
         and item.target.value == "jsname://handler"
         for item in snapshot.edges
     )
+
+
+def test_js_ts_twin_selects_full_refresh_for_broad_dependency_closure(tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    root.mkdir()
+    _write(root, "src/core.ts", "export function core() { return true }\n")
+    _write(
+        root,
+        "src/caller.ts",
+        "import { core } from './core'; export function caller() { return core() }\n",
+    )
+    for name in ("one", "two", "three"):
+        _write(root, f"src/{name}.ts", f"export function {name}() {{ return true }}\n")
+
+    project = _project(root)
+    with SqliteGraphStore(tmp_path / "graph.db") as store:
+        twin = TwinService(store, analyzer=JavaScriptTypeScriptGraphAnalyzer())
+        twin.open(project)
+        refreshed = twin.refresh(project, changed_paths=("src/core.ts",))
+
+    assert refreshed.affected_paths == (
+        "src/caller.ts",
+        "src/core.ts",
+        "src/one.ts",
+        "src/three.ts",
+        "src/two.ts",
+    )
+    assert "auto_full_refresh_selected" in {item.code for item in refreshed.diagnostics}

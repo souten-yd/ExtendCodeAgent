@@ -266,3 +266,13 @@ py-tree-sitter 0.25.2. Decision: pin 0.25.2, retain one parser per grammar, stre
 and retain only pure-Python descriptors across files. Treat every failed run only as a safety
 defect signal, never as benchmark evidence. Real-repository measurement may resume only after
 focused tests and three repetitions of the same ControlDeck cold/incremental path no longer crash.
+
+The safe run then disproved the assumption that incremental refresh is always the faster strategy:
+on the same existing baseline, an App.tsx dependency closure covered 60 of 133 JS/TS modules and
+took 4,931 ms, while explicit full refresh took 1,187 ms. Alternatives considered were persisting a
+new symbol index in PR-H, always rebuilding JS/TS, or choosing from existing graph facts. Decision:
+REUSE the Twin lifecycle and select full refresh when affected paths cover at least 40% of current
+module facts. This is language-neutral, deterministic, observable through
+`auto_full_refresh_selected`, and preserves narrow incremental behavior. Three measured automatic
+runs took 1,193 / 1,192 / 1,187 ms with identical 1,255 nodes and 3,888 edges. A persisted index is
+deferred because the measured full strategy already removes the regression without new storage.

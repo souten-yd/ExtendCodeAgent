@@ -7,8 +7,8 @@ Current PR: not created
 Base commit: `fe61a16e8f7f07e760d99ca449bc09c90166a6c5`
 Latest commit: `c6e4326` (PR-H JS/TS semantic implementation)
 Milestone: PR-H JS/TS semantic and benchmark-justified on-demand deep graph
-Current task: add measured auto full-build selection, then benchmark JS/TS value
-Status: JS/TS semantic slice implemented; native parser safety gate passed; performance correction next
+Current task: benchmark JS/TS ground truth and decide bounded deep-graph follow-up
+Status: JS/TS semantic and measured auto refresh strategy implemented
 
 Completed:
 - added official tree-sitter JavaScript/TypeScript/TSX parsing dependencies;
@@ -22,6 +22,8 @@ Completed:
   streaming Node traversal, and retaining only pure-Python descriptors across files;
 - repeated the exact ControlDeck cold/incremental Twin path in three independent processes with no
   crash and stable 1,255 nodes / 3,888 edges;
+- added language-neutral auto full refresh when the dependency closure covers at least 40% of
+  current module facts; three ControlDeck runs improved from about 5.0s to about 1.19s;
 - PR-G closeout PR #15 squash-merged as `fe61a16e8f7f07e760d99ca449bc09c90166a6c5`;
 - created PR-H branch from exact clean closeout main;
 - PR #14 exact head `1189c966a71d410a42ab3f51ed35d18b4c2f5af9` was mergeable/CLEAN
@@ -44,8 +46,7 @@ Completed:
 - verified frontier failure is reported unavailable for all 18 attempts, not as an empty success.
 
 In progress:
-- measured auto full-build selection because ControlDeck incremental is slower than cold;
-- real JS/TS repository benchmark and framework/deep-graph stop-gate decision.
+- real JS/TS repository ground-truth benchmark and framework/deep-graph stop-gate decision.
 
 Not started:
 - PR-H on-demand framework/deep graph, pending measured scenario gap;
@@ -69,6 +70,7 @@ Exact tests executed:
 - final build: Python sdist/wheel and TypeScript build PASS;
 - final integration: Python 13 passed in 0.88s, adapter 9 passed;
 - PR-H parser safety focused gate: Ruff PASS, strict mypy PASS, 5 focused tests PASS;
+- auto refresh focused gate: Ruff PASS, strict mypy PASS, 18 focused tests PASS;
 - three independent `PYTHONFAULTHANDLER=1` ControlDeck cold plus App.tsx refresh processes.
 - `tools/local/pr-g-evaluate --tiers local-low,local-medium --modes off,advisory,active`;
 - `tools/local/pr-g-evaluate --tiers host --modes off,advisory,active`;
@@ -90,6 +92,8 @@ Benchmark results:
 - local-low active: 1,061 ms total for six cases; local-medium active: 6,327 ms.
 - ControlDeck cold: 3,064 / 3,083 / 3,027 ms; incremental: 5,000 / 5,052 / 4,964 ms;
   DB 6,569,984 bytes; max RSS 69,544 / 69,032 / 69,276 KiB.
+- equal-baseline ControlDeck explicit full: 1,187 ms versus incremental 4,931 ms; automatic full
+  selection: 1,193 / 1,192 / 1,187 ms, identical fact counts.
 
 OpenCode version: 1.18.18.
 Model/provider: Ollama Qwen3 0.6B; Ollama Qwen 3.6 27B Q5; OpenCode
@@ -99,8 +103,8 @@ Routing profile: deterministic fake coverage plus real native/off/advisory/activ
 Known failures: configured frontier returns OpenCode `APIError`; no frontier quality claim.
 Known limitations: local-low is stochastic; active is not made default; stable OpenCode prompt lacks
 a per-request max-output field; host cache tokens must not be conflated with new input. PR-H's
-current incremental JS/TS refresh is consistently slower than cold on ControlDeck and must not be
-selected automatically until the full-build fallback is implemented.
+current JS/TS analyzer builds a transient cross-file index; broad dependency closures therefore
+select full refresh. A persisted symbol index remains a future optimization, not a PR-H requirement.
 Uncommitted work: coherent JS/TS semantic/composition/config implementation and tests.
 Temporary work: evaluation-only Ollama `qwen3:0.6b` remains installed; no temporary repo files.
 
