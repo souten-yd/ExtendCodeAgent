@@ -35,7 +35,13 @@ from extendcodeagent.convergence import (
 )
 from extendcodeagent.convergence.storage import SqliteConvergenceRepository
 from extendcodeagent.core.config.schema import KNOWN_ANALYZERS, CapabilityName, RolloutMode
-from extendcodeagent.core.contracts import CanonicalRef, ProjectRef, Provenance, SourceRevision
+from extendcodeagent.core.contracts import (
+    CanonicalRef,
+    ProjectRef,
+    Provenance,
+    SourceRevision,
+    TwinRevisionRef,
+)
 from extendcodeagent.core.policy import CapabilityPolicy
 from extendcodeagent.graph import GraphSnapshot
 from extendcodeagent.graph.analyzers import (
@@ -44,9 +50,16 @@ from extendcodeagent.graph.analyzers import (
     JavaScriptTypeScriptGraphAnalyzer,
     PythonGraphAnalyzer,
 )
+from extendcodeagent.research import ResearchDepth, ResearchRequest, build_research_plan
 from extendcodeagent.runtime import ObservationKind, ObservationStatus, RuntimeObservation
 from extendcodeagent.storage import SqliteGraphStore
 from extendcodeagent.testing import TestHealthSignals, evaluate_test_health, select_tests
+from extendcodeagent.traceability import (
+    ProjectRequirementReport,
+    Requirement,
+    RequirementEvidence,
+    evaluate_project_requirements,
+)
 from extendcodeagent.twin import TwinService
 
 INTERFACE_VERSION = "extendcodeagent.local.v1"
@@ -412,6 +425,49 @@ class ProjectIntelligenceApplication:
         )
         SqliteConvergenceRepository(self._ensure_store()).put(report, recommendation)
         return report, recommendation
+
+    def research_plan(
+        self, query: str, depth: ResearchDepth, facets: tuple[str, ...] = ()
+    ) -> dict[str, Any]:
+        self._require_explicit(CapabilityName.RESEARCH)
+        plan = build_research_plan(
+            ResearchRequest(
+                hashlib.sha256(f"{self.project.project_id}\0{query}".encode()).hexdigest()[:20],
+                self.project,
+                query,
+                depth,
+            ),
+            facets,
+        )
+        return {
+            "request_id": plan.request_id,
+            "queries": list(plan.queries),
+            "max_queries": plan.max_queries,
+            "max_sources": plan.max_sources,
+            "max_time_seconds": plan.max_time_seconds,
+        }
+
+    def evaluate_project_requirements(
+        self,
+        requirement_revision_id: str,
+        requirements: tuple[Requirement, ...],
+        evidence: tuple[RequirementEvidence, ...],
+    ) -> tuple[ConvergenceReport, ConvergenceRecommendation]:
+        snapshot = self._explicit_snapshot(CapabilityName.TRACEABILITY)
+        if snapshot.revision is None:
+            raise CapabilityUnavailable("traceability requires a Twin revision")
+        result: ProjectRequirementReport = evaluate_project_requirements(
+            self.project,
+            requirement_revision_id,
+            requirements,
+            tuple(node.canonical_ref for node in snapshot.nodes),
+            TwinRevisionRef(snapshot.revision.revision_id, snapshot.revision.source_revision),
+            evidence,
+        )
+        SqliteConvergenceRepository(self._ensure_store()).put(
+            result.convergence, result.recommendation
+        )
+        return result.convergence, result.recommendation
 
     def _impact_report(
         self,

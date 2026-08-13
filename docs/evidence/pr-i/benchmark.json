@@ -1,0 +1,17 @@
+{
+  "complete_expected": true,
+  "convergence_decision": "complete",
+  "convergence_mean_ms": 0.5424,
+  "convergence_p50_ms": 0.529,
+  "convergence_repetitions": 20,
+  "db_and_wal_size_bytes": 17771744,
+  "evidence_persistence_ms": 196.65,
+  "external_evidence_records": 200,
+  "max_rss_kib": 59644,
+  "repository": "/home/souten/ExtendCodeAgent",
+  "requirements": 200,
+  "research_plan_mean_ms": 0.002,
+  "research_plans": 1000,
+  "restart_lookup_passed": true,
+  "schema": "extendcodeagent.pr-i-benchmark.v1"
+}

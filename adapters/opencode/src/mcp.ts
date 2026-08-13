@@ -100,6 +100,18 @@ server.registerTool(
   },
   async (args) => result(await client.request("runtime_evidence", args)),
 )
+server.registerTool(
+  "pi_research_plan",
+  {
+    description: "Build a bounded provider-neutral research retrieval plan.",
+    inputSchema: {
+      query: z.string().min(1),
+      depth: z.enum(["micro", "standard", "deep"]).optional(),
+      facets: z.array(z.string()).optional(),
+    },
+  },
+  async (args) => result(await client.request("research_plan", args)),
+)
 
 const stop = async () => {
   await client.stop()

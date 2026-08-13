@@ -8,9 +8,18 @@ import pytest
 from extendcodeagent.blueprint import BlueprintElement
 from extendcodeagent.convergence import ActualElement, ActualSnapshot, ConvergenceDecision
 from extendcodeagent.core.config import ConfigLayer, ConfigResolver
-from extendcodeagent.core.contracts import CanonicalRef, SourceRevision, TwinRevisionRef
+from extendcodeagent.core.config.schema import CapabilityName
+from extendcodeagent.core.contracts import (
+    CanonicalRef,
+    EvidenceRef,
+    EvidenceStatus,
+    SourceRevision,
+    TwinRevisionRef,
+)
 from extendcodeagent.core.policy import CapabilityPolicy
+from extendcodeagent.research import ResearchDepth
 from extendcodeagent.service import CapabilityUnavailable, ProjectIntelligenceApplication
+from extendcodeagent.traceability import Requirement, RequirementEvidence
 
 
 def _write(root: Path, relative: str, content: str) -> None:
@@ -33,6 +42,8 @@ def _policy(mode: str) -> CapabilityPolicy:
             "context",
             "blueprint",
             "convergence",
+            "research",
+            "traceability",
         )
     }
     resolved = ConfigResolver().resolve(
@@ -71,6 +82,32 @@ def test_off_is_inert_and_does_not_create_a_database(tmp_path: Path) -> None:
         with pytest.raises(CapabilityUnavailable):
             application.symbol("leaf")
     assert not database.exists()
+
+
+def test_research_plan_and_project_traceability_use_central_policy(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    with ProjectIntelligenceApplication(
+        root, tmp_path / "graph.db", _policy("advisory")
+    ) as application:
+        plan = application.research_plan("SQLite durability", ResearchDepth.MICRO, ("docs",))
+        snapshot = application._explicit_snapshot(CapabilityName.TRACEABILITY)  # noqa: SLF001
+        assert snapshot.revision is not None
+        source = snapshot.revision.source_revision
+        report = application.evaluate_project_requirements(
+            "requirements-1",
+            (Requirement("r1", "service exists", (CanonicalRef("file://service.py"),)),),
+            (
+                RequirementEvidence(
+                    "r1",
+                    (CanonicalRef("file://service.py"),),
+                    (EvidenceRef("test:e1", EvidenceStatus.VERIFIED, source),),
+                    source,
+                ),
+            ),
+        )
+
+    assert plan["max_queries"] == 2
+    assert report[1].decision is ConvergenceDecision.COMPLETE
 
 
 def test_advisory_queries_share_one_revisioned_graph(tmp_path: Path) -> None:

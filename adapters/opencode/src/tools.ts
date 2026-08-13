@@ -87,5 +87,16 @@ export function createTools(request: Requester): Record<string, ToolDefinition> 
         return jsonResult(await request("runtime_evidence", args))
       },
     }),
+    pi_research_plan: tool({
+      description: "Build a bounded provider-neutral research retrieval plan.",
+      args: {
+        query: z.string().min(1),
+        depth: z.enum(["micro", "standard", "deep"]).optional(),
+        facets: z.array(z.string()).optional(),
+      },
+      async execute(args) {
+        return jsonResult(await request("research_plan", args))
+      },
+    }),
   }
 }

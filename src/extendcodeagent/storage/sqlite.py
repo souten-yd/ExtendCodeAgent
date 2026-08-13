@@ -45,13 +45,14 @@ from extendcodeagent.graph import (
     GraphRevision,
     GraphSnapshot,
 )
+from extendcodeagent.research.contracts import Evidence
 from extendcodeagent.runtime import (
     ObservationKind,
     ObservationStatus,
     RuntimeObservation,
 )
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 
 class StoreError(RuntimeError):
@@ -379,6 +380,29 @@ class SqliteGraphStore:
             _load_convergence_recommendation(row["recommendation_payload"]),
         )
 
+    def put_research_evidence(self, project: ProjectRef, evidence: Evidence) -> None:
+        payload = _dump(evidence)
+        existing = self._connection.execute(
+            "SELECT payload FROM research_evidence WHERE scope=? AND evidence_id=?",
+            (_scope(project), evidence.evidence_id),
+        ).fetchone()
+        if existing:
+            if existing["payload"] != payload:
+                raise StoreError(f"immutable research evidence collision: {evidence.evidence_id}")
+            return
+        with self._transaction():
+            self._connection.execute(
+                "INSERT INTO research_evidence(scope,evidence_id,retrieved_at,payload) VALUES(?,?,?,?)",
+                (_scope(project), evidence.evidence_id, evidence.retrieved_at.isoformat(), payload),
+            )
+
+    def research_evidence(self, project: ProjectRef, evidence_id: str) -> Evidence | None:
+        row = self._connection.execute(
+            "SELECT payload FROM research_evidence WHERE scope=? AND evidence_id=?",
+            (_scope(project), evidence_id),
+        ).fetchone()
+        return _load_research_evidence(row["payload"]) if row else None
+
     def prune(self, project: ProjectRef, *, keep: int) -> int:
         if keep <= 0:
             raise ValueError("keep must be positive")
@@ -525,8 +549,11 @@ class SqliteGraphStore:
             CREATE TABLE IF NOT EXISTS active_blueprints(scope TEXT PRIMARY KEY,revision_id TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS convergence_reports(row_id INTEGER PRIMARY KEY,scope TEXT NOT NULL,report_id TEXT NOT NULL,generated_at TEXT NOT NULL,report_payload TEXT NOT NULL,recommendation_payload TEXT NOT NULL,UNIQUE(scope,report_id));
             CREATE INDEX IF NOT EXISTS convergence_reports_latest ON convergence_reports(scope,generated_at,row_id);
+            CREATE TABLE IF NOT EXISTS research_evidence(scope TEXT NOT NULL,evidence_id TEXT NOT NULL,retrieved_at TEXT NOT NULL,payload TEXT NOT NULL,PRIMARY KEY(scope,evidence_id));
+            CREATE INDEX IF NOT EXISTS research_evidence_time ON research_evidence(scope,retrieved_at,evidence_id);
             UPDATE schema_meta SET version=2 WHERE version<2;
             UPDATE schema_meta SET version=3 WHERE version<3;
+            UPDATE schema_meta SET version=4 WHERE version<4;
             """
         )
 
@@ -587,6 +614,21 @@ def _evidence_ref(raw: dict[str, object]) -> EvidenceRef:
         str(raw["evidence_id"]),
         EvidenceStatus(str(raw["status"])),
         _source(revision) if isinstance(revision, dict) else None,
+    )
+
+
+def _load_research_evidence(payload: str) -> Evidence:
+    raw = json.loads(payload)
+    return Evidence(
+        str(raw["evidence_id"]),
+        str(raw["candidate_id"]),
+        str(raw["content_hash"]),
+        str(raw["summary"]),
+        _provenance(raw["provenance"]),
+        _confidence(raw["confidence"]),
+        datetime.fromisoformat(str(raw["retrieved_at"])),
+        EvidenceStatus(str(raw["status"])),
+        bool(raw["external"]),
     )
 
 

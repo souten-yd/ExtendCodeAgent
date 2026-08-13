@@ -287,3 +287,25 @@ PR-H. They add maintenance and certainty risk without closing the measured brows
 Keep framework/deep analyzers independently configurable and on-demand for a future concrete UI or
 security benchmark; this follows the PR-H measurement stop gate rather than treating the plan as a
 mandatory implementation list.
+
+## 2026-08-14 — PR-I research and traceability boundary
+
+After inspecting the existing shared evidence/provenance contracts, CapabilityPolicy, SQLite,
+Runtime, Blueprint/Convergence projections, sidecar/MCP callers, bounded PR-I plan/audit text, and
+KasaneCore research/requirement behavior:
+
+- REUSE `ProjectRef`, `SourceRevision`, `EvidenceRef`, `EvidenceStatus`, `Provenance`, immutable
+  dataclasses, centralized `RESEARCH`/`TRACEABILITY` modes, SQLite ownership, and the existing
+  target/actual/verification Convergence evaluator;
+- ADAPT bounded request/depth budgets, source candidates, claim-level evidence, explicit coverage
+  gaps/retrieval deficits, and KasaneCore's rule that explicit requirement IDs are authoritative;
+- CONSOLIDATE project convergence by projecting requirements into the existing `TargetSnapshot`
+  vocabulary instead of creating a second completion engine;
+- NEW small `SearchPort`, `FetchPort`, `ExtractPort`, `EvidenceRepository`, and `SynthesisPort`
+  protocols so OpenCode web/MCP or local implementations can call the same core;
+- DO NOT PORT Nexus jobs/events/heartbeats/UI, SearXNG, downloader/library/application databases,
+  Atlas Pydantic schemas, prompt rendering, keyword-only verification, or raw provider result shapes.
+
+External research evidence is always external provenance and cannot verify a Project Graph fact or
+requirement implementation by itself. Keyword/candidate matching may produce an observed link or a
+coverage gap, never `verified`. Completion continues to require current project/runtime evidence.
