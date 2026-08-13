@@ -8,7 +8,7 @@ Base commit: `f3d8016b30b0d7fa1972a1ee5bcb108f8f1148c8`
 Latest commit: `f3d8016b30b0d7fa1972a1ee5bcb108f8f1148c8` (PR-H closeout merge)
 Milestone: PR-I Research/Evidence/Traceability/project convergence
 Current task: inspect existing contracts/callers/tests and KasaneCore domain behavior
-Status: PR-I pure research/traceability focused gate PASS; durability/application integration next
+Status: PR-I domain/durability/application/MCP slice PASS; benchmark/evidence next
 
 Completed:
 - added bounded research request/plan/source/evidence/claim/gap/deficit contracts and ports;
@@ -16,6 +16,12 @@ Completed:
 - added explicit-ID project requirement projection through the existing Convergence engine;
 - verified external, stale, missing, or unmapped evidence cannot produce completion;
 - focused Ruff/mypy PASS and 10 research/traceability/convergence tests PASS;
+- added immutable research evidence persistence in the shared SQLite store with restart,
+  idempotency, collision rejection, and workspace isolation;
+- added centrally policy-gated research plans and project requirement evaluation to the existing
+  application; reports persist through the existing Convergence repository;
+- added `pi_research_plan` to the shared OpenCode/MCP sidecar path; adapter integration passes;
+- all-fast PASS with 99 Python and 9 adapter tests.
 - added official tree-sitter JavaScript/TypeScript/TSX parsing dependencies;
 - added independently selected JS/TS and composite analyzers behind existing GraphAnalyzer;
 - added file-qualified definitions, local import resolution, references, direct/inherited calls,
@@ -60,7 +66,7 @@ Completed:
 - verified frontier failure is reported unavailable for all 18 attempts, not as an empty success.
 
 In progress:
-- integrate evidence durability and explicit application/sidecar operations through existing owners.
+- PR-I benchmark/evidence and final integration review.
 
 Not started:
 - PR-I Research/Evidence/Traceability/project convergence;
@@ -124,11 +130,11 @@ Known limitations: local-low is stochastic; active is not made default; stable O
 a per-request max-output field; host cache tokens must not be conflated with new input. PR-H's
 current JS/TS analyzer builds a transient cross-file index; broad dependency closures therefore
 select full refresh. A persisted symbol index remains a future optimization, not a PR-H requirement.
-Uncommitted work: coherent PR-I pure-domain implementation and tests.
+Uncommitted work: coherent PR-I durability/application/MCP integration and tests.
 Temporary work: evaluation-only Ollama `qwen3:0.6b` remains installed; no temporary repo files.
 
-Next exact action: commit pure domain, add behavior-first SQLite workspace/restart/collision tests,
-then application policy and sidecar/MCP reuse without provider-shaped core types.
+Next exact action: commit integration slice; add reproducible research/traceability/convergence
+benchmark and evidence report; then final all-fast/build/integration/diff gates.
 Next files: PR-I plan/audit slices, current evidence/convergence/storage/adapter contracts and tests.
 Next commands:
 

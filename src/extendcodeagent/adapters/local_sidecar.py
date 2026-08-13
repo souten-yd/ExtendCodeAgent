@@ -16,6 +16,7 @@ from typing import Any
 
 from extendcodeagent.core.config import ConfigLayer, ConfigResolver, RolloutMode, load_jsonc
 from extendcodeagent.core.policy import CapabilityPolicy
+from extendcodeagent.research import ResearchDepth
 from extendcodeagent.service import CapabilityUnavailable, ProjectIntelligenceApplication
 from extendcodeagent.service.application import INTERFACE_VERSION
 
@@ -29,6 +30,8 @@ _ACTIVE_CAPABILITIES = (
     "test_obsolescence",
     "runtime",
     "context",
+    "research",
+    "traceability",
 )
 
 
@@ -193,6 +196,12 @@ def _dispatch(
             summary=_optional_string(params.get("summary"), "summary") or "",
             source_revision=_optional_string(params.get("source_revision"), "source_revision"),
             automatic=_boolean(params.get("automatic", True), "automatic"),
+        )
+    if operation == "research_plan":
+        return application.research_plan(
+            _required_string(params, "query"),
+            ResearchDepth(_optional_string(params.get("depth"), "depth") or "micro"),
+            _string_tuple(params.get("facets", []), "facets"),
         )
     raise ValueError(f"unknown operation: {operation}")
 

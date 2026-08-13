@@ -32,6 +32,7 @@ test("MCP stdio handshake lists and calls the shared tools", async () => {
         "pi_impact",
         "pi_path",
         "pi_references",
+        "pi_research_plan",
         "pi_runtime_evidence",
         "pi_status",
         "pi_symbol",
@@ -51,6 +52,15 @@ test("MCP stdio handshake lists and calls the shared tools", async () => {
     if (content?.type !== "text" || !content.text) throw new Error("expected text content")
     const result = JSON.parse(content.text) as { items: Array<{ canonical_ref: string }> }
     assert.equal(result.items[0]?.canonical_ref, "py://service#leaf")
+    const planResponse = (await client.callTool({
+      name: "pi_research_plan",
+      arguments: { query: "SQLite durability", depth: "micro", facets: ["official docs"] },
+    })) as { content: Array<{ type: string; text?: string }> }
+    const planContent = planResponse.content[0]
+    if (planContent?.type !== "text" || !planContent.text) throw new Error("expected plan text")
+    const plan = JSON.parse(planContent.text) as { max_queries: number; queries: string[] }
+    assert.equal(plan.max_queries, 2)
+    assert.deepEqual(plan.queries, ["SQLite durability official docs"])
   } finally {
     await client.close()
     await rm(root, { recursive: true, force: true })

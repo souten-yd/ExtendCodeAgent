@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from .contracts import (
     Claim,
     ClaimStatus,
@@ -12,7 +14,19 @@ from .contracts import (
     SourceCandidate,
 )
 from .ports import EvidenceRepository, ExtractPort, FetchPort, SearchPort, SynthesisPort
-from .service import build_research_plan, evaluate_claims
+from .service import build_research_plan, evaluate_claims, execute_research
+
+if TYPE_CHECKING:
+    from .storage import SqliteEvidenceRepository
+
+
+def __getattr__(name: str) -> object:
+    if name == "SqliteEvidenceRepository":
+        from .storage import SqliteEvidenceRepository
+
+        return SqliteEvidenceRepository
+    raise AttributeError(name)
+
 
 __all__ = [
     "Claim",
@@ -29,8 +43,10 @@ __all__ = [
     "ResearchRequest",
     "RetrievalDeficit",
     "SearchPort",
+    "SqliteEvidenceRepository",
     "SourceCandidate",
     "SynthesisPort",
     "build_research_plan",
     "evaluate_claims",
+    "execute_research",
 ]

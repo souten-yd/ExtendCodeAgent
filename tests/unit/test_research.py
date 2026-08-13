@@ -12,6 +12,7 @@ from extendcodeagent.research import (
     SourceCandidate,
     build_research_plan,
     evaluate_claims,
+    execute_research,
 )
 
 
@@ -60,3 +61,54 @@ def test_missing_and_conflicting_claim_evidence_are_explicit() -> None:
 
     assert {gap.claim_id for gap in result.coverage_gaps} == {"missing", "lost"}
     assert result.retrieval_deficit.missing_evidence == 2
+
+
+def test_research_execution_uses_ports_with_plan_bounds() -> None:
+    provenance = Provenance("https://example.test", "fake", "1")
+    candidate = SourceCandidate("s1", "https://example.test", "Docs", provenance)
+    evidence = Evidence(
+        "e1",
+        "s1",
+        "hash",
+        "summary",
+        provenance,
+        Confidence(0.8),
+        datetime.now(UTC),
+    )
+
+    class Ports:
+        stored: list[Evidence] = []
+
+        def search(self, query: str, *, limit: int) -> tuple[SourceCandidate, ...]:
+            assert limit == 4
+            return (candidate,)
+
+        def fetch(self, source: SourceCandidate) -> bytes:
+            return source.title.encode()
+
+        def extract(self, source: SourceCandidate, content: bytes) -> Evidence:
+            assert content == b"Docs"
+            return evidence
+
+        def put(self, item: Evidence) -> None:
+            self.stored.append(item)
+
+        def get(self, evidence_id: str) -> Evidence | None:
+            return evidence if evidence_id == "e1" else None
+
+        def synthesize(self, plan: object, items: tuple[Evidence, ...]) -> tuple[Claim, ...]:
+            assert items == (evidence,)
+            return (Claim("c1", "supported", ("e1",)),)
+
+    ports = Ports()
+    result = execute_research(
+        ResearchRequest("r1", _project(), "topic"),
+        ports,
+        ports,
+        ports,
+        ports,
+        ports,
+    )
+
+    assert result.retrieval_deficit.missing_evidence == 0
+    assert ports.stored == [evidence]

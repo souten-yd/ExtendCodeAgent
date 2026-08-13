@@ -15,7 +15,9 @@ from .contracts import (
     ResearchPlan,
     ResearchRequest,
     RetrievalDeficit,
+    SourceCandidate,
 )
+from .ports import EvidenceRepository, ExtractPort, FetchPort, SearchPort, SynthesisPort
 
 _BUDGETS = {
     ResearchDepth.MICRO: (2, 4, 30),
@@ -86,3 +88,32 @@ def evaluate_claims(
         tuple(gaps),
         RetrievalDeficit(len(claims), supported, len(gaps)),
     )
+
+
+def execute_research(
+    request: ResearchRequest,
+    search: SearchPort,
+    fetch: FetchPort,
+    extract: ExtractPort,
+    repository: EvidenceRepository,
+    synthesis: SynthesisPort,
+    *,
+    query_facets: tuple[str, ...] = (),
+) -> ResearchEvaluation:
+    plan = build_research_plan(request, query_facets)
+    candidates: dict[str, SourceCandidate] = {}
+    if request.allow_external:
+        for query in plan.queries:
+            for candidate in search.search(query, limit=plan.max_sources):
+                candidates.setdefault(candidate.candidate_id, candidate)
+                if len(candidates) >= plan.max_sources:
+                    break
+            if len(candidates) >= plan.max_sources:
+                break
+    evidence: list[Evidence] = []
+    for candidate in candidates.values():
+        item = extract.extract(candidate, fetch.fetch(candidate))
+        repository.put(item)
+        evidence.append(item)
+    claims = synthesis.synthesize(plan, tuple(evidence))
+    return evaluate_claims(claims, tuple(evidence))
