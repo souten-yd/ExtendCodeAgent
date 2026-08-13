@@ -124,6 +124,7 @@ Real-LLM evaluation must be reproducible enough to compare trends:
 - recorded OpenCode version;
 - recorded ExtendCodeAgent config;
 - recorded model/provider identifier;
+- recorded model profile/tier;
 - same tool permissions;
 - same timeout/retry budget;
 - compare native/off/shadow/advisory/active where relevant.
