@@ -8,7 +8,7 @@ Base commit: `f3d8016b30b0d7fa1972a1ee5bcb108f8f1148c8`
 Latest commit: `f3d8016b30b0d7fa1972a1ee5bcb108f8f1148c8` (PR-H closeout merge)
 Milestone: PR-I Research/Evidence/Traceability/project convergence
 Current task: inspect existing contracts/callers/tests and KasaneCore domain behavior
-Status: PR-I started; search-first classification in progress
+Status: PR-I behavior-first contracts collected RED as expected
 
 Completed:
 - added official tree-sitter JavaScript/TypeScript/TSX parsing dependencies;
@@ -55,7 +55,7 @@ Completed:
 - verified frontier failure is reported unavailable for all 18 attempts, not as an empty success.
 
 In progress:
-- bounded PR-I design delta and behavior inventory.
+- implement minimal research and traceability domain behind existing contracts.
 
 Not started:
 - PR-I Research/Evidence/Traceability/project convergence;
@@ -119,11 +119,11 @@ Known limitations: local-low is stochastic; active is not made default; stable O
 a per-request max-output field; host cache tokens must not be conflated with new input. PR-H's
 current JS/TS analyzer builds a transient cross-file index; broad dependency closures therefore
 select full refresh. A persisted symbol index remains a future optimization, not a PR-H requirement.
-Uncommitted work: this PR-I task-start handoff update only.
+Uncommitted work: PR-I decision record and red behavior tests.
 Temporary work: evaluation-only Ollama `qwen3:0.6b` remains installed; no temporary repo files.
 
-Next exact action: commit this task-start update, inspect bounded PR-I sources/tests and corresponding
-KasaneCore domain behavior, record REUSE/ADAPT/CONSOLIDATE/NEW/DO NOT PORT, then add red tests.
+Next exact action: commit red tests/decision, implement `research` and `traceability` pure domains,
+then run focused Ruff/mypy/pytest before storage or adapter work.
 Next files: PR-I plan/audit slices, current evidence/convergence/storage/adapter contracts and tests.
 Next commands:
 
