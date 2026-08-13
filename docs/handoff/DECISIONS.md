@@ -206,3 +206,32 @@ adapter, model call, Atlas planner, or new feature-specific environment switch i
 Measured test evidence before commit: focused domain/store tests passed (10 tests), then the full
 local fast gate passed Ruff/format/strict mypy, 75 Python tests, and 9 adapter tests. The application
 test also proves creating a planned target does not change the Actual Graph node count.
+
+## 2026-08-13 — PR-G bounded model execution after real-model measurement
+
+Decision: extend the existing `PolicyModelRouter`; add live adapters only behind `ModelAdapter`;
+keep Strategy scoring deterministic and allow the LLM to propose scope/explanations only. Strategy
+now exposes all planned axes (scope, impact, test burden, migration complexity, compatibility,
+rollbackability, performance, maintainability, cost, uncertainty). Equal scores return no selected
+alternative and require a decision instead of selecting by identifier.
+
+The first 27B evaluation exceeded ten minutes because an OpenAI-compatible request had no output
+bound. A 128-token bound alone caused Qwen thinking to consume the entire allowance and emit empty
+answers. Current Ollama documentation confirms `max_tokens` and `reasoning_effort=none` on the
+OpenAI-compatible endpoint. The adapter therefore uses provider-neutral request fields for both;
+the evaluation run completed 36 local cases in about 23 seconds. Alternatives rejected were an
+unbounded timeout-only request and silently raising the bound, both of which violate the weak-model
+bounded-payload requirement.
+
+Real OpenCode 1.18.18 also disproved the assumption that `tools: {}` disables tools: off mode still
+used 34 complete-session tool parts in the diagnostic run. Stable tool configuration supports a
+wildcard, so the host adapter now sends `tools: {"*": false}` unless native tools are explicitly
+enabled, and it aggregates all session messages before cleanup. A focused live check then measured
+zero active tool calls versus two native calls. The exact six-scenario run measured native 40 tool
+calls/78.016 s versus active zero calls/14.509 s, with both scoring 6/6.
+
+Do not make active the default from this sample. Local-low varied between repeated runs, and
+local-medium advisory already scored 6/6 with fewer prompt tokens. The central default remains off;
+advisory is the safe opt-in until final multi-repository distributions justify automation.
+Frontier returned OpenCode `APIError` for every attempt, so it is recorded as unavailable and cannot
+satisfy the final release gate.

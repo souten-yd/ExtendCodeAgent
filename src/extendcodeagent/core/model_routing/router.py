@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from time import perf_counter
 from types import MappingProxyType
 
 from ..config.schema import (
@@ -42,11 +43,13 @@ class PolicyModelRouter:
             else:
                 eligible.append(endpoint_id)
         selected = eligible[0] if eligible else None
-        reasons = (
+        reasons: tuple[str, ...] = (
             (f"initial_selection:{selected}", f"routing_mode:{self.config.routing_mode.value}")
             if selected
             else ("no_eligible_endpoint", f"routing_mode:{self.config.routing_mode.value}")
         )
+        if self.config.routing_mode is RoutingMode.ADAPTIVE:
+            reasons += (f"adaptive_required_reasoning:{self._required_reasoning(request)}",)
         return RouteDecision(
             selected_endpoint=selected,
             candidates=tuple(eligible),
@@ -55,6 +58,7 @@ class PolicyModelRouter:
         )
 
     def execute(self, request: ModelRequest) -> RoutedResponse:
+        started = perf_counter()
         decision = self.route(request)
         attempts: list[str] = []
         if not decision.candidates:
@@ -85,7 +89,12 @@ class PolicyModelRouter:
                 reasons=decision.reasons + (f"completed:{endpoint_id}",),
             )
             return RoutedResponse(
-                response=response, decision=final_decision, attempts=tuple(attempts)
+                response=response,
+                decision=final_decision,
+                attempts=tuple(attempts),
+                wall_time_ms=round((perf_counter() - started) * 1_000, 4),
+                escalation_count=max(0, len(tuple(dict.fromkeys(attempts))) - 1),
+                selected_locality=self.config.endpoints[endpoint_id].locality.value,
             )
         raise ModelUnavailable(f"model endpoints unavailable after attempts: {attempts}")
 
@@ -132,9 +141,17 @@ class PolicyModelRouter:
             reasons.append("structured_output_unsupported")
         if request.requires_tools and not endpoint.capabilities.tools:
             reasons.append("tools_unsupported")
-        if endpoint.capabilities.reasoning_strength < request.minimum_reasoning_strength:
+        if endpoint.capabilities.reasoning_strength < self._required_reasoning(request):
             reasons.append("reasoning_strength_insufficient")
         return reasons
+
+    def _required_reasoning(self, request: ModelRequest) -> int:
+        adaptive = (
+            request.adaptive_signals.required_reasoning_strength()
+            if self.config.routing_mode is RoutingMode.ADAPTIVE and request.adaptive_signals
+            else 0
+        )
+        return max(request.minimum_reasoning_strength, adaptive)
 
     def _fallback_allowed(self, previous: EndpointConfig, following: EndpointConfig) -> bool:
         if following.locality is EndpointLocality.REMOTE:

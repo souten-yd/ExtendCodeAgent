@@ -172,3 +172,19 @@
   passed plus adapter 9 passed, and Python package/TypeScript build PASS.
 - PR #12 remote head `44d123b` matched and was mergeable with no GitHub CI; it squash-merged to
   `main` as `157fd19b56db6c61e61b5f02ab81e3bf985d79fd`.
+- PR-G extended the existing router with adaptive signals and execution metrics, added live
+  OpenAI-compatible/OpenCode host adapters, and added deterministic Strategy scoring plus strict
+  model synthesis. Real conformance passed on Qwen3 0.6B, Qwen 3.6 27B, and OpenCode big-pickle;
+  the trivial host prompt consumed 8,250 input tokens, so it is not a weak-model bounded path.
+- Real evaluation forced three corrections: cap OpenAI-compatible output and disable Qwen thinking
+  for focused structured questions; use OpenCode `tools: {"*": false}` rather than an empty map;
+  and aggregate every assistant message including cache/tool/cost before deleting the session.
+- Exact implementation-head six-case results: local-low off/advisory/active 1/4/6 successes;
+  local-medium 1/6/6; host native/off/advisory/active 6/2/4/6. Host native used 40 tool calls and
+  78.016 s versus active zero calls and 14.509 s. No run mutated the worktree.
+- Frontier `llama/llama-3.3-70b-instruct` returned OpenCode `APIError` for all 18 attempts. Adapter
+  failure detection was corrected and reverified; frontier remains unavailable, not passed.
+- Final PR-G local gates passed: Ruff/format/strict mypy, 85 Python tests, 9 adapter tests, Python
+  sdist/wheel and TypeScript builds, 13 Python integration tests, and repeated 9 adapter tests.
+- PR #14 was published from exact local/remote head `f772017fc4848cee7f6e4535ce2cbf9e06b55104`;
+  no GitHub Actions checks are configured. Mergeability was still calculating at first query.

@@ -4,7 +4,7 @@ Status date: 2026-08-13
 
 ## Program state
 
-Overall: **PR-F BLUEPRINT/TASK CONVERGENCE COMPLETE — PR-G NEXT**
+Overall: **PR-G LIVE ROUTING/STRATEGY IMPLEMENTED — VALIDATION/PUBLICATION IN PROGRESS**
 
 The project now contains the strategic planning baseline plus a working Python host-neutral
 foundation. PR-A provides shared immutable contracts, centralized JSON/JSONC configuration,
@@ -48,14 +48,14 @@ adapters, local validation scripts, and architecture-boundary tests.
 | PR-D | OpenCode adapter + MCP advisory integration | complete |
 | PR-E | context/test intelligence/runtime ingest | complete |
 | PR-F | Blueprint + task-level Convergence | complete |
-| PR-G | live model routing + Strategy | not started |
+| PR-G | live model routing + Strategy | implementation complete; publication pending |
 | PR-H | JS/TS/framework/deep graph expansion | not started |
 | PR-I | Research/evidence + project-level convergence | not started |
 
 ## Immediate next action
 
-Close the merged-state PR-F handoff, then start PR-G live Model Routing and Strategy from that exact
-closeout head. PR-C provides
+Run the final PR-G local gates, publish/merge the bounded live-routing and Strategy slice, and merge
+a closeout handoff before starting PR-H. PR-C provides
 deterministic structural/Python AST facts, analyzer-owned Python alias resolution, persisted
 dependency-aware refresh, bounded path/impact traversal, weakest-link confidence, uncertainty,
 explanations, and test-candidate projection. Curated FP/FN review and real-repository repeated-query
@@ -102,6 +102,14 @@ p50 0.2348 ms and restart 1.8938 ms. Exact-head local gates passed; publication 
 
 PR #12 merged as `157fd19b56db6c61e61b5f02ab81e3bf985d79fd`. Live adapters and model-backed
 Strategy remain PR-G scope and must extend the existing PR-A ModelRouter.
+
+PR-G now extends that router with deterministic adaptive signals, live OpenAI-compatible/OpenCode
+adapters, complete-session model metrics, bounded reasoning/output controls, and fail-closed
+provider errors. Strategy metrics are deterministic across all required axes; model synthesis only
+proposes alternatives and explanation. The six-scenario evidence under `docs/evidence/pr-g/`
+records local-low/local-medium/host comparisons. Host active scored 6/6 with zero tool calls in
+14.509 seconds versus native 6/6 with 40 calls in 78.016 seconds. The configured frontier path was
+unavailable with `APIError`; it is not counted as passed and remains a final release blocker.
 
 The reproducible PR-D smoke measured alternating three-run startup medians of 1,046 ms native and
 1,070 ms plugin-enabled (+24 ms), then observed tool and external edit refreshes at 151 ms, MCP

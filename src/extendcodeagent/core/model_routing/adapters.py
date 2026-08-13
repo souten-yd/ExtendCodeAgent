@@ -1,0 +1,210 @@
+"""Live transport adapters behind the provider-neutral ModelAdapter port."""
+
+from __future__ import annotations
+
+import json
+import urllib.error
+import urllib.request
+from collections.abc import Callable
+from contextlib import suppress
+from dataclasses import dataclass
+from typing import cast
+
+from .contracts import ModelRequest, ModelResponse, ModelUnavailable
+
+JsonObject = dict[str, object]
+OpenAITransport = Callable[[str, JsonObject, dict[str, str]], JsonObject]
+HostTransport = Callable[[str, str, JsonObject | None], object]
+
+
+@dataclass(frozen=True, slots=True)
+class OpenAICompatibleAdapter:
+    base_url: str
+    model_id: str
+    api_key: str | None = None
+    timeout_seconds: float = 120.0
+    transport: OpenAITransport | None = None
+
+    def complete(self, request: ModelRequest) -> ModelResponse:
+        payload: JsonObject = {
+            "model": self.model_id,
+            "messages": [{"role": "user", "content": request.prompt}],
+            "max_tokens": request.max_output_tokens,
+        }
+        if request.requires_structured_output:
+            payload["response_format"] = {"type": "json_object"}
+        if request.reasoning_effort is not None:
+            payload["reasoning_effort"] = request.reasoning_effort
+        headers = {"Content-Type": "application/json"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        raw = (self.transport or self._post)(
+            f"{self.base_url.rstrip('/')}/chat/completions", payload, headers
+        )
+        try:
+            choices = cast("list[JsonObject]", raw["choices"])
+            message = cast("JsonObject", choices[0]["message"])
+            usage = cast("JsonObject", raw.get("usage", {}))
+            prompt_details = cast("JsonObject", usage.get("prompt_tokens_details", {}))
+            completion_details = cast("JsonObject", usage.get("completion_tokens_details", {}))
+            return ModelResponse(
+                text=str(message["content"]),
+                input_tokens=int(cast("int", usage.get("prompt_tokens", 0))),
+                output_tokens=int(cast("int", usage.get("completion_tokens", 0))),
+                cache_read_tokens=int(cast("int", prompt_details.get("cached_tokens", 0))),
+                reasoning_tokens=int(cast("int", completion_details.get("reasoning_tokens", 0))),
+            )
+        except (KeyError, IndexError, TypeError, ValueError) as error:
+            raise ModelUnavailable("invalid OpenAI-compatible response") from error
+
+    def _post(self, url: str, payload: JsonObject, headers: dict[str, str]) -> JsonObject:
+        return _request_json("POST", url, payload, headers, self.timeout_seconds)
+
+
+@dataclass(frozen=True, slots=True)
+class OpenCodeHostAdapter:
+    base_url: str
+    provider_id: str
+    model_id: str
+    timeout_seconds: float = 180.0
+    enable_native_tools: bool = False
+    transport: HostTransport | None = None
+
+    def complete(self, request: ModelRequest) -> ModelResponse:
+        send = self.transport or self._send
+        session = send("POST", "/session", {"title": "ExtendCodeAgent model routing"})
+        if not isinstance(session, dict):
+            raise ModelUnavailable("OpenCode returned an invalid session")
+        session_id = str(session.get("id", ""))
+        if not session_id:
+            raise ModelUnavailable("OpenCode did not create a session")
+        body: JsonObject = {
+            "model": {"providerID": self.provider_id, "modelID": self.model_id},
+            "parts": [{"type": "text", "text": request.prompt}],
+        }
+        if not self.enable_native_tools:
+            body["tools"] = {"*": False}
+        message_path = f"/session/{session_id}/message"
+        raw = send("POST", message_path, body)
+        try:
+            if not isinstance(raw, dict):
+                raise TypeError
+            raw_info = raw.get("info")
+            if not isinstance(raw_info, dict):
+                raise TypeError
+            provider_error = raw_info.get("error")
+            if provider_error is not None:
+                error_name = (
+                    str(provider_error.get("name", "unknown"))
+                    if isinstance(provider_error, dict)
+                    else "unknown"
+                )
+                raise ModelUnavailable(f"OpenCode model failed: {error_name}")
+            parts = cast("list[JsonObject]", raw["parts"])
+            text = "\n".join(
+                str(item["text"]) for item in parts if item.get("type") == "text" and "text" in item
+            )
+            if not text.strip():
+                raise ModelUnavailable("OpenCode host returned no text")
+            history = send("GET", message_path, None)
+            if not isinstance(history, list):
+                raise TypeError
+            assistant_messages = [
+                cast("JsonObject", item)
+                for item in history
+                if isinstance(item, dict)
+                and isinstance(item.get("info"), dict)
+                and cast("JsonObject", item["info"]).get("role") == "assistant"
+            ]
+            response = ModelResponse(
+                text=text,
+                input_tokens=sum(
+                    _message_token_count(item, "input") for item in assistant_messages
+                ),
+                output_tokens=sum(
+                    _message_token_count(item, "output") for item in assistant_messages
+                ),
+                tool_calls=sum(_message_tool_count(item) for item in assistant_messages),
+                cost=sum(_message_cost(item) for item in assistant_messages),
+                cache_read_tokens=sum(
+                    _message_cache_count(item, "read") for item in assistant_messages
+                ),
+                cache_write_tokens=sum(
+                    _message_cache_count(item, "write") for item in assistant_messages
+                ),
+                reasoning_tokens=sum(
+                    _message_token_count(item, "reasoning") for item in assistant_messages
+                ),
+            )
+            return response
+        except (KeyError, TypeError, ValueError) as error:
+            raise ModelUnavailable("invalid OpenCode host response") from error
+        finally:
+            with suppress(ModelUnavailable):
+                send("DELETE", f"/session/{session_id}", None)
+
+    def _send(self, method: str, path: str, payload: JsonObject | None) -> object:
+        return _request_value(
+            method,
+            f"{self.base_url.rstrip('/')}{path}",
+            payload,
+            {"Content-Type": "application/json"},
+            self.timeout_seconds,
+        )
+
+
+def _request_json(
+    method: str,
+    url: str,
+    payload: JsonObject | None,
+    headers: dict[str, str],
+    timeout: float,
+) -> JsonObject:
+    value = _request_value(method, url, payload, headers, timeout)
+    if not isinstance(value, dict):
+        raise ModelUnavailable("model transport returned a non-object response")
+    return cast("JsonObject", value)
+
+
+def _request_value(
+    method: str,
+    url: str,
+    payload: JsonObject | None,
+    headers: dict[str, str],
+    timeout: float,
+) -> object:
+    request = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode() if payload is not None else None,
+        headers=headers,
+        method=method,
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            value = json.loads(response.read())
+    except (OSError, urllib.error.URLError, json.JSONDecodeError) as error:
+        raise ModelUnavailable(f"model transport unavailable: {url}") from error
+    return value
+
+
+def _message_token_count(message: JsonObject, kind: str) -> int:
+    info = cast("JsonObject", message["info"])
+    tokens = cast("JsonObject", info.get("tokens", {}))
+    return int(cast("int", tokens.get(kind, 0)))
+
+
+def _message_tool_count(message: JsonObject) -> int:
+    parts = cast("list[JsonObject]", message.get("parts", []))
+    return sum(1 for item in parts if item.get("type") == "tool")
+
+
+def _message_cache_count(message: JsonObject, kind: str) -> int:
+    info = cast("JsonObject", message["info"])
+    tokens = cast("JsonObject", info.get("tokens", {}))
+    cache = cast("JsonObject", tokens.get("cache", {}))
+    return int(cast("int", cache.get(kind, 0)))
+
+
+def _message_cost(message: JsonObject) -> float:
+    info = cast("JsonObject", message["info"])
+    return float(cast("float", info.get("cost", 0.0)))

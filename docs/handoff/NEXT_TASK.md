@@ -1,37 +1,27 @@
 # Next Task
 
-Start PR-G live Model Routing + Strategy only after the PR-F closeout is merged.
+Finish PR-G publication, merge its closeout, then start PR-H without mixing Research/Traceability.
 
-1. Fast-forward `main`, pass `tools/local/all-fast` and `tools/local/build`, then create
-   `agent/pr-g-routing-strategy` from the exact updated head.
-2. Read only PR-G/model-routing/Strategy sections of the execution plan and migration audit; inspect
-   existing PR-A ModelRouter/contracts/fakes and current stable OpenCode host model interfaces.
-3. Extend the existing router. Do not create a parallel router. Add OpenAI-compatible local and
-   OpenCode host adapters behind the provider-neutral port; preserve local-only and remote-code deny.
-4. Add deterministic adaptive signals: impact/file/language counts, uncertainty, strategy scope,
-   evidence conflict, context requirement, and security sensitivity. Record explainable selection,
-   escalation, fallback, token/time, and model tier.
-5. Build Strategy Core anew: deterministic metrics and provenance; LLM only proposes alternatives
-   and explains tradeoffs. Never invent A/B/C fallback choices or treat LLM output as verified fact.
-6. Keep weak-local payloads bounded: graph facts, candidate filtering, one focused structured
-   question. Do not send whole repositories.
-7. Prove fake routing, privacy, failures, and structured-output behavior first; then run real
-   local-low, local-medium, host/default, and frontier evaluations where available.
-8. Compare the same tasks across native/off/advisory/active and record success, calls, tokens, wall
-   time, unnecessary reads/edits, selected tests, escalations, and correction. Do not make active the
-   default if weak local performance regresses.
-9. Publish/merge PR-G and a separate closeout before PR-H.
+1. Run PR-G `tools/local/all-fast`, `tools/local/build`, relevant integration, diff inspection, and
+   verify the compact evidence JSON.
+2. Publish PR-G, verify exact remote head/mergeability, merge it, rerun main gates, then merge a
+   documentation-only closeout with merged hashes and the frontier limitation.
+3. Create `agent/pr-h-js-ts-deep-graph` from exact closeout main.
+4. Read only PR-H and JS/TS analyzer slices, inspect current analyzer plugin contracts/callers/tests,
+   and classify REUSE/ADAPT/NEW before implementation.
+5. Implement JS/TS semantic analysis first. Use PR-G evidence to keep deeper CFG/DFG/framework
+   graphs on-demand; do not add Research/Evidence/Traceability from PR-I.
+6. Build curated JS/TS ground truth and real measurements before deciding which deep graph is worth
+   its maintenance/query cost.
 
 Resume:
 
 ```bash
 cd /home/souten/ExtendCodeAgent
-git switch main
-git pull --ff-only origin main
-git status --short
 tools/local/all-fast
 tools/local/build
-git switch -c agent/pr-g-routing-strategy
+git diff --check
+git status --short
 ```
 
-Keep JS/TS/deep graph (PR-H) and Research/Traceability/project convergence (PR-I) outside PR-G.
+Keep Research/Traceability/project convergence (PR-I) outside PR-H.

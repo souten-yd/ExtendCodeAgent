@@ -5,6 +5,7 @@ import pytest
 from extendcodeagent.core.config import ConfigLayer, ConfigResolver
 from extendcodeagent.core.config.schema import ModelConfig, ModelRole
 from extendcodeagent.core.model_routing import (
+    AdaptiveSignals,
     FakeModelAdapter,
     ModelRequest,
     ModelUnavailable,
@@ -106,6 +107,9 @@ def test_local_first_falls_back_after_unavailable_local() -> None:
     )
     assert result.response.text == "host"
     assert result.attempts == ("local-small", "host-default")
+    assert result.escalation_count == 1
+    assert result.selected_locality == "host"
+    assert result.wall_time_ms >= 0
 
 
 def test_remote_code_deny_blocks_remote_endpoint() -> None:
@@ -204,3 +208,44 @@ def test_configured_retry_is_bounded_before_fallback() -> None:
     assert result.response.text == "fallback"
     assert result.attempts == ("local", "local", "host")
     assert len(local.calls) == 2
+
+
+def test_adaptive_routing_uses_deterministic_scope_and_risk_signals() -> None:
+    router = PolicyModelRouter(_config("adaptive"), {})
+    small = router.route(
+        ModelRequest(
+            ModelRole.CODE_REASONER,
+            "small",
+            adaptive_signals=AdaptiveSignals(file_count=1, impact_size=2),
+        )
+    )
+    risky = router.route(
+        ModelRequest(
+            ModelRole.CODE_REASONER,
+            "risky",
+            adaptive_signals=AdaptiveSignals(
+                file_count=20,
+                language_count=3,
+                uncertainty=0.9,
+                evidence_conflict=True,
+                security_sensitive=True,
+            ),
+        )
+    )
+    assert small.selected_endpoint == "local-small"
+    assert risky.selected_endpoint == "remote-strong"
+    assert "adaptive_required_reasoning:5" in risky.reasons
+
+
+def test_adaptive_privacy_never_uses_remote_to_satisfy_risk() -> None:
+    router = PolicyModelRouter(_config("adaptive", remote_code_policy="deny"), {})
+    decision = router.route(
+        ModelRequest(
+            ModelRole.CODE_REASONER,
+            "private source",
+            contains_source_code=True,
+            adaptive_signals=AdaptiveSignals(security_sensitive=True, uncertainty=1.0),
+        )
+    )
+    assert decision.selected_endpoint is None
+    assert "remote_code_policy" in decision.rejected["remote-strong"]
