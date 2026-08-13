@@ -2,13 +2,13 @@
 
 Updated: 2026-08-13 (Asia/Tokyo)
 
-Current branch: `agent/pr-c-semantic-impact`
-Current PR: [#6](https://github.com/souten-yd/ExtendCodeAgent/pull/6) (draft)
-Base commit: `faf307dbff00f8f33671a8cb885bfe8593b5725f`
-Latest commit: `e3a65b7` (completed PR-C implementation and evidence)
+Current branch: `agent/pr-c-closeout` (docs-only closeout)
+Current PR: [#6](https://github.com/souten-yd/ExtendCodeAgent/pull/6) (merged)
+Base commit: `ef6db532f74be97cbd86483b0bbe89ee6ac95a29`
+Latest commit: `ef6db532f74be97cbd86483b0bbe89ee6ac95a29` (PR-C squash merge)
 Current milestone: PR-C Structural/Python Semantic + Path/Impact
-Current task: remote exact-head verification, ready transition, merge, and closeout
-Task status: in progress
+Current task: PR-C merged-state closeout and PR-D handoff
+Task status: complete and merged
 
 Goal: extend the PR-B graph/twin foundation with deterministic structural and Python semantic facts,
 bounded explainable path queries, and confidence-aware impact analysis without adding OpenCode,
@@ -38,12 +38,13 @@ Completed:
 - added dependency-aware importer refresh, an end-to-end persisted impact/test-candidate fixture,
   expanded host-neutral architecture coverage, a human FP/FN report, and real-repository benchmark.
 - published draft PR #6; initial remote head `699d0d39c42763ad28ab8c0fe1aaa49d4aff941d`.
+- verified final remote head `d078b3c413cbdbbcd9d9a9ef78c00122eb5b3864`, marked PR
+  ready at MERGEABLE/CLEAN with no GitHub checks, and squash-merged as `ef6db532`;
+- fast-forwarded local `main`; post-merge all-fast and integration gates passed.
 
-In progress:
-- handoff publication update and remote exact-head gate review.
+In progress: none.
 
-Not started:
-- ready transition, merge, post-merge validation, and closeout.
+Not started: PR-D OpenCode/MCP adapter implementation and real-host acceptance.
 
 Important architecture decisions:
 - ADAPT the newer deterministic Python semantic analyzer behavior and graph analysis algorithms.
@@ -67,8 +68,9 @@ Exact tests executed:
 - `tools/local/test-integration`
 - `tools/local/build`
 - `tools/local/benchmark-pr-c`
-Exact results: focused `15 passed`; substantive-head all-fast Ruff PASS, strict mypy PASS,
-`45 passed in 0.18s`; integration `8 passed in 3.30s`; sdist/wheel build success.
+Exact results: focused `15 passed`; final PR head all-fast Ruff PASS, strict mypy PASS,
+`45 passed in 0.18s`; integration `8 passed in 0.35s`; sdist/wheel build success. Post-merge
+`main`: all-fast `45 passed in 0.16s`; integration `8 passed in 0.37s`.
 Benchmark results: 64 files, 423 nodes, 2,194 edges; cold semantic index 623.969 ms;
 dependency-aware two-file incremental refresh 282.761 ms; DB+WAL 3,975,808 bytes; max RSS
 44,720 KiB; 100 impact queries p50 0.0649 ms/p95 0.3118 ms; 100 lexical `rg` baseline queries
@@ -81,12 +83,13 @@ Known limitations: LSP enrichment is optional in the plan and deferred because n
 consumer exists; Python analysis intentionally reports unresolved dynamic dispatch as uncertain;
 incremental semantic refresh parses all Python ASTs to build a correct symbol index before emitting
 only affected facts, so its scaling advantage is not yet proven.
-Uncommitted work: PR-created handoff metadata only; production/evidence implementation is committed.
+Uncommitted work: this docs-only closeout until merged.
 Temporary work: none.
 
-Next exact action: commit/push this PR-created handoff update, rerun exact-head local gates, verify
-remote head/mergeability/check state, mark PR #6 ready, then squash-merge.
-Next files: `docs/handoff/CURRENT_HANDOFF.md`, `IMPLEMENTATION_LOG.md`, then GitHub PR #6 metadata.
-Next commands: commit/push docs; `tools/local/all-fast`; `tools/local/test-integration`;
-`tools/local/build`; inspect `gh pr view 6`; ready and merge only when exact-head evidence matches.
-Rollback path: delete this unpushed branch or revert its coherent commits; do not reset unrelated work.
+Next exact action: merge this docs-only closeout, create `agent/pr-d-opencode-mcp` from updated main,
+then verify current OpenCode stable plugin/MCP APIs and install/version before adapter design.
+Next files: current OpenCode official docs/API/package types, PR-D execution-plan slice, then new
+`adapters/opencode/`, `mcp/`, and versioned host-neutral interface tests.
+Next commands: sync main; create PR-D branch; verify `opencode --version` or install current stable;
+record API/version evidence before production adapter changes.
+Rollback path: revert merge `ef6db532f74be97cbd86483b0bbe89ee6ac95a29`; do not reset unrelated work.

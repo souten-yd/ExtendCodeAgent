@@ -75,3 +75,6 @@
   `8 passed in 0.36s`, and sdist/wheel build succeeded.
 - Published draft PR [#6](https://github.com/souten-yd/ExtendCodeAgent/pull/6); initial remote head
   `699d0d39c42763ad28ab8c0fe1aaa49d4aff941d` matched the locally verified head.
+- Final remote head `d078b3c413cbdbbcd9d9a9ef78c00122eb5b3864` was MERGEABLE/CLEAN with no
+  GitHub Actions checks. PR #6 was marked ready and squash-merged as `ef6db532`.
+- Post-merge `main`: all-fast `45 passed in 0.16s`; integration `8 passed in 0.37s`.
