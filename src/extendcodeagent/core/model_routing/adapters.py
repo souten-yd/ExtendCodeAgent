@@ -32,6 +32,8 @@ class OpenAICompatibleAdapter:
         }
         if request.requires_structured_output:
             payload["response_format"] = {"type": "json_object"}
+        if request.reasoning_effort is not None:
+            payload["reasoning_effort"] = request.reasoning_effort
         headers = {"Content-Type": "application/json"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"

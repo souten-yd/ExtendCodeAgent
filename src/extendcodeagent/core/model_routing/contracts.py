@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Protocol
+from typing import Literal, Protocol
 
 from ..config.schema import ModelRole
 
@@ -42,6 +42,7 @@ class ModelRequest:
     prompt: str
     context_tokens: int = 0
     max_output_tokens: int = 512
+    reasoning_effort: Literal["none", "low", "medium", "high"] | None = None
     contains_source_code: bool = False
     remote_context_approved: bool = False
     requires_structured_output: bool = False
