@@ -243,6 +243,9 @@ def _evaluate(adapter: ModelAdapter, tier: str, mode: str, scenario: Scenario) -
             "answer": answer[:500],
             "input_tokens": response.input_tokens,
             "output_tokens": response.output_tokens,
+            "cache_read_tokens": response.cache_read_tokens,
+            "cache_write_tokens": response.cache_write_tokens,
+            "reasoning_tokens": response.reasoning_tokens,
             "tool_calls": response.tool_calls,
             "cost": response.cost,
             "wall_ms": round((time.perf_counter() - started) * 1_000, 1),
@@ -314,15 +317,37 @@ def _summary(results: list[dict[str, object]]) -> dict[str, dict[str, int]]:
         if "mode" not in item:
             continue
         key = f"{item['tier']}:{item['mode']}"
-        group = grouped.setdefault(key, {"tasks": 0, "successes": 0, "tokens": 0})
+        group = grouped.setdefault(
+            key,
+            {
+                "tasks": 0,
+                "successes": 0,
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "cache_read_tokens": 0,
+                "tool_calls": 0,
+                "wall_ms": 0,
+            },
+        )
         group["tasks"] += 1
         group["successes"] += int(bool(item.get("success")))
-        group["tokens"] += _as_int(item.get("input_tokens")) + _as_int(item.get("output_tokens"))
+        for metric in (
+            "input_tokens",
+            "output_tokens",
+            "cache_read_tokens",
+            "tool_calls",
+        ):
+            group[metric] += _as_int(item.get(metric))
+        group["wall_ms"] += round(_as_float(item.get("wall_ms")))
     return grouped
 
 
 def _as_int(value: object) -> int:
     return value if isinstance(value, int) else 0
+
+
+def _as_float(value: object) -> float:
+    return float(value) if isinstance(value, int | float) else 0.0
 
 
 def _worktree_state() -> str:

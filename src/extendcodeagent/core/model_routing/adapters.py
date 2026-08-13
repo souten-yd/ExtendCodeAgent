@@ -45,10 +45,14 @@ class OpenAICompatibleAdapter:
             choices = cast("list[JsonObject]", raw["choices"])
             message = cast("JsonObject", choices[0]["message"])
             usage = cast("JsonObject", raw.get("usage", {}))
+            prompt_details = cast("JsonObject", usage.get("prompt_tokens_details", {}))
+            completion_details = cast("JsonObject", usage.get("completion_tokens_details", {}))
             return ModelResponse(
-                str(message["content"]),
-                int(cast("int", usage.get("prompt_tokens", 0))),
-                int(cast("int", usage.get("completion_tokens", 0))),
+                text=str(message["content"]),
+                input_tokens=int(cast("int", usage.get("prompt_tokens", 0))),
+                output_tokens=int(cast("int", usage.get("completion_tokens", 0))),
+                cache_read_tokens=int(cast("int", prompt_details.get("cached_tokens", 0))),
+                reasoning_tokens=int(cast("int", completion_details.get("reasoning_tokens", 0))),
             )
         except (KeyError, IndexError, TypeError, ValueError) as error:
             raise ModelUnavailable("invalid OpenAI-compatible response") from error
@@ -100,11 +104,24 @@ class OpenCodeHostAdapter:
                 and cast("JsonObject", item["info"]).get("role") == "assistant"
             ]
             response = ModelResponse(
-                text,
-                sum(_message_token_count(item, "input") for item in assistant_messages),
-                sum(_message_token_count(item, "output") for item in assistant_messages),
-                sum(_message_tool_count(item) for item in assistant_messages),
-                sum(_message_cost(item) for item in assistant_messages),
+                text=text,
+                input_tokens=sum(
+                    _message_token_count(item, "input") for item in assistant_messages
+                ),
+                output_tokens=sum(
+                    _message_token_count(item, "output") for item in assistant_messages
+                ),
+                tool_calls=sum(_message_tool_count(item) for item in assistant_messages),
+                cost=sum(_message_cost(item) for item in assistant_messages),
+                cache_read_tokens=sum(
+                    _message_cache_count(item, "read") for item in assistant_messages
+                ),
+                cache_write_tokens=sum(
+                    _message_cache_count(item, "write") for item in assistant_messages
+                ),
+                reasoning_tokens=sum(
+                    _message_token_count(item, "reasoning") for item in assistant_messages
+                ),
             )
             with suppress(ModelUnavailable):
                 send("DELETE", f"/session/{session_id}", None)
@@ -165,6 +182,13 @@ def _message_token_count(message: JsonObject, kind: str) -> int:
 def _message_tool_count(message: JsonObject) -> int:
     parts = cast("list[JsonObject]", message.get("parts", []))
     return sum(1 for item in parts if item.get("type") == "tool")
+
+
+def _message_cache_count(message: JsonObject, kind: str) -> int:
+    info = cast("JsonObject", message["info"])
+    tokens = cast("JsonObject", info.get("tokens", {}))
+    cache = cast("JsonObject", tokens.get("cache", {}))
+    return int(cast("int", cache.get(kind, 0)))
 
 
 def _message_cost(message: JsonObject) -> float:

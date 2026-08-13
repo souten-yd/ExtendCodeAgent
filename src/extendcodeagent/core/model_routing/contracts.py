@@ -69,9 +69,19 @@ class ModelResponse:
     output_tokens: int = 0
     tool_calls: int = 0
     cost: float | None = None
+    cache_read_tokens: int = 0
+    cache_write_tokens: int = 0
+    reasoning_tokens: int = 0
 
     def __post_init__(self) -> None:
-        if self.input_tokens < 0 or self.output_tokens < 0 or self.tool_calls < 0:
+        token_counts = (
+            self.input_tokens,
+            self.output_tokens,
+            self.cache_read_tokens,
+            self.cache_write_tokens,
+            self.reasoning_tokens,
+        )
+        if any(value < 0 for value in token_counts) or self.tool_calls < 0:
             raise ValueError("model token counts must not be negative")
         if self.cost is not None and self.cost < 0:
             raise ValueError("model cost must not be negative")

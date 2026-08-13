@@ -17,7 +17,12 @@ def test_openai_compatible_adapter_uses_bounded_chat_completion_contract() -> No
         calls.append((url, payload, headers))
         return {
             "choices": [{"message": {"content": '{"answer":"ok"}'}}],
-            "usage": {"prompt_tokens": 12, "completion_tokens": 4},
+            "usage": {
+                "prompt_tokens": 12,
+                "completion_tokens": 4,
+                "prompt_tokens_details": {"cached_tokens": 2},
+                "completion_tokens_details": {"reasoning_tokens": 1},
+            },
         }
 
     adapter = OpenAICompatibleAdapter("http://127.0.0.1:11434/v1", "qwen", transport=transport)
@@ -36,6 +41,7 @@ def test_openai_compatible_adapter_uses_bounded_chat_completion_contract() -> No
     assert calls[0][1]["reasoning_effort"] == "none"
     assert response.text == '{"answer":"ok"}'
     assert (response.input_tokens, response.output_tokens) == (12, 4)
+    assert (response.cache_read_tokens, response.reasoning_tokens) == (2, 1)
 
 
 def test_opencode_host_adapter_uses_stable_session_model_contract() -> None:
@@ -46,7 +52,16 @@ def test_opencode_host_adapter_uses_stable_session_model_contract() -> None:
         if path == "/session":
             return {"id": "session-1"}
         response = {
-            "info": {"role": "assistant", "tokens": {"input": 8, "output": 3}, "cost": 0.012},
+            "info": {
+                "role": "assistant",
+                "tokens": {
+                    "input": 8,
+                    "output": 3,
+                    "reasoning": 2,
+                    "cache": {"read": 20, "write": 4},
+                },
+                "cost": 0.012,
+            },
             "parts": [{"type": "tool"}, {"type": "text", "text": "host answer"}],
         }
         return [response] if method == "GET" else response
@@ -66,4 +81,6 @@ def test_opencode_host_adapter_uses_stable_session_model_contract() -> None:
     assert (response.input_tokens, response.output_tokens) == (8, 3)
     assert response.tool_calls == 1
     assert response.cost == 0.012
+    assert (response.cache_read_tokens, response.cache_write_tokens) == (20, 4)
+    assert response.reasoning_tokens == 2
     assert calls[-1][:2] == ("DELETE", "/session/session-1")
