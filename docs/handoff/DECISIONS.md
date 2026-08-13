@@ -146,3 +146,19 @@ collectors, context/query tests, and current ExtendCodeAgent call paths:
 
 PR-E uses deterministic algorithms and the existing CapabilityPolicy. Model summarization/routing,
 Blueprint/Convergence, and JS/TS semantic expansion remain later independent milestones.
+
+## 2026-08-13 — Stable tool-result truthfulness after real-host measurement
+
+Stable OpenCode 1.18.18 `tool.execute.after` exposes tool/title/output/metadata but does not
+guarantee an exit status. A model-free session-shell API edit did not emit this hook at all. A real
+local Ollama Qwen 3.6 27B agent invocation did emit a `bash` hook, but its actual metadata contained
+no explicit exit status.
+
+Decision: the adapter records `passed`/`failed` only from explicit supported status or numeric exit
+metadata. Unknown outcomes are `observed`, output text is not persisted, and session-shell API calls
+are not claimed as runtime-hook evidence. This prevents a completed tool call from becoming false
+verification. Automatic ingest is limited to shadow/active; advisory remains explicit-query only.
+
+The temporary Ollama provider configuration follows current stable OpenCode provider documentation:
+<https://opencode.ai/docs/providers/>. Live model routing remains PR-G; this PR-E use is only a
+bounded adapter conformance check.

@@ -43,3 +43,14 @@
 - The three-run temporary-repository startup comparison had a +24 ms median delta and one 1,609 ms
   native outlier. It is not statistically conclusive; retain broader native/extension comparisons
   for final release validation.
+
+## PR-E current limitations
+
+- Stable OpenCode 1.18.18 does not route the model-free session-shell endpoint through
+  `tool.execute.after`. Real runtime-hook evidence therefore requires an actual agent tool call.
+- The real local Qwen agent `bash` hook omitted explicit exit metadata, so its successful command is
+  truthfully stored as `observed`, not `passed`.
+- The first real-repository test-selection sample found no graph-linked candidate for
+  `reconcile_observations` and correctly selected full-suite fallback. This may be a source-root/
+  re-export resolution recall gap; do not widen PR-E into semantic-analyzer work without a bounded
+  diagnosis and ownership decision.

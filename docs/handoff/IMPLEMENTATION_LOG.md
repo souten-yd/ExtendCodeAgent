@@ -144,3 +144,10 @@
   metadata controls pass/fail, output text is not persisted, and `pi_*` calls do not recurse.
 - Sidecar/adapter gate: all-fast Python `63 passed in 0.43s`, adapter `9 passed in 4.27s`;
   integration `12 passed in 1.18s`, repeated adapter `9 passed in 4.27s`.
+- First extended real-host run disproved the assumption that model-free session shell emits stable
+  tool hooks: it produced zero observations. A real local Ollama Qwen 3.6 27B agent `bash` call did
+  emit one hook, persisted/reconnected correctly, and truthfully normalized to `observed` because
+  actual metadata had no exit status; off added no evidence. Eight `pi_*` tools were discovered.
+- Initial real-repo PR-E benchmark: cold graph/symbol 2,164 ms; standard context 100 items/2,131
+  tokens, weak context 8 items/148 tokens; both p50 about 28.6 ms. Test selection p50 30.90 ms and
+  safely fell back to full suite for the selected uncovered/unaligned target.

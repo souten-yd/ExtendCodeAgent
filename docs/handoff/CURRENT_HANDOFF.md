@@ -49,14 +49,19 @@ Completed:
 - exposed strict sidecar operations for context, runtime ingest, and runtime evidence;
 - added stable plugin/MCP `pi_context` and `pi_runtime_evidence` tools plus adapter-only tool-result
   normalization that never infers passed from output presence, never stores output text, and avoids
-  recursive evidence for `pi_*` tools.
+  recursive evidence for `pi_*` tools;
+- measured stable real-host behavior: model-free session shell emitted no tool hook, while a real
+  local Qwen 3.6 27B agent `bash` call emitted and persisted one `observed` result with no explicit
+  exit metadata; restart retained it and off mode added none;
+- ran an initial real-repository benchmark: standard context 100 items/2,131 tokens versus weak 8
+  items/148 tokens; the selected symbol had no test candidate and safely fell back to full suite.
 
 In progress:
-- commit the sidecar/adapter slice, then extend the model-free real OpenCode smoke and add
-  deterministic real-project context/test benchmarks.
+- commit reproducible real-host/benchmark harness changes, rerun them on exact head, and record
+  compact PR-E evidence.
 
 Not started:
-- real OpenCode PR-E evidence, benchmarks/A-B report, publication.
+- exact-head evidence commit, final gates, publication.
 
 Important architecture decisions:
 - ADAPT KasaneCore revision matching, truthful unavailable semantics, and bounded context behavior.
@@ -84,19 +89,23 @@ Exact results: pure-domain focused `12 passed`; store/application focused `8 pas
 PASS; Python `63 passed in 0.43s`; adapter `6 passed in 4.27s`; Python integration `11 passed in
 0.60s`; sidecar/adapter all-fast Python `63 passed in 0.43s`, adapter `9 passed in 4.27s`;
 integration `12 passed in 1.18s`, repeated adapter `9 passed in 4.27s`; base build PASS.
-Benchmark results: none yet for PR-E.
+Benchmark results: initial worktree sample cold graph/symbol 2,164 ms; standard context p50 28.56 ms
+at 100 items/2,131 tokens; weak context p50 28.55 ms at 8 items/148 tokens; test selection p50 30.90
+ms with full-suite fallback; DB 5,111,808 bytes; max RSS 45,172 KiB. Exact-head rerun required.
 OpenCode version: 1.18.18 (carried from verified PR-D install; not yet exercised for PR-E).
 Model/provider: none.
 Routing profile: not applicable; live routing is out of scope.
-Known failures: none yet.
-Known limitations: stable `tool.execute.after` has no guaranteed explicit exit status, so unknown
-outcomes remain `observed`; context currently projects Graph nodes only and health is recomputed.
-Uncommitted work: coherent sidecar/stable-adapter slice and this handoff update.
+Known failures: the first runtime smoke incorrectly expected session-shell to emit a stable tool
+hook and timed out after 20 seconds; corrected after real-host diagnosis.
+Known limitations: actual stable `bash` metadata lacked exit status and remains `observed`; the
+first real-repo selection target fell back to full suite; context projects Graph nodes only.
+Uncommitted work: real-host/benchmark harness, measured-decision docs, and this handoff update.
 Temporary work: none.
 
-Next exact action: commit the adapter slice, extend the real OpenCode smoke to assert eight tools
-and persisted stable-host runtime observation semantics, then add a reproducible PR-E benchmark.
-Next files: `tools/local/opencode_smoke.py`, `docs/evidence/pr-e/`, and a bounded benchmark script.
-Next commands: `git diff --check`; commit; patch smoke assertions; run real OpenCode; inspect actual
-observation status/revision; record compact evidence; benchmark context/test selection.
+Next exact action: commit the reproducible harness, rerun model-free/model-backed OpenCode smoke and
+the PR-E benchmark on exact head, then record compact evidence and final gates.
+Next files: `tools/local/`, `docs/evidence/pr-e/`, CURRENT_STATUS and handoff.
+Next commands: `git diff --check`; commit; `tools/local/opencode-smoke`;
+`EXTENDCODEAGENT_SMOKE_MODEL=ollama/qwen3.6-27b-q5_k_m:latest tools/local/opencode-runtime-smoke`;
+`tools/local/pr-e-benchmark`; record exact outputs; run all-fast/integration/build.
 Rollback path: revert PR-E commits or delete this branch; merged PR-D remains unaffected.

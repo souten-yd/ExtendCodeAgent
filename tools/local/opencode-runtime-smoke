@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+: "${EXTENDCODEAGENT_SMOKE_MODEL:?set EXTENDCODEAGENT_SMOKE_MODEL to a local provider/model}"
+"${repo_root}/tools/local/opencode-smoke"
