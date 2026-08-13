@@ -2,28 +2,26 @@
 
 Updated: 2026-08-13 (Asia/Tokyo)
 
-Current branch: `main` (PR-A merged; create a new branch for PR-B)
-Current PR: [#2](https://github.com/souten-yd/ExtendCodeAgent/pull/2) (merged)
-Base commit: `9623282d00ef98490d5c36ea16256f6fcde260af`
-Latest commit: `49db5bac7084fc3df444dc8b3c5f18cc7f79a0f8` (PR-A squash merge)
-Current milestone: PR-A Foundation
-Current task: host-neutral contracts, centralized configuration/capability policy, model-routing contracts and fake adapters, local validation harness, architecture tests
-Task status: complete and merged
+Current branch: `agent/pr-b-graph-twin-store`
+Current PR: not created
+Base commit: `40602d3ad8f147c9166e32919f7005da1c11279e`
+Latest commit: `40602d3ad8f147c9166e32919f7005da1c11279e`
+Current milestone: PR-B Graph / Digital Twin Foundation
+Current task: behavior-first Graph contracts, immutable revisions, SQLite store, source snapshot, full/file-level incremental refresh, persistence and benchmark
+Task status: investigation in progress; implementation not started
 
-Goal: Establish the smallest working host-neutral foundation that later KasaneCore migrations and OpenCode adapters can depend on without leaking Atlas or OpenCode types into core.
+Goal: Adapt KasaneCore's proven revision/store/source lifecycle into the existing host-neutral PR-A foundation without importing semantic, impact, OpenCode/MCP, runtime, or model behavior.
 
 Scope:
-- repository/package bootstrap;
-- shared host-neutral contracts and diagnostics;
-- immutable centralized configuration resolution;
-- feature capability policy with off/shadow/advisory/active modes;
-- provider-neutral model router contracts and fake adapters;
-- offline local test/build/lint/typecheck harness;
-- architecture dependency boundary tests.
+- GraphNode/GraphEdge/GraphEvidence/GraphRevision/GraphDelta/GraphSnapshot contracts;
+- atomic SQLite revision store, current pointer, historical reads, isolation/conflict handling;
+- bounded source snapshots and Git/non-Git fingerprints including untracked state;
+- full build and file-level changed/deleted refresh;
+- restart/retention/export-import foundation and local real-repository benchmark.
 
 Out of scope:
-- Graph/Twin persistence, indexing, semantic analysis, impact analysis, MCP server, OpenCode plugin implementation, real model provider calls, real OpenCode/LLM evaluation;
-- bulk copying KasaneCore or importing Atlas/Nexus DTOs.
+- semantic/call graph, path/impact, OpenCode/MCP, runtime/test/context, Blueprint/Convergence,
+  live model routing, research, and Atlas/Nexus application infrastructure.
 
 Completed:
 - fetched and fast-forward checked `origin/main` (already current);
@@ -36,10 +34,12 @@ Completed:
   generated-wheel archive smoke.
 - published and squash-merged PR #2; post-merge `main` fast gates passed again.
 
-In progress: none.
+In progress:
+- extracting behavioral requirements from the four named KasaneCore sources/tests and defining the
+  minimum PR-B contract/store boundary.
 
 Not started:
-- PR-B Graph/Twin revision/store/source snapshot work.
+- target tests, implementation, focused validation, benchmark, PR publication and merge.
 
 Important architecture decisions:
 - Use the planning baseline's recommended Python-first staged core for PR-A; no TypeScript OpenCode adapter is introduced in this slice.
@@ -60,17 +60,17 @@ Files changed:
 - `tools/local/*`;
 - required handoff files.
 
-Files currently being edited: PR-A foundation tests and validation documentation.
+Files currently being edited: PR-B behavioral test design and handoff documentation.
 
-Tests executed:
+Tests executed at PR-B start:
 - `tools/local/all-fast`
-- wheel archive import smoke against `dist/extendcodeagent-0.1.0-py3-none-any.whl`
+- `tools/local/build`
 Exact results:
 - Ruff lint: `All checks passed!`
 - Ruff format: `17 files already formatted`
 - mypy 1.17.1 strict: `Success: no issues found in 17 source files`
 - pytest 8.4.1: `25 passed in 0.04s`
-- wheel archive smoke: `PASS (version=0.1.0, default_enabled=False)`
+- sdist/wheel build: success
 Benchmarks executed: none; PR-A has no graph/runtime or live-model performance path to benchmark.
 Exact results: not applicable; unit suite runtime was 0.04 seconds.
 OpenCode version tested: unavailable; `opencode` is not installed locally. Real integration is deferred to PR-D.
@@ -80,11 +80,11 @@ LLM/provider tested: deterministic fake local/host/remote adapters only; no real
 Model routing profile: manual/local-first/frontier-first/cost/latency/quality/adaptive/host-only/local-only contracts; focused tests exercised local-only, host-only, fallback/retry, capability filters, and remote-code policy.
 Known failures: none in required local gates.
 Known limitations: no Graph/Twin, OpenCode/MCP, or live provider implementation exists in PR-A by design.
-Uncommitted work: none after this docs-only closeout is merged.
+Uncommitted work: PR-B start handoff update only.
 Temporary files: none.
 Experimental code: none.
 
-Next exact action: create a PR-B branch from updated `main` and capture Graph/Twin store behavior from the listed KasaneCore tests before implementation.
-Next files to inspect after merge: `../KasaneCore/agent/project_twin/contracts.py`, `store.py`, `source_adapter.py`, `module.py`, plus store/source-refresh/durability tests.
-Next commands to run: `git switch main`; `git pull --ff-only origin main`; `git switch -c agent/pr-b-graph-twin-store`; `tools/local/all-fast`.
-Rollback path: revert merge commit `49db5bac7084fc3df444dc8b3c5f18cc7f79a0f8`; do not reset or discard unrelated work.
+Next exact action: finish the targeted SQLite schema/apply/snapshot and module refresh inspection, then write target behavioral tests before implementation.
+Next files: `../KasaneCore/agent/project_twin/store.py` relevant schema/apply/snapshot slices and `module.py` refresh slices; then `tests/unit/test_graph_contracts.py` and PR-B component tests.
+Next commands: targeted `sed` of those slices; `git status --short`; focused pytest after tests exist.
+Rollback path: remove/revert only PR-B branch commits; PR-A on `main` remains authoritative.

@@ -24,3 +24,10 @@
 - Verified final PR head `ce251a5c0273e4bbb5fcd126d0bbffd10defed64`, marked it ready, and
   squash-merged as `49db5bac7084fc3df444dc8b3c5f18cc7f79a0f8`.
 - Fast local gates on merged `main`: Ruff and strict mypy passed; `25 passed in 0.04s`.
+
+## 2026-08-13 — PR-B started
+
+- Synced `main` at `40602d3ad8f147c9166e32919f7005da1c11279e`; local fast gates and package build passed.
+- Created `agent/pr-b-graph-twin-store`.
+- Inspected the four required KasaneCore sources and their store/source/refresh/durability tests.
+- Kept PR-B scope explicitly limited to Graph/Twin persistence, source snapshot, and file-level refresh.

@@ -34,3 +34,18 @@ Sources checked 2026-08-13:
 - <https://opencode.ai/docs/plugins/>
 - <https://opencode.ai/v2/docs/build/plugins>
 - <https://opencode.ai/docs/cli/>
+
+## 2026-08-13 — PR-B migration classification
+
+- ADAPT: immutable revision lineage, optimistic expected-head rejection, transaction atomicity,
+  idempotency, historical snapshots, invalidation, restart persistence, and bounded source scans.
+- CONSOLIDATE: KasaneCore project and workspace identity into PR-A `ProjectRef`; source/analyzer
+  metadata into `SourceRevision`, `Provenance`, and Graph-domain contracts.
+- REPLACE: Atlas/Pydantic DTOs, `project_id`-only store keys, `ca_data` defaults, and synchronous
+  module orchestration with small host-neutral dataclasses/services and `(project, workspace)` scope.
+- NEW: non-Git deterministic fingerprint fallback, explicit retention/export-import foundation,
+  and real-repository local benchmark reporting.
+- DO NOT PORT: semantic/static analyzers, impact/path, runtime observations, Atlas events/context,
+  OpenCode/MCP, or model routing into PR-B.
+
+GitHub CI remains unnecessary: all PR-B behavior, restart, benchmark, and packaging gates are locally reproducible.
