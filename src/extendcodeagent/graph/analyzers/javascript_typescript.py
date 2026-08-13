@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Iterator
 from dataclasses import dataclass
+from itertools import chain
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING
 
@@ -46,16 +48,20 @@ class _Definition:
     name: str
     qualname: str
     path: str
-    node: Node
+    node_type: str
+    start_byte: int
+    end_byte: int
+    start_line: int
+    end_line: int
     owner_class: str | None = None
-    decorators: tuple[Node, ...] = ()
+    decorators: tuple[str, ...] = ()
+    base_name: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class _Module:
     path: str
     source: bytes
-    root: Node
     imports: dict[str, _Import]
     import_targets: tuple[tuple[str, str | None], ...]
 
@@ -79,12 +85,18 @@ class JavaScriptTypeScriptGraphAnalyzer:
         relevant_paths = {
             item.path for item in snapshot.files if Path(item.path).suffix.lower() in _SUFFIXES
         }
+        parsers = {
+            "javascript": Parser(_JS_LANGUAGE),
+            "typescript": Parser(_TS_LANGUAGE),
+            "tsx": Parser(_TSX_LANGUAGE),
+        }
         modules: list[_Module] = []
+        definitions: dict[str, _Definition] = {}
         diagnostics: list[Diagnostic] = []
         for path in sorted(relevant_paths):
             try:
                 source = (root_path / path).read_bytes()
-                tree = _parser_for(path).parse(source)
+                tree = _parser_for(path, parsers).parse(source)
             except OSError as exc:
                 if selected is None or path in selected:
                     diagnostics.append(
@@ -104,10 +116,12 @@ class JavaScriptTypeScriptGraphAnalyzer:
                     )
                 continue
             imports, targets = _imports(path, tree.root_node, source, relevant_paths)
-            modules.append(_Module(path, source, tree.root_node, imports, targets))
+            module = _Module(path, source, imports, targets)
+            modules.append(module)
+            _collect_module_definitions(definitions, module, tree.root_node)
 
-        definitions = _collect_definitions(modules)
         by_path_name = {(item.path, item.name): item for item in definitions.values()}
+        modules_by_path = {item.path: item for item in modules}
         classes = {item.ref: item for item in definitions.values() if item.kind == "class"}
         methods = {
             (item.path, item.owner_class or "", item.name): item
@@ -227,8 +241,8 @@ class JavaScriptTypeScriptGraphAnalyzer:
                 properties={
                     "name": definition.name,
                     "qualname": definition.qualname,
-                    "start_line": definition.node.start_point.row + 1,
-                    "end_line": definition.node.end_point.row + 1,
+                    "start_line": definition.start_line,
+                    "end_line": definition.end_line,
                 },
             )
             owner = (
@@ -241,15 +255,33 @@ class JavaScriptTypeScriptGraphAnalyzer:
         for module in modules:
             if selected is not None and module.path not in selected:
                 continue
+            tree = _parser_for(module.path, parsers).parse(module.source)
+            wanted_ranges = {
+                (definition.start_byte, definition.end_byte, definition.node_type)
+                for definition in definitions.values()
+                if definition.path == module.path
+            }
+            nodes_by_range = {
+                (node.start_byte, node.end_byte, node.type): node
+                for node in chain((tree.root_node,), _walk(tree.root_node))
+                if (node.start_byte, node.end_byte, node.type) in wanted_ranges
+            }
             for definition in definitions.values():
                 if definition.path != module.path:
                     continue
+                node = nodes_by_range.get(
+                    (definition.start_byte, definition.end_byte, definition.node_type)
+                )
+                if node is None:
+                    continue
                 _emit_definition_edges(
                     definition,
+                    node,
                     module,
                     by_path_name,
                     classes,
                     methods,
+                    modules_by_path,
                     add_edge,
                 )
 
@@ -261,12 +293,10 @@ class JavaScriptTypeScriptGraphAnalyzer:
         )
 
 
-def _parser_for(path: str) -> Parser:
+def _parser_for(path: str, parsers: dict[str, Parser]) -> Parser:
     suffix = Path(path).suffix.lower()
-    language = (
-        _TSX_LANGUAGE if suffix == ".tsx" else _TS_LANGUAGE if suffix == ".ts" else _JS_LANGUAGE
-    )
-    return Parser(language)
+    key = "tsx" if suffix == ".tsx" else "typescript" if suffix == ".ts" else "javascript"
+    return parsers[key]
 
 
 def _imports(
@@ -333,25 +363,22 @@ def _resolve_module_path(current: str, specifier: str, available: set[str]) -> s
     return next((item for item in candidates if item in available), None)
 
 
-def _collect_definitions(modules: list[_Module]) -> dict[str, _Definition]:
-    result: dict[str, _Definition] = {}
-    for module in modules:
-        pending_decorators: list[Node] = []
-        for top in module.root.named_children:
-            declaration = top
-            decorators: tuple[Node, ...] = ()
-            if top.type == "export_statement":
-                declaration = top.child_by_field_name("declaration") or top
-                decorators = tuple(
-                    child for child in top.named_children if child.type == "decorator"
-                )
-            if declaration.type == "decorator":
-                pending_decorators.append(declaration)
-                continue
-            decorators = (*pending_decorators, *decorators)
-            pending_decorators.clear()
-            _collect_declaration(result, module, declaration, decorators)
-    return result
+def _collect_module_definitions(
+    result: dict[str, _Definition], module: _Module, root: Node
+) -> None:
+    pending_decorators: list[Node] = []
+    for top in root.named_children:
+        declaration = top
+        decorators: tuple[Node, ...] = ()
+        if top.type == "export_statement":
+            declaration = top.child_by_field_name("declaration") or top
+            decorators = tuple(child for child in top.named_children if child.type == "decorator")
+        if declaration.type == "decorator":
+            pending_decorators.append(declaration)
+            continue
+        decorators = (*pending_decorators, *decorators)
+        pending_decorators.clear()
+        _collect_declaration(result, module, declaration, decorators)
 
 
 def _collect_declaration(
@@ -442,59 +469,79 @@ def _store_definition(
     qualname = f"{owner_class}.{name}" if owner_class else name
     ref = f"js://{module.path}#{qualname}"
     emitted_kind = "test" if kind == "function" and _is_test(module.path, name) else kind
-    result[ref] = _Definition(
-        ref, emitted_kind, name, qualname, module.path, node, owner_class, decorators
+    decorator_names = tuple(
+        decorator_name
+        for decorator in decorators
+        if (decorator_name := _decorator_name(module.source, decorator)) is not None
     )
+    base_name: str | None = None
+    if kind == "class":
+        heritage = next((item for item in _walk(node) if item.type == "extends_clause"), None)
+        if heritage is not None:
+            base_name = _expression_name(module.source, heritage.child_by_field_name("value"))
+    result[ref] = _Definition(
+        ref,
+        emitted_kind,
+        name,
+        qualname,
+        module.path,
+        node.type,
+        node.start_byte,
+        node.end_byte,
+        node.start_point.row + 1,
+        node.end_point.row + 1,
+        owner_class,
+        decorator_names,
+        base_name,
+    )
+
+
+def _decorator_name(source: bytes, decorator: Node) -> str | None:
+    expression = next(iter(decorator.named_children), None)
+    if expression is not None and expression.type == "call_expression":
+        expression = expression.child_by_field_name("function")
+    return _expression_name(source, expression)
 
 
 def _emit_definition_edges(
     definition: _Definition,
+    definition_node: Node,
     module: _Module,
     definitions: dict[tuple[str, str], _Definition],
     classes: dict[str, _Definition],
     methods: dict[tuple[str, str, str], _Definition],
+    modules: dict[str, _Module],
     add_edge: object,
 ) -> None:
     emit = add_edge
     assert callable(emit)
-    for decorator in definition.decorators:
-        expression = next(iter(decorator.named_children), None)
-        if expression is not None and expression.type == "call_expression":
-            expression = expression.child_by_field_name("function")
-        name = _expression_name(module.source, expression)
-        if name:
-            target = _resolve_name(name, module, definitions)
+    for name in definition.decorators:
+        target = _resolve_name(name, module, definitions)
+        emit(
+            definition.ref,
+            target[0] if target else f"jsname://{name.rsplit('.', 1)[-1]}",
+            "decorated_by",
+            definition.path,
+            confidence=target[1] if target else 0.5,
+            status=FactStatus.DECLARED if target else FactStatus.INFERRED,
+        )
+    if definition.kind == "class":
+        if definition.base_name:
+            target = _resolve_name(definition.base_name, module, definitions)
             emit(
                 definition.ref,
-                target[0] if target else f"jsname://{name.rsplit('.', 1)[-1]}",
-                "decorated_by",
+                target[0] if target else f"jsname://{definition.base_name}",
+                "inherits",
                 definition.path,
                 confidence=target[1] if target else 0.5,
                 status=FactStatus.DECLARED if target else FactStatus.INFERRED,
             )
-    if definition.kind == "class":
-        heritage = next(
-            (item for item in _walk(definition.node) if item.type == "extends_clause"), None
-        )
-        if heritage is not None:
-            base_node = heritage.child_by_field_name("value")
-            name = _expression_name(module.source, base_node)
-            if name:
-                target = _resolve_name(name, module, definitions)
-                emit(
-                    definition.ref,
-                    target[0] if target else f"jsname://{name}",
-                    "inherits",
-                    definition.path,
-                    confidence=target[1] if target else 0.5,
-                    status=FactStatus.DECLARED if target else FactStatus.INFERRED,
-                )
         return
     if definition.kind not in {"function", "method", "test"}:
         return
-    variable_classes = _variable_classes(definition, module, definitions)
+    variable_classes = _variable_classes(definition_node, module, definitions)
     call_functions: set[tuple[int, int]] = set()
-    for node in _scope_walk(definition.node):
+    for node in _scope_walk(definition_node):
         if node.type != "call_expression":
             continue
         function = node.child_by_field_name("function")
@@ -509,6 +556,7 @@ def _emit_definition_edges(
             classes,
             methods,
             variable_classes,
+            modules,
         )
         name = _expression_name(module.source, function) or "dynamic"
         emit(
@@ -519,7 +567,7 @@ def _emit_definition_edges(
             confidence=target[1] if target else 0.35,
             status=FactStatus.DECLARED if target else FactStatus.INFERRED,
         )
-    for node in _scope_walk(definition.node):
+    for node in _scope_walk(definition_node):
         if node.type not in {"identifier", "type_identifier"}:
             continue
         if (node.start_byte, node.end_byte) in call_functions:
@@ -537,12 +585,12 @@ def _emit_definition_edges(
 
 
 def _variable_classes(
-    definition: _Definition,
+    definition_node: Node,
     module: _Module,
     definitions: dict[tuple[str, str], _Definition],
 ) -> dict[str, str]:
     result: dict[str, str] = {}
-    for node in _scope_walk(definition.node):
+    for node in _scope_walk(definition_node):
         if node.type != "variable_declarator":
             continue
         name_node = node.child_by_field_name("name")
@@ -565,6 +613,7 @@ def _resolve_call(
     classes: dict[str, _Definition],
     methods: dict[tuple[str, str, str], _Definition],
     variable_classes: dict[str, str],
+    modules: dict[str, _Module],
 ) -> tuple[str, float] | None:
     if node.type in {"identifier", "type_identifier"}:
         return _resolve_name(_text(module.source, node), module, definitions)
@@ -597,7 +646,7 @@ def _resolve_call(
     direct = methods.get((owner.path, owner.name, method_name))
     if direct:
         return direct.ref, 0.95
-    base_ref = _base_class_ref(owner, module, definitions)
+    base_ref = _base_class_ref(owner, modules, definitions)
     if base_ref and base_ref in classes:
         base = classes[base_ref]
         inherited = methods.get((base.path, base.name, method_name))
@@ -608,19 +657,15 @@ def _resolve_call(
 
 def _base_class_ref(
     definition: _Definition,
-    module: _Module,
+    modules: dict[str, _Module],
     definitions: dict[tuple[str, str], _Definition],
 ) -> str | None:
-    heritage = next(
-        (item for item in _walk(definition.node) if item.type == "extends_clause"), None
-    )
-    if heritage is None:
+    if definition.base_name is None:
         return None
-    return_value = _resolve_name(
-        _expression_name(module.source, heritage.child_by_field_name("value")) or "",
-        module,
-        definitions,
-    )
+    module = modules.get(definition.path)
+    if module is None:
+        return None
+    return_value = _resolve_name(definition.base_name, module, definitions)
     return return_value[0] if return_value else None
 
 
@@ -652,18 +697,15 @@ def _expression_name(source: bytes, node: Node | None) -> str | None:
     return None
 
 
-def _walk(node: Node) -> tuple[Node, ...]:
-    result: list[Node] = []
+def _walk(node: Node) -> Iterator[Node]:
     pending = list(reversed(node.named_children))
     while pending:
         current = pending.pop()
-        result.append(current)
+        yield current
         pending.extend(reversed(current.named_children))
-    return tuple(result)
 
 
-def _scope_walk(node: Node) -> tuple[Node, ...]:
-    result: list[Node] = []
+def _scope_walk(node: Node) -> Iterator[Node]:
     pending = list(reversed(node.named_children))
     nested = {
         "function_declaration",
@@ -676,9 +718,8 @@ def _scope_walk(node: Node) -> tuple[Node, ...]:
         current = pending.pop()
         if current is not node and current.type in nested:
             continue
-        result.append(current)
+        yield current
         pending.extend(reversed(current.named_children))
-    return tuple(result)
 
 
 def _text(source: bytes, node: Node) -> str:

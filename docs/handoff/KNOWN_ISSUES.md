@@ -72,3 +72,11 @@
 - Stable session prompt does not expose a per-request output-token bound. The OpenAI-compatible path
   is bounded; the host path relies on focused prompts and a transport timeout. Final validation
   should reassess this against the then-current stable OpenCode API.
+
+## PR-H measurement incident
+
+- py-tree-sitter 0.26.0 segfaulted even after cross-file `Node` state was replaced with serializable
+  descriptors; the same isolated ControlDeck TSX analysis passed repeatedly on 0.25.2. The analyzer
+  pins 0.25.2, reuses one `Parser` per grammar, streams traversal, and retains only descriptors
+  across files. This remains open until three repetitions of the real-repository cold/incremental
+  path and full local gates pass; a recurrence requires replacing the Python binding path.

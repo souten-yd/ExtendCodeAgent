@@ -256,3 +256,13 @@ does not read environment variables. Tree-sitter is preferred to regex because s
 observable and resolved facts can be distinguished from inferred dynamic calls. Framework
 relations remain separate plugin-style analyzers. Deeper graphs remain on-demand and require a
 measured scenario gap before implementation.
+
+The first real ControlDeck benchmark process segfaulted before producing measurements. Retaining
+each owning tree-sitter `Tree`, then replacing cross-file `Node` state with serializable descriptors,
+still reproduced the crash on one isolated ControlDeck TSX file under py-tree-sitter 0.26.0. The
+official grammar wheels expose mixed ABI 15 (JavaScript) and ABI 14 (TypeScript/TSX), both within
+the binding's declared 13–15 range, but the same isolated analyzer passed repeatedly on
+py-tree-sitter 0.25.2. Decision: pin 0.25.2, retain one parser per grammar, stream Node traversal,
+and retain only pure-Python descriptors across files. Treat every failed run only as a safety
+defect signal, never as benchmark evidence. Real-repository measurement may resume only after
+focused tests and three repetitions of the same ControlDeck cold/incremental path no longer crash.
