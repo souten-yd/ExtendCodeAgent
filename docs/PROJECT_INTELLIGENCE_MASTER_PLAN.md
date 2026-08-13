@@ -1,6 +1,6 @@
 # ExtendCodeAgent — Project Intelligence Master Plan
 
-Status: initial strategic master plan
+Status: canonical strategic master plan
 Date: 2026-08-13
 Target host: OpenCode
 Source inspiration / migration candidate: `souten-yd/KasaneCore` Atlas Project Intelligence
@@ -226,9 +226,57 @@ Convergence states should include absent/partial/materialized/observed/verified/
 
 ## 9. Research Intelligence
 
-Do not duplicate OpenCode's basic web tools. Add a research orchestration/evidence layer with provider-independent Search/Fetch/Evidence ports. Search/fetch and synthesis model routing are separate concerns. Research may use local synthesis, host models, or frontier models according to configuration and privacy policy.
+Do not duplicate OpenCode's basic web tools. Add a research orchestration/evidence layer with provider-independent Search/Fetch/Evidence ports.
 
-## 10. Model routing target
+Target capabilities:
+- research planning and intent classification;
+- official/primary-source preference when appropriate;
+- configurable source mix and depth;
+- evidence/claim provenance;
+- coverage-gap detection;
+- replenishment/adaptive retrieval;
+- citation-ready evidence records;
+- explicit unavailable/degraded states.
+
+Search/fetch and synthesis model routing are separate concerns. Research may use local synthesis, host models, or frontier models according to configuration and privacy policy.
+
+## 10. Requirement and evidence traceability
+
+Preserve a durable chain where applicable:
+
+```text
+Requirement / Task Goal
+-> Blueprint / Target Constraint
+-> Strategy / Plan Item
+-> Proposed / Applied File or Symbol
+-> Test / Verification
+-> Runtime Observation / Evidence
+```
+
+Canonical source/workspace state remains authoritative. Traceability is a projection and audit mechanism, not mutation authority.
+
+## 11. Context Intelligence
+
+Do not replace OpenCode context management. Project Intelligence supplies bounded, revision-aware project facts.
+
+Context packages should include only justified items and record:
+- source Twin revision;
+- inclusion reason;
+- confidence/provenance;
+- token estimate;
+- truncation;
+- phase/task intent;
+- stale status.
+
+Weak local-model profiles default to smaller structured context. Frontier profiles may receive richer packages but still respect hard budgets.
+
+## 12. Runtime Intelligence and reconciliation
+
+Normalize evidence from test runners, coverage, API/browser observations, traces, file/DB/process effects, and other configured runtime sources.
+
+Static inference and runtime observation remain separate facts. Reconciliation can strengthen, contradict, or invalidate inferred relationships, but must preserve provenance/history.
+
+## 13. Model routing target
 
 Define logical model roles rather than hard-coded names:
 
@@ -243,14 +291,176 @@ verification_reviewer
 fallback
 ```
 
-Roles map to configured endpoints such as OpenCode host models, OpenAI-compatible local endpoints, or remote/frontier providers. Required routing modes include manual, local-first, frontier-first, cost-optimized, latency-optimized, quality-optimized, adaptive, host-only, and local-only.
+Roles map to configured endpoints such as OpenCode host models, OpenAI-compatible local endpoints, or remote/frontier providers. Required routing modes include:
+
+```text
+manual
+local_first
+frontier_first
+cost_optimized
+latency_optimized
+quality_optimized
+adaptive
+host_only
+local_only
+```
 
 Routing must consider endpoint capabilities, context limits, privacy rules, task complexity, uncertainty, cost/latency budgets, and user policy. Escalation/fallback decisions must be observable and explainable. No silent remote escalation is allowed when policy forbids it.
 
-Weak local-model mode emphasizes deterministic graph queries, small structured context, explicit schemas, and single-purpose calls. Frontier mode may use richer synthesis but cannot bypass deterministic evidence/verification rules.
+Weak local-model mode emphasizes deterministic graph queries, small structured context, explicit schemas, candidate ranking, and single-purpose calls. Frontier mode may use richer synthesis but cannot bypass deterministic evidence/verification rules.
 
-## 11. Implementation and validation governance
+## 14. Configuration and rollout target
 
-The detailed implementation order, local-only validation strategy, real OpenCode/LLM A/B matrix, configuration model, CI restrictions, PR boundaries, and Codex token-efficiency rules are defined in `docs/IMPLEMENTATION_EXECUTION_LOCAL_VALIDATION_PLAN.md` and `docs/CODEX_IMPLEMENTATION_GUIDE.md`.
+Major features must be individually configurable. Global modes:
 
-The baseline policy is local-first validation. GitHub CI is exceptional. Real LLM evaluations are milestone-gated and include weak local, practical local, OpenCode host/default, and frontier profiles when available.
+```text
+off
+shadow
+advisory
+active
+```
+
+Configuration precedence and detailed feature/budget/model settings are defined in `docs/IMPLEMENTATION_EXECUTION_LOCAL_VALIDATION_PLAN.md`.
+
+Automatic activation must be conservative. Expensive analysis and remote model use are opt-in/policy-driven until measured evidence justifies broader defaults.
+
+## 15. Storage and lifecycle
+
+Initial persistence may use SQLite because KasaneCore already proves the approach and it supports durable revisions locally without requiring external services.
+
+Requirements:
+- project/workspace isolation;
+- deterministic identity where possible;
+- atomic revision commit;
+- source/analyzer version metadata;
+- bounded retention/compaction;
+- export/import/integrity check;
+- rebuild-from-source;
+- no cloud dependency.
+
+Storage implementation remains behind a coarse adapter so it can be replaced later if measured scale requires it.
+
+## 16. Analyzer architecture
+
+Language/framework analyzers use a coarse result contract rather than one interface per graph feature. An analyzer declares supported capabilities and returns graph facts plus diagnostics/provenance.
+
+Initial order:
+1. repository/source snapshot;
+2. structural file/module graph;
+3. Python AST semantic graph;
+4. optional LSP enrichment;
+5. JS/TS semantic graph;
+6. framework/resource adapters;
+7. scoped CFG/DFG/state/event/UI analysis.
+
+Do not require LLM inference for baseline parsing.
+
+## 17. OpenCode adapter responsibilities
+
+The thin adapter owns:
+- config discovery and resolved host settings;
+- host/project/session identity translation;
+- file/watcher/session/tool event capture;
+- event batching/coalescing;
+- commands/tools/status UX;
+- host model/provider bridge when supported;
+- sidecar/MCP lifecycle/reconnect;
+- translation between OpenCode types and host-neutral contracts.
+
+It does not own graph algorithms, Blueprint policy, Convergence logic, or model-specific business rules.
+
+## 18. MCP / CLI surface
+
+Initial advisory tools should stay coarse:
+
+```text
+pi.status
+pi.symbol
+pi.references
+pi.path
+pi.impact
+pi.tests
+pi.context
+```
+
+Later additions may include Blueprint/Strategy/Convergence/Research operations once their core behavior is proven.
+
+MCP is a durable compatibility/fallback surface and allows future use from other coding agents without importing OpenCode APIs.
+
+## 19. Performance strategy
+
+- incremental refresh over full rebuild where reliable;
+- event coalescing;
+- bounded traversal;
+- cached immutable revisions;
+- on-demand deep analysis;
+- context/token caps;
+- no LLM call for deterministic graph query;
+- no synchronous repository-scale analysis in host hooks;
+- measure CPU, RAM, DB size, initial indexing, refresh latency, query latency, and model/token overhead.
+
+A feature that is theoretically richer but consistently slower/more expensive without outcome improvement should remain optional or be redesigned.
+
+## 20. Validation strategy
+
+Local validation is primary.
+
+Required layers:
+- offline unit tests;
+- component/store/analyzer tests;
+- integrated Graph/Twin/Impact/Context/Test tests;
+- OpenCode adapter contract tests;
+- real local OpenCode smoke/shadow/advisory/active tests;
+- fixed real-repository benchmarks;
+- milestone-gated real-LLM A/B evaluation.
+
+Real-LLM profiles include weak local, practical local, OpenCode host/default, and frontier when available. Compare native OpenCode, extension off, shadow, advisory, and active modes.
+
+GitHub CI is exceptional and must not contain mandatory real-LLM evaluation.
+
+## 21. Implementation waves
+
+Detailed PR boundaries are canonical in `docs/IMPLEMENTATION_EXECUTION_LOCAL_VALIDATION_PLAN.md`.
+
+High-level order:
+
+```text
+A. contracts/config/model-router contracts/local harness
+B. graph revision/store/source snapshot
+C. structural/Python semantic/path/impact
+D. OpenCode adapter + MCP advisory tools
+E. context/test intelligence/runtime ingest
+F. Blueprint + task-level Convergence
+G. live model routing + Strategy
+H. JS/TS/framework/deep graph expansion
+I. Research/evidence + project-level convergence
+```
+
+Do not start by copying large KasaneCore directories.
+
+## 22. Definition of done
+
+The program reaches a production-capable first release only when:
+- OpenCode core remains unmodified;
+- host adapter/API compatibility is isolated;
+- major features can be independently disabled;
+- off/shadow/advisory/active modes work;
+- graph/twin revisions and stale detection are durable;
+- impact/path/test results are explainable and measured;
+- local OpenCode integration survives restart/external edits;
+- weak local and frontier/host model paths are evaluated;
+- local-only privacy mode is proven;
+- routing/escalation/fallback behavior is tested;
+- local clean-bootstrap tests pass;
+- real repository performance evidence is recorded;
+- failures degrade safely;
+- implementation status reflects actual evidence, not design intent.
+
+## 23. Governance references
+
+Implementation details, critical objections, configuration schema, model routing, local validation, CI restrictions, real-LLM evaluation, PR boundaries, and performance rules:
+
+- `docs/IMPLEMENTATION_EXECUTION_LOCAL_VALIDATION_PLAN.md`
+- `docs/CODEX_IMPLEMENTATION_GUIDE.md`
+- `docs/KASANECORE_MIGRATION_AUDIT.md`
+- `docs/CURRENT_STATUS.md`
