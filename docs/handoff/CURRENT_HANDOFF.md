@@ -3,12 +3,12 @@
 Updated: 2026-08-14 (Asia/Tokyo)
 
 Current branch: `agent/pr-h-js-ts-deep-graph`
-Current PR: not created
+Current PR: #16 `https://github.com/souten-yd/ExtendCodeAgent/pull/16`
 Base commit: `fe61a16e8f7f07e760d99ca449bc09c90166a6c5`
 Latest commit: `9222fa08a58bd4c97eaddb34cff7afbe1a8998eb`
 Milestone: PR-H JS/TS semantic and benchmark-justified on-demand deep graph
-Current task: publish and merge PR-H, then leave closeout on main
-Status: PR-H final local gates and diff inspection PASS
+Current task: verify and merge PR-H, then leave closeout on main
+Status: PR #16 open; final local gates PASS; mergeability recalculating after handoff push
 
 Completed:
 - added official tree-sitter JavaScript/TypeScript/TSX parsing dependencies;
@@ -29,6 +29,7 @@ Completed:
 - recorded a reproducible benchmark and human-reviewable FP/FN report under `docs/evidence/pr-h/`;
 - rejected always-on CFG/DFG/state/event/UI work because it does not close the measured browser/API
   evidence gap; deeper analyzers stay on-demand pending a concrete benchmark.
+- created PR #16; no GitHub Actions checks are configured.
 - PR-G closeout PR #15 squash-merged as `fe61a16e8f7f07e760d99ca449bc09c90166a6c5`;
 - created PR-H branch from exact clean closeout main;
 - PR #14 exact head `1189c966a71d410a42ab3f51ed35d18b4c2f5af9` was mergeable/CLEAN
@@ -118,7 +119,8 @@ select full refresh. A persisted symbol index remains a future optimization, not
 Uncommitted work: this handoff gate update only.
 Temporary work: evaluation-only Ollama `qwen3:0.6b` remains installed; no temporary repo files.
 
-Next exact action: commit handoff, push branch, create/inspect/merge PR-H, then sync main handoff.
+Next exact action: commit/push this PR event, verify exact remote head and CLEAN mergeability, squash
+merge PR #16, then switch/pull main and run all-fast/build before closeout.
 Next files: PR metadata, then canonical closeout handoff only.
 Next commands:
 

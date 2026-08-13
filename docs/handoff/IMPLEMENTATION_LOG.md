@@ -213,3 +213,5 @@
   1,389 ms, DB+WAL 17,438,936 bytes, max RSS 76,512 KiB, impact mean 0.0282 ms. Measurement did not
   justify always-on CFG/DFG/state/event/UI graphs; they remain independently configurable on-demand
   future analyzers rather than being added without a task benefit.
+- PR #16 was created after final all-fast/build/integration/benchmark/diff gates; no GitHub Actions
+  checks are configured and mergeability was still calculating at the initial query.
