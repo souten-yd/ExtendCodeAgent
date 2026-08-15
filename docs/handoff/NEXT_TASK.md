@@ -1,123 +1,160 @@
 # Next Task
 
-Start the evidence-driven productization baseline, then formalize the minimum runtime-adapter
-contract required by transparent task-aware PI before implementing automatic behavior.
+Updated: 2026-08-16 (Asia/Tokyo)
+
+The immediate product target is **OpenCode**, with the OpenCode feature already integrated into
+ControlDeck as the primary end-to-end validation host. ExtendCodeAgent remains architecturally
+host-neutral, but no second harness is a current production dependency.
 
 Canonical execution documents:
 
 1. `docs/PRODUCTIZATION_AND_MODEL_EVALUATION_PLAN.md`
-2. `docs/TRANSPARENT_PI_ORCHESTRATION_PLAN.md`
-3. `docs/RUNTIME_ADAPTER_ARCHITECTURE_PLAN.md`
-4. `docs/CODEX_PRODUCTIZATION_EXECUTION_GUIDE.md`
-5. `docs/handoff/CURRENT_HANDOFF.md`
-6. existing implementation/evidence only as needed for the active slice.
+2. `docs/COMPETITIVE_ANALYSIS_AND_FEATURE_GAP_ROADMAP.md`
+3. `docs/CONTROLDECK_OPENCODE_VALIDATION_AND_ADOPTION_PLAN.md`
+4. `docs/TRANSPARENT_PI_ORCHESTRATION_PLAN.md`
+5. `docs/RUNTIME_ADAPTER_ARCHITECTURE_PLAN.md`
+6. `docs/CODEX_PRODUCTIZATION_EXECUTION_GUIDE.md`
+7. `docs/handoff/CURRENT_HANDOFF.md`
 
-## Architectural product target
+The competitive and ControlDeck validation plans are strategic overlays. Where older feature-order
+language conflicts, use their consolidated sequence while preserving existing architecture invariants.
 
-OpenCode is the **primary reference runtime and first native adapter**, not the architectural core of
-ExtendCodeAgent. Project Intelligence, Task-aware orchestration, Context/Impact/Verification,
-Runtime Evidence, Model Routing, Strategy and Convergence remain host-neutral.
+## Product target
 
-Do not build a new generic agent harness. Reuse each runtime's agent loop, tools, shell, permissions,
-session and UI. Cross-runtime integration occurs through a small capability-negotiated Runtime
-Adapter Contract plus MCP as a compatibility floor.
+OpenCode is the primary reference runtime and the only production-target runtime during the current
+phase. ControlDeck is the first user-facing integration and acceptance environment.
 
-Before a second harness is proven, describe the project precisely as:
+ExtendCodeAgent is positioned as:
 
-> a host-neutral Intelligence Layer with OpenCode as its primary reference runtime.
+> a host-neutral Project Intelligence and Verification Runtime with OpenCode as its primary reference
+> runtime and ControlDeck as its first end-to-end product host.
 
-Do not claim multi-harness production support before it is tested.
+Its differentiated value is:
+
+1. Project Truth — revision-aware Graph/Twin/provenance/freshness;
+2. Verification Intelligence — Impact/Test/Runtime/Traceability/Convergence;
+3. Task-aware Intelligence — minimum useful PI and progressive expansion;
+4. Weak-Local Efficiency — bounded structured evidence and cache-friendly delivery;
+5. Cross-agent Consistency — Project Truth across runtime-owned worktrees/tasks when those signals are
+   available.
+
+Do not implement a second generic agent harness, team runtime, scheduler, browser, shell/edit engine,
+sandbox, worktree/checkpoint engine, generic conversational memory or TUI.
+
+## Mandatory evidence rule
+
+A capability is not adopted because source code exists or unit tests pass. Every new or materially
+changed capability MUST be evaluated using the harness/agent/LLM combinations needed to prove its
+claimed benefit.
+
+The primary comparison path is ControlDeck -> OpenCode:
+
+- native OpenCode / ExtendCodeAgent absent or disabled;
+- `off`;
+- `shadow`;
+- `advisory`;
+- `active` when permitted.
+
+Model tiers are selected according to the feature:
+
+- local-low;
+- local-practical;
+- host/default when applicable;
+- frontier when functioning/allowed.
+
+Repeated runs are mandatory for stochastic local models. A feature that benefits only one model tier
+may be retained only with an explicit model-scoped rollout.
+
+For orchestration-specific tests only, OpenCode+OMO and OpenCode+OMO+ExtendCodeAgent may be compared
+after the normal OpenCode baseline is stable. OMO is not a release dependency.
+
+## Anti-overfit rule
+
+ControlDeck is the primary repository and integration target, but ControlDeck-only success is
+insufficient for `active-default` generic PI.
+
+- Keep a held-out ControlDeck task set outside tuning.
+- Run the first implementation/evaluation on real ControlDeck Python/TS/workflow/OpenCode tasks.
+- Before generic `active-default`, repeat a small accepted subset on at least one suitable held-out
+  repository using the same OpenCode runtime.
+- Do not add another harness merely to prove generalization.
+
+ControlDeck headless runs may operate on managed/imported project copies. Record exact workspace
+identity, source/managed-copy relation, Git SHA and fingerprint. Never mix Twin/runtime evidence from
+different copies because content appears similar.
+
+## Competitive decisions
+
+Adopt when measured useful:
+
+- Atomic-style stable-prefix-aware PI delivery;
+- deterministic candidate reduction and bounded decision envelopes for weak models;
+- Project Evidence Memory with revision/provenance/invalidation;
+- compact PI trace/replay without raw private reasoning transcripts;
+- stronger evidence-backed verification/completion;
+- runtime-observed worktree/subagent/task identity for future PI-aware parallel development.
+
+Delegate rather than reimplement:
+
+- generic multi-agent/team orchestration;
+- background execution/scheduling;
+- browser/desktop automation;
+- shell/edit/patch;
+- sandbox/permissions;
+- provider/model management;
+- generic session recovery;
+- worktree/checkpoint engines;
+- host UI.
 
 ## Immediate sequence
 
-1. Fast-forward `main` and create `agent/release-validation-baseline`.
-2. Run current local lint/typecheck/unit/integration/build before changing production code.
-3. Record exact environment, current OpenCode stable version, repository SHAs, local model profiles,
-   host/default model, and frontier availability under `docs/evidence/final/`.
-4. Re-run real OpenCode plugin/MCP/edit/external-edit/restart/reconnect/off/shadow/advisory behavior
-   before optimizing it.
-5. Reproduce and repair the frontier path in this order: native OpenCode provider smoke, provider/auth
-   classification, then ExtendCodeAgent adapter only if native succeeds.
-6. Build a versioned real-task benchmark set and compare native/off/advisory/active across weak-local,
-   practical-local, host/default, and a functioning frontier path. Repeat weak/local runs; do not use
-   one lucky run as acceptance evidence.
-7. Produce `docs/evidence/final/baseline-gap-report.md` ranking failures by frequency, severity, and
-   user value. Classify each failure as model/provider/context/graph/runtime/test/routing/task-selection/
-   OpenCode-adapter/lifecycle/config/performance.
-8. Fix blocking OpenCode/frontier/lifecycle defects before transparent orchestration.
-9. Run **RA-0 Minimal Runtime Contract** before TA-0 production behavior:
-   - inventory exactly which runtime signals TA-0/TA-1 need;
-   - reuse existing host-neutral contracts first;
-   - add only missing RuntimeCapabilities/observation/delivery contracts;
-   - keep OpenCode-specific SDK/types inside `adapters/opencode`;
-   - map unsupported hooks to explicit unavailable/degraded capabilities;
-   - add architecture/conformance tests;
-   - do not add a second harness and do not change user-visible behavior.
-10. Implement `TA-0` on `agent/task-aware-shadow`: deterministic task signals/classification,
-    `IntelligencePlan`, reasons and telemetry only. It MUST NOT alter context/model/test behavior.
-11. Evaluate TA-0 against curated expected plans and the current manual/advisory baseline. Measure
-    intent accuracy, capability precision/recall, under/over-selection, planner latency and unnecessary
-    deep-analysis selection.
-12. Implement `TA-1` advisory auto-selection only after TA-0 passes. Reuse existing Context/Impact/Test/
-    Runtime services; do not create parallel query or context systems.
-13. Implement `TA-2` bounded active only for empirically accepted low-risk relation/task classes.
-    Stale/uncertain evidence must downgrade to advisory/source inspection/native fallback.
-14. Implement `TA-3` progressive expansion only after repeated local-low/local-practical/host evaluation.
-    Intelligence expansion and model escalation remain separate decisions.
-15. Implement Runtime Bridge only if held-out UI/API tasks repeatedly fail because of a measured runtime
-    boundary gap and a small generic bridge materially improves recall.
-16. Implement bounded DFG/Taint/CFG only if a repeated high-value task proves a missing data/control
-    relation is the root cause and deep analysis is the smallest measured fix.
-17. Finish with `TA-FINAL`/integration-only final Release Validation. Compare transparent auto against
-    both native OpenCode and manual/advisory PI across repositories and model tiers.
-18. Run **RA-1 OpenCode adapter conformance** and **RA-2 MCP compatibility conformance** as part of or
-    immediately after the production baseline. Capability declarations, observations, delivery,
-    privacy, lifecycle and fallback semantics must be truthful and reproducible.
-19. After the OpenCode production-capable baseline, run **RA-3 Second-Harness Proof** using exactly one
-    additional runtime selected by API stability/accessibility/user value. The purpose is to prove the
-    architecture, not to start broad platform expansion. Project Model/Impact/Context/Verification/
-    Task Controller must not be rewritten for the second runtime.
-20. Do not add further runtime adapters until RA-3 evidence shows the generic contract is stable and
-    there is demonstrated user value.
+1. Merge COMP-0 strategy documentation.
+2. Create `agent/release-validation-baseline` from synchronized `main`.
+3. Run local lint/typecheck/unit/integration/build before production changes.
+4. Record ControlDeck commit, ExtendCodeAgent commit, OpenCode version, model/provider profiles,
+   managed project/workspace identities and hardware/environment under `docs/evidence/final/`.
+5. Establish **ControlDeck -> OpenCode native** baseline before PI optimization.
+6. Revalidate plugin/MCP/edit/external-edit/restart/reconnect/off/shadow/advisory paths inside the
+   ControlDeck-hosted workflow where applicable.
+7. Reproduce frontier/provider failures with PI disabled first. Fix ControlDeck/OpenCode/provider
+   lifecycle/config issues before PI core changes.
+8. Build versioned ControlDeck real-task and held-out task sets. Compare required runtime/mode/model
+   combinations with objective tests/build/behavior evidence.
+9. Produce the RV-0 gap report. Attribute every failure to host, runtime, model/provider, PI adapter,
+   PI core, task selection, verification or performance before changing code.
+10. Run RA-0 only for OpenCode signals actually consumed by TA/verification. Keep OpenCode SDK/types in
+    the adapter.
+11. Implement TA-0 shadow planning; no task behavior change.
+12. Evaluate TA-0 task/capability selection on ControlDeck held-out prompts.
+13. Run WL-0 only if measured weak-local failures justify stable-prefix/structured-evidence changes.
+14. Implement TA-1 advisory selection using existing PI services.
+15. Run VI-0, consolidating confidence calibration, Test Intelligence and Convergence/completion
+    correctness. Add Verification Intelligence 2.0 features only for measured failures.
+16. Implement TA-2 bounded active only for accepted task/relation/model scopes.
+17. Implement TA-3 progressive expansion after repeated model-tier evidence.
+18. Implement Runtime Bridge or bounded DFG/Taint/CFG only after repeated ControlDeck tasks prove a
+    specific missing relation is the smallest fix.
+19. Run RV-FINAL with ControlDeck primary plus held-out repository confirmation. No new feature scope.
+20. Implement Project Evidence Memory/PI Trace as P1 after the baseline unless cross-session evidence
+    loss is shown to be a release blocker.
+21. Run optional OpenCode+OMO complementarity tests only for relevant orchestration claims.
+22. Run RA-3 second-harness proof only after the OpenCode production baseline. It proves portability;
+    it does not start broad adapter expansion.
+23. Run PI-aware parallel/worktree work only after a stable OpenCode/compatible runtime signal path is
+    demonstrated. Start advisory/detection-only, not automatic team control.
 
-## Runtime integration tiers
+## Feature adoption states
 
-Treat runtime support as capability-based, not all-or-nothing:
+Use explicit rollout states:
 
-1. **Tier 1 MCP/explicit tools** — PI queries are reachable; no claim of transparent automation.
-2. **Tier 2 Native adapter** — host observations/tool/context integration are normalized.
-3. **Tier 3 Transparent integration** — sufficient trusted signals/delivery exist for Task-aware PI.
+`experimental -> shadow -> advisory -> active-scoped -> active-default`
 
-The controller must downgrade honestly when runtime capabilities are missing. MCP-only compatibility
-is not equivalent to a full runtime adapter.
+or `deferred/rejected` when evidence does not justify cost.
 
-## Transparent PI product target
-
-Users should be able to ask normal OpenCode questions/tasks without mentioning PI. The controller
-must select the **minimum** useful intelligence, expand only when evidence requires it, and frequently
-choose native/no-extra-PI when additional analysis has no demonstrated value.
-
-Normal automation must remain inspectable through PI health/last-plan diagnostics, but it should not
-require routine PI-specific prompts or a large new user-facing tool surface.
-
-## Controller evaluation baselines
-
-Always distinguish:
-
-1. native OpenCode;
-2. manual/advisory best-known PI plan;
-3. transparent controller auto-selection.
-
-This is required to prove not only that PI is useful, but that the controller selects it correctly.
-Use counterfactual/ablation checks on disputed high-value tasks.
-
-## Frozen by default
-
-Do not implement repository-wide CFG/DFG, persistent full UI graphs, universal Blueprint/Strategy,
-automatic Research, a new independent agent harness, or multiple runtime adapters merely to complete
-an architectural roadmap.
-
-Deep capabilities and additional runtimes stay evidence-gated.
+A capability advances only when real ControlDeck-hosted OpenCode evidence exists, the necessary
+model/agent combinations were tested, critical correctness did not regress, benefit is attributable to
+the capability, overhead is bounded, fallback/privacy semantics remain correct, and held-out tasks do
+not show critical overfit.
 
 ## Resume
 
@@ -132,6 +169,5 @@ tools/local/build
 git switch -c agent/release-validation-baseline
 ```
 
-Update `CURRENT_HANDOFF.md` before substantial code changes and after every major model/OpenCode/
-controller/runtime-adapter evaluation so another account/agent can resume without conversation
-history.
+Update `CURRENT_HANDOFF.md` after each major ControlDeck/OpenCode/model/controller evaluation so work
+can resume without conversation history.
