@@ -14,7 +14,12 @@ Canonical execution documents:
 4. `docs/TRANSPARENT_PI_ORCHESTRATION_PLAN.md`
 5. `docs/RUNTIME_ADAPTER_ARCHITECTURE_PLAN.md`
 6. `docs/CODEX_PRODUCTIZATION_EXECUTION_GUIDE.md`
-7. `docs/handoff/CURRENT_HANDOFF.md`
+7. `docs/VERIFICATION_OBLIGATION_AND_TEST_EXECUTION_PLAN.md`
+8. `docs/TEST_PORTFOLIO_INTELLIGENCE_AND_BROAD_EVALUATION_PLAN.md`
+9. `docs/COMPOSITIONAL_VERIFICATION_AND_EVIDENCE_REUSE_PLAN.md`
+10. `docs/FAILURE_DRIVEN_PI_REEVALUATION_PLAN.md`
+11. `docs/PI_VERIFICATION_OBSERVABILITY_INTEGRATED_DESIGN.md`
+12. `docs/handoff/CURRENT_HANDOFF.md`
 
 ## Product boundary
 
@@ -97,6 +102,21 @@ Delegate rather than reimplement:
 - worktree/checkpoint engines;
 - host UI/integration plumbing.
 
+## Verification refinement rule
+
+Verification improvements MUST maximize reuse of the existing revision-aware PI core rather than create parallel truth stores.
+
+- `TestIntent`, Oracle quality, Observability Gap, Environment Matrix, Evidence Diversity, Verification Certificate, Regression Knowledge, Nondeterminism and Verification Debt are projections over the same Digital Twin / Project Graph / Impact / Runtime Evidence / Traceability / Convergence model.
+- Missing observability is not automatically a missing test. Prefer an existing runtime/host signal and keep the obligation unavailable/inconclusive when the required truth cannot actually be observed.
+- Environment verification is Impact-selected; never expand to a Cartesian test matrix by default.
+- Verification Certificates are auditable reason records for one candidate revision, not permanent proof.
+- Evidence reuse is invalidation/boundary/freshness aware and remains subject to calibration.
+- Evidence Diversity must protect independent unit/contract/integration/runtime/GUI/calibration value when consolidating tests.
+- Failure-driven re-evaluation starts with Test Intent and Oracle and expands only the unresolved PI neighborhood.
+- Every strengthened capability remains depth-configurable and may be demoted/scoped when repeated evaluation shows cost without verified benefit.
+
+Use `docs/evaluation/pi-verification-integrated-metrics-v1.json` for the initial machine-readable evaluation dimensions.
+
 ## Immediate sequence
 
 1. Start RV-0 from synchronized `main` after this correction is merged.
@@ -117,16 +137,17 @@ Delegate rather than reimplement:
 12. TA-1: advisory automatic capability/context selection.
 13. VI-0: confidence, Test Intelligence and Convergence/completion quality; add 2.0 features only for
     measured failures.
-14. TA-2: bounded active for accepted task/relation/model scopes.
-15. TA-3: progressive expansion after repeated evidence.
-16. Runtime Bridge or bounded DFG/Taint/CFG only when repeated high-value OpenCode tasks prove a
+14. For accepted verification gaps after VI-0, implement `PI_VERIFICATION_OBSERVABILITY_INTEGRATED_DESIGN.md` in its staged `VI-X0 -> VI-XFINAL` sequence. Do not implement all VI-X features speculatively; each stage remains evidence-gated.
+15. TA-2: bounded active for accepted task/relation/model scopes.
+16. TA-3: progressive expansion after repeated evidence.
+17. Runtime Bridge or bounded DFG/Taint/CFG only when repeated high-value OpenCode tasks prove a
     missing relation is the smallest fix.
-17. RV-FINAL: OpenCode production baseline across representative + held-out repositories; no new
+18. RV-FINAL: OpenCode production baseline across representative + held-out repositories; no new
     feature scope.
-18. Project Evidence Memory/PI Trace remains P1 unless cross-session evidence loss is a release blocker.
-19. Optional OpenCode+OMO comparisons only for relevant orchestration claims.
-20. RA-3 second-harness proof only after the OpenCode production baseline.
-21. PI-aware parallel/worktree work only after a stable OpenCode-compatible runtime signal path is
+19. Project Evidence Memory/PI Trace remains P1 unless cross-session evidence loss is a release blocker.
+20. Optional OpenCode+OMO comparisons only for relevant orchestration claims.
+21. RA-3 second-harness proof only after the OpenCode production baseline.
+22. PI-aware parallel/worktree work only after a stable OpenCode-compatible runtime signal path is
     demonstrated; start advisory/detection-only.
 
 ## Future ControlDeck rule

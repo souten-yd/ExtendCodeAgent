@@ -1,0 +1,92 @@
+{
+  "schema": 1,
+  "evaluation_id": "pi-verification-integrated-v1",
+  "purpose": "Evaluate integrated PI verification refinements without collapsing correctness, coverage, observability, environment selection, reuse, and cost into one opaque score.",
+  "required_arms": [
+    "native_or_full_reference",
+    "impact_selection_only",
+    "obligation_selection",
+    "compositional_verification",
+    "integrated_observability_environment_certificate",
+    "selected_capability_ablations"
+  ],
+  "correctness": [
+    "false_verified_rate",
+    "verification_obligation_coverage_recall",
+    "test_intent_precision",
+    "test_intent_recall",
+    "oracle_defect_detection_rate",
+    "observability_gap_precision",
+    "observability_gap_recall",
+    "environment_impact_miss_rate",
+    "evidence_invalidation_recall",
+    "evidence_reuse_miss_rate",
+    "full_reference_only_failure_count",
+    "root_cause_classification_accuracy",
+    "escaped_regression_rate"
+  ],
+  "efficiency": [
+    "verification_wall_time_ms",
+    "pi_analysis_overhead_ms",
+    "heavy_e2e_avoided_count",
+    "full_suite_avoided_count",
+    "selected_test_count",
+    "total_test_count",
+    "selected_environment_profile_count",
+    "full_environment_profile_count",
+    "browser_runtime_minutes",
+    "process_runtime_minutes",
+    "unnecessary_generated_tests_avoided",
+    "unnecessary_edits_avoided",
+    "time_to_verified_ms",
+    "certificate_construction_ms"
+  ],
+  "portfolio": [
+    "evidence_diversity_roles_preserved",
+    "consolidation_recommendations_accepted",
+    "consolidation_recommendations_rejected",
+    "calibration_e2e_retained",
+    "observability_gaps_resolved",
+    "observability_gaps_remaining",
+    "verification_debt_by_category",
+    "regression_knowledge_hits",
+    "regression_knowledge_contribution"
+  ],
+  "nondeterminism": [
+    "flaky_detection_precision",
+    "flaky_detection_recall",
+    "production_race_misclassified_as_flaky",
+    "harness_flake_misclassified_as_implementation"
+  ],
+  "performance_obligations": [
+    "explicit_performance_obligations_total",
+    "performance_obligations_satisfied",
+    "performance_regressions_detected",
+    "false_performance_regressions"
+  ],
+  "certificate": [
+    "certificate_status",
+    "fresh_evidence_count",
+    "reused_evidence_count",
+    "invalidated_evidence_count",
+    "observability_gap_count",
+    "environment_profile_count",
+    "remaining_gap_count",
+    "full_or_calibration_run_performed",
+    "pi_depth_by_capability"
+  ],
+  "anti_overfit": {
+    "corpus_manifest": "docs/evaluation/test-portfolio-corpus-v1.json",
+    "policy": "4+1 rotating held-out",
+    "freeze_rules_before_held_out": true,
+    "repo_name_special_cases_forbidden": true
+  },
+  "acceptance_principles": [
+    "No critical false-VERIFIED regression versus broader/full reference verification.",
+    "Efficiency gains never override obligation coverage correctness.",
+    "Observability proxies cannot substitute for required runtime truth.",
+    "Environment-matrix reduction must be audited against broader reference runs.",
+    "Evidence reuse must remain invalidation- and boundary-aware.",
+    "A capability/depth is demoted or scoped when added cost has no repeatable verified benefit."
+  ]
+}
