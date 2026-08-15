@@ -2,9 +2,9 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-The immediate product target is **OpenCode**, with the OpenCode feature already integrated into
-ControlDeck as the primary end-to-end validation host. ExtendCodeAgent remains architecturally
-host-neutral, but no second harness is a current production dependency.
+The immediate product/runtime target is **OpenCode**. ControlDeck is the **primary evaluation
+platform**, not an ExtendCodeAgent integration target. ExtendCodeAgent remains architecturally
+host-neutral, while no second harness is a current production dependency.
 
 Canonical execution documents:
 
@@ -16,87 +16,75 @@ Canonical execution documents:
 6. `docs/CODEX_PRODUCTIZATION_EXECUTION_GUIDE.md`
 7. `docs/handoff/CURRENT_HANDOFF.md`
 
-The competitive and ControlDeck validation plans are strategic overlays. Where older feature-order
-language conflicts, use their consolidated sequence while preserving existing architecture invariants.
+## Product boundary
 
-## Product target
+ExtendCodeAgent integrates with OpenCode through the OpenCode adapter/plugin/MCP boundary.
+ControlDeck independently owns any installation, launch, configuration, UI, job-management or intake
+mechanism used to make OpenCode/ExtendCodeAgent available in ControlDeck.
 
-OpenCode is the primary reference runtime and the only production-target runtime during the current
-phase. ControlDeck is the first user-facing integration and acceptance environment.
+ExtendCodeAgent MUST NOT add a ControlDeck-specific adapter, install protocol, discovery API,
+lifecycle manager, provider contract, configuration schema or UI integration.
 
-ExtendCodeAgent is positioned as:
+Describe the current product precisely as:
 
-> a host-neutral Project Intelligence and Verification Runtime with OpenCode as its primary reference
-> runtime and ControlDeck as its first end-to-end product host.
-
-Its differentiated value is:
-
-1. Project Truth — revision-aware Graph/Twin/provenance/freshness;
-2. Verification Intelligence — Impact/Test/Runtime/Traceability/Convergence;
-3. Task-aware Intelligence — minimum useful PI and progressive expansion;
-4. Weak-Local Efficiency — bounded structured evidence and cache-friendly delivery;
-5. Cross-agent Consistency — Project Truth across runtime-owned worktrees/tasks when those signals are
-   available.
-
-Do not implement a second generic agent harness, team runtime, scheduler, browser, shell/edit engine,
-sandbox, worktree/checkpoint engine, generic conversational memory or TUI.
+> a host-neutral Project Intelligence and Verification Runtime with OpenCode as its current reference
+> and production-target runtime; ControlDeck is a primary real-world evaluation platform.
 
 ## Mandatory evidence rule
 
-A capability is not adopted because source code exists or unit tests pass. Every new or materially
-changed capability MUST be evaluated using the harness/agent/LLM combinations needed to prove its
+A capability is not adopted because implementation or unit tests exist. Every new or materially
+changed capability MUST be evaluated with the OpenCode/agent/LLM combinations needed to prove its
 claimed benefit.
 
-The primary comparison path is ControlDeck -> OpenCode:
+Primary mode comparison:
 
-- native OpenCode / ExtendCodeAgent absent or disabled;
+- OpenCode native / ExtendCodeAgent absent or disabled;
 - `off`;
 - `shadow`;
 - `advisory`;
 - `active` when permitted.
 
-Model tiers are selected according to the feature:
+Run these mainly through ControlDeck for realistic workflows. When ControlDeck behavior could affect a
+metric, add a direct OpenCode control run. ControlDeck platform behavior must never be credited as an
+ExtendCodeAgent gain.
+
+Use model tiers according to the claim:
 
 - local-low;
 - local-practical;
 - host/default when applicable;
 - frontier when functioning/allowed.
 
-Repeated runs are mandatory for stochastic local models. A feature that benefits only one model tier
-may be retained only with an explicit model-scoped rollout.
-
-For orchestration-specific tests only, OpenCode+OMO and OpenCode+OMO+ExtendCodeAgent may be compared
-after the normal OpenCode baseline is stable. OMO is not a release dependency.
+Repeat stochastic local-model runs. A feature that benefits only one model tier may remain only with
+an explicit scoped rollout.
 
 ## Anti-overfit rule
 
-ControlDeck is the primary repository and integration target, but ControlDeck-only success is
-insufficient for `active-default` generic PI.
-
-- Keep a held-out ControlDeck task set outside tuning.
-- Run the first implementation/evaluation on real ControlDeck Python/TS/workflow/OpenCode tasks.
-- Before generic `active-default`, repeat a small accepted subset on at least one suitable held-out
-  repository using the same OpenCode runtime.
+- Use real ControlDeck tasks as the first rich corpus.
+- Reserve held-out ControlDeck tasks/prompts outside tuning.
+- Before generic `active-default`, repeat an accepted subset on a held-out repository using the same
+  OpenCode runtime.
+- Where platform influence is plausible, repeat a small direct OpenCode control outside ControlDeck.
 - Do not add another harness merely to prove generalization.
 
-ControlDeck headless runs may operate on managed/imported project copies. Record exact workspace
-identity, source/managed-copy relation, Git SHA and fingerprint. Never mix Twin/runtime evidence from
-different copies because content appears similar.
+Workspace/revision identity must remain explicit when ControlDeck or any other platform copies or
+manages a project. Never merge Twin/runtime evidence from different workspaces because content looks
+similar.
 
 ## Competitive decisions
 
-Adopt when measured useful:
+Adopt only when measured useful:
 
-- Atomic-style stable-prefix-aware PI delivery;
-- deterministic candidate reduction and bounded decision envelopes for weak models;
-- Project Evidence Memory with revision/provenance/invalidation;
+- stable-prefix-aware / bounded structured evidence for weak local models;
+- deterministic candidate reduction and decision envelopes;
+- Project Evidence Memory with provenance/revision/invalidation;
 - compact PI trace/replay without raw private reasoning transcripts;
-- stronger evidence-backed verification/completion;
+- stronger Verification Intelligence and evidence-backed completion;
 - runtime-observed worktree/subagent/task identity for future PI-aware parallel development.
 
 Delegate rather than reimplement:
 
-- generic multi-agent/team orchestration;
+- generic team/multi-agent orchestration;
 - background execution/scheduling;
 - browser/desktop automation;
 - shell/edit/patch;
@@ -104,57 +92,47 @@ Delegate rather than reimplement:
 - provider/model management;
 - generic session recovery;
 - worktree/checkpoint engines;
-- host UI.
+- host/platform UI and integration lifecycle.
 
 ## Immediate sequence
 
-1. Merge COMP-0 strategy documentation.
-2. Create `agent/release-validation-baseline` from synchronized `main`.
-3. Run local lint/typecheck/unit/integration/build before production changes.
-4. Record ControlDeck commit, ExtendCodeAgent commit, OpenCode version, model/provider profiles,
-   managed project/workspace identities and hardware/environment under `docs/evidence/final/`.
-5. Establish **ControlDeck -> OpenCode native** baseline before PI optimization.
-6. Revalidate plugin/MCP/edit/external-edit/restart/reconnect/off/shadow/advisory paths inside the
-   ControlDeck-hosted workflow where applicable.
-7. Reproduce frontier/provider failures with PI disabled first. Fix ControlDeck/OpenCode/provider
-   lifecycle/config issues before PI core changes.
-8. Build versioned ControlDeck real-task and held-out task sets. Compare required runtime/mode/model
-   combinations with objective tests/build/behavior evidence.
-9. Produce the RV-0 gap report. Attribute every failure to host, runtime, model/provider, PI adapter,
-   PI core, task selection, verification or performance before changing code.
-10. Run RA-0 only for OpenCode signals actually consumed by TA/verification. Keep OpenCode SDK/types in
-    the adapter.
-11. Implement TA-0 shadow planning; no task behavior change.
-12. Evaluate TA-0 task/capability selection on ControlDeck held-out prompts.
-13. Run WL-0 only if measured weak-local failures justify stable-prefix/structured-evidence changes.
-14. Implement TA-1 advisory selection using existing PI services.
-15. Run VI-0, consolidating confidence calibration, Test Intelligence and Convergence/completion
-    correctness. Add Verification Intelligence 2.0 features only for measured failures.
-16. Implement TA-2 bounded active only for accepted task/relation/model scopes.
-17. Implement TA-3 progressive expansion after repeated model-tier evidence.
-18. Implement Runtime Bridge or bounded DFG/Taint/CFG only after repeated ControlDeck tasks prove a
-    specific missing relation is the smallest fix.
-19. Run RV-FINAL with ControlDeck primary plus held-out repository confirmation. No new feature scope.
-20. Implement Project Evidence Memory/PI Trace as P1 after the baseline unless cross-session evidence
-    loss is shown to be a release blocker.
-21. Run optional OpenCode+OMO complementarity tests only for relevant orchestration claims.
-22. Run RA-3 second-harness proof only after the OpenCode production baseline. It proves portability;
-    it does not start broad adapter expansion.
-23. Run PI-aware parallel/worktree work only after a stable OpenCode/compatible runtime signal path is
-    demonstrated. Start advisory/detection-only, not automatic team control.
+1. Start RV-0 from synchronized `main` after this planning correction is merged.
+2. Run local lint/typecheck/unit/integration/build before production changes.
+3. Record ExtendCodeAgent commit, OpenCode version, model/provider profiles, repository/workspace
+   identity and hardware/runtime environment. Record ControlDeck commit only as evaluation-platform
+   metadata when used.
+4. Establish an OpenCode-native baseline before PI optimization, normally through ControlDeck plus a
+   direct OpenCode control where platform influence is plausible.
+5. Revalidate OpenCode adapter/plugin/MCP/edit/restart/reconnect/off/shadow/advisory paths.
+6. Reproduce frontier/provider failures with PI disabled first. Fix only OpenCode/ECA/model-provider
+   defects in ExtendCodeAgent; ControlDeck-only defects remain ControlDeck responsibility.
+7. Build versioned real-task and held-out task sets. Compare required runtime/mode/model combinations
+   with objective test/build/behavior evidence.
+8. Produce the RV-0 gap report and classify each failure as evaluation-platform, OpenCode runtime,
+   model/provider, PI adapter, PI core, task selection, verification or performance.
+9. RA-0: formalize only OpenCode signals consumed by Task-aware PI/Verification.
+10. TA-0: deterministic shadow planning only.
+11. WL-0: weak-local protocol only if measured failures justify it.
+12. TA-1: advisory automatic capability/context selection.
+13. VI-0: confidence, Test Intelligence and Convergence/completion quality; add 2.0 features only for
+    measured failures.
+14. TA-2: bounded active for accepted task/relation/model scopes.
+15. TA-3: progressive expansion after repeated evidence.
+16. Runtime Bridge or bounded DFG/Taint/CFG only when a repeated high-value OpenCode task proves the
+    missing relation is the smallest fix.
+17. RV-FINAL: OpenCode production baseline using ControlDeck as primary evaluation platform plus
+    held-out repository confirmation; no new feature scope.
+18. Project Evidence Memory/PI Trace remains P1 unless cross-session evidence loss is a release blocker.
+19. Optional OpenCode+OMO comparisons only for relevant orchestration claims.
+20. RA-3 second-harness proof only after the OpenCode production baseline.
+21. PI-aware parallel/worktree work only after a stable OpenCode-compatible runtime signal path is
+    demonstrated; start advisory/detection-only.
 
 ## Feature adoption states
-
-Use explicit rollout states:
 
 `experimental -> shadow -> advisory -> active-scoped -> active-default`
 
 or `deferred/rejected` when evidence does not justify cost.
-
-A capability advances only when real ControlDeck-hosted OpenCode evidence exists, the necessary
-model/agent combinations were tested, critical correctness did not regress, benefit is attributable to
-the capability, overhead is bounded, fallback/privacy semantics remain correct, and held-out tasks do
-not show critical overfit.
 
 ## Resume
 
@@ -169,5 +147,5 @@ tools/local/build
 git switch -c agent/release-validation-baseline
 ```
 
-Update `CURRENT_HANDOFF.md` after each major ControlDeck/OpenCode/model/controller evaluation so work
-can resume without conversation history.
+Update `CURRENT_HANDOFF.md` after each major OpenCode/model/controller evaluation. ControlDeck-specific
+integration decisions belong in ControlDeck, not in this repository.
