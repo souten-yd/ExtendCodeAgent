@@ -9,12 +9,13 @@ For Codex work in this repository, read and follow in this order:
 5. `docs/TEST_PORTFOLIO_INTELLIGENCE_AND_BROAD_EVALUATION_PLAN.md`
 6. `docs/COMPOSITIONAL_VERIFICATION_AND_EVIDENCE_REUSE_PLAN.md`
 7. `docs/FAILURE_DRIVEN_PI_REEVALUATION_PLAN.md`
-8. `docs/handoff/CURRENT_HANDOFF.md`
-9. the canonical plans referenced by those files.
+8. `docs/PI_VERIFICATION_OBSERVABILITY_INTEGRATED_DESIGN.md`
+9. `docs/handoff/CURRENT_HANDOFF.md`
+10. the canonical plans referenced by those files.
 
 Current responsibility: develop ExtendCodeAgent for OpenCode and evaluate/fix coexistence with OMO. Do not implement ControlDeck installation/UI/stack-management logic here.
 
-Preserve the host-neutral Project Intelligence core, keep OpenCode-specific behavior in its adapter, reuse existing components before adding new ones, and require real OpenCode/agent/LLM evidence before promoting a capability, capability depth, targeted-verification policy, Test Portfolio capability, compositional-evidence policy, failure-reevaluation policy, or an ECA+OMO version tuple.
+Preserve the host-neutral Project Intelligence core, keep OpenCode-specific behavior in its adapter, reuse existing components before adding new ones, and require real OpenCode/agent/LLM evidence before promoting a capability, capability depth, targeted-verification policy, Test Portfolio capability, compositional-evidence policy, failure-reevaluation policy, integrated verification capability, or an ECA+OMO version tuple.
 
 Strengthened PI capabilities must remain depth-configurable rather than permanently maximum-cost. Keep rollout authority (`off/shadow/advisory/active`) separate from per-capability execution depth, and use evaluation evidence to recommend/promote/demote levels.
 
@@ -27,3 +28,5 @@ GUI verification must prove the required **user-visible/runtime outcome**, not m
 For expensive verification, follow `docs/COMPOSITIONAL_VERIFICATION_AND_EVIDENCE_REUSE_PLAN.md`: evidence reuse is not a generic PASS cache. Reuse a prior segment only when its Evidence Dependency Closure, boundary pre/postconditions, runtime/config/environment assumptions, revision/workspace identity and freshness remain compatible. Model user-flow verification as a branching Evidence DAG rather than forcing a linear chain. Find the nearest trustworthy Verification Frontier, verify only residual invalidated/uncovered obligations, and compose fresh + reusable evidence conservatively. Preserve periodic/release full E2E calibration so hidden dependencies and composition misses remain discoverable.
 
 For unexpected verification failures, follow `docs/FAILURE_DRIVEN_PI_REEVALUATION_PLAN.md`. Treat FAIL as new revision-aware evidence, not automatic proof of production-code error or test obsolescence. Re-evaluate in this order by default: **Test Intent/specification consistency -> Oracle quality -> fixture/mock/helper freshness -> harness/environment/runtime validity -> Impact/Evidence Dependency Closure -> static/runtime reconciliation -> production implementation**. Failure alone must never justify deleting, weakening or obsoleting a test. Expand only the relevant PI capability/scope when current evidence is insufficient, and record `PI_MODEL_MISS` / `EVIDENCE_REUSE_MISS` as product calibration evidence.
+
+For the next verification refinements, follow `docs/PI_VERIFICATION_OBSERVABILITY_INTEGRATED_DESIGN.md`. Do not build standalone competing truth stores for Observability Gap, Environment Matrix, Verification Certificate, Nondeterminism, Evidence Diversity, Regression Knowledge, Performance Obligations, or Verification Debt. Project them from the same revision-aware Digital Twin / Project Graph / Impact / Test Intent / Runtime Evidence / Traceability / Convergence model. Missing observability is not automatically a missing test; environment verification must be impact-selected rather than Cartesian; certificates are auditable reason records rather than permanent proof; and Evidence Diversity must protect independent unit/contract/runtime/GUI/calibration value during test consolidation.
