@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "evaluation": "compositional-verification-v1",
+  "primary_correctness_metrics": [
+    "false_verified_rate",
+    "evidence_reuse_invalidation_recall",
+    "boundary_compatibility_error_rate",
+    "full_e2e_only_discovered_failures",
+    "escaped_regression_rate",
+    "stale_or_conflicting_evidence_reuse_rate"
+  ],
+  "primary_efficiency_metrics": [
+    "heavy_tests_avoided_per_task",
+    "full_e2e_executions_avoided",
+    "verification_wall_time_reduction",
+    "browser_process_time_reduction",
+    "evidence_analysis_overhead",
+    "time_to_verified",
+    "new_tests_avoided"
+  ],
+  "portfolio_metrics": [
+    "bridge_tests_generated",
+    "full_flow_tests_generated",
+    "calibration_e2e_retained",
+    "unique_obligation_coverage_retained",
+    "consolidation_recommendation_acceptance"
+  ],
+  "required_comparisons": [
+    "full_reference_verification",
+    "impact_test_selection_only",
+    "verification_obligation_without_reuse",
+    "compositional_verification",
+    "compositional_verification_validity_signal_ablation"
+  ],
+  "corpus_manifest": "docs/evaluation/test-portfolio-corpus-v1.json",
+  "gui_runtime_cases_required": true,
+  "held_out_required": true
+}
