@@ -2,39 +2,41 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/platform-evaluation-boundary`
+Current branch: `agent/opencode-equivalence-evaluation`
 Milestone: A-I implementation complete; evidence-driven Productization active
-Current task: merge the platform-boundary correction, then start RV-0
+Current task: merge the OpenCode-equivalence planning correction, then start RV-0
 
 ## Current source of truth
 
 Canonical strategic overlays:
 
 1. `docs/COMPETITIVE_ANALYSIS_AND_FEATURE_GAP_ROADMAP.md`
-2. `docs/CONTROLDECK_OPENCODE_VALIDATION_AND_ADOPTION_PLAN.md`
+2. `docs/OPENCODE_VALIDATION_AND_ADOPTION_PLAN.md`
 3. `docs/handoff/NEXT_TASK.md`
 
 Existing architecture/productization plans remain valid unless these overlays explicitly consolidate
 execution order.
 
-## Corrected product/platform decision
+## Corrected runtime decision
 
 - Architecture remains host-neutral.
 - **OpenCode is the only current production-target runtime.**
-- **ControlDeck is the primary evaluation platform, not an ExtendCodeAgent integration target.**
-- ExtendCodeAgent integrates with OpenCode only through its normal OpenCode adapter/plugin/MCP
-  boundary.
-- ControlDeck independently owns all ControlDeck-side intake/install/configuration/launch/UI/job
-  integration needed to expose OpenCode or ExtendCodeAgent.
-- ExtendCodeAgent MUST NOT add ControlDeck-specific APIs, adapters, lifecycle management, install
-  protocols or configuration formats.
+- Current ControlDeck usage is treated as **ordinary OpenCode usage** for ExtendCodeAgent purposes.
+- ControlDeck is not a separate harness, adapter target, runtime contract, or mandatory evaluation
+  dimension today.
+- ExtendCodeAgent integrates only with OpenCode through its normal adapter/plugin/MCP boundary.
+- Do not add ControlDeck-specific APIs, adapters, lifecycle management, install/discovery protocols,
+  configuration formats, UI contracts, or special PI behavior.
+- ControlDeck may remain a convenient place to run OpenCode, and its repository is a useful real-world
+  benchmark candidate, but neither is privileged in product acceptance.
 - Other harnesses remain research/reference sources and future portability targets, not current
   production dependencies.
 - OMO may be used for targeted OpenCode orchestration comparisons but is not a release dependency.
 
-The key distinction is:
+The key rule is:
 
-> OpenCode is the runtime/product target; ControlDeck is one real-world platform used to evaluate it.
+> Evaluate OpenCode + ExtendCodeAgent. Do not invent a separate ControlDeck runtime condition until a
+> future deep ControlDeck integration is measured to change relevant OpenCode semantics.
 
 ## Mandatory adoption evidence
 
@@ -51,25 +53,25 @@ OpenCode + ExtendCodeAgent advisory
 OpenCode + ExtendCodeAgent active (where permitted)
 ```
 
-Use ControlDeck for realistic end-to-end runs, but treat its behavior as experiment-environment
-behavior. Add direct OpenCode control runs whenever ControlDeck could materially influence the metric.
+ControlDeck-launched and terminal-launched OpenCode count as the same condition unless a measured
+semantic discrepancy is found.
 
 Use local-low, local-practical, host/default and functioning frontier tiers as relevant. Repeat
-stochastic local-model runs. Record exact OpenCode/ExtendCodeAgent/model/project identities; record
-ControlDeck version only as platform metadata when used.
+stochastic local-model runs. Record exact OpenCode/ExtendCodeAgent/model/repository/workspace
+identities and relevant hardware/runtime details.
 
 ## Anti-overfit and attribution
 
-- reserve held-out ControlDeck tasks/prompts;
-- use ControlDeck as the first rich real-task corpus;
-- before generic `active-default`, confirm a small subset on a held-out repository with the same
-  OpenCode runtime;
-- use direct OpenCode controls for metrics sensitive to platform lifecycle/provider/project handling;
-- do not credit ControlDeck/OpenCode/model improvements as PI gains;
-- classify failures as evaluation-platform, OpenCode runtime, model/provider, PI adapter, PI core,
-  task selection, verification or performance.
+- use multiple real repositories rather than treating ControlDeck as the sole acceptance project;
+- ControlDeck can remain one mixed Python/JS/TS real-world corpus;
+- reserve held-out tasks/prompts and at least one held-out repository outside tuning;
+- before generic `active-default`, confirm accepted behavior on held-out repository work;
+- do not credit OpenCode/model/provider improvements as PI gains;
+- classify failures as OpenCode runtime, model/provider, PI adapter, PI core, task selection,
+  verification or performance.
 
-Copied/managed project workspaces remain separate Twin/workspace identities unless explicitly related.
+Different repositories, worktrees and copied workspaces remain distinct Twin/workspace identities
+unless explicitly related.
 
 ## Competitive decisions
 
@@ -82,16 +84,15 @@ Adopt into PI only when measured useful:
 - stronger Verification Intelligence and evidence-backed completion;
 - runtime-observed worktree/subagent/task identity sufficient for future PI-aware parallel work.
 
-Explicitly do not duplicate runtime/platform-owned team orchestration, scheduler/background manager,
-browser, shell/edit engine, sandbox/permissions, provider/model management, generic session recovery,
-worktree/checkpoint engine, generic conversational memory, host UI or ControlDeck integration plumbing.
+Explicitly do not duplicate runtime-owned team orchestration, scheduler/background manager, browser,
+shell/edit engine, sandbox/permissions, provider/model management, generic session recovery,
+worktree/checkpoint engine, generic conversational memory or host UI.
 
 ## Updated execution sequence
 
-1. Merge this platform-boundary planning correction.
-2. RV-0 OpenCode baseline using ControlDeck as the primary evaluation platform.
-3. RV-1 blocking OpenCode/ECA/model-provider repair if measured. ControlDeck-only defects are not ECA
-   production scope.
+1. Merge this OpenCode-equivalence planning correction.
+2. RV-0 OpenCode baseline and measured multi-repository gap report.
+3. RV-1 blocking OpenCode/ECA/model-provider repair if measured.
 4. RA-0 minimum OpenCode runtime contract used by PI.
 5. TA-0 shadow Task-aware planner.
 6. WL-0 weak-local evidence protocol if evidence justifies it.
@@ -100,11 +101,20 @@ worktree/checkpoint engine, generic conversational memory, host UI or ControlDec
 9. TA-2 bounded active.
 10. TA-3 progressive expansion.
 11. conditional Runtime Bridge and bounded deep analysis.
-12. RV-FINAL OpenCode production baseline, ControlDeck primary plus held-out repository confirmation.
+12. RV-FINAL OpenCode production baseline across representative and held-out repositories.
 13. EM-0 Project Evidence Memory/PI Trace if not pulled earlier by measured need.
 14. optional OpenCode/OMO complementarity benchmark.
 15. RA-3 one second-harness portability proof.
 16. MA-0 PI-aware parallel/worktree intelligence after stable runtime identity signals are proven.
+
+## Future ControlDeck deep integration
+
+The user expects ControlDeck may integrate OpenCode more deeply later. That future possibility does
+not change today's ExtendCodeAgent plan.
+
+Only introduce a distinct `ControlDeck + OpenCode` evaluation condition after an implemented
+ControlDeck change is shown to alter relevant session/tool/context/model/workspace/verification or
+multi-agent semantics. Until then, treat it as OpenCode.
 
 ## Immediate next work after merge
 
@@ -122,14 +132,13 @@ git switch -c agent/release-validation-baseline
 RV-0 first records:
 
 - ExtendCodeAgent exact commit;
-- current OpenCode version and OpenCode integration mode;
+- current OpenCode version and integration mode;
 - model/provider tiers and availability;
 - repository/workspace identity and SHA/fingerprint;
 - hardware/runtime environment;
-- ControlDeck commit/version only when it is the evaluation platform;
 - OpenCode-native baseline before PI optimization.
 
-Then execute paired mode/model comparisons and produce `docs/evidence/final/baseline-gap-report.md`
-before production feature changes.
+Then execute paired mode/model comparisons across representative and held-out tasks and produce
+`docs/evidence/final/baseline-gap-report.md` before production feature changes.
 
 Rollback path: switch to synchronized `main`; this branch changes documentation only.
