@@ -1,92 +1,135 @@
 # Current Handoff
 
-Updated: 2026-08-14 (Asia/Tokyo)
+Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/productization-phase-closeout`
-Current PR: documentation-only productization closeout; not yet published
-Base commit: `a87d2fc6453c2f0d7bb9d1ccb8e48e16e2b7f1a7`
-Latest synchronized main: `a87d2fc6453c2f0d7bb9d1ccb8e48e16e2b7f1a7`
+Current branch: `agent/competitive-feature-gap-roadmap`
+Base: `main` at `d64c75d2707c93a25485d2582b506b176e0a95f5`
 Milestone: A-I implementation complete; evidence-driven Productization active
-Current task: merge this docs-only closeout, then start RV-0 Baseline Release Validation
-Status: PR #20 and PR #21 merged; Transparent Task-aware PI planned; RV-0 next
+Current task: merge the competitive/ControlDeck-first planning update, then start RV-0
 
 ## Current source of truth
 
-- PR #20 merged as `731f587d600d5a563a26231d801e248f5f176c32`.
-- PR #21 merged as `a87d2fc6453c2f0d7bb9d1ccb8e48e16e2b7f1a7`.
-- The active sequence is RV-0, blocking defect fixes, TA-0, TA-1, TA-2, TA-3, conditional
-  Runtime Bridge/deep analysis, TA-FINAL, then the production-capable decision.
-- No later stage may start before the preceding acceptance evidence passes.
-- Current installed and npm-stable OpenCode: `1.18.18` (checked 2026-08-14).
-- Known frontier result: `0/18` available; OpenCode `APIError`; diagnose native provider/auth/model
-  before changing the adapter or Project Intelligence Core.
-- Known local-low limitation: Qwen3 0.6B is stochastic; use repeated distributions.
+The strategy has been refined after comparing OpenCode + ExtendCodeAgent with Atomic Agent, Claude
+Code, Codex, Cline and OMO.
 
-Canonical execution order:
+New canonical overlays:
 
-1. `docs/PRODUCTIZATION_AND_MODEL_EVALUATION_PLAN.md`
-2. `docs/TRANSPARENT_PI_ORCHESTRATION_PLAN.md`
-3. `docs/CODEX_PRODUCTIZATION_EXECUTION_GUIDE.md`
-4. `docs/handoff/NEXT_TASK.md`
+1. `docs/COMPETITIVE_ANALYSIS_AND_FEATURE_GAP_ROADMAP.md`
+2. `docs/CONTROLDECK_OPENCODE_VALIDATION_AND_ADOPTION_PLAN.md`
+3. `docs/handoff/NEXT_TASK.md`
 
-## Exact baseline gates on synchronized main
+Existing architecture/productization plans remain valid unless the overlays explicitly consolidate
+feature order.
 
-- `tools/local/all-fast`: PASS; Ruff/format/strict mypy, Python 99 passed, adapter 9 passed.
-- `tools/local/test-integration`: PASS; Python 16 passed, adapter 9 passed.
-- `tools/local/build`: PASS; Python sdist/wheel and TypeScript build.
-- Two pre-existing untracked validation helpers are preserved and must not enter the docs-only PR:
-  `tools/local/release-validation-matrix` and `tools/local/release_validation_matrix.py`.
+## Product decision
 
-## Current environment/model continuity
+- Architecture remains host-neutral.
+- **OpenCode is the only current production-target runtime.**
+- **ControlDeck's existing OpenCode feature is the primary end-to-end validation host.**
+- Other harnesses are research/reference sources and future adapter targets, not current production
+  dependencies.
+- OMO may be used later for targeted OpenCode orchestration comparisons but is not a release dependency.
+- A second independent harness is deferred until after an OpenCode production-capable baseline.
 
-- OpenCode: installed `1.18.18`; npm stable `1.18.18`.
-- Local-low continuity: Ollama Qwen3 0.6B; repeated behavior is stochastic.
-- Local-practical continuity: Ollama Qwen 3.6 27B Q5.
-- Host continuity: OpenCode `opencode/big-pickle` from the PR-G evidence; RV-0 must discover and
-  record the current default rather than assume it is unchanged.
-- Frontier continuity: `llama/llama-3.3-70b-instruct` returned OpenCode `APIError` in all 18 prior
-  attempts. RV-0 starts with PI completely off and a native minimal provider smoke.
-- Exact current OpenCode configuration, endpoint availability, context sizes, privacy profiles,
-  repository commits, CPU/RAM/GPU, and process lifecycle evidence remain RV-0 work.
+This focus must not leak OpenCode/ControlDeck types into Project Intelligence core contracts.
 
-## RV-0 scope and required outputs
+## Competitive decisions
 
-RV-0 is validation-first and adds no production feature by default. It must revalidate plugin load,
-automatic sidecar lifecycle, MCP/tool calls, edits and refresh, restart/reopen/reconnect, all rollout
-modes, native fallback, and current model tiers across fixed repositories and repeated versioned
-tasks. Failures receive one required primary classification and are ranked by frequency, severity,
-and user value.
+Adopt into PI only when measured useful:
 
-Required outputs under `docs/evidence/final/`:
+- stable-prefix-aware / bounded structured evidence for weak local models;
+- deterministic candidate reduction and decision envelopes;
+- Project Evidence Memory with provenance/revision/invalidation;
+- compact append-only PI trace/replay;
+- stronger Verification Intelligence and evidence-backed completion;
+- runtime-observed worktree/subagent/task identity sufficient for future PI-aware parallel work.
 
-- `environment.md`
-- `baseline-gap-report.md`
-- `model-matrix.json`
-- `task-results.json`
-- `opencode-integration.json`
-- `performance.json`
+Explicitly do not duplicate runtime-owned team orchestration, scheduler/background manager, browser,
+shell/edit engine, sandbox/permissions, provider/model management, generic session recovery,
+worktree/checkpoint engine, generic conversational memory or host UI.
 
-Blocking defects may be fixed only after measured failure, root cause, insufficiency of existing
-configuration/capability, minimal change, retest, and before/after evidence. TA-0 cannot start until
-RV-0 and blocking defect acceptance are complete.
+## Mandatory adoption evidence
 
-## Next exact commands
+A feature is not adopted because it is implemented or unit-tested. It must be exercised with the
+harness/agent/LLM combinations necessary to prove the claimed effect.
+
+Primary comparison:
+
+```text
+ControlDeck -> OpenCode native
+ControlDeck -> OpenCode + ExtendCodeAgent off
+ControlDeck -> OpenCode + ExtendCodeAgent shadow
+ControlDeck -> OpenCode + ExtendCodeAgent advisory
+ControlDeck -> OpenCode + ExtendCodeAgent active (only where permitted)
+```
+
+Use local-low, local-practical, host/default and functioning frontier tiers as relevant to the claim.
+Repeat stochastic local-model runs. Record exact ControlDeck/ExtendCodeAgent/OpenCode/model/project
+versions for accepted evidence.
+
+For orchestration-specific questions only, later compare OpenCode+OMO against
+OpenCode+OMO+ExtendCodeAgent on identical tasks.
+
+## Anti-overfit rule
+
+ControlDeck is the primary repository and host, but generic PI cannot reach `active-default` solely
+from tuning-set success on ControlDeck.
+
+- reserve held-out ControlDeck tasks/prompts;
+- run real ControlDeck Python/TypeScript/workflow/OpenCode tasks first;
+- before generic active-default, confirm a small accepted subset on at least one suitable held-out
+  repository using the same OpenCode runtime;
+- do not add a second harness merely to prove generalization.
+
+ControlDeck may run on managed/imported project copies. PI workspace identity, source relation, Git SHA
+and fingerprint must be explicit. Evidence from different copies must not be silently merged.
+
+## Updated execution sequence
+
+1. COMP-0 planning update (this branch).
+2. RV-0 ControlDeck-first OpenCode baseline and gap report.
+3. RV-1 blocking ControlDeck/OpenCode/provider/lifecycle repair if measured.
+4. RA-0 minimum OpenCode runtime contract used by PI.
+5. TA-0 shadow Task-aware planner.
+6. WL-0 weak-local evidence protocol if RV/TA evidence justifies it.
+7. TA-1 advisory automatic capability/context selection.
+8. VI-0 consolidated confidence/Test Intelligence/Convergence quality work.
+9. TA-2 bounded active.
+10. TA-3 progressive expansion.
+11. conditional Runtime Bridge and bounded deep analysis.
+12. RV-FINAL OpenCode production baseline with ControlDeck primary plus held-out repo confirmation.
+13. EM-0 Project Evidence Memory/PI Trace if not pulled earlier by measured need.
+14. optional OpenCode/OMO complementarity benchmark.
+15. RA-3 one second-harness portability proof.
+16. MA-0 PI-aware parallel/worktree intelligence after stable runtime identity signals are proven.
+
+No later feature is accepted merely because it appears on this roadmap. Each advancement follows the
+adoption gates in the ControlDeck validation plan.
+
+## Immediate next work after merge
 
 ```bash
 cd /home/souten/ExtendCodeAgent
-git status --short
-git diff --check
-tools/local/all-fast
-# publish and merge the docs-only PR, then:
 git switch main
 git pull --ff-only origin main
 git status --short
-git rev-parse HEAD
+tools/local/all-fast
+tools/local/test-integration
+tools/local/build
 git switch -c agent/release-validation-baseline
 ```
 
-After creating the RV-0 branch, first write `docs/evidence/final/environment.md`; do not import the
-pre-existing untracked validation helpers until their provenance, scope, and correctness have been
-reviewed against the new RV-0 requirements.
+RV-0 first records:
 
-Rollback path: switch to synchronized `main`. The docs-only branch changes no production code.
+- ControlDeck exact commit and OpenCode integration mode;
+- ExtendCodeAgent exact commit;
+- current OpenCode version;
+- model/provider tiers and availability;
+- managed project/workspace identity and repository SHA/fingerprint;
+- hardware/runtime environment;
+- native OpenCode baseline before PI optimization.
+
+Then build versioned ControlDeck tuning and held-out tasks, execute paired mode/model comparisons, and
+produce `docs/evidence/final/baseline-gap-report.md` before production feature changes.
+
+Rollback path: switch to synchronized `main`; this planning branch changes documentation only.
