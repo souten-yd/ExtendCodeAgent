@@ -1,36 +1,60 @@
 # Next Task
 
-Close the post-PR-#20/#21 documentation drift, then start the evidence-driven productization
-baseline and implement transparent task-aware PI only in measured, accepted stages.
+Start the evidence-driven productization baseline, then formalize the minimum runtime-adapter
+contract required by transparent task-aware PI before implementing automatic behavior.
 
 Canonical execution documents:
 
 1. `docs/PRODUCTIZATION_AND_MODEL_EVALUATION_PLAN.md`
 2. `docs/TRANSPARENT_PI_ORCHESTRATION_PLAN.md`
-3. `docs/CODEX_PRODUCTIZATION_EXECUTION_GUIDE.md`
-4. `docs/handoff/CURRENT_HANDOFF.md`
-5. existing implementation/evidence only as needed for the active slice.
+3. `docs/RUNTIME_ADAPTER_ARCHITECTURE_PLAN.md`
+4. `docs/CODEX_PRODUCTIZATION_EXECUTION_GUIDE.md`
+5. `docs/handoff/CURRENT_HANDOFF.md`
+6. existing implementation/evidence only as needed for the active slice.
+
+## Architectural product target
+
+OpenCode is the **primary reference runtime and first native adapter**, not the architectural core of
+ExtendCodeAgent. Project Intelligence, Task-aware orchestration, Context/Impact/Verification,
+Runtime Evidence, Model Routing, Strategy and Convergence remain host-neutral.
+
+Do not build a new generic agent harness. Reuse each runtime's agent loop, tools, shell, permissions,
+session and UI. Cross-runtime integration occurs through a small capability-negotiated Runtime
+Adapter Contract plus MCP as a compatibility floor.
+
+Before a second harness is proven, describe the project precisely as:
+
+> a host-neutral Intelligence Layer with OpenCode as its primary reference runtime.
+
+Do not claim multi-harness production support before it is tested.
 
 ## Immediate sequence
 
-1. Merge the docs-only productization closeout from `agent/productization-phase-closeout`.
-2. Fast-forward `main` and create `agent/release-validation-baseline`.
-3. Run current local lint/typecheck/unit/integration/build before changing production code.
-4. Record exact environment, current OpenCode stable version, repository SHAs, local model profiles,
+1. Fast-forward `main` and create `agent/release-validation-baseline`.
+2. Run current local lint/typecheck/unit/integration/build before changing production code.
+3. Record exact environment, current OpenCode stable version, repository SHAs, local model profiles,
    host/default model, and frontier availability under `docs/evidence/final/`.
-5. Re-run real OpenCode plugin/MCP/edit/external-edit/restart/reconnect/off/shadow/advisory behavior
+4. Re-run real OpenCode plugin/MCP/edit/external-edit/restart/reconnect/off/shadow/advisory behavior
    before optimizing it.
-6. Reproduce and repair the frontier path in this order: native OpenCode provider smoke, provider/auth
+5. Reproduce and repair the frontier path in this order: native OpenCode provider smoke, provider/auth
    classification, then ExtendCodeAgent adapter only if native succeeds.
-7. Build a versioned real-task benchmark set and compare native/off/advisory/active across weak-local,
+6. Build a versioned real-task benchmark set and compare native/off/advisory/active across weak-local,
    practical-local, host/default, and a functioning frontier path. Repeat weak/local runs; do not use
    one lucky run as acceptance evidence.
-8. Produce `docs/evidence/final/baseline-gap-report.md` ranking failures by frequency, severity, and
+7. Produce `docs/evidence/final/baseline-gap-report.md` ranking failures by frequency, severity, and
    user value. Classify each failure as model/provider/context/graph/runtime/test/routing/task-selection/
    OpenCode-adapter/lifecycle/config/performance.
-9. Fix blocking OpenCode/frontier/lifecycle defects before adding transparent orchestration.
+8. Fix blocking OpenCode/frontier/lifecycle defects before transparent orchestration.
+9. Run **RA-0 Minimal Runtime Contract** before TA-0 production behavior:
+   - inventory exactly which runtime signals TA-0/TA-1 need;
+   - reuse existing host-neutral contracts first;
+   - add only missing RuntimeCapabilities/observation/delivery contracts;
+   - keep OpenCode-specific SDK/types inside `adapters/opencode`;
+   - map unsupported hooks to explicit unavailable/degraded capabilities;
+   - add architecture/conformance tests;
+   - do not add a second harness and do not change user-visible behavior.
 10. Implement `TA-0` on `agent/task-aware-shadow`: deterministic task signals/classification,
-   `IntelligencePlan`, reasons and telemetry only. It MUST NOT alter context/model/test behavior.
+    `IntelligencePlan`, reasons and telemetry only. It MUST NOT alter context/model/test behavior.
 11. Evaluate TA-0 against curated expected plans and the current manual/advisory baseline. Measure
     intent accuracy, capability precision/recall, under/over-selection, planner latency and unnecessary
     deep-analysis selection.
@@ -46,8 +70,26 @@ Canonical execution documents:
     relation is the root cause and deep analysis is the smallest measured fix.
 17. Finish with `TA-FINAL`/integration-only final Release Validation. Compare transparent auto against
     both native OpenCode and manual/advisory PI across repositories and model tiers.
-18. Do not make transparent automation a default candidate while critical under-selection, false
-    completion, frontier/provider, privacy, or native-fallback gates remain unresolved.
+18. Run **RA-1 OpenCode adapter conformance** and **RA-2 MCP compatibility conformance** as part of or
+    immediately after the production baseline. Capability declarations, observations, delivery,
+    privacy, lifecycle and fallback semantics must be truthful and reproducible.
+19. After the OpenCode production-capable baseline, run **RA-3 Second-Harness Proof** using exactly one
+    additional runtime selected by API stability/accessibility/user value. The purpose is to prove the
+    architecture, not to start broad platform expansion. Project Model/Impact/Context/Verification/
+    Task Controller must not be rewritten for the second runtime.
+20. Do not add further runtime adapters until RA-3 evidence shows the generic contract is stable and
+    there is demonstrated user value.
+
+## Runtime integration tiers
+
+Treat runtime support as capability-based, not all-or-nothing:
+
+1. **Tier 1 MCP/explicit tools** — PI queries are reachable; no claim of transparent automation.
+2. **Tier 2 Native adapter** — host observations/tool/context integration are normalized.
+3. **Tier 3 Transparent integration** — sufficient trusted signals/delivery exist for Task-aware PI.
+
+The controller must downgrade honestly when runtime capabilities are missing. MCP-only compatibility
+is not equivalent to a full runtime adapter.
 
 ## Transparent PI product target
 
@@ -72,9 +114,10 @@ Use counterfactual/ablation checks on disputed high-value tasks.
 ## Frozen by default
 
 Do not implement repository-wide CFG/DFG, persistent full UI graphs, universal Blueprint/Strategy,
-automatic Research, or deferred graph types merely to complete the historical roadmap.
+automatic Research, a new independent agent harness, or multiple runtime adapters merely to complete
+an architectural roadmap.
 
-Deep capabilities stay on-demand and evidence-gated.
+Deep capabilities and additional runtimes stay evidence-gated.
 
 ## Resume
 
@@ -86,12 +129,9 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/productization-phase-closeout
-# after the docs-only PR is merged:
-git switch main
-git pull --ff-only origin main
 git switch -c agent/release-validation-baseline
 ```
 
 Update `CURRENT_HANDOFF.md` before substantial code changes and after every major model/OpenCode/
-controller evaluation so another account/agent can resume without conversation history.
+controller/runtime-adapter evaluation so another account/agent can resume without conversation
+history.
