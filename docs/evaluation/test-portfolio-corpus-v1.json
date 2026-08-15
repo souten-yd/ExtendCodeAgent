@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "corpus_id": "test-portfolio-v1",
+  "created_at": "2026-08-16",
+  "policy": {
+    "design": "4+1 rotating held-out",
+    "initial_held_out": "react-hook-form",
+    "pin_policy": "Never move a pin inside this corpus version. Upstream refresh creates a new corpus version.",
+    "third_party_source_storage": "Clone locally into ignored/disposable evaluation roots; do not vendor into ExtendCodeAgent."
+  },
+  "repositories": [
+    {
+      "id": "flask",
+      "repository": "pallets/flask",
+      "ref": "2a8a38b051fc248865730bf3511bf2e2ea325e81",
+      "language_profile": ["python"],
+      "domain": "web-framework",
+      "test_profile": ["pytest", "typing", "multi-environment"],
+      "role": "tuning-reference"
+    },
+    {
+      "id": "httpx",
+      "repository": "encode/httpx",
+      "ref": "b5addb64f0161ff6bfe94c124ef76f6a1fba5254",
+      "language_profile": ["python"],
+      "domain": "sync-async-http-client",
+      "test_profile": ["pytest", "async", "network-sensitive"],
+      "role": "tuning-reference"
+    },
+    {
+      "id": "express",
+      "repository": "expressjs/express",
+      "ref": "a3714473feb3d2908add734d340e7755fd85e0a3",
+      "language_profile": ["javascript"],
+      "domain": "web-framework",
+      "test_profile": ["mocha", "supertest", "acceptance"],
+      "role": "tuning-reference"
+    },
+    {
+      "id": "vite",
+      "repository": "vitejs/vite",
+      "ref": "dcf88bd2ad2b1a8845f9029587cc8c825e382d42",
+      "language_profile": ["typescript", "javascript"],
+      "domain": "build-tool-dev-server-monorepo",
+      "test_profile": ["vitest-unit", "serve-e2e", "build-e2e", "typecheck", "build"],
+      "role": "tuning-reference"
+    },
+    {
+      "id": "react-hook-form",
+      "repository": "react-hook-form/react-hook-form",
+      "ref": "9b7af71b4d25da143fd2522c40d20466c7433f00",
+      "language_profile": ["typescript", "react"],
+      "domain": "ui-form-library",
+      "test_profile": ["jest-jsdom", "type-tests", "playwright-e2e", "build-api"],
+      "role": "held-out"
+    }
+  ]
+}
