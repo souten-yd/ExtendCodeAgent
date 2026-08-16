@@ -24,8 +24,13 @@ export function createTools(request: Requester): Record<string, ToolDefinition> 
       },
     }),
     pi_symbol: tool({
-      description: "Find bounded project symbols by name or canonical reference.",
-      args: { query: z.string().min(1) },
+      description:
+        "Find task-ready definition, export, caller, and test paths for a project symbol. " +
+        "Use detail only when raw graph facts are required.",
+      args: {
+        query: z.string().min(1),
+        view: z.enum(["compact", "detail"]).default("compact"),
+      },
       async execute(args) {
         return jsonResult(await request("symbol", args))
       },
@@ -52,20 +57,27 @@ export function createTools(request: Requester): Record<string, ToolDefinition> 
       },
     }),
     pi_impact: tool({
-      description: "Assess direct/transitive project impact with confidence and explanations.",
+      description:
+        "Assess task-ready definition, production use, focused test, and uncertainty facts. " +
+        "Use detail only for full explanation paths.",
       args: {
         changed_refs: refs,
         min_confidence: z.number().min(0).max(1).optional(),
         max_depth: z.number().int().min(0).optional(),
         include_historical: z.boolean().optional(),
+        view: z.enum(["compact", "detail"]).default("compact"),
       },
       async execute(args) {
         return jsonResult(await request("impact", args))
       },
     }),
     pi_tests: tool({
-      description: "Recommend graph-linked tests for changed project references.",
-      args: { changed_refs: refs },
+      description:
+        "Recommend task-ready tests and explicitly report incomplete obligation coverage.",
+      args: {
+        changed_refs: refs,
+        view: z.enum(["compact", "detail"]).default("compact"),
+      },
       async execute(args) {
         return jsonResult(await request("tests", args))
       },

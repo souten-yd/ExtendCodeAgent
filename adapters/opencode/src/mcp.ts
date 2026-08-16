@@ -38,8 +38,11 @@ server.registerTool(
 server.registerTool(
   "pi_symbol",
   {
-    description: "Find bounded project symbols.",
-    inputSchema: { query: z.string().min(1) },
+    description: "Find task-ready symbol context or detailed graph facts.",
+    inputSchema: {
+      query: z.string().min(1),
+      view: z.enum(["compact", "detail"]).default("compact"),
+    },
   },
   async (args) => result(await client.request("symbol", args)),
 )
@@ -75,6 +78,7 @@ server.registerTool(
       min_confidence: z.number().min(0).max(1).optional(),
       max_depth: z.number().int().min(0).optional(),
       include_historical: z.boolean().optional(),
+      view: z.enum(["compact", "detail"]).default("compact"),
     },
   },
   async (args) => result(await client.request("impact", args)),
@@ -82,8 +86,11 @@ server.registerTool(
 server.registerTool(
   "pi_tests",
   {
-    description: "Recommend graph-linked tests for changed references.",
-    inputSchema: { changed_refs: z.array(z.string()).min(1) },
+    description: "Recommend task-ready tests and expose incomplete obligation coverage.",
+    inputSchema: {
+      changed_refs: z.array(z.string()).min(1),
+      view: z.enum(["compact", "detail"]).default("compact"),
+    },
   },
   async (args) => result(await client.request("tests", args)),
 )

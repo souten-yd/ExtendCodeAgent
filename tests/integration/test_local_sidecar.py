@@ -91,6 +91,17 @@ def test_sidecar_round_trip_and_interface_rejection(tmp_path: Path) -> None:
         assert all(isinstance(value, int | float) and value >= 0 for value in timing.values())
         assert timing["cold_twin_build_ms"] > 0
         assert timing["snapshot_load_ms"] > 0
+        compact = _request(
+            server,
+            "secret",
+            {
+                "interface": INTERFACE_VERSION,
+                "operation": "symbol",
+                "params": {"query": "leaf", "view": "compact"},
+            },
+        )
+        assert compact["result"]["definition"] == ["service.py"]
+        assert compact["result"]["coverage_complete"] is False
         with pytest.raises(urllib.error.HTTPError) as wrong_version:
             _request(
                 server,

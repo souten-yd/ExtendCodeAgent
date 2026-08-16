@@ -218,16 +218,25 @@ class ProjectIntelligenceApplication:
             "diagnostics": [item.code for item in result.diagnostics],
         }
 
-    def symbol(self, query: str) -> dict[str, Any]:
+    def symbol(self, query: str, *, view: str = "detail") -> dict[str, Any]:
         snapshot = self._explicit_snapshot(CapabilityName.SEMANTIC)
         lowered = query.casefold()
-        items = [
-            _node_json(node)
+        matches = [
+            node
             for node in snapshot.nodes
             if lowered in node.canonical_ref.value.casefold()
             or lowered in str(node.properties.get("name", "")).casefold()
         ][: self.max_items]
-        return _result(snapshot, depth=self.policy.depth(CapabilityName.SEMANTIC), items=items)
+        if view == "compact":
+            return self._compact_symbol(snapshot, matches)
+        if view != "detail":
+            raise ValueError("view must be compact or detail")
+        return _result(
+            snapshot,
+            depth=self.policy.depth(CapabilityName.SEMANTIC),
+            view=view,
+            items=[_node_json(node) for node in matches],
+        )
 
     def references(self, canonical_ref: str) -> dict[str, Any]:
         snapshot = self._explicit_snapshot(CapabilityName.SEMANTIC)
@@ -277,6 +286,7 @@ class ProjectIntelligenceApplication:
         min_confidence: float = 0.0,
         max_depth: int | None = None,
         include_historical: bool = False,
+        view: str = "detail",
     ) -> dict[str, Any]:
         snapshot = self._explicit_snapshot(CapabilityName.IMPACT)
         report = self._impact_report(
@@ -286,9 +296,14 @@ class ProjectIntelligenceApplication:
             max_depth=max_depth,
             include_historical=include_historical,
         )
+        if view == "compact":
+            return self._compact_impact(snapshot, changed_refs, report)
+        if view != "detail":
+            raise ValueError("view must be compact or detail")
         return _result(
             snapshot,
             depth=self.policy.depth(CapabilityName.IMPACT),
+            view=view,
             direct=[_impact_json(item) for item in report.direct_impacts],
             transitive=[_impact_json(item) for item in report.transitive_impacts],
             requirements=[_impact_json(item) for item in report.affected_requirements],
@@ -300,7 +315,7 @@ class ProjectIntelligenceApplication:
             diagnostics=[item.code for item in report.diagnostics],
         )
 
-    def tests(self, changed_refs: tuple[str, ...]) -> dict[str, Any]:
+    def tests(self, changed_refs: tuple[str, ...], *, view: str = "detail") -> dict[str, Any]:
         snapshot = self._explicit_snapshot(CapabilityName.TEST_SELECTION)
         report = self._impact_report(
             snapshot, changed_refs, capability=CapabilityName.TEST_SELECTION
@@ -340,13 +355,122 @@ class ProjectIntelligenceApplication:
             if current_revision and obsolescence
             else []
         )
+        if view == "compact":
+            return _result(
+                snapshot,
+                depth=self.policy.depth(CapabilityName.TEST_SELECTION),
+                view=view,
+                selected_tests=sorted({item.source_ref for item in selection.candidates}),
+                candidate_refs=sorted({item.canonical_ref.value for item in selection.candidates}),
+                coverage_complete=False,
+                uncovered_obligations=[
+                    "structural/architecture coverage is not represented by call relations"
+                ],
+                fallback_search_required=True,
+                fallback=selection.fallback,
+                diagnostics=list(selection.diagnostics),
+            )
+        if view != "detail":
+            raise ValueError("view must be compact or detail")
         return _result(
             snapshot,
             depth=self.policy.depth(CapabilityName.TEST_SELECTION),
+            view=view,
             items=[_impact_json(item) for item in report.recommended_tests],
             fallback=selection.fallback,
             health=health,
             diagnostics=list(selection.diagnostics),
+        )
+
+    def _compact_symbol(self, snapshot: GraphSnapshot, matches: list[Any]) -> dict[str, Any]:
+        definitions = [
+            node
+            for node in matches
+            if node.node_type
+            not in {"repository", "directory", "file", "module", "package", "dependency", "test"}
+        ] or matches
+        refs = tuple(node.canonical_ref.value for node in definitions)
+        analysis = self._analysis_service(snapshot)
+        report = (
+            analysis.assess_impact(
+                ImpactQuery(
+                    refs,
+                    min_inferred_confidence=self.policy.min_inferred_confidence(
+                        CapabilityName.SEMANTIC
+                    ),
+                    max_depth=self.max_depth,
+                )
+            )
+            if refs
+            else None
+        )
+        exports = sorted(
+            {
+                edge.source_ref
+                for ref in refs
+                for edge in analysis.reverse.get(ref, ())
+                if edge.edge_type == "imports" and Path(edge.source_ref).name == "__init__.py"
+            }
+        )
+        direct_production = sorted(
+            {
+                item.source_ref
+                for item in (report.direct_impacts if report is not None else ())
+                if item.item_type in {"function", "method", "api_route", "handler"}
+            }
+        )
+        source_production = [path for path in direct_production if path.startswith("src/")]
+        production_callers = source_production or direct_production
+        tests = sorted(
+            {item.source_ref for item in report.recommended_tests} if report is not None else set()
+        )
+        return _result(
+            snapshot,
+            depth=self.policy.depth(CapabilityName.SEMANTIC),
+            view="compact",
+            symbols=list(refs),
+            definition=sorted({node.source_ref for node in definitions}),
+            exports=exports,
+            production_callers=production_callers,
+            tests=tests,
+            coverage_complete=False,
+            unresolved=["structural/architecture tests may not be represented by call relations"],
+        )
+
+    def _compact_impact(
+        self, snapshot: GraphSnapshot, changed_refs: tuple[str, ...], report: Any
+    ) -> dict[str, Any]:
+        nodes = {node.canonical_ref.value: node for node in snapshot.nodes}
+        production = tuple(
+            item
+            for item in report.direct_impacts
+            if item.item_type in {"function", "method", "api_route", "handler"}
+        )
+        candidate_tests = sorted({item.source_ref for item in report.recommended_tests})
+        return _result(
+            snapshot,
+            depth=self.policy.depth(CapabilityName.IMPACT),
+            view="compact",
+            changed_refs=list(changed_refs),
+            definition=sorted({nodes[ref].source_ref for ref in changed_refs if ref in nodes}),
+            production_methods=sorted(
+                {
+                    str(nodes[item.canonical_ref].properties.get("qualname", item.canonical_ref))
+                    for item in production
+                    if item.canonical_ref in nodes
+                }
+            ),
+            direct_use_count=len(production),
+            affected_symbols=[
+                item.canonical_ref for item in (*report.direct_impacts, *report.transitive_impacts)
+            ],
+            focused_tests=_focused_test_paths(changed_refs, nodes, candidate_tests),
+            candidate_tests=candidate_tests,
+            uncertainty=sorted({item.canonical_ref for item in report.uncertainty}),
+            coverage_complete=False,
+            unresolved=[
+                "dynamic, structural, or repeated source-level uses may require native confirmation"
+            ],
         )
 
     def source_revision(self) -> str:
@@ -704,6 +828,32 @@ def _path_json(item: Any) -> dict[str, Any]:
         "contains_inferred": item.contains_inferred,
         "explanation": item.explanation,
     }
+
+
+def _focused_test_paths(
+    changed_refs: tuple[str, ...], nodes: dict[str, Any], candidate_tests: list[str]
+) -> list[str]:
+    generic = {"src", "lib", "app", "service", "index", "main", "py", "extendcodeagent"}
+    source_tokens = {
+        token
+        for ref in changed_refs
+        if ref in nodes
+        for part in Path(nodes[ref].source_ref).parts
+        for token in Path(part).stem.casefold().split("_")
+        if token and token not in generic
+    }
+    focused = [
+        path
+        for path in candidate_tests
+        if source_tokens
+        & {
+            token
+            for part in Path(path).parts
+            for token in Path(part).stem.casefold().split("_")
+            if token
+        }
+    ]
+    return focused or candidate_tests
 
 
 def _health_json(item: Any) -> dict[str, Any]:

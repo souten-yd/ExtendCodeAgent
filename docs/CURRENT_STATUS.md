@@ -149,6 +149,13 @@ snapshot load 149.969ms, query 6.191ms, serialization 0.043ms and post-PI agent/
 23,066ms; adjacency was unused. The FAIL was classified `RETRIEVAL_MISSING`. This one-cell smoke is
 instrumentation evidence only and does not explain the earlier timeout or authorize broader runs.
 
+B1 compact projection is now implemented for the existing `pi_symbol`, `pi_impact` and `pi_tests`
+routes without adding tools. OpenCode defaults to compact while direct application callers retain
+the detailed view. A clean-workspace deterministic query returns the exact symbol definition,
+public export, production source caller and two existing tests for `select_tests`; compact impact
+separates focused tests from the wider candidate set and keeps `coverage_complete=false` plus an
+explicit unresolved boundary. This is projection evidence only pending the sealed pilot rerun.
+
 The bootstrap blocker has a bounded B1 repair at exact head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`. A matching current-edge identity index and schema-5
 migration reduce exact-pin three-run cold medians to 15,825ms for KasaneCore and 6,368ms for PEDS;

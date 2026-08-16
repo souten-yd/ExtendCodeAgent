@@ -53,6 +53,13 @@ Current task: prove real PI activation and repair missing capability routes befo
   6.191ms, serialization 0.043ms and post-PI residual 23,066ms. Symbol does not build adjacency, so
   that segment was 0ms. This proves the trace path only; it is one FAIL classified
   `RETRIEVAL_MISSING`, not effect/performance acceptance evidence.
+- B1 compact views are added to the existing symbol/impact/tests routes; OpenCode plugin and MCP
+  default them to `compact`, while `view=detail` preserves prior graph-rich responses. On the clean
+  ECA task workspace, symbol compact returns the exact `select_tests` definition, export, production
+  source caller and two test paths. Impact compact returns the exact three production methods and
+  narrows focused tests to `tests/unit/test_graph_analysis.py`, while retaining all candidates and
+  `coverage_complete=false`. Do not rerun the pilot until structural obligation coverage and source
+  use counts are repaired.
 - Comprehensive B0a execution now requires passing same-exact-head activation and pilot reports. Current
   deterministic reachability audit blocks it because `blueprint`, `convergence`, `traceability` and
   `strategy` have no OpenCode tool/task route. Next: finish focused/full gates, publish this guard,

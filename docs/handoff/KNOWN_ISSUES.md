@@ -174,6 +174,11 @@
 - Exact-answer misses are not treated as one failure class. Required fact recall, schema validity
   and final exact pass distinguish retrieval gaps from task-schema projection and downstream agent
   reasoning. The exact oracle is not weakened.
+- Compact projection now fixes the symbol entity-context shape on the clean ECA task workspace. It
+  intentionally remains incomplete for `_edge_meets_confidence`: graph callers deduplicate four
+  source occurrences to three methods, and AST-scanning architecture coverage has no call edge.
+  The response says `coverage_complete=false`; source-use multiplicity and structural coverage are
+  the next repair, not a reason to claim the compact view is complete.
 
 - The old 306-cell baseline began without an observed-PI activation precondition. It stopped at 137
   cells; pure `native` results measure OpenCode/model behavior, not PI effect, and will not be reused
