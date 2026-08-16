@@ -164,6 +164,13 @@ the exact 3 production methods, 4 source uses and 2 focused tests; required-veri
 returns exactly the unit, integration and architecture files with all three bounded obligations
 covered. This is task-grounded repair evidence, not general TestIntent completeness.
 
+A revision-scoped sidecar cache now reuses the immutable `GraphSnapshot`, exact-name symbol index and
+`GraphAnalysisService` adjacency indexes, while checking the cheap current revision and invalidating
+after every Twin open/refresh. On the clean ECA task workspace after one cold symbol query, cached
+snapshot loads measured 0.045/0.018/0.016ms for impact/tests/symbol, adjacency rebuild stayed 0ms and
+query execution measured 1.697/0.739/0.244ms. These are one-process query-path measurements, not
+large-repository performance acceptance.
+
 The bootstrap blocker has a bounded B1 repair at exact head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`. A matching current-edge identity index and schema-5
 migration reduce exact-pin three-run cold medians to 15,825ms for KasaneCore and 6,368ms for PEDS;
