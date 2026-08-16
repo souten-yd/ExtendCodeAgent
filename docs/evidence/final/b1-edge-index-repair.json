@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "evidence_id": "b1-edge-index-repair-v1",
+  "classification": "B1_BLOCKING_REPAIR_EVIDENCE",
+  "captured_at": "2026-08-16",
+  "implementation_revision": "fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7",
+  "defect": {
+    "path": "SqliteGraphStore._close_current",
+    "cause": "The current-edge supersession UPDATE filtered by scope, edge_id and valid_to without a matching index, producing repeated table scans while applying a large initial graph.",
+    "repair": "Add edges_current_id on (scope, edge_id, valid_to) and migrate schema version 4 catalogs to version 5.",
+    "behavior_change": "none"
+  },
+  "query_plan_proof": {
+    "migration_from_schema_version": 4,
+    "migration_to_schema_version": 5,
+    "index": "edges_current_id",
+    "planner_result": "USING INDEX edges_current_id",
+    "test": "tests/unit/test_sqlite_store.py::test_current_edge_identity_lookup_uses_dedicated_index",
+    "result": "PASS"
+  },
+  "before": [
+    {
+      "repository": "kasanecore",
+      "revision": "d238d291dc1c6283d186ae03020368178df4863f",
+      "result": "EXCLUDED_BOOTSTRAP_GAP",
+      "build_time_ms_lower_bound": 300000
+    },
+    {
+      "repository": "peds",
+      "revision": "c607943367da648f1598f957ece314b29d2fc683",
+      "result": "EXCLUDED_BOOTSTRAP_GAP",
+      "build_time_ms_lower_bound": 300000
+    }
+  ],
+  "after": [
+    {
+      "repository": "kasanecore",
+      "revision": "d238d291dc1c6283d186ae03020368178df4863f",
+      "worktree_fingerprint": "153712e6b9ef2f633dee13d296cc97d46499120ece92af7240f14e6f1eeef4a4",
+      "nodes": 21183,
+      "edges": 123311,
+      "cold_build_ms": [15825, 14924, 17258],
+      "median_cold_build_ms": 15825,
+      "budget_ms": 180000,
+      "budget_result": "PASS",
+      "eligibility": "INCLUDED"
+    },
+    {
+      "repository": "peds",
+      "revision": "c607943367da648f1598f957ece314b29d2fc683",
+      "worktree_fingerprint": "d5a2af5d5d6620c17fcf93c3e073832f02c689fa93ed63e93dcac7dd3b05f939",
+      "nodes": 8662,
+      "edges": 54965,
+      "cold_build_ms": [6368, 6393, 6364],
+      "median_cold_build_ms": 6368,
+      "budget_ms": 20000,
+      "budget_result": "PASS",
+      "eligibility": "INCLUDED",
+      "diagnostics": [
+        "binary_file",
+        "javascript_typescript_parse_error"
+      ]
+    }
+  ],
+  "environment": {
+    "platform": "Linux-7.0.0-28-generic-x86_64-with-glibc2.39",
+    "machine": "x86_64",
+    "cpu_count": 16,
+    "opencode_version": "1.18.16"
+  },
+  "validation": {
+    "all_fast": "PASS: 183 Python tests and 9 adapter tests",
+    "integration": "PASS: 31 Python tests and 9 adapter tests",
+    "build": "PASS: Python sdist/wheel and TypeScript adapter",
+    "cold_repetitions_per_repository": 3,
+    "baseline_and_screening_effect": "NOT_TESTED"
+  }
+}

@@ -1,5 +1,21 @@
 # Implementation Log
 
+## 2026-08-16 — B1 current-edge index repair
+
+- Confirmed the B0a bootstrap diagnosis: `_close_current` updates current edges by
+  `(scope, edge_id, valid_to)` while SQLite had no matching index, causing repeated scans during
+  large initial Twins.
+- Added `edges_current_id`, bumped the store schema to 5 and proved an existing schema-4 catalog is
+  migrated and the exact UPDATE uses the new index. No graph or revision semantics changed.
+- Exact implementation head `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7` rebuilt both previously
+  excluded exact pins three times from fresh databases. KasaneCore measured 15,825 / 14,924 /
+  17,258ms (median 15,825ms, L budget 180,000ms); PEDS measured 6,368 / 6,393 / 6,364ms
+  (median 6,368ms, M budget 20,000ms). Both are now bootstrap-eligible.
+- Final gates pass with the repair source selected: `all-fast` (183 Python, 9 adapter), integration
+  (31 Python, 9 adapter), and Python/TypeScript build.
+- Evidence: `docs/evidence/final/b1-edge-index-repair.json`. This removes a bootstrap blocker; it is
+  not PI quality or model-effect evidence.
+
 ## 2026-08-16 — B0a enforced baseline and screening schedules
 
 - Bound B0a runner scopes to the sealed screening plan and exact bootstrap eligibility evidence.

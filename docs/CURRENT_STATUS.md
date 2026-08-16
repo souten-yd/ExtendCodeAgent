@@ -113,7 +113,15 @@ This is a partial B0a checkpoint, not screening or confirmation evidence.
 The post-bootstrap runner now enforces a 306-cell full-tier `native`/`off` baseline and a 714-cell
 local-practical screen. The latter contains 294 paired active/ablation cells plus capability-specific
 D0-D4 arms only for semantic, impact, test selection and context. A synthetic test proves the
-two-PASS screening-table threshold, but no B0a result cell has run; PI effect remains NOT TESTED.
+two-PASS screening-table threshold. The baseline has 53 checkpointed cells but is incomplete; no
+screening cell has run and PI effect remains NOT TESTED.
+
+The bootstrap blocker has a bounded B1 repair at exact head
+`fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`. A matching current-edge identity index and schema-5
+migration reduce exact-pin three-run cold medians to 15,825ms for KasaneCore and 6,368ms for PEDS;
+both now pass their size-class budgets and are eligible for held-out work. This performance result
+does not establish PI quality. The native/off baseline has 53/306 checkpointed cells on the earlier
+sealed schedule head; screening will use the repaired merged head.
 
 E3 sealed 13 tasks across three task repositories and nine required classes at
 `23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632`. The ControlDeck-managed

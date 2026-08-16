@@ -133,6 +133,10 @@
 
 ## B0a bootstrap performance observation
 
+- Resolved for the two blocking repositories by `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`:
+  schema 5 adds the matching current-edge identity index. Three fresh runs put KasaneCore at a
+  15,825ms median and PEDS at 6,368ms, both within budget. The original timeout evidence remains a
+  valid observation of the pre-repair implementation.
 - The first pinned KasaneCore initial Twin spent multiple minutes applying edges in
   `SqliteGraphStore._close_current`. The schema indexes current nodes by canonical reference but has
   no equivalent current-edge ID index, so the per-edge supersession update is a suspected scaling
