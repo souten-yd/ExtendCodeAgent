@@ -1,6 +1,6 @@
 # ExtendCodeAgent — Current Status
 
-Status date: 2026-08-16
+Status date: 2026-08-17
 
 ## Program state
 
@@ -115,6 +115,17 @@ local-practical screen. The latter contains 294 paired active/ablation cells plu
 D0-D4 arms only for semantic, impact, test selection and context. A synthetic test proves the
 two-PASS screening-table threshold. The old protocol stopped after 137/306 baseline cells; those
 cells measured OpenCode model variance and are diagnostic only, not PI effect.
+
+A corrected-head comprehensive baseline reached 229/306 before the host-default provider began
+returning `Rate limit exceeded`. OpenCode exhausted its retries immediately but the runner waited for
+each task timeout and recorded four cells as `TIMEOUT` with projection attribution. This is a runner
+classification defect, not model quality. Commit `602a455` enables error logging, stops after final
+provider retry exhaustion, records stable `provider_failure` categories, and emits
+`UNAVAILABLE`/`PROVIDER_GAP`. A real ControlDeck-installed OpenCode route reproduced the rate limit
+and completed this classification in 9,103ms rather than the 300,000ms task timeout. The 229-cell
+checkpoint is diagnostic only; after merge and provider recovery, activation/pilot and the baseline
+restart from zero at one exact head. See
+`docs/evidence/final/b0a-provider-gap-runner-repair.json`.
 
 A review found that the long schedules had no fail-closed activation precondition. A separately
 sealed four-model gate now requires observed `pi_status`, task-bearing PI tool use, active

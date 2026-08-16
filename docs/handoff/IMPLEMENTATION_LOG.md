@@ -1,5 +1,16 @@
 # Implementation Log
 
+## 2026-08-17 — B0a provider-gap fail-fast repair
+
+- Stopped the corrected-head baseline at 229/306 after OpenCode logs proved host-default was returning
+  `Rate limit exceeded` immediately while the runner misreported the cells as task timeouts.
+- Added `--print-logs --log-level ERROR`, final-retry detection, bounded process-group cleanup and
+  stable provider categories. Provider gaps now emit `UNAVAILABLE` with `PROVIDER_GAP` attribution.
+- A real ControlDeck-installed `opencode/big-pickle` cell returned `RATE_LIMIT` in 9,103ms instead of
+  waiting for the 300,000ms task timeout. Runner integration passed 20 tests; lint and typecheck pass.
+- The old 229-cell checkpoint is diagnostic only. Exact-head activation/pilot and the 306-cell
+  baseline restart after this repair merges and the provider route recovers.
+
 ## 2026-08-16 — B1 current-edge index repair
 
 - Confirmed the B0a bootstrap diagnosis: `_close_current` updates current edges by

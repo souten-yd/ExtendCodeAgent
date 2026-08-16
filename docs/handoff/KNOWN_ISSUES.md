@@ -1,5 +1,17 @@
 # Known Issues
 
+## B0a host-default provider rate limit and superseded checkpoint
+
+- The `7e58751` baseline stopped at 229/306 after four host-default cells encountered an immediate
+  provider rate limit. OpenCode stayed alive after exhausting retries, so the old runner recorded
+  task `TIMEOUT` and projection attribution instead of provider unavailability.
+- Commit `602a455` repairs the harness and has real-route fail-fast evidence, but it does not restore
+  provider capacity. The affected checkpoint remains diagnostic and must not enter quality/latency
+  aggregates or be resumed across the runner-head change.
+- Resume condition: merge the repair, observe provider recovery through the sealed activation route,
+  rerun activation/pilot at one exact head, then restart baseline from zero. Port 8090 and Ollama are
+  unrelated and must not be changed for this host-default gap.
+
 ## E3 evaluation limitations
 
 - The ControlDeck-managed OpenCode selected for E3 is 1.18.16, while earlier npm-stable evidence used

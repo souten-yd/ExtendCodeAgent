@@ -1,6 +1,6 @@
 # Next Task
 
-Updated: 2026-08-16 (Asia/Tokyo)
+Updated: 2026-08-17 (Asia/Tokyo)
 
 ## Canonical plan
 
@@ -87,6 +87,13 @@ The final new-seal activation and 27-cell pilot now pass. Version and merge the 
 evidence, then start the 306-cell baseline from a fresh path with the exact activation/pilot reports;
 only after baseline completion start the 714-cell PI screening. Preserve task-level symbol/test
 variance and the six-part timing fields in compact evidence.
+
+That baseline reached 229/306 at `7e58751` before host-default began returning rate limits. Four
+provider-gap cells were misreported as task timeouts because OpenCode wrote the retry failure only to
+its error log and remained alive until the task deadline. Commit `602a455` repairs early provider-gap
+detection and classification. Do not resume the 229-cell report or count those cells in quality or
+latency aggregates. Merge the repair, wait for provider recovery, rerun exact-head activation/pilot,
+and restart the 306-cell baseline from zero; the 714-cell screen remains gated on full completion.
 
 The conditional B1 storage blocker is repaired at exact implementation head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`: KasaneCore and PEDS now pass three-run cold-index
