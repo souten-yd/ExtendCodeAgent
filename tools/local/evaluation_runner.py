@@ -334,7 +334,16 @@ def _metrics(log_path: Path) -> dict[str, Any]:
         "cache_read_tokens": 0,
         "cache_write_tokens": 0,
         "errors": [],
+        "pi_tools": [],
+        "selected_evidence_ids": [],
+        "twin_revision_ids": [],
+        "observed_capability_modes": {},
+        "observed_capability_depths": {},
+        "pi_analysis_ms": 0,
     }
+    pi_tools: set[str] = set()
+    evidence_ids: set[str] = set()
+    revision_ids: set[str] = set()
     for line in log_path.read_text(encoding="utf-8", errors="replace").splitlines():
         try:
             event = json.loads(line)
@@ -343,6 +352,27 @@ def _metrics(log_path: Path) -> dict[str, Any]:
         result["events"] += 1
         if event.get("type") == "tool_use":
             result["tool_calls"] += 1
+            part = event.get("part")
+            if isinstance(part, dict):
+                tool_name = str(part.get("tool") or "")
+                if tool_name.startswith("pi_") or "_pi_" in tool_name:
+                    pi_tools.add(tool_name.removeprefix("extendcodeagent_"))
+                    state = part.get("state")
+                    if isinstance(state, dict):
+                        timing = state.get("time")
+                        if isinstance(timing, dict):
+                            start, end = timing.get("start"), timing.get("end")
+                            if isinstance(start, int) and isinstance(end, int) and end >= start:
+                                result["pi_analysis_ms"] += end - start
+                        output = state.get("output")
+                        if isinstance(output, str):
+                            _observe_pi_output(
+                                tool_name,
+                                output,
+                                evidence_ids,
+                                revision_ids,
+                                result,
+                            )
         if event.get("type") == "error":
             error = event.get("error")
             result["errors"].append(error.get("name") if isinstance(error, dict) else str(error))
@@ -355,7 +385,54 @@ def _metrics(log_path: Path) -> dict[str, Any]:
             cache = tokens.get("cache") or {}
             result["cache_read_tokens"] += int(cache.get("read") or 0)
             result["cache_write_tokens"] += int(cache.get("write") or 0)
+    result["pi_tools"] = sorted(pi_tools)
+    result["selected_evidence_ids"] = sorted(evidence_ids)
+    result["twin_revision_ids"] = sorted(revision_ids)
     return result
+
+
+def _observe_pi_output(
+    tool_name: str,
+    output: str,
+    evidence_ids: set[str],
+    revision_ids: set[str],
+    metrics: dict[str, Any],
+) -> None:
+    try:
+        value = json.loads(output)
+    except json.JSONDecodeError:
+        return
+    if not isinstance(value, dict):
+        return
+    revision = value.get("revision_id")
+    if isinstance(revision, str) and revision:
+        revision_ids.add(revision)
+    if tool_name.endswith("pi_status"):
+        capabilities = value.get("capabilities")
+        if isinstance(capabilities, list):
+            for capability in capabilities:
+                if not isinstance(capability, dict) or not isinstance(capability.get("name"), str):
+                    continue
+                name = capability["name"]
+                mode, depth = capability.get("mode"), capability.get("depth")
+                if isinstance(mode, str):
+                    metrics["observed_capability_modes"][name] = mode
+                if isinstance(depth, str) and mode != "off":
+                    metrics["observed_capability_depths"][name] = depth
+        return
+    _collect_evidence_refs(value, evidence_ids)
+
+
+def _collect_evidence_refs(value: object, evidence_ids: set[str]) -> None:
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if key in {"canonical_ref", "evidence_id", "source_ref"} and isinstance(item, str):
+                evidence_ids.add(f"{key}:{item}")
+            else:
+                _collect_evidence_refs(item, evidence_ids)
+    elif isinstance(value, list):
+        for item in value:
+            _collect_evidence_refs(item, evidence_ids)
 
 
 def _execute(cell: dict[str, Any], task: dict[str, Any], raw_root: Path) -> dict[str, Any]:
@@ -535,7 +612,9 @@ def _append_trace(
     repository = next(
         item for item in suite["repositories"] if item["id"] == result["repository_id"]
     )
-    capability_modes, capability_depths = _trace_capabilities(result["arm"])
+    planned_modes, planned_depths = _trace_capabilities(result["arm"])
+    capability_modes = result.get("observed_capability_modes") or planned_modes
+    capability_depths = result.get("observed_capability_depths") or planned_depths
     trace_id = (
         "trace-"
         + hashlib.sha256(
@@ -559,14 +638,17 @@ def _append_trace(
             capability_modes=capability_modes,
             capability_depths=capability_depths,
             used_features={},
-            selected_evidence_ids=(),
+            selected_evidence_ids=tuple(result.get("selected_evidence_ids", ())),
             source_revision_id=repository["revision"],
-            twin_revision_id=None,
+            twin_revision_id=next(iter(result.get("twin_revision_ids", ())), None),
             model_tier=result["model_tier"],
             model_id=result.get("model_id"),
             verification_outcome=result["outcome"],
             fallback="model_unavailable" if result["outcome"] == "UNAVAILABLE" else None,
-            timings_ms={"agent_wall": result.get("wall_ms")},
+            timings_ms={
+                "agent_wall": result.get("wall_ms"),
+                "pi_analysis": result.get("pi_analysis_ms"),
+            },
         )
     )
     result["trace_id"] = trace_id
