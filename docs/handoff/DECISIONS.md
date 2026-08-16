@@ -959,3 +959,17 @@ The sealed 27-cell gate is now the adoption boundary evidence for entering compr
 active gained six exact PASS over controls, every active cell observed required PI, and no timeout
 occurred. This authorizes—not completes—the 306-cell baseline and 714-cell screening schedules.
 Residual symbol/test variance remains visible in task-level metrics and is not treated as resolved.
+
+## 2026-08-17 — Evaluation checkpoints migrate only through compatibility and Bridge proof
+
+Decision: a runner-only repair no longer forces unconditional deletion of every prior cell, but
+`--resume` across revisions remains forbidden. A sealed Compatibility Manifest proves unchanged
+core/adapter/task/oracle/repository/model semantics. `audit-checkpoint` classifies every source cell;
+only complete, trace-valid, provider-clean cells are functional reuse candidates. Their latency is
+kept as `LEGACY_RUNNER_LATENCY` and is not mixed with current-run timing.
+
+Migration remains blocked until a sealed 10–20-cell Bridge Sample covers local-practical,
+host-default, Copilot Sonnet and Copilot Codex plus symbol/impact/test classes. A mismatch expands
+`REPLAY_REQUIRED` to the related model/task class. Migration copies results with source hashes and
+provenance; it never edits the source checkpoint. Provider pause/resume and availability probes are
+evaluation-runner concerns, not ECA core behavior.

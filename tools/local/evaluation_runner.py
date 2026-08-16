@@ -17,6 +17,11 @@ from statistics import median
 from typing import Any
 
 from extendcodeagent.evaluation import EvaluationTrace, EvaluationTraceLog
+from extendcodeagent.evaluation.compatibility import (
+    CompatibilityError,
+    audit_checkpoint,
+    verify_seal,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 MATRIX = ROOT / "docs/evaluation/evaluation-matrix-v1.json"
@@ -27,6 +32,9 @@ CORPUS = ROOT / "docs/evaluation/test-portfolio-corpus-v1.json"
 B0A_PLAN = ROOT / "docs/evaluation/b0a-screening-plan-v1.json"
 B0A_ACTIVATION_PLAN = ROOT / "docs/evaluation/b0a-activation-plan-v1.json"
 B0A_BOOTSTRAP = ROOT / "docs/evidence/final/b0a-bootstrap-environment-v1.json"
+B0A_CHECKPOINT_COMPATIBILITY = (
+    ROOT / "docs/evaluation/b0a-checkpoint-compatibility-v1.json"
+)
 E3_HARNESS = ROOT / "tools/local/e3_task_suite.py"
 PYTHON = ROOT / ".venv/bin/python"
 PLUGIN = ROOT / "adapters/opencode/dist/src/plugin.js"
@@ -189,6 +197,7 @@ def validate() -> None:
     b0a_plan = _load(B0A_PLAN)
     activation_plan = _load(B0A_ACTIVATION_PLAN)
     bootstrap = _load(B0A_BOOTSTRAP)
+    compatibility = _load(B0A_CHECKPOINT_COMPATIBILITY)
     _verify_seal(matrix, "matrix")
     _verify_seal(labels, "Layer A labels")
     expected_inputs = {
@@ -231,6 +240,7 @@ def validate() -> None:
         raise EvaluationError("quality corpus is empty or unsupported")
     _verify_seal(b0a_plan, "B0a screening plan")
     _verify_seal(activation_plan, "B0a PI activation plan")
+    verify_seal(compatibility, "B0a checkpoint compatibility manifest")
     if b0a_plan["inputs"]["matrix_seal"] != matrix["seal"]["canonical_payload"]:
         raise EvaluationError("B0a plan matrix seal is stale")
     if b0a_plan["inputs"]["task_suite_seal"] != tasks["seal"]["canonical_payload"]:
@@ -1761,7 +1771,9 @@ def main() -> int:
     sub.add_parser("validate")
     sub.add_parser("metrics")
     seal_parser = sub.add_parser("seal")
-    seal_parser.add_argument("target", choices=["matrix", "labels", "activation"])
+    seal_parser.add_argument(
+        "target", choices=["matrix", "labels", "activation", "compatibility"]
+    )
     plan_parser = sub.add_parser("plan")
     plan_parser.add_argument(
         "--scope",
@@ -1803,6 +1815,10 @@ def main() -> int:
     screen_parser = sub.add_parser("screen")
     screen_parser.add_argument("--input", type=Path, required=True)
     screen_parser.add_argument("--output", type=Path, required=True)
+    audit_parser = sub.add_parser("audit-checkpoint")
+    audit_parser.add_argument("--source", type=Path, required=True)
+    audit_parser.add_argument("--compatibility", type=Path, required=True)
+    audit_parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     try:
         if args.command == "validate":
@@ -1815,6 +1831,7 @@ def main() -> int:
                 "matrix": MATRIX,
                 "labels": LABELS,
                 "activation": B0A_ACTIVATION_PLAN,
+                "compatibility": B0A_CHECKPOINT_COMPATIBILITY,
             }[args.target]
             seal(target)
         elif args.command == "plan":
@@ -1845,9 +1862,31 @@ def main() -> int:
                 args.activation_report,
                 args.pilot_report,
             )
-        else:
+        elif args.command == "screen":
             _write_report(args.output, screening_table(_load(args.input)))
-    except (EvaluationError, KeyError, TypeError, ValueError, subprocess.TimeoutExpired) as error:
+        else:
+            _require_clean_worktree()
+            source_report = _load(args.source)
+            source_scope = source_report.get("schedule", {}).get("scope")
+            if not isinstance(source_scope, str):
+                raise EvaluationError("source checkpoint has no schedule scope")
+            _write_report(
+                args.output,
+                audit_checkpoint(
+                    ROOT,
+                    args.source.resolve(),
+                    args.compatibility.resolve(),
+                    plan(source_scope)["cells"],
+                ),
+            )
+    except (
+        CompatibilityError,
+        EvaluationError,
+        KeyError,
+        TypeError,
+        ValueError,
+        subprocess.TimeoutExpired,
+    ) as error:
         print(f"unified evaluation error: {error}", file=sys.stderr)
         return 1
     if args.command not in {"plan", "metrics", "screen"}:

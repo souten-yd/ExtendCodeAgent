@@ -91,9 +91,10 @@ variance and the six-part timing fields in compact evidence.
 That baseline reached 229/306 at `7e58751` before host-default began returning rate limits. Four
 provider-gap cells were misreported as task timeouts because OpenCode wrote the retry failure only to
 its error log and remained alive until the task deadline. PR #66 at merged head `91b82e3` repairs early provider-gap
-detection and classification. Do not resume the 229-cell report or count those cells in quality or
-latency aggregates. Merge the repair, wait for provider recovery, rerun exact-head activation/pilot,
-and restart the 306-cell baseline from zero; the 714-cell screen remains gated on full completion.
+detection and classification. Do not directly resume or modify the 229-cell report. Audit it against
+the sealed compatibility manifest, run the required multi-provider Bridge Sample, migrate only
+validated functional results with provenance, rerun latest activation, and execute only remaining
+cells. Legacy runner latency stays separate. The 714-cell screen remains gated on 306 completion.
 
 The conditional B1 storage blocker is repaired at exact implementation head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`: KasaneCore and PEDS now pass three-run cold-index

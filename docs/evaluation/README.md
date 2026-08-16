@@ -26,3 +26,19 @@ silently scored or destructively deleted.
 The historical `benchmark_pr_b/c/h/i` and `pr_g_evaluate` scripts remain only to reproduce their
 original PR evidence. They are retired as current evaluation entry points: new matrix, model, task,
 metric, and Layer C work belongs in the unified runner and its versioned manifests.
+
+Runner-only changes do not authorize either an unconditional resume or automatic deletion of prior
+results. Audit an immutable checkpoint against a sealed compatibility manifest first:
+
+```bash
+tools/local/evaluation-runner audit-checkpoint \
+  --source .evaluation/unified-v1/old-result.json \
+  --compatibility docs/evaluation/b0a-checkpoint-compatibility-v1.json \
+  --output .evaluation/unified-v1/old-result-audit.json
+```
+
+`REUSABLE` means functional outcome only; its timing remains `LEGACY_RUNNER_LATENCY`. Provider gaps,
+timeouts, incomplete cells, seal mismatches and provenance failures never migrate. The audit report
+is hash-bound to the source checkpoint, trace log, every source result and compatibility manifest,
+and is itself sealed. Audit alone does not permit migration: a separately sealed 10–20-cell
+multi-provider Bridge Proof must match the affected model/task classes first.

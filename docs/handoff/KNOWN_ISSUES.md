@@ -1,5 +1,15 @@
 # Known Issues
 
+## Checkpoint migration is proof-gated, not direct resume
+
+- The 229-cell `7e58751` report is immutable and cannot be passed directly to `--resume` on a newer
+  runner. It is also no longer discarded wholesale merely because provider supervision changed.
+- A sealed compatibility audit currently yields the diagnostic split 217 reuse candidates, four
+  provider gaps and eight timeouts. Official reuse still requires the clean merged audit plus a
+  matching multi-provider Bridge Proof; no migration command exists yet.
+- Functional outcome and legacy latency are separate. Even a migrated functional result remains
+  `LEGACY_RUNNER_LATENCY` until an explicit latency bridge permits aggregation.
+
 ## B0a host-default provider rate limit and superseded checkpoint
 
 - The `7e58751` baseline stopped at 229/306 after four host-default cells encountered an immediate
