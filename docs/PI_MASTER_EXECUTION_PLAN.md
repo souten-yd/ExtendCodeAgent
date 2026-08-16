@@ -540,6 +540,11 @@ covered screening task. Tool visibility, planned matrix state, or an unobserved 
 does not pass. A missing route is a blocking B1 adapter/productization gap; do not spend the full
 matrix to infer `no screened effect` from a capability that could not run.
 
+For causal evaluation, expose PI through one canonical OpenCode plugin tool route and one sidecar.
+Do not register the same `pi_*` namespace again through MCP in the same agent process: duplicate tool
+names and independent sidecars make observed arm state route-dependent. MCP remains a separately
+tested integration surface in the adapter lifecycle gates.
+
 Activation proves execution, not benefit. Before the comprehensive schedules, run the sealed
 **PI-effect pilot** on port-8090 local-practical: `native / off / active` over symbol, impact and test
 selection tasks. Execute one interleaved repetition first (9 cells, task by task with all three arms)

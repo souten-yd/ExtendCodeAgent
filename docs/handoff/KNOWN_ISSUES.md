@@ -159,6 +159,10 @@
   before any active comparison, including one 256,319ms response. Those cells are not effect
   evidence. Pilot execution must be interleaved and pass its 9-cell initial tranche before spending
   the remaining confirmation cells.
+- After PR #50, the first interleaved off cell selected a duplicate qualified MCP `pi_status` and hit
+  an OpenCode tool-result shape error. Native and active completed; active PI observation passed.
+  This is not an effect result. Causal cells must expose one plugin namespace/sidecar, while MCP is
+  validated separately, before the 9-cell tranche is rerun from zero.
 
 - The old 306-cell baseline began without an observed-PI activation precondition. It stopped at 137
   cells; pure `native` results measure OpenCode/model behavior, not PI effect, and will not be reused

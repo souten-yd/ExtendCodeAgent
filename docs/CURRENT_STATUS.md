@@ -135,6 +135,12 @@ before reaching any active comparison; one test-selection response took 256,319m
 run was stopped without a partial ninth cell. A staged interleaved pilot repair is in progress so the
 first nine cells measure all three arms before confirmation work is authorized.
 
+The first interleaved symbol triplet then found another fail-closed integration issue: native and
+active completed, with active PI observation valid, but off selected the duplicate qualified MCP
+tool and OpenCode returned a result-shape error instead of disabled state. The attempt stopped after
+that three-cell comparison. Evaluation is being narrowed to the canonical plugin namespace and one
+sidecar; MCP remains independently tested.
+
 The bootstrap blocker has a bounded B1 repair at exact head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`. A matching current-edge identity index and schema-5
 migration reduce exact-pin three-run cold medians to 15,825ms for KasaneCore and 6,368ms for PEDS;
