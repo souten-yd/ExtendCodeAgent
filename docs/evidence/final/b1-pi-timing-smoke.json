@@ -1,0 +1,49 @@
+{
+  "schema_version": "b1-pi-timing-smoke.v1",
+  "recorded_at": "2026-08-16T20:58:18+09:00",
+  "source_revision": "1116d6be7f5e29b7bcea6b5c1610785bcc061afd",
+  "scope": "single-cell instrumentation smoke; not PI effect or performance acceptance evidence",
+  "route": {
+    "runtime": "ControlDeck-managed OpenCode",
+    "model_tier": "local-practical",
+    "model_id": "eca-local-practical/llama",
+    "arm": "active",
+    "task_id": "eca-symbol-001"
+  },
+  "result": {
+    "outcome": "FAIL",
+    "process_exit": 0,
+    "errors": [],
+    "wall_ms": 57990,
+    "pi_analysis_ms": 161,
+    "pi_timing_ms": {
+      "cold_twin_build_ms": 474.73,
+      "snapshot_load_ms": 149.969,
+      "adjacency_index_build_ms": 0.0,
+      "query_execution_ms": 6.191,
+      "json_serialization_ms": 0.043,
+      "model_reasoning_after_tool_ms": 23066
+    },
+    "outcome_attribution": {
+      "classification": "RETRIEVAL_MISSING",
+      "required_fact_recall": 0.8,
+      "pi_required_fact_recall": 0.4,
+      "schema_valid": true,
+      "final_exact_pass": false
+    },
+    "pi_tools": [
+      "pi_references",
+      "pi_symbol"
+    ]
+  },
+  "artifact_digests": {
+    "report_sha256": "5af75dd70842f1c0927c6fd45ae9d3ae1c8ecb7ffc1a003786294f5426f003cf",
+    "trace_sha256": "7bdc95f54d5a08c719dba7babb188c024fcd046596ccf6b619ab6b2b712e2436"
+  },
+  "interpretation": [
+    "The report and hash-chained trace contain the same six segmented timing values.",
+    "The symbol route does not construct a GraphAnalysisService adjacency index, so that segment is zero by design.",
+    "On this one ExtendCodeAgent cell, snapshot load dominates measured PI query work but does not dominate total agent wall time.",
+    "One cell cannot identify the cause of the prior 300157ms timeout or justify query optimization across larger repositories."
+  ]
+}
