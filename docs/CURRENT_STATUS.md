@@ -123,8 +123,11 @@ classification defect, not model quality. PR #66 at merged head `91b82e3` enable
 provider retry exhaustion, records stable `provider_failure` categories, and emits
 `UNAVAILABLE`/`PROVIDER_GAP`. A real ControlDeck-installed OpenCode route reproduced the rate limit
 and completed this classification in 9,103ms rather than the 300,000ms task timeout. The 229-cell
-checkpoint is diagnostic only; after merge and provider recovery, activation/pilot and the baseline
-restart from zero at one exact head. See
+checkpoint remains immutable. The former whole-checkpoint discard decision is superseded by a
+sealed compatibility audit: a development-tree diagnostic classified 217 cells as functional reuse
+candidates, four as provider gaps and eight as timeouts. No cell migrates until a clean merged runner
+reproduces the audit and a 10–20-cell multi-provider Bridge Proof matches the affected classes.
+Migrated latency remains separate. See
 `docs/evidence/final/b0a-provider-gap-runner-repair.json`.
 
 A review found that the long schedules had no fail-closed activation precondition. A separately
