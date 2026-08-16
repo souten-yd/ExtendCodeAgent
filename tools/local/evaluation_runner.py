@@ -498,7 +498,7 @@ def _metrics(log_path: Path) -> dict[str, Any]:
     evidence_ids: set[str] = set()
     revision_ids: set[str] = set()
     pi_facts: set[str] = set()
-    last_pi_tool_end: int | None = None
+    first_pi_tool_end: int | None = None
     last_event_end: int | None = None
     tool_intervals: list[tuple[int, int]] = []
     for line in log_path.read_text(encoding="utf-8", errors="replace").splitlines():
@@ -528,7 +528,7 @@ def _metrics(log_path: Path) -> dict[str, Any]:
                             start, end = timing.get("start"), timing.get("end")
                             if isinstance(start, int) and isinstance(end, int) and end >= start:
                                 result["pi_analysis_ms"] += end - start
-                                last_pi_tool_end = max(last_pi_tool_end or end, end)
+                                first_pi_tool_end = min(first_pi_tool_end or end, end)
                         output = state.get("output")
                         if isinstance(output, str):
                             _observe_pi_output(
@@ -555,14 +555,14 @@ def _metrics(log_path: Path) -> dict[str, Any]:
     result["selected_evidence_ids"] = sorted(evidence_ids)
     result["twin_revision_ids"] = sorted(revision_ids)
     result["observed_pi_facts"] = sorted(pi_facts)
-    if last_pi_tool_end is not None and last_event_end is not None:
+    if first_pi_tool_end is not None and last_event_end is not None:
         later_tool_ms = sum(
-            max(0, end - max(start, last_pi_tool_end))
+            max(0, end - max(start, first_pi_tool_end))
             for start, end in tool_intervals
-            if end > last_pi_tool_end
+            if end > first_pi_tool_end
         )
         result["pi_timing_ms"]["model_reasoning_after_tool_ms"] = max(
-            0, last_event_end - last_pi_tool_end - later_tool_ms
+            0, last_event_end - first_pi_tool_end - later_tool_ms
         )
     return result
 
@@ -612,7 +612,9 @@ def _observe_pi_output(
             if key == "cold_twin_build_ms":
                 metrics["pi_timing_ms"][key] = max(metrics["pi_timing_ms"][key], float(observed))
             else:
-                metrics["pi_timing_ms"][key] += float(observed)
+                metrics["pi_timing_ms"][key] = round(
+                    metrics["pi_timing_ms"][key] + float(observed), 3
+                )
     revision = value.get("revision_id")
     if isinstance(revision, str) and revision:
         revision_ids.add(revision)
