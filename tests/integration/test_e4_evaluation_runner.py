@@ -320,6 +320,7 @@ def test_metrics_split_pi_and_post_tool_model_time(tmp_path: Path) -> None:
                                     "canonical_ref": "py://testing.service#select_tests",
                                 }
                             ],
+                            "symbols": ["py://testing.service#select_tests"],
                             "revision_id": "twin-1",
                             "capabilities_used": ["blueprint", "strategy"],
                             "timing": {
@@ -374,6 +375,7 @@ def test_metrics_split_pi_and_post_tool_model_time(tmp_path: Path) -> None:
     }
     assert "src/extendcodeagent/testing/service.py" in measured["observed_pi_facts"]
     assert measured["pi_capabilities_used"] == ["blueprint", "strategy"]
+    assert "canonical_ref:py://testing.service#select_tests" in measured["selected_evidence_ids"]
 
 
 def test_outcome_attribution_separates_retrieval_projection_and_reasoning(
