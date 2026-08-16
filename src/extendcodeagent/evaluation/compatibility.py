@@ -553,6 +553,17 @@ def migrate_checkpoint(
     proof = json.loads(bridge_proof_path.read_text(encoding="utf-8"))
     verify_seal(audit, "checkpoint audit")
     verify_seal(proof, "bridge proof")
+    bridge_plan_path = Path(str(proof.get("bridge_plan", "")))
+    if not bridge_plan_path.is_file():
+        raise CompatibilityError("migration bridge plan is missing")
+    bridge_plan = json.loads(bridge_plan_path.read_text(encoding="utf-8"))
+    verify_seal(bridge_plan, "bridge plan")
+    if proof.get("bridge_plan_seal") != bridge_plan["seal"]["canonical_payload"]:
+        raise CompatibilityError("migration proof and bridge plan seals differ")
+    if bridge_plan.get("audit_seal") != audit["seal"]["canonical_payload"]:
+        raise CompatibilityError("migration audit and bridge plan seals differ")
+    if bridge_plan.get("compatibility_manifest_seal") != audit.get("compatibility_manifest_seal"):
+        raise CompatibilityError("migration compatibility manifest seals differ")
     source_hash = hashlib.sha256(source_path.read_bytes()).hexdigest()
     if source_hash != audit.get("source_checkpoint_sha256"):
         raise CompatibilityError("migration source does not match checkpoint audit")
