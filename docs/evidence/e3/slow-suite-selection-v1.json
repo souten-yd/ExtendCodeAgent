@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "evidence_id": "e3-slow-suite-selection-v1",
+  "observed_at": "2026-08-16",
+  "threshold_seconds": 600,
+  "selected": {
+    "repository_id": "peds",
+    "repository": "https://github.com/souten-yd/PEDS.git",
+    "revision": "c607943367da648f1598f957ece314b29d2fc683",
+    "setup": [
+      "isolated detached local clone at the exact remote-reachable revision",
+      "uv sync --frozen",
+      "npm ci"
+    ],
+    "phases": [
+      {
+        "argv": [
+          "./peds",
+          "test"
+        ],
+        "status": "PASS",
+        "wall_seconds": 435,
+        "observed_results": "npm contracts/typecheck/build passed; 1600 Python tests passed and 3 hardware tests skipped; pytest reported 423.80 seconds"
+      },
+      {
+        "argv": [
+          "npm",
+          "run",
+          "test:e2e"
+        ],
+        "status": "PASS",
+        "wall_seconds": 321,
+        "observed_results": "82 Playwright tests passed and 2 screenshot tests skipped; Playwright reported 5.3 minutes"
+      }
+    ],
+    "full_suite_wall_seconds": 756,
+    "result": "PASS"
+  },
+  "rejected_measurements": [
+    {
+      "repository_id": "kasanecore",
+      "revision": "d238d291dc1c6283d186ae03020368178df4863f",
+      "result": "REJECTED_NOT_REPRODUCIBLE",
+      "reason": "The pinned checkout collected against untracked or generated UI assets and produced 30 FileNotFound errors even after a temporary StyleBert asset environment was supplied."
+    },
+    {
+      "repository_id": "peds",
+      "revision": "995c5902d187ca5ea954e87ee1efdb5287542474",
+      "result": "REJECTED_NOT_GREEN",
+      "reason": "The current origin/main pin produced 22 failures, 1687 passes, and 3 skips in the Server suite because the remote revision predates local-only catalog reconciliation work."
+    },
+    {
+      "repository_id": "peds",
+      "revision": "c607943367da648f1598f957ece314b29d2fc683",
+      "result": "REJECTED_CONTAMINATED_DEPENDENCIES",
+      "reason": "A preliminary checkout shared node_modules from a newer worktree and failed TypeScript checking. Its separate E2E phase passed 82 tests with 2 skips in 325 seconds, but the combined result was discarded and replaced by the clean lockfile measurement."
+    }
+  ],
+  "interpretation": "The selected project meets the greater-than-ten-minute condition with a green clean suite. This establishes a workload where selective verification can plausibly save time; it does not prove that selection is accurate or beneficial."
+}

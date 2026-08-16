@@ -738,3 +738,27 @@ Llama-compatible Qwen3.6 27B service on port 8090 and waits for wake-up. Ollama 
 servers must not be started. Frontier evaluation uses two mandatory OpenCode arms, Sonnet and Codex,
 both through the registered GitHub Copilot provider. E3 seals exact installed identifiers; domain code
 must not hard-code them.
+
+## 2026-08-16 — E3 sealed Layer B suite and corpus-candidate boundary
+
+Decision: E3 v1 contains 13 objective tasks over pinned ExtendCodeAgent, ControlDeck and held-out
+KasaneCore revisions. PEDS is pinned only for the measured slow-suite condition. OpenCode, Hermes
+Agent and Atomic Agents are recorded as next-version candidates, while the Rust Codex repository is
+reference-only until Rust analysis exists and is measured. Popularity is contextual evidence, not a
+promotion criterion, and the candidate registry cannot mutate the sealed v1 split.
+
+The native proof uses ControlDeck-managed OpenCode 1.18.16 in pure mode with `opencode/big-pickle`.
+Its 4 PASS / 9 FAIL result is retained without manual upgrades: exact output-type, path-granularity
+and terminal-symbol misses are objective failures. The 30.77% rate satisfies the non-triviality
+condition without tuning against the held-out outcomes.
+
+The slow-suite pin is PEDS `c607943367da648f1598f957ece314b29d2fc683`. A clean lockfile setup
+passed the normal gate in 435 seconds and Playwright in 321 seconds, totaling 756 seconds. KasaneCore
+was rejected for unreproducible generated-asset dependencies; a newer PEDS pin was rejected because
+its remote revision was not green. Contaminated shared dependencies are never accepted as pin
+evidence.
+
+OMO 4.19.4 plus ECA model-free coexistence passed in an ephemeral profile. The absent permitted
+weak-local endpoint keeps the required local-low model arm UNAVAILABLE. Installer isolation and
+generic raw tool-ID overlap are recorded for later B2 assessment rather than being hidden or called
+compatible.

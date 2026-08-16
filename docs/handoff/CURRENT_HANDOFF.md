@@ -2,9 +2,27 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/v0a-verification-contract-slice`
+Current branch: `agent/e3-layer-b-task-suite`
 Milestone: A-I implementation complete; Phase 0 (evaluation enablement) active
-Current task: E0/E1/E2 are merged; V0a is complete and locally verified; next is E3
+Current task: E0/E1/E2/V0a are merged; E3 is complete and locally verified; next is E4
+
+## E3 closeout (2026-08-16)
+
+- Sealed `docs/evaluation/task-suite-v1.json` with 13 tasks, nine required task classes, immutable
+  tuning/held-out repository roles, exact ControlDeck OpenCode/model routes, and objective oracles.
+- Exact manifest seal: `23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632`.
+- Native pure OpenCode proof: 4 PASS / 9 FAIL / 0 TIMEOUT / 0 UNAVAILABLE, success rate 30.77%; all
+  13 task oracles executed at the exact seal.
+- Selected PEDS `c607943367da648f1598f957ece314b29d2fc683` as the slow suite after clean `uv sync
+  --frozen` and `npm ci`: normal gate 435 seconds plus Playwright 321 seconds, total 756 seconds.
+- Loaded OMO 4.19.4 and ECA together in an ephemeral profile on ControlDeck-managed OpenCode 1.18.16;
+  ECA connected and all nine `pi_*` tools remained visible. The local-low task arm is UNAVAILABLE
+  because no permitted non-Ollama weak-local endpoint exists.
+- Registered OpenCode, Hermes Agent and Atomic Agents as next-corpus candidates; Codex remains a
+  reference-only candidate until the analyzer supports and measures Rust. This registry does not
+  modify the sealed E3 v1 split.
+- Next: E4 unified runner and versioned Layer A labels. Mandatory frontier routes remain GitHub
+  Copilot Sonnet and Codex; local-practical remains the existing port-8090 Qwen3.6 27B service.
 
 ## Plan review pass (2026-08-16)
 

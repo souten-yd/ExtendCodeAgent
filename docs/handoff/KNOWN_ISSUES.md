@@ -1,5 +1,23 @@
 # Known Issues
 
+## E3 evaluation limitations
+
+- The ControlDeck-managed OpenCode selected for E3 is 1.18.16, while earlier npm-stable evidence used
+  1.18.18. E4/B0 must report the executable and version actually used rather than treating these as
+  interchangeable.
+- No permitted non-Ollama weak-local endpoint is registered. `OpenCode + OMO + ECA @ local-low` is
+  therefore UNAVAILABLE; model-free coexistence PASS is not model-task evidence.
+- OMO 4.19.4 and ECA expose unique ECA `pi_*` names, but generic raw IDs such as `glob`, `grep`,
+  `skill`, and `task` overlap. B2 must assess semantic dispatch/conflict behavior.
+- OMO's installer wrote `~/.omo/omo.jsonc` despite an isolated XDG configuration. The newly created
+  file was moved into the temporary evidence root and the previously absent directory was restored;
+  future automation must not assume XDG isolation is complete.
+- GitHub candidate popularity and activity observations drift. OpenCode, Hermes Agent, Atomic Agents,
+  and Codex require a fresh immutable pin and clean dependency/test audit before any corpus promotion.
+- A supplemental repository-wide Ruff scan reports one pre-existing E501 long line in
+  `tools/local/benchmark_pr_b.py`. Normal all-fast/integration/build gates pass; E4 already owns
+  retiring that per-PR benchmark into the unified runner.
+
 ## PR-A environment
 
 - The local machine has Python 3.12.3 but no Python 3.11 executable, so the declared 3.11 lower
