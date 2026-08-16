@@ -306,7 +306,7 @@ def test_agent_environment_cannot_retarget_the_shared_runner_venv(
     assert isolated["PIP_REQUIRE_VIRTUALENV"] == "true"
 
 
-def test_active_environment_shares_the_sealed_project_config_with_plugin_and_mcp(
+def test_active_environment_uses_one_plugin_route_with_the_sealed_project_config(
     tmp_path: Path,
 ) -> None:
     env, _ = _environment("active", "local-practical", tmp_path / "workspace")
@@ -316,9 +316,8 @@ def test_active_environment_shares_the_sealed_project_config_with_plugin_and_mcp
         capability: "active" for capability in CONFIGURABLE_CAPABILITIES
     }
     opencode = json.loads(env["OPENCODE_CONFIG_CONTENT"])
-    assert opencode["mcp"]["extendcodeagent"]["environment"][
-        "EXTENDCODEAGENT_PROJECT_CONFIG"
-    ] == str(project_config)
+    assert opencode["plugin"]
+    assert "mcp" not in opencode
 
     native, _ = _environment("native", "local-practical", tmp_path / "native")
     assert "EXTENDCODEAGENT_PROJECT_CONFIG" not in native

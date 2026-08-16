@@ -29,7 +29,6 @@ B0A_BOOTSTRAP = ROOT / "docs/evidence/final/b0a-bootstrap-environment-v1.json"
 E3_HARNESS = ROOT / "tools/local/e3_task_suite.py"
 PYTHON = ROOT / ".venv/bin/python"
 PLUGIN = ROOT / "adapters/opencode/dist/src/plugin.js"
-MCP = ROOT / "adapters/opencode/dist/src/mcp.js"
 CONFIGURABLE_CAPABILITIES = (
     "graph",
     "twin",
@@ -433,20 +432,6 @@ def _environment(arm: str, model_tier: str, workspace: Path) -> tuple[dict[str, 
         project_config.write_text(
             json.dumps({"project_intelligence": pi}, separators=(",", ":")), encoding="utf-8"
         )
-        config["mcp"] = {
-            "extendcodeagent": {
-                "type": "local",
-                "command": ["node", str(MCP)],
-                "enabled": True,
-                "environment": {
-                    "PYTHONPATH": str(ROOT / "src"),
-                    "EXTENDCODEAGENT_ROOT": str(workspace),
-                    "EXTENDCODEAGENT_PYTHON": str(PYTHON),
-                    "EXTENDCODEAGENT_MODE": mode,
-                    "EXTENDCODEAGENT_PROJECT_CONFIG": str(project_config),
-                },
-            }
-        }
     env = {
         **_isolated_agent_environment(),
         "OPENCODE_CONFIG_CONTENT": json.dumps(config, separators=(",", ":")),
@@ -454,9 +439,9 @@ def _environment(arm: str, model_tier: str, workspace: Path) -> tuple[dict[str, 
         "EXTENDCODEAGENT_MODE": mode,
     }
     if mode != "native":
-        # OpenCode loads the plugin in its own process, outside the MCP-specific
-        # environment block. Both integration routes must resolve the same sealed
-        # project configuration or pi_status can truthfully report different arms.
+        # Evaluation uses one canonical OpenCode plugin tool route. Registering the
+        # same tools again through MCP creates duplicate names and independent
+        # sidecars, which makes an arm's observed state route-dependent.
         env["EXTENDCODEAGENT_PROJECT_CONFIG"] = str(project_config)
     return env, model_id
 

@@ -2,7 +2,7 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/b0a-staged-effect-pilot`; latest merged base `ebe2a19`
+Current branch: `agent/b0a-single-opencode-pi-route`; latest merged base `6ab0850`
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
 Current task: prove real PI activation and repair missing capability routes before comprehensive B0a
 
@@ -32,6 +32,10 @@ Current task: prove real PI activation and repair missing capability routes befo
   symbol/impact/test-selection (9 cells). Only a passing signal continues to three repetitions/27
   total; it proceeds only on an objective active PASS gain, complete active/off observations, no
   provider/timeout failure and active median wall ratio at most 2x.
+- PR #50 merged staged interleaving as `6ab0850a513b0ee22ea82c1599e151bdc572fcc8`; activation passed
+  4/4 at that head. The first symbol triplet stopped the tranche because off selected a duplicate MCP
+  tool and failed to observe disabled state, while active PI observation passed. Current repair keeps
+  one plugin namespace/sidecar in evaluation and retains MCP as a separate lifecycle gate.
 - Comprehensive B0a execution now requires passing same-exact-head activation and pilot reports. Current
   deterministic reachability audit blocks it because `blueprint`, `convergence`, `traceability` and
   `strategy` have no OpenCode tool/task route. Next: finish focused/full gates, publish this guard,

@@ -425,3 +425,9 @@
   not reached `off` or `active`, while one completed native test-selection cell took 256,319ms. The
   eight cells remain diagnostic only. Began a staged task-interleaved repair: 9 cells first, then 27
   total only if the initial effect and latency gate passes.
+- PR #50 merged staged interleaving as `6ab0850a513b0ee22ea82c1599e151bdc572fcc8`; its exact-head
+  activation passed all four required routes.
+- Stopped the staged pilot after the first native/off/active symbol triplet. Active observed its
+  required PI successfully, but off selected the duplicate `extendcodeagent_pi_status` MCP route and
+  OpenCode raised a tool-result shape error, leaving disabled state unobserved. Began a bounded
+  single-route repair: plugin tools/one sidecar in causal cells, MCP in dedicated lifecycle tests.

@@ -876,6 +876,12 @@ match its contract, provider errors/timeouts are forbidden, and active median wa
 within 2x of the slower control. Any failure produces `REPAIR_AND_RETEST`; the pilot is rerun at the
 repaired exact head before comprehensive evaluation.
 
+Evaluation cells expose one canonical `pi_*` namespace through the OpenCode plugin and one sidecar.
+The same tools are not simultaneously registered through MCP: the first staged off cell selected the
+duplicate qualified MCP name and hit an OpenCode result-shape error instead of observing disabled
+state. MCP conformance remains covered by its dedicated lifecycle tests rather than a duplicate live
+route inside causal cells.
+
 Evaluation agent shells must not inherit the runner's editable environment. The runner removes its
 `.venv/bin`, `VIRTUAL_ENV` and root `PYTHONPATH` before launching OpenCode and requires pip to have an
 isolated virtualenv. The ECA sidecar still receives its explicit interpreter. This prevents a model
