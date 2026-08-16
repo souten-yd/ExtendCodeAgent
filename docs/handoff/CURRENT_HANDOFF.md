@@ -69,6 +69,13 @@ Current task: prove real PI activation and repair missing capability routes befo
   returns exactly architecture projection, Twin integration and unit verification, with
   `architecture_boundary`, `integration_boundary`, and `unit_behavior` covered and no fallback.
   This bounded evidence does not claim a complete generic TestIntent/Coverage Graph.
+- Revision-scoped sidecar caching now reuses one immutable snapshot, exact symbol-name index and
+  `GraphAnalysisService` forward/reverse adjacency map. Every request checks current revision;
+  Twin open/refresh and revision mismatch invalidate all query caches. Existing fallback substring
+  symbol behavior remains when there is no exact indexed match.
+- Clean ECA task-workspace measurement after one cold symbol query: cached snapshot load
+  impact/tests/symbol = 0.045/0.018/0.016ms, adjacency rebuild = 0ms, query execution =
+  1.697/0.739/0.244ms. Cold Twin was 506.273ms and is reported cumulatively, not rerun per query.
 - Comprehensive B0a execution now requires passing same-exact-head activation and pilot reports. Current
   deterministic reachability audit blocks it because `blueprint`, `convergence`, `traceability` and
   `strategy` have no OpenCode tool/task route. Next: finish focused/full gates, publish this guard,

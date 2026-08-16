@@ -100,6 +100,9 @@ class ProjectIntelligenceApplication:
         self._blueprints: BlueprintService | None = None
         self._request_timing: dict[str, float] | None = None
         self._cold_twin_build_ms = 0.0
+        self._snapshot_cache: GraphSnapshot | None = None
+        self._analysis_cache: tuple[str, GraphAnalysisService] | None = None
+        self._symbol_index_cache: tuple[str, dict[str, tuple[Any, ...]]] | None = None
 
     def __enter__(self) -> ProjectIntelligenceApplication:
         return self
@@ -113,6 +116,7 @@ class ProjectIntelligenceApplication:
             self._store = None
             self._twin = None
             self._blueprints = None
+            self._invalidate_query_cache()
 
     def begin_timing(self) -> None:
         """Start one sidecar-request timing scope.
@@ -207,6 +211,7 @@ class ProjectIntelligenceApplication:
             if current and paths
             else twin.open(self.project)
         )
+        self._invalidate_query_cache()
         if current is None:
             self._record_timing("cold_twin_build_current_request_ms", started)
         return {
@@ -221,12 +226,7 @@ class ProjectIntelligenceApplication:
     def symbol(self, query: str, *, view: str = "detail") -> dict[str, Any]:
         snapshot = self._explicit_snapshot(CapabilityName.SEMANTIC)
         lowered = query.casefold()
-        matches = [
-            node
-            for node in snapshot.nodes
-            if lowered in node.canonical_ref.value.casefold()
-            or lowered in str(node.properties.get("name", "")).casefold()
-        ][: self.max_items]
+        matches = self._symbol_matches(snapshot, lowered)
         if view == "compact":
             return self._compact_symbol(snapshot, matches)
         if view != "detail":
@@ -243,9 +243,8 @@ class ProjectIntelligenceApplication:
         inferred_floor = self.policy.min_inferred_confidence(CapabilityName.SEMANTIC)
         items = [
             _edge_json(edge)
-            for edge in snapshot.edges
-            if edge.target.value == canonical_ref
-            and (edge.status is not FactStatus.INFERRED or edge.confidence.value >= inferred_floor)
+            for edge in self._analysis_service(snapshot).reverse.get(canonical_ref, ())
+            if edge.status is not FactStatus.INFERRED or edge.confidence.value >= inferred_floor
         ][: self.max_items]
         return _result(snapshot, depth=self.policy.depth(CapabilityName.SEMANTIC), items=items)
 
@@ -763,21 +762,82 @@ class ProjectIntelligenceApplication:
         if open_if_missing and snapshot.revision is None:
             started = time.perf_counter_ns()
             twin.open(self.project)
+            self._invalidate_query_cache()
             self._record_timing("cold_twin_build_current_request_ms", started)
             snapshot = self._load_snapshot(twin)
         return snapshot
 
     def _load_snapshot(self, twin: TwinService) -> GraphSnapshot:
         started = time.perf_counter_ns()
-        snapshot = twin.snapshot(self.project)
+        current = twin.store.current_revision(self.project)
+        cached = self._snapshot_cache
+        if (
+            cached is not None
+            and cached.revision is not None
+            and current is not None
+            and cached.revision.revision_id == current.revision_id
+        ):
+            snapshot = cached
+        else:
+            snapshot = twin.snapshot(self.project, current.revision_id if current else None)
+            self._snapshot_cache = snapshot if snapshot.revision is not None else None
+            self._analysis_cache = None
+            self._symbol_index_cache = None
         self._record_timing("snapshot_load_ms", started)
         return snapshot
 
     def _analysis_service(self, snapshot: GraphSnapshot) -> GraphAnalysisService:
+        revision_id = snapshot.revision.revision_id if snapshot.revision is not None else None
+        if (
+            revision_id is not None
+            and self._analysis_cache is not None
+            and self._analysis_cache[0] == revision_id
+        ):
+            return self._analysis_cache[1]
         started = time.perf_counter_ns()
         service = GraphAnalysisService(snapshot, self._reference_resolver())
         self._record_timing("adjacency_index_build_ms", started)
+        if revision_id is not None:
+            self._analysis_cache = (revision_id, service)
         return service
+
+    def _symbol_matches(self, snapshot: GraphSnapshot, lowered: str) -> list[Any]:
+        revision_id = snapshot.revision.revision_id if snapshot.revision is not None else None
+        cached = self._symbol_index_cache
+        if revision_id is not None and (cached is None or cached[0] != revision_id):
+            started = time.perf_counter_ns()
+            buckets: dict[str, list[Any]] = {}
+            for node in snapshot.nodes:
+                keys = {
+                    node.canonical_ref.value.casefold(),
+                    str(node.properties.get("name", "")).casefold(),
+                    str(node.properties.get("qualname", "")).casefold(),
+                }
+                for key in keys - {""}:
+                    buckets.setdefault(key, []).append(node)
+            cached = (
+                revision_id,
+                {
+                    key: tuple(sorted(values, key=lambda item: item.canonical_ref.value))
+                    for key, values in buckets.items()
+                },
+            )
+            self._symbol_index_cache = cached
+            self._record_timing("adjacency_index_build_ms", started)
+        exact = cached[1].get(lowered, ()) if cached is not None else ()
+        if exact:
+            return list(exact[: self.max_items])
+        return [
+            node
+            for node in snapshot.nodes
+            if lowered in node.canonical_ref.value.casefold()
+            or lowered in str(node.properties.get("name", "")).casefold()
+        ][: self.max_items]
+
+    def _invalidate_query_cache(self) -> None:
+        self._snapshot_cache = None
+        self._analysis_cache = None
+        self._symbol_index_cache = None
 
     def _ensure_twin(self) -> TwinService:
         if self._twin is None:

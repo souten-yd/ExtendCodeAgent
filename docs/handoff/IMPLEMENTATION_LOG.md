@@ -480,3 +480,13 @@
   projection gaps only; generic TestIntent, dynamic coverage and held-out recall remain unproven.
 - Structural-obligation gates pass: `all-fast` (187 Python, 9 adapter), integration (39 Python,
   9 adapter), strict mypy, clean-workspace exact projection proof and Python/TypeScript build.
+- Added revision-scoped in-process query caches for immutable snapshots, exact symbol buckets and
+  `GraphAnalysisService` adjacency indexes. Current revision is checked before reuse; Twin open,
+  refresh, close or revision mismatch invalidates the caches. `pi_references` now consumes the shared
+  reverse index rather than scanning all edges per call.
+- Clean ECA task-workspace query measurement after cold symbol: cached snapshot load
+  0.045/0.018/0.016ms and query 1.697/0.739/0.244ms for impact/tests/symbol; cached adjacency rebuild
+  is 0ms. The 506.273ms cold Twin is cumulative trace context, not repeated work.
+- Revision-cache gates pass: `all-fast` (188 Python, 9 adapter), integration (39 Python, 9 adapter),
+  strict mypy, refresh-invalidation test, clean-workspace segmented query measurement and
+  Python/TypeScript build.

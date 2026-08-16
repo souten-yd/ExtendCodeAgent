@@ -18,10 +18,12 @@ from extendcodeagent.core.contracts import (
     CanonicalRef,
     EvidenceRef,
     EvidenceStatus,
+    ProjectRef,
     SourceRevision,
     TwinRevisionRef,
 )
 from extendcodeagent.core.policy import CapabilityPolicy
+from extendcodeagent.graph import GraphSnapshot
 from extendcodeagent.research import ResearchDepth
 from extendcodeagent.service import CapabilityUnavailable, ProjectIntelligenceApplication
 from extendcodeagent.traceability import Requirement, RequirementEvidence
@@ -230,6 +232,46 @@ def test_compact_impact_counts_source_uses_and_tests_cover_structural_scope(
     assert selected["coverage_complete"] is True
     assert selected["uncovered_obligations"] == []
     assert selected["fallback_search_required"] is False
+
+
+def test_revision_query_cache_reuses_and_invalidates_snapshot_and_indexes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = _repo(tmp_path)
+    with ProjectIntelligenceApplication(
+        root, tmp_path / "cache.db", _policy("active")
+    ) as application:
+        first = application.symbol("leaf", view="compact")
+        store = application._ensure_store()  # noqa: SLF001
+        original_snapshot = store.snapshot
+        snapshot_calls = 0
+
+        def counted_snapshot(project: ProjectRef, revision_id: str | None = None) -> GraphSnapshot:
+            nonlocal snapshot_calls
+            snapshot_calls += 1
+            return original_snapshot(project, revision_id)
+
+        monkeypatch.setattr(store, "snapshot", counted_snapshot)
+        second = application.symbol("leaf", view="compact")
+        snapshot = application._snapshot(open_if_missing=True)  # noqa: SLF001
+        first_analysis = application._analysis_service(snapshot)  # noqa: SLF001
+        second_analysis = application._analysis_service(snapshot)  # noqa: SLF001
+
+        assert second["revision_id"] == first["revision_id"]
+        assert snapshot_calls == 0
+        assert first_analysis is second_analysis
+
+        _write(
+            root,
+            "service.py",
+            "def leaf():\n    return 2\n\ndef caller():\n    return leaf()\n",
+        )
+        refreshed = application.process_event(("service.py",), "file.edited")
+        third = application.symbol("leaf", view="compact")
+
+    assert refreshed["revision_id"] == third["revision_id"]
+    assert third["revision_id"] != first["revision_id"]
+    assert snapshot_calls >= 2
 
 
 def test_runtime_ingest_persists_and_marks_old_green_test_stale(tmp_path: Path) -> None:
