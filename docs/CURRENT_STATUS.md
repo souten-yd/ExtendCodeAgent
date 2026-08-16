@@ -6,6 +6,14 @@ Status date: 2026-08-17
 
 Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0a IN PROGRESS**
 
+The B0a quality target is now explicitly limited to three routes: ControlDeck-managed
+`local-practical` Qwen, GitHub Copilot Sonnet, and GitHub Copilot Codex. `host-default` and
+`local-low` are not quality targets. The corrected `native`/`off` baseline denominator is therefore
+162 cells. Qwen and Sonnet are complete at 54/54 each; Codex has 37 valid cells and 17 pending, for
+145/162 valid cells overall. Sixteen Codex cells that OpenCode returned after
+`You have exceeded your monthly quota` are provider-gap attempts, not quality outcomes; one further
+Codex cell was interrupted before recording.
+
 PRs A-I are merged and the implementation baseline is complete. Planning PRs
 [#20](https://github.com/souten-yd/ExtendCodeAgent/pull/20) and
 [#21](https://github.com/souten-yd/ExtendCodeAgent/pull/21) are also merged. All planning documents

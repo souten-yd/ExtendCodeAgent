@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hashlib
 import json
 import os
@@ -36,6 +37,7 @@ METRICS = ROOT / "docs/evaluation/pi-verification-integrated-metrics-v1.json"
 CORPUS = ROOT / "docs/evaluation/test-portfolio-corpus-v1.json"
 B0A_PLAN = ROOT / "docs/evaluation/b0a-screening-plan-v1.json"
 B0A_ACTIVATION_PLAN = ROOT / "docs/evaluation/b0a-activation-plan-v1.json"
+B0A_QUALITY_TARGET = ROOT / "docs/evaluation/b0a-quality-target-v1.json"
 B0A_BOOTSTRAP = ROOT / "docs/evidence/final/b0a-bootstrap-environment-v1.json"
 B0A_CHECKPOINT_COMPATIBILITY = ROOT / "docs/evaluation/b0a-checkpoint-compatibility-v1.json"
 E3_HARNESS = ROOT / "tools/local/e3_task_suite.py"
@@ -58,10 +60,10 @@ CONFIGURABLE_CAPABILITIES = (
 )
 B0A_ACTIVATION_MODELS = (
     "local-practical",
-    "host-default",
     "frontier-sonnet",
     "frontier-codex",
 )
+B0A_QUALITY_MODELS = frozenset(B0A_ACTIVATION_MODELS)
 LOCAL_SOURCES = {
     "extendcodeagent": ROOT,
     "controldeck": Path("/home/souten/ControlDeck"),
@@ -75,7 +77,10 @@ class EvaluationError(RuntimeError):
 
 def _provider_failure(stderr: str) -> str | None:
     """Return a stable provider-gap category without persisting provider detail."""
-    if "Rate limit exceeded" in stderr:
+    lowered = stderr.lower()
+    if "exceeded your monthly quota" in lowered:
+        return "QUOTA_EXHAUSTED"
+    if "rate limit exceeded" in lowered:
         return "RATE_LIMIT"
     if "AuthenticationError" in stderr:
         return "AUTHENTICATION"
@@ -104,10 +109,8 @@ def _terminate_process_group(process: subprocess.Popen[str]) -> None:
     try:
         process.wait(timeout=2)
     except subprocess.TimeoutExpired:
-        try:
+        with contextlib.suppress(ProcessLookupError):
             os.killpg(process.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
         process.wait()
 
 
@@ -146,7 +149,11 @@ def _run_opencode(
                 stdout = _partial_text(error.stdout, stdout)
                 stderr = _partial_text(error.stderr, stderr)
                 provider_failure = _provider_failure(stderr)
-                if provider_failure and "AI_RetryError: Failed after" in stderr:
+                if provider_failure and (
+                    "AI_RetryError: Failed after" in stderr
+                    or provider_failure
+                    in {"RATE_LIMIT", "QUOTA_EXHAUSTED", "AUTHENTICATION", "MODEL_NOT_FOUND"}
+                ):
                     _terminate_process_group(process)
                     final_stdout, final_stderr = process.communicate()
                     return (
@@ -199,6 +206,7 @@ def validate() -> None:
     corpus = _load(CORPUS)
     b0a_plan = _load(B0A_PLAN)
     activation_plan = _load(B0A_ACTIVATION_PLAN)
+    quality_target = _load(B0A_QUALITY_TARGET)
     bootstrap = _load(B0A_BOOTSTRAP)
     compatibility = _load(B0A_CHECKPOINT_COMPATIBILITY)
     _verify_seal(matrix, "matrix")
@@ -243,6 +251,7 @@ def validate() -> None:
         raise EvaluationError("quality corpus is empty or unsupported")
     _verify_seal(b0a_plan, "B0a screening plan")
     _verify_seal(activation_plan, "B0a PI activation plan")
+    verify_seal(quality_target, "B0a quality target")
     verify_seal(compatibility, "B0a checkpoint compatibility manifest")
     if b0a_plan["inputs"]["matrix_seal"] != matrix["seal"]["canonical_payload"]:
         raise EvaluationError("B0a plan matrix seal is stale")
@@ -257,8 +266,14 @@ def validate() -> None:
         raise EvaluationError("B0a activation-plan task-suite seal is stale")
     if activation_inputs["screening_plan_seal"] != b0a_plan["seal"]["canonical_payload"]:
         raise EvaluationError("B0a activation plan does not match the screening plan")
-    if tuple(activation_plan["models"]) != B0A_ACTIVATION_MODELS:
-        raise EvaluationError("B0a activation plan does not cover every permitted model route")
+    if not set(B0A_ACTIVATION_MODELS) < set(activation_plan["models"]):
+        raise EvaluationError("B0a activation plan does not cover every quality model route")
+    if tuple(quality_target["quality_models"]) != B0A_ACTIVATION_MODELS:
+        raise EvaluationError("B0a quality target does not match the permitted model routes")
+    if quality_target["activation_plan_seal"] != activation_plan["seal"]["canonical_payload"]:
+        raise EvaluationError("B0a quality target references a stale activation plan")
+    if quality_target["baseline"]["expected_cells"] != 162:
+        raise EvaluationError("B0a quality target baseline size is not 162 cells")
     pilot = activation_plan["pilot"]
     if pilot["model"] != "local-practical" or pilot["repetitions"] != 3:
         raise EvaluationError("B0a PI pilot must use three port-8090 local-practical repetitions")
@@ -369,6 +384,8 @@ def plan(
         models = [item for item in models if item["id"] == pilot_model]
     elif scope == "b0a-screening":
         models = [item for item in models if item["id"] == "local-practical"]
+    elif scope == "b0a-baseline":
+        models = [item for item in models if item["id"] in B0A_QUALITY_MODELS]
     elif scope == "screening":
         models = [item for item in models if item["id"] in {"local-low", "local-practical"}]
     if selected_models is not None:
@@ -1127,7 +1144,7 @@ def _pilot_off_assessment(result: dict[str, Any]) -> dict[str, Any]:
 
 def _activation_gate(results: list[dict[str, Any]]) -> dict[str, Any]:
     activation_plan = _load(B0A_ACTIVATION_PLAN)
-    expected_models = set(activation_plan["models"])
+    expected_models = set(B0A_ACTIVATION_MODELS)
     observed_models = {item["model_tier"] for item in results}
     missing_models = sorted(expected_models - observed_models)
     unexpected_models = sorted(observed_models - expected_models)
@@ -1643,6 +1660,121 @@ def probe_provider(model_tier: str, output: Path) -> None:
     )
 
 
+def requeue_provider_gaps(checkpoint_path: Path, output: Path, raw_root: Path) -> dict[str, Any]:
+    """Copy a checkpoint while moving detected provider gaps back to pending."""
+    _require_clean_worktree()
+    source = _load(checkpoint_path.resolve())
+    if "seal" in source:
+        verify_seal(source, "source checkpoint")
+    if source.get("schedule", {}).get("scope") != "b0a-baseline":
+        raise EvaluationError("provider requeue currently requires a B0a baseline checkpoint")
+    current_revision = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+    ).strip()
+    schedule = plan("b0a-baseline")
+    scheduled_ids = {item["cell_id"] for item in schedule["cells"]}
+    source_raw_root = Path(str(source["trace_log"])).parent
+    kept: list[dict[str, Any]] = []
+    requeued: list[dict[str, Any]] = []
+    for result in source.get("results", []):
+        if result.get("cell_id") not in scheduled_ids:
+            continue
+        stderr_path = source_raw_root / "logs" / f"{result['cell_id']}.stderr.log"
+        stderr = (
+            stderr_path.read_text(encoding="utf-8", errors="replace")
+            if stderr_path.is_file()
+            else ""
+        )
+        failure = result.get("provider_failure") or _provider_failure(stderr)
+        if failure:
+            requeued.append(
+                {
+                    **result,
+                    "provider_failure": failure,
+                    "quality_result_excluded": True,
+                    "requeue_reason": "provider_gap",
+                }
+            )
+        else:
+            kept.append(result)
+    if not requeued:
+        raise EvaluationError("no provider-gap results were found to requeue")
+    source_traces = EvaluationTraceLog(Path(str(source["trace_log"]))).replay()
+    kept_trace_ids = {item.get("trace_id") for item in kept}
+    selected_traces = [item for item in source_traces if item.trace_id in kept_trace_ids]
+    if len(selected_traces) != len(kept):
+        raise EvaluationError("requeued checkpoint trace coverage is incomplete")
+    trace_path = raw_root.resolve() / "traces.jsonl"
+    if output.exists() or trace_path.exists():
+        raise EvaluationError("provider requeue output already exists")
+    trace_path.parent.mkdir(parents=True, exist_ok=True)
+    trace_log = EvaluationTraceLog(trace_path)
+    for trace in selected_traces:
+        trace_log.append(trace)
+    provider_queue = {
+        key: value
+        for key, value in source.get("provider_queue", {}).items()
+        if key in B0A_QUALITY_MODELS
+    }
+    for attempt in requeued:
+        provider_queue[attempt["model_tier"]] = {
+            "status": "PAUSED_PROVIDER_GAP",
+            "failure": attempt["provider_failure"],
+            "trigger_cell": attempt["cell_id"],
+        }
+    prior_attempts = [
+        item
+        for item in source.get("provider_attempts", [])
+        if item.get("model_tier") in B0A_QUALITY_MODELS
+    ]
+    body = {
+        **{
+            key: value
+            for key, value in source.items()
+            if key
+            not in {
+                "seal",
+                "results",
+                "outcomes",
+                "schedule",
+                "provider_queue",
+                "provider_attempts",
+            }
+        },
+        "captured_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        "source_revision": current_revision,
+        "schedule": {key: value for key, value in schedule.items() if key != "cells"},
+        "trace_log": str(trace_path),
+        "executed_cells": len(kept),
+        "outcomes": dict(Counter(item["outcome"] for item in kept)),
+        "provider_queue": provider_queue,
+        "provider_attempts": [*prior_attempts, *requeued],
+        "results": kept,
+        "target_completion": {
+            "model_tiers": sorted(B0A_QUALITY_MODELS),
+            "expected_cells": len(schedule["cells"]),
+            "completed_cells": len(kept),
+            "pending_cells": len(schedule["cells"]) - len(kept),
+        },
+        "provider_requeue": {
+            "source_checkpoint": str(checkpoint_path.resolve()),
+            "source_checkpoint_sha256": hashlib.sha256(
+                checkpoint_path.resolve().read_bytes()
+            ).hexdigest(),
+            "requeued_cells": [item["cell_id"] for item in requeued],
+            "requeued_count": len(requeued),
+        },
+    }
+    migration_summary = body.get("migration_summary")
+    if isinstance(migration_summary, dict):
+        body["migration_summary"] = {
+            **migration_summary,
+            "remaining_schedule_cells": len(schedule["cells"]) - len(kept),
+            "quality_target_cells": len(schedule["cells"]),
+        }
+    return {**body, "seal": {"algorithm": "sha256", "canonical_payload": digest(body)}}
+
+
 def _validate_resume(
     previous: dict[str, Any],
     scope: str,
@@ -1885,6 +2017,13 @@ def _report(
         report["provider_attempts"] = provider_attempts
     if migration_provenance:
         report.update(migration_provenance)
+    if scope == "b0a-baseline":
+        report["target_completion"] = {
+            "model_tiers": sorted(B0A_QUALITY_MODELS),
+            "expected_cells": len(schedule["cells"]),
+            "completed_cells": len(results),
+            "pending_cells": len(schedule["cells"]) - len(results),
+        }
     report["failure_attribution"] = dict(
         Counter(
             item.get("outcome_attribution", {}).get("classification", "NOT_CLASSIFIED")
@@ -2179,6 +2318,10 @@ def main() -> int:
     promote_parser.add_argument("--source", type=Path, required=True)
     promote_parser.add_argument("--audit", type=Path, required=True)
     promote_parser.add_argument("--output", type=Path, required=True)
+    requeue_parser = sub.add_parser("requeue-provider-gaps")
+    requeue_parser.add_argument("--checkpoint", type=Path, required=True)
+    requeue_parser.add_argument("--output", type=Path, required=True)
+    requeue_parser.add_argument("--raw-root", type=Path, required=True)
     args = parser.parse_args()
     try:
         if args.command == "validate":
@@ -2279,8 +2422,13 @@ def main() -> int:
                     args.raw_root.resolve() / "traces.jsonl",
                 ),
             )
-        else:
+        elif args.command == "promote-pilot":
             _write_report(args.output, promote_pilot(args.source, args.audit))
+        else:
+            _write_report(
+                args.output,
+                requeue_provider_gaps(args.checkpoint, args.output, args.raw_root),
+            )
     except (
         CompatibilityError,
         EvaluationError,

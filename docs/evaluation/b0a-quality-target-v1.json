@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "policy_id": "b0a-quality-target-v1",
+  "created_at": "2026-08-17",
+  "activation_plan": "docs/evaluation/b0a-activation-plan-v1.json",
+  "activation_plan_seal": "53c289a1c5916689ef2e4e47acbc28fe9408ce332a354f66e5165a0ede723691",
+  "quality_models": [
+    "local-practical",
+    "frontier-sonnet",
+    "frontier-codex"
+  ],
+  "excluded_models": {
+    "host-default": "opaque OpenCode convenience route; not a requested quality target",
+    "local-low": "unavailable and not a requested quality target"
+  },
+  "baseline": {
+    "arms": [
+      "native",
+      "off"
+    ],
+    "tasks": 9,
+    "repetitions": 3,
+    "expected_cells": 162
+  },
+  "provider_gap_policy": "Provider capacity gaps stay pending and never enter quality or latency aggregates.",
+  "seal": {
+    "algorithm": "sha256",
+    "canonical_payload": "64f9ec41f05f245e5e13d89a99dfccae8adce3a8902ed739c7203cd63fa98667"
+  }
+}

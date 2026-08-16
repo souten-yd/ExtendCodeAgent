@@ -1,5 +1,18 @@
 # Implementation Log
 
+## 2026-08-17 — Three-route B0a target and Copilot quota requeue
+
+- Corrected the B0a quality scope to the user-mandated routes only: ControlDeck-managed Qwen,
+  GitHub Copilot Sonnet, and GitHub Copilot Codex. The baseline is 162 cells, not the historical
+  306-cell all-tier schedule; `host-default` and `local-low` are excluded from target progress.
+- The resumed run produced 54/54 valid Qwen cells, 54/54 valid Sonnet cells, and 37/54 valid Codex
+  cells. Codex then returned `You have exceeded your monthly quota` through the GitHub Copilot
+  provider. Sixteen such results are requeued as `QUOTA_EXHAUSTED`; the interrupted seventeenth
+  cell remains pending. Valid progress is 145/162.
+- Added a sealed copy/requeue command so provider-gap attempts leave the quality result set without
+  modifying the source checkpoint. Resume keeps only the affected Copilot Codex queue paused and
+  retains complete provenance and a rebuilt trace chain.
+
 ## 2026-08-17 — Partial activation and compatible pilot promotion
 
 - Latest activation at `c95bdfb` passed PI route activation for local-practical, Copilot Sonnet and

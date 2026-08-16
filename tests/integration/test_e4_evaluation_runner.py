@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 import tools.local.evaluation_runner as evaluation_runner  # noqa: E402
+from extendcodeagent.evaluation import EvaluationTrace, EvaluationTraceLog  # noqa: E402
 from tools.local.evaluation_runner import (  # noqa: E402
     CONFIGURABLE_CAPABILITIES,
     _activation_assessment,
@@ -31,6 +32,7 @@ from tools.local.evaluation_runner import (  # noqa: E402
     _run_opencode,
     _task_instruction,
     promote_pilot,
+    requeue_provider_gaps,
 )
 
 RUNNER = ROOT / "tools/local/evaluation-runner"
@@ -57,7 +59,7 @@ def _digest(value: dict[str, object]) -> str:
 def test_provider_gap_pauses_only_its_queue_and_other_models_continue(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ) -> None:
-    planned = evaluation_runner.plan("b0a-baseline")["cells"]
+    planned = evaluation_runner.plan("base")["cells"]
     host = [item for item in planned if item["model_tier"] == "host-default"][:2]
     local = next(item for item in planned if item["model_tier"] == "local-practical")
     schedule = {"scope": "base", "counts": {"cells": 3}, "cells": [*host, local]}
@@ -118,6 +120,7 @@ def test_opencode_provider_failure_is_classified_and_stops_early(tmp_path: Path)
     assert timed_out is False
     assert provider_failure == "RATE_LIMIT"
     assert _provider_failure("AuthenticationError") == "AUTHENTICATION"
+    assert _provider_failure("You have exceeded your monthly quota") == "QUOTA_EXHAUSTED"
 
 
 def test_matrix_and_promoted_layer_a_labels_are_sealed() -> None:
@@ -149,12 +152,11 @@ def test_b0a_schedules_enforce_bootstrap_exclusions_and_screening_contract() -> 
     activation = _run("plan", "--scope", "b0a-activation")
     assert activation.returncode == 0, activation.stderr
     activation_plan = json.loads(activation.stdout)
-    assert activation_plan["counts"] == {"cells": 4, "available": 4, "unavailable": 0}
+    assert activation_plan["counts"] == {"cells": 3, "available": 3, "unavailable": 0}
     assert {item["arm"] for item in activation_plan["cells"]} == {"active"}
     assert {item["task_id"] for item in activation_plan["cells"]} == {"eca-symbol-001"}
     assert {item["model_tier"] for item in activation_plan["cells"]} == {
         "local-practical",
-        "host-default",
         "frontier-sonnet",
         "frontier-codex",
     }
@@ -183,7 +185,12 @@ def test_b0a_schedules_enforce_bootstrap_exclusions_and_screening_contract() -> 
     baseline = _run("plan", "--scope", "b0a-baseline")
     assert baseline.returncode == 0, baseline.stderr
     baseline_plan = json.loads(baseline.stdout)
-    assert baseline_plan["counts"] == {"cells": 306, "available": 216, "unavailable": 90}
+    assert baseline_plan["counts"] == {"cells": 162, "available": 162, "unavailable": 0}
+    assert {item["model_tier"] for item in baseline_plan["cells"]} == {
+        "local-practical",
+        "frontier-sonnet",
+        "frontier-codex",
+    }
     assert {item["arm"] for item in baseline_plan["cells"]} == {"native", "off"}
     assert {item["repository_id"] for item in baseline_plan["cells"]} == {
         "extendcodeagent",
@@ -248,7 +255,7 @@ def test_activation_contract_blocks_comprehensive_run_until_every_route_is_reach
 
 def test_activation_gate_requires_observed_runtime_state_and_provenance() -> None:
     results = []
-    for model in ("local-practical", "host-default", "frontier-sonnet", "frontier-codex"):
+    for model in ("local-practical", "frontier-sonnet", "frontier-codex"):
         result: dict[str, Any] = {
             "model_tier": model,
             "outcome": "FAIL",
@@ -283,7 +290,7 @@ def test_activation_gate_requires_observed_runtime_state_and_provenance() -> Non
     assert failed["assessment_mismatches"] == ["local-practical"]
 
 
-def test_activation_allows_only_an_isolated_paused_provider_gap(tmp_path: Path) -> None:
+def test_activation_requires_only_the_three_quality_models(tmp_path: Path) -> None:
     results = []
     for model in ("local-practical", "frontier-sonnet", "frontier-codex"):
         result: dict[str, Any] = {
@@ -322,8 +329,70 @@ def test_activation_allows_only_an_isolated_paused_provider_gap(tmp_path: Path) 
     path = tmp_path / "activation.json"
     path.write_text(json.dumps(report))
     evidence = _require_activation_report(path, require_comprehensive=True)
-    assert evidence["status"] == "PARTIAL_PROVIDER_GAP"
+    assert evidence["status"] == "PASS"
     assert evidence["provider_queue"]["host-default"]["status"] == ("PAUSED_PROVIDER_GAP")
+
+
+def test_requeue_moves_quota_failures_out_of_quality_results(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+) -> None:
+    planned = evaluation_runner.plan("b0a-baseline")["cells"][:2]
+    raw = tmp_path / "source-raw"
+    trace_path = raw / "traces.jsonl"
+    results = []
+    for index, cell in enumerate(planned):
+        result = {
+            **cell,
+            "outcome": "UNAVAILABLE" if index == 0 else "FAIL",
+            "trace_id": f"trace-{index}",
+        }
+        results.append(result)
+        EvaluationTraceLog(trace_path).append(
+            EvaluationTrace(
+                trace_id=result["trace_id"],
+                plan_id="plan",
+                cell_id=cell["cell_id"],
+                task_id=cell["task_id"],
+                task_class=cell["task_class"],
+                oracle_id=f"e3-oracle:{cell['task_id']}",
+                input_seals={"matrix": "seal"},
+                capability_state_source="planned_matrix",
+                capability_modes={},
+                capability_depths={},
+                used_features={},
+                selected_evidence_ids=(),
+                source_revision_id="repo",
+                twin_revision_id=None,
+                model_tier=cell["model_tier"],
+                model_id=cell["model_id"],
+                verification_outcome=result["outcome"],
+                fallback=None,
+            )
+        )
+    logs = raw / "logs"
+    logs.mkdir(parents=True)
+    (logs / f"{planned[0]['cell_id']}.stderr.log").write_text(
+        "AI_APICallError: You have exceeded your monthly quota"
+    )
+    source = tmp_path / "source.json"
+    source.write_text(
+        json.dumps(
+            {
+                "schedule": {"scope": "b0a-baseline"},
+                "trace_log": str(trace_path),
+                "results": results,
+            }
+        )
+    )
+    schedule = {"scope": "b0a-baseline", "counts": {"cells": 2}, "cells": planned}
+    monkeypatch.setattr(evaluation_runner, "plan", lambda *args, **kwargs: schedule)
+    monkeypatch.setattr(evaluation_runner, "_require_clean_worktree", lambda: None)
+    repaired = requeue_provider_gaps(source, tmp_path / "repaired.json", tmp_path / "repaired-raw")
+    assert repaired["executed_cells"] == 1
+    assert repaired["target_completion"]["pending_cells"] == 1
+    assert repaired["provider_queue"][planned[0]["model_tier"]]["failure"] == ("QUOTA_EXHAUSTED")
+    assert repaired["provider_requeue"]["requeued_count"] == 1
+    assert len(EvaluationTraceLog(Path(repaired["trace_log"])).replay()) == 1
 
 
 def test_promoted_pilot_requires_a_fully_reusable_sealed_audit(
