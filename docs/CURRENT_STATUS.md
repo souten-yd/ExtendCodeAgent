@@ -119,7 +119,7 @@ cells measured OpenCode model variance and are diagnostic only, not PI effect.
 A corrected-head comprehensive baseline reached 229/306 before the host-default provider began
 returning `Rate limit exceeded`. OpenCode exhausted its retries immediately but the runner waited for
 each task timeout and recorded four cells as `TIMEOUT` with projection attribution. This is a runner
-classification defect, not model quality. Commit `602a455` enables error logging, stops after final
+classification defect, not model quality. PR #66 at merged head `91b82e3` enables error logging, stops after final
 provider retry exhaustion, records stable `provider_failure` categories, and emits
 `UNAVAILABLE`/`PROVIDER_GAP`. A real ControlDeck-installed OpenCode route reproduced the rate limit
 and completed this classification in 9,103ms rather than the 300,000ms task timeout. The 229-cell

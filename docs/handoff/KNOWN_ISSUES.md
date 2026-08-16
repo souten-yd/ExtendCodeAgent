@@ -5,7 +5,7 @@
 - The `7e58751` baseline stopped at 229/306 after four host-default cells encountered an immediate
   provider rate limit. OpenCode stayed alive after exhausting retries, so the old runner recorded
   task `TIMEOUT` and projection attribution instead of provider unavailability.
-- Commit `602a455` repairs the harness and has real-route fail-fast evidence, but it does not restore
+- PR #66 at merged head `91b82e3` repairs the harness and has real-route fail-fast evidence, but it does not restore
   provider capacity. The affected checkpoint remains diagnostic and must not enter quality/latency
   aggregates or be resumed across the runner-head change.
 - Resume condition: merge the repair, observe provider recovery through the sealed activation route,
