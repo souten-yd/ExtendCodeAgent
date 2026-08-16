@@ -214,6 +214,13 @@ symbol retained every fact but converted a one-item list to a scalar. Median wal
 paths rather than canonical URIs and the collector did not classify those paths as selected evidence.
 That attribution defect must be repaired and the same 9 cells rerun before confirmation expands.
 
+PR #62 repaired repository-path attribution. At exact head `d36d9104c822`, activation and the fresh
+9-cell pilot passed the initial gate with the same 0/0/2 PASS split, active required-fact recall 1.0,
+and no observation failures. Confirmation was stopped at 14/27 after off impact repetition 2 reached
+its sealed 420-second timeout. ControlDeck llama.cpp logs show the first Qwen response continuously
+generated 27,998 tokens at about 67 tokens/second; PI was not involved. The replacement matrix now
+caps local-practical output at 8,192 tokens for every arm, is resealed, and requires a fresh run.
+
 The bootstrap blocker has a bounded B1 repair at exact head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`. A matching current-edge identity index and schema-5
 migration reduce exact-pin three-run cold medians to 15,825ms for KasaneCore and 6,368ms for PEDS;

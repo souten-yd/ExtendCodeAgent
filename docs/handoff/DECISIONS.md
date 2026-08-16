@@ -945,3 +945,9 @@ selected-evidence observation with repository-relative paths emitted in compact 
 These are the task-ready evidence used by `pi_tests`; treating them as absent caused a false PI-use
 failure even when the exact PI output and final answer matched. This exception is limited to the
 pilot assessment and does not weaken the four-model activation contract.
+
+The local-practical OpenCode provider is sealed to an 8,192-token output limit for every arm. A
+confirmation off-control generated 27,998 tokens in its first response and hit the 420-second task
+timeout before any tool event, so this is a model runaway boundary rather than PI latency. The cap is
+arm-neutral, remains well above ordinary observed outputs, and changes the matrix seal; old runs are
+diagnostic only and a fresh activation/pilot is mandatory.

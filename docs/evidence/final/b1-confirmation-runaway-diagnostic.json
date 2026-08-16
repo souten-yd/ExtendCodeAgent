@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "classification": "B1_CONFIRMATION_REPAIR_REQUIRED",
+  "source_revision": "d36d9104c8228acbaadab69d650749aed96b3b55",
+  "matrix_seal": "9059fd04eac641f892f788675c2b7d0b9c2d92851bcb28362f27264af4598a32",
+  "note": "matrix_seal is the repaired replacement; the interrupted run used the superseded 13d3e854 seal",
+  "initial_gate": {
+    "decision": "CONTINUE_TO_CONFIRMATION",
+    "passes": {
+      "native": 0,
+      "off": 0,
+      "active": 2
+    },
+    "active_pass_delta_over_best_control": 2,
+    "active_required_fact_recall": 1.0,
+    "active_observation_failures": 0
+  },
+  "confirmation_checkpoint": {
+    "observed_cells": 14,
+    "passes": {
+      "native": 0,
+      "off": 0,
+      "active": 3
+    },
+    "timeout_cell": "b0a-pilot--off--local-practical--eca-impact-001--r2",
+    "timeout_ms": 420088,
+    "action": "Stopped remaining cells because the sealed gate cannot pass after any provider error or timeout."
+  },
+  "runtime_diagnosis": {
+    "component": "ControlDeck-managed llama.cpp/Qwen generation",
+    "decoded_tokens_before_cancel": 27998,
+    "approximate_generation_rate_tokens_per_second": 67.35,
+    "pi_involved": false,
+    "interpretation": "The first model response generated continuously until the task timeout; this was not PI query, snapshot, or graph latency."
+  },
+  "repair": {
+    "local_practical_max_output_tokens": 8192,
+    "applies_to_arms": [
+      "native",
+      "off",
+      "active"
+    ],
+    "activation_plan_seal": "ba7d0caa47f7f8cf308a5e43036631b2d797084ed5bbd14a90ac6584311b00b4",
+    "required_next_action": "Merge, then rerun activation and the sealed pilot from a fresh output path."
+  }
+}

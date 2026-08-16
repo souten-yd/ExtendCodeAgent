@@ -124,6 +124,8 @@ def validate() -> None:
     models = {item["id"]: item for item in matrix["model_tiers"]}
     if models["local-practical"]["base_url"] != "http://127.0.0.1:8090/v1":
         raise EvaluationError("local-practical is not sealed to port 8090")
+    if models["local-practical"].get("max_output_tokens") != 8192:
+        raise EvaluationError("local-practical output must remain bounded to 8192 tokens")
     if models["frontier-sonnet"]["model_id"] != "github-copilot/claude-sonnet-5":
         raise EvaluationError("Sonnet is not routed through the sealed Copilot model")
     if models["frontier-codex"]["model_id"] != "github-copilot/gpt-5.3-codex":
@@ -407,7 +409,12 @@ def _environment(arm: str, model_tier: str, workspace: Path) -> tuple[dict[str, 
                 "npm": "@ai-sdk/openai-compatible",
                 "name": "E3 pinned local practical",
                 "options": {"baseURL": model["base_url"]},
-                "models": {model_id: {"name": "Qwen3.6 27B on port 8090"}},
+                "models": {
+                    model_id: {
+                        "name": "Qwen3.6 27B on port 8090",
+                        "limit": {"output": model["max_output_tokens"]},
+                    }
+                },
             }
         }
         model_id = f"{provider}/{model_id}"

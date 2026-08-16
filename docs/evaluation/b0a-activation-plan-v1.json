@@ -4,11 +4,11 @@
   "created_at": "2026-08-16",
   "inputs": {
     "evaluation_matrix": "docs/evaluation/evaluation-matrix-v1.json",
-    "matrix_seal": "13d3e854234efbc302ff7d6c0ab5f4f2dfd3eea9cc11d98c2760e03ca4b6f16e",
+    "matrix_seal": "9059fd04eac641f892f788675c2b7d0b9c2d92851bcb28362f27264af4598a32",
     "task_suite": "docs/evaluation/task-suite-v1.json",
     "task_suite_seal": "23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632",
     "screening_plan": "docs/evaluation/b0a-screening-plan-v1.json",
-    "screening_plan_seal": "2603866634a789831822d05edc95d331d4a025a5d84a7bda242a016bd5b21882"
+    "screening_plan_seal": "1e913291eff51b05c69f91e456cc1e2dd5a3594d1f349cc57981548e16d2e070"
   },
   "arm": "active",
   "task_id": "eca-symbol-001",
@@ -150,6 +150,6 @@
   },
   "seal": {
     "algorithm": "sha256",
-    "canonical_payload": "b39d2060a907826ccc385c6fd2804ffb3b5b47ffbe2c68facbdc99e8471931e6"
+    "canonical_payload": "ba7d0caa47f7f8cf308a5e43036631b2d797084ed5bbd14a90ac6584311b00b4"
   }
 }

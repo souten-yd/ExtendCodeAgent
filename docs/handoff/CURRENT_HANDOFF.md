@@ -2,7 +2,7 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/b1-repo-path-evidence`; latest merged base `170649043f502c41ebca119ff495b2e9809eda6d`
+Current branch: `agent/b1-bound-local-output`; latest merged base `d36d9104c8228acbaadab69d650749aed96b3b55`
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
 Current task: prove real PI activation and repair missing capability routes before comprehensive B0a
 
@@ -91,6 +91,10 @@ Current task: prove real PI activation and repair missing capability routes befo
   fact recall 1.0 on every active task. The gate stopped because repository-relative
   `selected_tests` were not classified as selected evidence. Next: merge that bounded attribution
   repair and rerun activation plus the same 9 cells before any 27/306/714 continuation.
+  PR #62's repaired 9-cell gate passed 0/0/2, but confirmation stopped at 14/27 when off impact
+  generated 27,998 tokens before its first response and timed out at 420 seconds. The matrix now
+  applies an 8,192-token local-practical limit to every arm and is resealed. Merge it, then restart
+  activation and pilot on fresh paths; never resume the superseded-seal report.
 
 - Conditional B1 repair exact head `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7` adds the missing
   current-edge identity index. Three cold exact-pin runs changed KasaneCore/PEDS from >300-second

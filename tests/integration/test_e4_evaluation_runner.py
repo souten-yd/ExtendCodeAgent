@@ -329,6 +329,19 @@ def test_answer_instruction_is_exact_for_all_arms_and_preserves_compact_pi_field
     assert "expanding scalar/path values into explanation objects" in active
 
 
+def test_local_practical_output_is_bounded_for_every_arm(tmp_path: Path) -> None:
+    for arm in ("native", "off", "active"):
+        arm_root = tmp_path / arm
+        arm_root.mkdir()
+        env, model_id = _environment(arm, "local-practical", arm_root / "workspace")
+        config = json.loads(env["OPENCODE_CONFIG_CONTENT"])
+
+        assert model_id == "eca-local-practical/llama"
+        assert config["provider"]["eca-local-practical"]["models"]["llama"]["limit"] == {
+            "output": 8192
+        }
+
+
 def test_agent_environment_cannot_retarget_the_shared_runner_venv(
     monkeypatch: MonkeyPatch,
 ) -> None:

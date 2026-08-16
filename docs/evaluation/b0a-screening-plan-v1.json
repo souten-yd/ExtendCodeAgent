@@ -4,7 +4,7 @@
   "created_at": "2026-08-16",
   "inputs": {
     "evaluation_matrix": "docs/evaluation/evaluation-matrix-v1.json",
-    "matrix_seal": "13d3e854234efbc302ff7d6c0ab5f4f2dfd3eea9cc11d98c2760e03ca4b6f16e",
+    "matrix_seal": "9059fd04eac641f892f788675c2b7d0b9c2d92851bcb28362f27264af4598a32",
     "task_suite": "docs/evaluation/task-suite-v1.json",
     "task_suite_seal": "23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632",
     "quality_corpus": "docs/evaluation/test-portfolio-corpus-v1.json"
@@ -97,6 +97,6 @@
   },
   "seal": {
     "algorithm": "sha256",
-    "canonical_payload": "2603866634a789831822d05edc95d331d4a025a5d84a7bda242a016bd5b21882"
+    "canonical_payload": "1e913291eff51b05c69f91e456cc1e2dd5a3594d1f349cc57981548e16d2e070"
   }
 }

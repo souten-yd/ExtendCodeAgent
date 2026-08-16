@@ -72,7 +72,8 @@
       "minimum_repetitions": 3,
       "provider": "llama-compatible",
       "model_id": "llama",
-      "base_url": "http://127.0.0.1:8090/v1"
+      "base_url": "http://127.0.0.1:8090/v1",
+      "max_output_tokens": 8192
     },
     {
       "id": "host-default",
@@ -130,6 +131,6 @@
   },
   "seal": {
     "algorithm": "sha256",
-    "canonical_payload": "13d3e854234efbc302ff7d6c0ab5f4f2dfd3eea9cc11d98c2760e03ca4b6f16e"
+    "canonical_payload": "9059fd04eac641f892f788675c2b7d0b9c2d92851bcb28362f27264af4598a32"
   }
 }
