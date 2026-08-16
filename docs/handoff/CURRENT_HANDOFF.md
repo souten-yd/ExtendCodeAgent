@@ -47,9 +47,12 @@ Current task: prove real PI activation and repair missing capability routes befo
   `final_exact_pass` and retrieval/projection/reasoning attribution. It also splits PI time into cold
   Twin build, snapshot load, adjacency/index construction, query execution, JSON serialization and
   post-PI agent/model residual from the first PI result after subtracting later tool execution.
-  Publish this slice
-  independently before changing PI
-  projection semantics.
+  PRs #52 and #53 published this slice independently before PI projection semantics change.
+- Exact merged-head instrumentation smoke at `1116d6be7f5e29b7bcea6b5c1610785bcc061afd`
+  recorded wall 57,990ms, PI tool 161ms, cold Twin 474.730ms, snapshot load 149.969ms, query
+  6.191ms, serialization 0.043ms and post-PI residual 23,066ms. Symbol does not build adjacency, so
+  that segment was 0ms. This proves the trace path only; it is one FAIL classified
+  `RETRIEVAL_MISSING`, not effect/performance acceptance evidence.
 - Comprehensive B0a execution now requires passing same-exact-head activation and pilot reports. Current
   deterministic reachability audit blocks it because `blueprint`, `convergence`, `traceability` and
   `strategy` have no OpenCode tool/task route. Next: finish focused/full gates, publish this guard,

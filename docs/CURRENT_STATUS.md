@@ -143,6 +143,12 @@ JSON serialization and post-tool model reasoning. The measured repair order is c
 projection, obligation-aware/structural test coverage, revision-scoped query indexes, then missing
 OpenCode runtime routes. The sealed tasks and exact oracles remain unchanged.
 
+PRs #52/#53 merged segmented timing and exact-failure attribution. A single exact-head active-symbol
+smoke at `1116d6b` proved report/trace agreement: wall 57,990ms, PI tools 161ms, cold Twin 474.730ms,
+snapshot load 149.969ms, query 6.191ms, serialization 0.043ms and post-PI agent/model residual
+23,066ms; adjacency was unused. The FAIL was classified `RETRIEVAL_MISSING`. This one-cell smoke is
+instrumentation evidence only and does not explain the earlier timeout or authorize broader runs.
+
 The bootstrap blocker has a bounded B1 repair at exact head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`. A matching current-edge identity index and schema-5
 migration reduce exact-pin three-run cold medians to 15,825ms for KasaneCore and 6,368ms for PEDS;

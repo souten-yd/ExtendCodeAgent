@@ -440,7 +440,8 @@
   ten FAIL and one TIMEOUT and is diagnostic repair input, not comprehensive evidence.
 - Began bounded B1 attribution/timing instrumentation without changing task oracles. Sidecar results
   expose cold Twin build, snapshot load, adjacency/index build, query and JSON serialization time;
-  the evaluation trace adds post-PI agent/model residual after subtracting later tool execution.
+  the evaluation trace adds post-PI agent/model residual from the first PI result after subtracting
+  later tool execution.
   Exact failures additionally record
   required-fact recall, schema validity, final exact pass and retrieval/projection/reasoning class.
 - Attribution/timing slice gates pass: `all-fast` (183 Python, 9 adapter), integration (39 Python,
@@ -449,3 +450,9 @@
   exposed binary-float noise in summed serialization time. Corrected it to cover the interval from
   the first PI result through cell completion while subtracting every later tool interval, and round
   accumulated millisecond segments to three decimals.
+- PRs #52/#53 merged the instrumentation and correction as `e901329`/`1116d6b`. A fresh exact-head
+  active-symbol smoke through ControlDeck-managed OpenCode recorded wall 57,990ms, PI tool 161ms,
+  cold Twin 474.730ms, snapshot 149.969ms, adjacency 0ms, query 6.191ms, serialization 0.043ms and
+  post-PI residual 23,066ms. Report and hash-chain trace agree. Outcome was one
+  `RETRIEVAL_MISSING` FAIL, so this is measurement-path evidence only. Versioned summary:
+  `docs/evidence/final/b1-pi-timing-smoke.json`.
