@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 
 import pytest
 
 from extendcodeagent.analysis import ImpactItem, ImpactReport
+from extendcodeagent.core.config.schema import CapabilityName
 from extendcodeagent.core.contracts import CanonicalRef, ProjectRef, Provenance, SourceRevision
+from extendcodeagent.core.policy import CapabilityPolicy, CapabilityUnavailable
 from extendcodeagent.graph import FactStatus
 from extendcodeagent.runtime import ObservationKind, ObservationStatus, RuntimeObservation
 from extendcodeagent.testing import (
@@ -95,9 +98,19 @@ def test_test_selection_falls_back_for_missing_or_low_confidence_candidates() ->
     ],
 )
 def test_test_health_states_are_evidence_based(
-    signals: HealthSignals, expected: HealthState
+    signals: HealthSignals, expected: HealthState, policy: CapabilityPolicy
 ) -> None:
-    result = evaluate_test_health(signals, current_revision=SourceRevision("rev-2"))
+    result = evaluate_test_health(signals, current_revision=SourceRevision("rev-2"), policy=policy)
     assert result.state is expected
     assert result.reasons
     assert result.delete_recommended is False
+
+
+def test_test_obsolescence_is_unavailable_when_the_capability_is_off(
+    policy_factory: Callable[..., CapabilityPolicy],
+) -> None:
+    off = policy_factory("advisory", overrides={CapabilityName.TEST_OBSOLESCENCE: "off"})
+    with pytest.raises(CapabilityUnavailable, match="test_obsolescence"):
+        evaluate_test_health(
+            HealthSignals(TEST_REF), current_revision=SourceRevision("rev-2"), policy=off
+        )

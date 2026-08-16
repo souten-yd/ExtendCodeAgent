@@ -2,9 +2,21 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/pi-master-execution-plan`
+Current branch: `agent/plan-corrections-and-evaluation-scope`
 Milestone: A-I implementation complete; Phase 0 (evaluation enablement) active
-Current task: merge the planning consolidation, then start stage E1
+Current task: E1 complete and a plan review pass applied, both unmerged; next is stage E2
+
+## Plan review pass (2026-08-16)
+
+A full read-through corrected three residual inconsistencies (Evidence Memory at both P0 and P1;
+`D0` meaning both a depth level and a Phase 5 stage, now `X0`/`X1`; B0's ablation sweep saying 14
+instead of 13) and closed four scope gaps: a new stage **E3** defines the Layer B task suite before
+the runner exists, §7.2 gains numeric Layer C budgets, invariant **8** treats repository content as
+untrusted input, and §10.2 adds program-level stop and pivot criteria. The moat is restated as
+Verification Intelligence with Project Truth as substrate, scored against a new code-intelligence
+column in the competitive analysis. Full rationale in `DECISIONS.md`.
+
+Phase 0 is now E0–E5; the former E3/E4 became E4/E5.
 
 ## Current source of truth
 
@@ -96,20 +108,20 @@ Owned by master plan section 8. Summary:
 
 ```text
 Phase 0  E0 consolidation -> E1 gating conformance -> E2 depth contract
-         -> E3 evaluation runner + labels -> E4 minimal PI trace
+         -> E3 Layer B task suite -> E4 evaluation runner + labels -> E5 minimal PI trace
 Phase 1  B0 baseline validation and gap report -> B1 blocking repair (conditional)
 Phase 2  C0 runtime contract -> C1 shadow planner -> C2 weak-local (conditional)
          -> C3 advisory selection + adaptive depth
 Phase 3  V0 verification contracts -> V1 calibration -> V2 required verification set
          -> V3 evidence reuse -> V4 failure-driven re-evaluation -> V5 observability (conditional)
 Phase 4  A0 bounded active -> A1 progressive expansion
-Phase 5  D0 runtime bridge (conditional) -> D1 bounded deep analysis (conditional)
+Phase 5  X0 runtime bridge (conditional) -> X1 bounded deep analysis (conditional)
 Phase 6  R0 production-capable baseline
 Phase 7  P0 evidence memory -> P1 conformance -> P2 second harness -> P3 parallel intelligence
          -> P4 comparative benchmark
 ```
 
-B0 does not start before E1-E4 are complete.
+B0 does not start before E1-E5 are complete.
 
 ## Future ControlDeck deep integration
 
@@ -120,7 +132,31 @@ Only introduce a distinct `ControlDeck + OpenCode` evaluation condition after an
 ControlDeck change is shown to alter relevant session/tool/context/model/workspace/verification or
 multi-agent semantics. Until then, treat it as OpenCode.
 
-## Immediate next work after merge
+## Stage E1 — done on this branch
+
+Delivered:
+
+- `strategy` gated at `build_strategy`, `test_obsolescence` gated at `evaluate_test_health`, both
+  through the shared `CapabilityPolicy.require_explicit_use` in `core/policy.py`. No new gate
+  mechanism; `service/application.py` now delegates `_require_explicit` to the same helper.
+- `test_obsolescence` is independent of `test_selection`: with it off, `pi_tests` still selects tests
+  and returns `health: []`.
+- `call_graph` folded into `semantic` (`CAPABILITY_FOLDED_INTO`). The rejected independent-gate option
+  and its reasons are in `DECISIONS.md`.
+- The seven unimplemented capabilities declared in `NOT_IMPLEMENTED_CAPABILITIES`, forced to `off`,
+  and rejected with `ConfigError` if configured to a non-`off` mode.
+- `tests/architecture/test_capability_gating.py`: AST scan asserting every `CapabilityName` is gated,
+  folded into a gated capability, or declared unimplemented; inventory counts pinned at 21/7/1/13 so a
+  new capability cannot be added silently.
+- `pi_status` reports `implementation`, `mode` and `governed_by` for all 21 capabilities;
+  `PiStatus`/`CapabilityStatus`/`RolloutMode` typed in `adapters/opencode/src/client.ts`.
+- Per-capability `off` inertness parametrized over all 13 configurable capabilities, in addition to
+  the existing global-`off` test.
+
+Evidence: `tools/local/all-fast`, `tools/local/test-integration`, `tools/local/build` all exit 0.
+Defaults unchanged — every capability still ships `off`.
+
+## Immediate next work
 
 ```bash
 cd /home/souten/ExtendCodeAgent
@@ -130,11 +166,12 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/e1-capability-gating-conformance
+git switch -c agent/e2-capability-depth-contract
 ```
 
-E1 gates `strategy`, `test_obsolescence` and `call_graph`, declares the seven unimplemented
-capabilities truthfully, adds the architecture test that makes gating total, reports capability
-implementation state through `pi_status`, and re-verifies `off` inertness per capability.
+E2 adds the depth axis (`D0..D4`) to the central config with min/max/preferred/auto, orthogonal to
+`RolloutMode`, with no adaptive selection yet, depth recorded in every PI response and visible in
+`pi_status`, and no behavior change at default depth.
 
-Rollback path: switch to synchronized `main`; this branch changes documentation only.
+Rollback path: switch to synchronized `main`. This branch changes host-neutral core gating, the
+OpenCode adapter status types, tests and documentation; it adds no capability and changes no default.

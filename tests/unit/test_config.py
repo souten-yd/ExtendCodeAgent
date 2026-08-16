@@ -6,7 +6,13 @@ from pathlib import Path
 import pytest
 
 from extendcodeagent.core.config import CapabilityName, ConfigLayer, ConfigResolver, load_jsonc
-from extendcodeagent.core.config.schema import ConfigError, ModelRole, RolloutMode, RoutingMode
+from extendcodeagent.core.config.schema import (
+    NOT_IMPLEMENTED_CAPABILITIES,
+    ConfigError,
+    ModelRole,
+    RolloutMode,
+    RoutingMode,
+)
 
 
 def test_precedence_and_deep_merge_are_deterministic() -> None:
@@ -80,6 +86,63 @@ def test_invalid_and_unknown_values_fail_closed() -> None:
         resolver.resolve(ConfigLayer("project", {"project_intelligence": {"mode": "auto"}}))
     with pytest.raises(ConfigError, match="must be a boolean"):
         resolver.resolve(ConfigLayer("project", {"project_intelligence": {"enabled": "true"}}))
+
+
+@pytest.mark.parametrize(
+    "capability", sorted(NOT_IMPLEMENTED_CAPABILITIES), ids=lambda item: item.value
+)
+@pytest.mark.parametrize("mode", ["shadow", "advisory", "active"])
+def test_unimplemented_capability_cannot_be_enabled(capability: CapabilityName, mode: str) -> None:
+    """Configuring a capability that does not exist fails loudly instead of being ignored."""
+
+    with pytest.raises(ConfigError, match=f"{capability.value} is declared but not implemented"):
+        ConfigResolver().resolve(
+            ConfigLayer(
+                "project",
+                {
+                    "project_intelligence": {
+                        "enabled": True,
+                        "mode": "active",
+                        "capabilities": {capability.value: mode},
+                    }
+                },
+            )
+        )
+
+
+def test_folded_capability_must_be_configured_through_its_owner() -> None:
+    with pytest.raises(ConfigError, match="call_graph is governed by 'semantic'"):
+        ConfigResolver().resolve(
+            ConfigLayer(
+                "project",
+                {
+                    "project_intelligence": {
+                        "enabled": True,
+                        "mode": "active",
+                        "capabilities": {"call_graph": "active"},
+                    }
+                },
+            )
+        )
+
+
+def test_unimplemented_and_folded_capabilities_accept_off() -> None:
+    """The shipped default sets every capability to off, so off must stay valid."""
+
+    resolved = ConfigResolver().resolve(
+        ConfigLayer(
+            "project",
+            {
+                "project_intelligence": {
+                    "capabilities": {
+                        **{name.value: "off" for name in NOT_IMPLEMENTED_CAPABILITIES},
+                        "call_graph": "off",
+                    }
+                }
+            },
+        )
+    )
+    assert resolved.project_intelligence.capabilities[CapabilityName.UI_GRAPH] is RolloutMode.OFF
 
 
 def test_endpoint_references_must_resolve() -> None:

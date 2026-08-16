@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from extendcodeagent.core.config.schema import CapabilityName
+from extendcodeagent.core.policy import CapabilityPolicy
+
 from .contracts import (
     ProposedAlternative,
     StrategyAlternative,
@@ -17,7 +20,10 @@ def build_strategy(
     request: StrategyRequest,
     signals: StrategySignals,
     synthesis: StrategySynthesisPort,
+    *,
+    policy: CapabilityPolicy,
 ) -> StrategyResult:
+    policy.require_explicit_use(CapabilityName.STRATEGY)
     if not request.goal.strip():
         raise StrategyError("goal must not be empty")
     candidate_files = tuple(

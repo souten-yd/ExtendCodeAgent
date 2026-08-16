@@ -27,6 +27,7 @@ from .schema import (
     ResolvedConfig,
     RolloutMode,
     RoutingMode,
+    unconfigurable_reason,
 )
 
 RawConfig = Mapping[str, Any]
@@ -233,6 +234,13 @@ def _materialize(raw: dict[str, Any], applied: tuple[str, ...]) -> ResolvedConfi
         )
         for name in ALL_CAPABILITIES
     }
+    rejected = [
+        f"project_intelligence.capabilities.{name.value} {reason}"
+        for name, mode in capabilities.items()
+        if mode is not RolloutMode.OFF and (reason := unconfigurable_reason(name)) is not None
+    ]
+    if rejected:
+        raise ConfigError("; ".join(sorted(rejected)))
     analyzers_raw = pi["analyzers"]
     if not isinstance(analyzers_raw, list) or not all(
         isinstance(item, str) for item in analyzers_raw

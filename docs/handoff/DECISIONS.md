@@ -331,9 +331,10 @@ Consequences:
   `CapabilityPolicy` — including `strategy` and `test_obsolescence`, which have real implementations —
   so per-capability ablation is currently impossible and no keep/demote decision could be supported.
   Phase 0 adds gating conformance (E1), the capability depth contract (E2), a unified evaluation runner
-  with a versioned ground-truth label set (E3) and a minimal attributable PI trace (E4).
-- The minimal PI trace is promoted from P1 to Phase 0 as evaluation infrastructure. Durable Project
-  Evidence Memory remains P1.
+  with a Layer B task suite (E3), a versioned Layer A label set and unified runner (E4), and a
+  minimal attributable PI trace (E5).
+- The minimal PI trace is promoted into Phase 0 as evaluation infrastructure. Durable Project
+  Evidence Memory becomes the first post-baseline stage, `P0`.
 - The frontier model path becomes a conditional release gate with a documented exception rule. A
   provider outage outside the repository can no longer block the baseline indefinitely; the exception
   records the error category, the native reproduction, the withdrawn claims and the re-test trigger.
@@ -343,5 +344,163 @@ Consequences:
   deterministic quality ground truth. Held-out material stays outside tuning.
 - Future strategy changes edit the master plan. A new design document requires a section 2 registration
   and a stage owner in the same commit.
+
+GitHub Actions: not added. This change is documentation only.
+
+## 2026-08-16 — E1 capability gating conformance
+
+Context: `CapabilityName` declares 21 capabilities, but `CapabilityPolicy` was consulted only in
+`service/application.py` and covered 11 of them. `strategy` and `test_obsolescence` had real
+implementations that no configuration could switch off, `call_graph` was emitted unconditionally by
+the analyzers, and seven names were pure declarations with nothing behind them. Per-capability
+ablation — the precondition for every keep/demote decision in the evaluation framework — was
+therefore impossible for 10 of 21 capabilities.
+
+### Decision 1 — `call_graph` is folded into `semantic`, not gated independently
+
+`call_graph` is recorded in `CAPABILITY_FOLDED_INTO` as governed by `semantic`. Its rollout mode is
+always `semantic`'s, and configuring `project_intelligence.capabilities.call_graph` to anything other
+than `off` is a `ConfigError` pointing at `semantic`.
+
+Reason: `may_call` is emitted by `graph/analyzers/python.py` and
+`graph/analyzers/javascript_typescript.py` inside the same AST/tree-sitter walk that emits `calls`,
+`references` and `imports`; the two differ only by whether `_resolve_call` resolved the target.
+
+Rejected alternative — an independent `call_graph` gate. It was rejected because it requires one of
+two unacceptable mechanisms:
+
+- passing `CapabilityPolicy` into the analyzers, which are pure revision-keyed functions today.
+  Analyzer output would then depend on rollout mode, so the same source revision would produce
+  different Twin revisions under different configuration. That breaks revision identity and the
+  Evidence Dependency Closure that compositional evidence reuse is built on; or
+- post-filtering `may_call` edges out of a stored snapshot, which leaves the stored graph and the
+  served graph disagreeing and silently changes `impact` confidence without any record.
+
+An independent arm would also not isolate a distinct capability: ablating `call_graph` while
+`semantic` stays on removes only the *inferred* half of one edge family, which is a confidence-
+threshold question (`min_confidence`, already a query parameter) rather than a capability question.
+The depth axis in stage E2 is the correct place for that trade-off.
+
+Consequence: `ablation(call_graph)` is not an available arm. Ablating `semantic` covers it. This is
+recorded in the master plan section 6 so no later stage schedules a `call_graph` arm.
+
+### Decision 2 — configuring an unimplemented capability is a `ConfigError`, not a diagnostic
+
+`cfg`, `data_flow`, `state_event`, `side_effects`, `api_schema_db`, `ui_graph` and `memory` are listed
+in `NOT_IMPLEMENTED_CAPABILITIES`. `CapabilityPolicy` forces them to `off` regardless of
+configuration, and the resolver rejects any non-`off` value for them at resolve time.
+
+Reason: a warning-level diagnostic was rejected because `ResolvedConfig` has no diagnostic channel —
+adding one would mean either logging from host-neutral core (which nothing else does) or growing the
+resolved-config contract for a case that should not occur. More importantly, the failure mode a
+diagnostic permits is exactly the one Phase 0 exists to remove: an evaluation arm configured with
+`ui_graph: active` would record results under a label describing a capability that never ran, and the
+resulting keep/demote decision would be unfalsifiable. Invariant 1 (evidence policy) and invariant 4
+(truthful degradation) both require the loud failure. Configuration is resolved once at startup, so
+failing closed costs one clear error at the earliest possible point.
+
+The shipped default sets every capability to `off`, so no existing configuration is affected.
+
+### Mechanism
+
+No new gating mechanism was introduced. `CapabilityUnavailable` and `require_explicit_use` moved to
+`core/policy.py` so `service/application.py` (`_require_explicit`, `_explicit_snapshot`),
+`strategy/service.py` and `testing/service.py` share one gate. `build_strategy` and
+`evaluate_test_health` take a required keyword-only `policy`. `test_obsolescence` is gated separately
+from `test_selection`: with it off, `pi_tests` still selects tests and returns `health: []`.
+
+`pi_status` now reports `name`, `implementation`, `mode` and `governed_by` for all 21 capabilities,
+typed as `PiStatus`/`CapabilityStatus` in the OpenCode adapter.
+
+`tests/architecture/test_capability_gating.py` asserts by AST scan that every `CapabilityName` member
+is policy-gated, folded into a gated capability, or declared unimplemented, and pins the 21/7/1/13
+inventory counts so a new capability cannot be added silently.
+
+GitHub Actions: not added. Validation stays local.
+
+## 2026-08-16 — Plan review corrections and evaluation scope
+
+Context: a full read-through of the consolidated plan found three residual inconsistencies that E0 was
+supposed to eliminate, and four scope gaps that would have surfaced as unusable results at B0.
+
+### Corrections
+
+1. **Project Evidence Memory was scheduled at both P0 and P1.** §3 row 6 and this file said P1; §8 and
+   the §9 legacy mapping said P0. Resolved to **P0**, matching §8/§9.
+2. **`D0` denoted two different things** — capability depth level 0 (§7.1 arm G, E2, V2) and the
+   Phase 5 runtime-bridge stage. In a document whose purpose was retiring ambiguous identifiers this is
+   a defect. Phase 5 stages are renamed **X0** and **X1**; `D0..D4` now means depth only, and §8
+   Phase 5 states the rule explicitly.
+3. **B0 scheduled an ablation sweep over "the 14 implemented capabilities".** After E1 folded
+   `call_graph` into `semantic` there are 14 implemented but only **13** ablatable. Corrected to 13
+   with a pointer to §6. This was missed in the E1 documentation pass.
+
+### Decision — a Layer B task suite is a stage, not part of the runner
+
+Phase 0 gains a new stage **E3 (Layer B task suite and outcome ground truth)**; the former E3 and E4
+become **E4** and **E5**.
+
+Reason: Layer A had a versioned label set while Layer B — the layer the entire product claim rests on
+— had no defined task set, no per-task oracle, and no sealed held-out split. B0 would have produced
+outcome numbers that could not be compared between arms or between runs, and the fix would have
+required repeating B0. Folding the suite into the runner stage was rejected because it lets the suite
+be shaped by what the runner happens to make easy, which is the standard way an evaluation ends up
+measuring the implementation instead of the claim. E3 seals the suite before the runner exists.
+
+The renumbering cost is accepted because no stage past E1 has started. §9, §11, §12, the handoff
+documents and `CURRENT_STATUS.md` were updated in the same commit.
+
+The suite must include a negative-control task class expected not to benefit from PI, and at least one
+task whose correct answer is "insufficient evidence", so the suite can detect PI-induced
+overconfidence rather than only rewarding recall.
+
+### Decision — Layer C budgets become numeric thresholds in the master plan
+
+§7.4 gated promotion on "Layer C stays within budget" while §7.2 listed only metric names, and the
+qualitative budgets lived in a document whose sequencing was superseded. That made the condition
+unfalsifiable. §7.2 now carries a numeric table by repository size class, plus an advisory context
+overhead ratio. The numbers are provisional and calibrated at B0; changing one requires a decision
+entry with the measurement. A budget breach blocks promotion even when Layer A and Layer B improve —
+the response is lower depth or a scoped rollout, never a raised budget.
+
+Recorded honestly: the PR-B measurement (182.145 ms incremental vs 185.638 ms cold on 50 files) means
+the S-class incremental budget is **not currently met** by the fingerprint path.
+
+### Decision — repository content is untrusted input (new invariant 8)
+
+The plan treated privacy as outbound-only (`RemoteCodePolicy`). Nothing addressed the inbound
+direction, even though every capability reads repository text and delivers it into an agent context —
+a direct injection channel. New invariant 8 requires PI output to be structured data rather than
+prose, forbids repository content from changing rollout mode, depth, capability selection, privacy
+policy or verification verdicts, and requires the E3 suite to contain injection-shaped strings so B0
+measures propagation instead of assuming absence. Propagation is a release blocker.
+
+### Decision — the moat is Verification Intelligence; Project Truth is substrate
+
+The competitive analysis scored Project Graph and Impact Analysis only against agent harnesses, where
+they look like a 5-vs-1 advantage. That is the wrong comparison set: static code intelligence
+(Sourcegraph, CodeQL, IDE indexers, LSP) has built code graphs for years with wider language coverage
+and greater scale. A **CI column** is added to §3.3, and rows 22–23 are scored at parity or behind.
+
+Consequently §2 no longer lists five co-equal moat areas — which made the strategy unfalsifiable,
+since any result could be credited to some other pillar. Verification Intelligence is the single
+defended area; the other four are supporting. Master plan §1 is restated to match, and now also states
+the Python/JS-TS language boundary explicitly.
+
+### Decision — program-level stop and pivot criteria (new §10.2)
+
+Invariant 10 was a per-capability stop rule only. Nothing said what happens if B0 disproves the
+premise, so the default outcome was indefinite continuation. §10.2 adds two pivots (verification-only,
+weak-local-only) and a three-condition stop requiring a confirming repeat run. A stop is written up as
+a negative result to the same evidence standard as a positive one. Provider unavailability, a single
+tier regressing, language coverage and OpenCode drift explicitly do not trigger it.
+
+### Recorded — no existing evidence supports the product thesis
+
+`docs/evidence/pr-g/model-evaluation.json` is 6 scenarios, 1 repetition, `tool_calls = 0` in every arm.
+Zero tool calls means no agentic work occurred; it is a context-injection A/B, and 1/6 → 6/6 is close
+to tautological when the needed facts are placed in the prompt. Under invariant 1 it is real evidence
+that the model-routing path functions, and nothing more. §5 now states this, and no claim may cite it
+as outcome evidence.
 
 GitHub Actions: not added. This change is documentation only.

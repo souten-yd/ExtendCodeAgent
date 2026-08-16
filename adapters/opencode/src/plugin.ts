@@ -1,7 +1,7 @@
 import { join, resolve } from "node:path"
 import type { Plugin } from "@opencode-ai/plugin"
 
-import { SidecarClient } from "./client.js"
+import { SidecarClient, type PiStatus, type RolloutMode } from "./client.js"
 import { ToolObservationNormalizer } from "./observations.js"
 import { workspacePath } from "./paths.js"
 import { CoalescingEventQueue } from "./queue.js"
@@ -69,7 +69,7 @@ async function startWatcher(
   queue: CoalescingEventQueue,
 ): Promise<WorkspaceWatcher | undefined> {
   try {
-    const status = (await client.request("status")) as { mode?: string }
+    const status = (await client.request("status")) as Partial<PiStatus>
     if (status.mode === "off") return undefined
     return await startWorkspaceWatcher(root, (path) =>
       queue.enqueue("file.watcher.updated", [path]),
@@ -79,9 +79,7 @@ async function startWatcher(
   }
 }
 
-function readMode(
-  value: string | undefined,
-): "off" | "shadow" | "advisory" | "active" | undefined {
+function readMode(value: string | undefined): RolloutMode | undefined {
   if (value === undefined) return undefined
   if (value === "off" || value === "shadow" || value === "advisory" || value === "active") {
     return value

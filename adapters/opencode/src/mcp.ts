@@ -24,7 +24,7 @@ function result(value: unknown) {
 
 server.registerTool(
   "pi_status",
-  { description: "Show Project Intelligence status and revision." },
+  { description: "Show Project Intelligence status, revision, and capability states." },
   async () => result(await client.request("status")),
 )
 server.registerTool(

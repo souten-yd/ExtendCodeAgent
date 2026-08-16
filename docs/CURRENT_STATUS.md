@@ -14,10 +14,10 @@ have since been consolidated into a single canonical execution plan,
 backlog.
 
 This is not a production-capable designation. Baseline release validation (stage B0, formerly RV-0) is
-deliberately **not** the next step: ten of twenty-one declared capabilities are not policy-gated, the
-capability depth axis is unimplemented, evaluation is a set of per-PR scripts, and there is no
-attributable PI trace. Phase 0 (E1-E4) closes those gaps first so that baseline results can support
-keep/demote decisions.
+deliberately **not** the next step: the capability depth axis is unimplemented, evaluation is a set of
+per-PR scripts, and there is no attributable PI trace. Phase 0 (E1-E5) closes those gaps first so that
+baseline results can support keep/demote decisions. Stage E1 is complete — every declared capability
+is now policy-gated or declared unimplemented.
 
 ## Canonical read order
 
@@ -61,16 +61,55 @@ mapped in master plan section 9 and must not be used to schedule work.
 | PR-H | JS/TS/framework/deep graph expansion | complete; deeper graphs deferred by measurement |
 | PR-I | Research/evidence + project-level convergence | complete |
 
+## Capability gating state
+
+Complete inventory as enforced by `tests/architecture/test_capability_gating.py`. Ablatable means the
+capability can be set to `off` independently and the corresponding work then does not run.
+
+| Capability | Implementation | Rollout authority | Ablatable |
+|---|---|---|---|
+| `graph` | implemented | own | yes |
+| `twin` | implemented | own | yes |
+| `semantic` | implemented | own | yes |
+| `impact` | implemented | own | yes |
+| `test_selection` | implemented | own | yes |
+| `test_obsolescence` | implemented | own | yes |
+| `context` | implemented | own | yes |
+| `runtime` | implemented | own | yes |
+| `blueprint` | implemented | own | yes |
+| `convergence` | implemented | own | yes |
+| `research` | implemented | own | yes |
+| `traceability` | implemented | own | yes |
+| `strategy` | implemented | own | yes |
+| `call_graph` | implemented | governed by `semantic` | no — ablate `semantic` |
+| `cfg` | not_implemented | forced `off` | n/a |
+| `data_flow` | not_implemented | forced `off` | n/a |
+| `state_event` | not_implemented | forced `off` | n/a |
+| `side_effects` | not_implemented | forced `off` | n/a |
+| `api_schema_db` | not_implemented | forced `off` | n/a |
+| `ui_graph` | not_implemented | forced `off` | n/a |
+| `memory` | not_implemented | forced `off` | n/a |
+
+13 capabilities are independently configurable; the other 8 must stay `off` and a non-`off` value is a
+`ConfigError`. `pi_status` reports `implementation`, `mode` and `governed_by` for all 21. Rationale
+for the `call_graph` folding and the `ConfigError` policy: `docs/handoff/DECISIONS.md` (2026-08-16).
+
 ## Immediate next action
 
-Phase 0, stage E1: capability gating conformance. Gate `strategy`, `test_obsolescence` and
-`call_graph`; declare the seven unimplemented capabilities truthfully; add the architecture test that
-makes gating total; re-verify `off` inertness per capability. See `docs/handoff/NEXT_TASK.md`.
+Phase 0, stage E2: capability depth contract (`D0..D4` in the central config, orthogonal to
+`RolloutMode`, no adaptive selection yet, depth recorded in every PI response and visible in
+`pi_status`). See `docs/handoff/NEXT_TASK.md`.
+
+No recorded evidence yet supports the product thesis. The only real-model result,
+`docs/evidence/pr-g/model-evaluation.json`, is 6 scenarios at 1 repetition with `tool_calls = 0` in
+every arm — a context-injection A/B rather than agent task completion. It is evidence that model
+routing works, not that Project Intelligence improves outcomes. See master plan section 5; B0 replaces
+it against the sealed E3 task suite.
 
 The current installed and npm-stable OpenCode version is still `1.18.18` as of 2026-08-14 and must be
 re-evaluated at B0 rather than assumed compatible from PR-D evidence. The known frontier route remains
 unavailable (`0/18`, OpenCode `APIError`); it is now a conditional release gate under master plan
-section 10.2, not an indefinite blocker. Qwen3 0.6B local-low results remain stochastic and require
+section 10.3, not an indefinite blocker. Qwen3 0.6B local-low results remain stochastic and require
 repeated distributions, not a best-run claim.
 
 PR-C provides

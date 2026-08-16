@@ -34,14 +34,34 @@ The durable product position is:
 > agents persistent, revision-aware project truth; bounded evidence; impact/test/runtime reasoning;
 > evidence-backed completion; weak-local-model efficiency; and cross-agent/worktree consistency.
 
-The moat is therefore five connected areas:
+The moat is **one** area, with four supporting ones. Ranking them is deliberate: an earlier version of
+this document listed five co-equal areas, which made the strategy unfalsifiable because any measured
+result could be attributed to some other pillar. Section 3.3 shows why the ranking is what it is.
 
-1. **Project Truth** — Project Graph, Digital Twin, provenance, freshness, workspace/revision identity.
-2. **Verification Intelligence** — Impact, Test Intelligence, Runtime Evidence, Traceability, Convergence.
+**The moat:**
+
+1. **Verification Intelligence** — obligation-driven required verification sets, evidence reuse with
+   dependency closure and invalidation, failure-driven re-evaluation, evidence-backed completion.
+   Nothing in the compared runtimes does this, and static code-intelligence products (§3.3 column CI)
+   answer a different question. This is what the product must be judged on.
+
+**Supporting, not differentiating on their own:**
+
+2. **Project Truth** — Project Graph, Digital Twin, provenance, freshness, workspace/revision identity.
+   Necessary substrate for (1). At parity or behind mature code intelligence in isolation; do not
+   market it as the advantage.
 3. **Task-aware Intelligence** — minimum useful PI, progressive expansion, explainable model/context routing.
 4. **Weak-local Efficiency** — small structured evidence, cache-friendly stable envelopes, bounded decisions.
 5. **Cross-agent Consistency** — keep multiple agent sessions/worktrees aligned with project truth without
    owning the team runtime itself.
+
+**Structural risk of a layer strategy.** A layer above a runtime is absorbable. Claude Code already
+ships subagents, hooks and memory; if a harness adds a project index, area 2 loses its remaining
+distinctiveness overnight. This is a further reason to concentrate on (1): verification obligations are
+tied to executed evidence and to the user's test suite, which harness vendors have shown no appetite to
+own, and which cannot be added as a context feature. The anti-staleness policy (§12) tells us when a
+competitor moves; this ranking tells us what to do about it — defend (1), concede parity on (2)
+without repricing the product.
 
 ## 3. Competitive snapshot and scoring method
 
@@ -65,9 +85,20 @@ Systems:
 - Codex = OpenAI Codex CLI/runtime
 - Cline = Cline SDK/CLI/agent runtime
 - OMO = OpenCode + Oh-My-OpenAgent
+- **CI = code-intelligence products** (Sourcegraph, CodeQL, Glean, JetBrains/IDE indexers, LSP
+  servers) taken as a category, not a single vendor
 
 A score for OC+E does not convert unimplemented roadmap items into delivered features. Current source,
 recorded evidence, and accepted plans remain authoritative.
+
+**On the CI column.** Sections 3.1 and 3.2 compare against agent harnesses, which is the right set for
+harness features. Section 3.3 is different: Project Graph, Impact Analysis and traceability are not
+things agent harnesses ever tried to build, so scoring them only against harnesses flatters
+ExtendCodeAgent and hides the real competition. Static code intelligence has existed for years and is
+mature. The honest question is not "does OpenCode have a code graph" — it does not — but "what does
+ExtendCodeAgent do that a mature code-intelligence product does not". The CI column exists to force
+that question. CI products are not runtimes and are not adoption alternatives to this project; they
+are the capability benchmark for the Project Truth claim.
 
 ### 3.1 Harness and model/runtime foundation
 
@@ -109,25 +140,55 @@ is to normalize the useful observations and let PI reason over work performed by
 
 ### 3.3 Project Intelligence and differentiated value
 
-| # | Capability | OC | OC+E | Atomic | Claude | Codex | Cline | OMO |
-|---|---|---:|---:|---:|---:|---:|---:|---:|
-| 21 | persistent memory | 2 | 2 | 5 | 5 | 4 | 3 | 3 |
-| 22 | Project Graph / Digital Twin | 1 | 5 | 1 | 2 | 2 | 1 | 3 |
-| 23 | Impact Analysis | 1 | 5 | 1 | 3 | 3 | 2 | 3 |
-| 24 | Test Intelligence | 2 | 5 | 1 | 4 | 4 | 3 | 3 |
-| 25 | Runtime Evidence | 3 | 4 | 4 | 4 | 4 | 3 | 4 |
-| 26 | requirement -> code -> test traceability | 1 | 4 | 1 | 2 | 2 | 1 | 1 |
-| 27 | Strategy / architecture intelligence | 3 | 5 | 2 | 5 | 4 | 3 | 4 |
-| 28 | Convergence / evidence-backed done | 2 | 5 | 1 | 3 | 3 | 2 | 3 |
-| 29 | research evidence/provenance | 3 | 5 | 2 | 4 | 4 | 3 | 4 |
-| 30 | adaptive model/task routing | 2 | 4 | 2 | 3 | 3 | 3 | 5 |
+| # | Capability | OC | OC+E | Atomic | Claude | Codex | Cline | OMO | **CI** |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 21 | persistent memory | 2 | 2 | 5 | 5 | 4 | 3 | 3 | 1 |
+| 22 | Project Graph / Digital Twin | 1 | 5 | 1 | 2 | 2 | 1 | 3 | **5** |
+| 23 | Impact Analysis | 1 | 5 | 1 | 3 | 3 | 2 | 3 | **4** |
+| 24 | Test Intelligence | 2 | 5 | 1 | 4 | 4 | 3 | 3 | 3 |
+| 25 | Runtime Evidence | 3 | 4 | 4 | 4 | 4 | 3 | 4 | 2 |
+| 26 | requirement -> code -> test traceability | 1 | 4 | 1 | 2 | 2 | 1 | 1 | 2 |
+| 27 | Strategy / architecture intelligence | 3 | 5 | 2 | 5 | 4 | 3 | 4 | 1 |
+| 28 | Convergence / evidence-backed done | 2 | 5 | 1 | 3 | 3 | 2 | 3 | 1 |
+| 29 | research evidence/provenance | 3 | 5 | 2 | 4 | 4 | 3 | 4 | 2 |
+| 30 | adaptive model/task routing | 2 | 4 | 2 | 3 | 3 | 3 | 5 | 0 |
 
-Category normalized score: OC 40, OC+E 88, Atomic 40, Claude 70, Codex 66, Cline 48, OMO 66.
+Category normalized score: OC 40, OC+E 88, Atomic 40, Claude 70, Codex 66, Cline 48, OMO 66, CI 42.
 
 Using a strategic weighting of 30% foundation, 30% orchestration, 40% Project Intelligence gives the
-following planning score: OC+E 79.6, OMO 79.2, Claude 76.6, Codex 75.0, Cline 70.2, OC 57.4,
-Atomic 54.4. This is not a claim of benchmark superiority. It demonstrates that ExtendCodeAgent's
-best position is specialization above capable runtimes rather than harness parity.
+following planning score among *runtimes*: OC+E 79.6, OMO 79.2, Claude 76.6, Codex 75.0, Cline 70.2,
+OC 57.4, Atomic 54.4. CI products are excluded from that composite because they have no harness or
+orchestration surface; comparing them on it would be meaningless. This is not a claim of benchmark
+superiority. It demonstrates that ExtendCodeAgent's best position is specialization above capable
+runtimes rather than harness parity.
+
+#### What the CI column changes
+
+Rows 22 and 23 are the correction. Against agent harnesses, Project Graph and Impact Analysis look
+like a 5-versus-1 advantage. Against mature code intelligence they are **parity at best** — Sourcegraph
+and IDE indexers have better language coverage, better scale, and years more hardening than 62 Python
+modules with two analyzers. Any claim that Project Graph is the differentiator is not defensible.
+
+What the CI column shows ExtendCodeAgent actually owns is rows **24, 25, 26, 28** — Test Intelligence,
+Runtime Evidence, traceability and evidence-backed completion. Static code intelligence answers "what
+references this". It does not answer "given this change, what must be verified, what evidence is still
+valid, and is this task actually done". That gap is the product.
+
+Three properties produce it, and none of them are present in a static indexer:
+
+1. **Revision-aware evidence with invalidation.** A CI product tells you the current state of the
+   code. It does not record that a test passed at revision *r*, that the implementation has since
+   changed, and that the prior result is therefore stale. Evidence with a lifetime is a different
+   data model, not a feature on top.
+2. **Verification obligations as first-class objects.** Deriving a *required* verification set from a
+   semantic change plus impact closure plus coverage, then recomputing the residual gap, is a
+   different question from graph traversal.
+3. **Bounded, agent-shaped delivery.** CI products are built for humans reading a UI or for CI
+   pipelines. Fitting evidence into a weak local model's context window under a token budget, with
+   confidence and provenance attached, is a distinct engineering problem.
+
+Consequence for positioning: **the moat is Verification Intelligence; Project Truth is its
+substrate, not the selling point.** Section 2 is restated accordingly.
 
 ## 4. What to adopt from Atomic Agent
 
