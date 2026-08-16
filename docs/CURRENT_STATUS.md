@@ -137,6 +137,13 @@ All three host-default cells remained `RATE_LIMIT` and are bridge-unavailable, n
 This run also exposed that a provider shard continued after its first gap; the runner now pauses that
 queue after one triggering attempt while allowing other model queues to continue.
 
+The latest activation at `c95bdfb` observed ready Twin revisions, canonical evidence and
+`pi_status`/`pi_symbol` through local-practical, Copilot Sonnet and Copilot Codex. Local-practical and
+Sonnet also passed the task oracle; Codex's PI activation passed while its task oracle failed.
+host-default remained rate-limited and is the only missing route, so this is
+`PARTIAL_PROVIDER_GAP`, not a complete activation PASS. The historical 27-cell pilot separately
+audits as 27/27 `REUSABLE` with trace integrity PASS and can be promoted without rerunning it.
+
 A review found that the long schedules had no fail-closed activation precondition. A separately
 sealed four-model gate now requires observed `pi_status`, task-bearing PI tool use, active
 capability/depth state, Twin revision, canonical evidence and positive PI time before comprehensive

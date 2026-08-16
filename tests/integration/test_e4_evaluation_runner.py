@@ -27,8 +27,10 @@ from tools.local.evaluation_runner import (  # noqa: E402
     _pilot_gate,
     _pilot_off_assessment,
     _provider_failure,
+    _require_activation_report,
     _run_opencode,
     _task_instruction,
+    promote_pilot,
 )
 
 RUNNER = ROOT / "tools/local/evaluation-runner"
@@ -279,6 +281,92 @@ def test_activation_gate_requires_observed_runtime_state_and_provenance() -> Non
     assert failed["status"] == "FAIL"
     assert failed["failed_models"] == ["local-practical"]
     assert failed["assessment_mismatches"] == ["local-practical"]
+
+
+def test_activation_allows_only_an_isolated_paused_provider_gap(tmp_path: Path) -> None:
+    results = []
+    for model in ("local-practical", "frontier-sonnet", "frontier-codex"):
+        result: dict[str, Any] = {
+            "model_tier": model,
+            "outcome": "FAIL",
+            "process_exit": 0,
+            "errors": [],
+            "pi_tools": ["pi_status", "pi_symbol"],
+            "observed_pi_readiness": "ready",
+            "observed_capability_modes": {
+                capability: "active" for capability in CONFIGURABLE_CAPABILITIES
+            },
+            "observed_capability_depths": {
+                capability: "D2" for capability in CONFIGURABLE_CAPABILITIES
+            },
+            "twin_revision_ids": ["twin-1"],
+            "selected_evidence_ids": ["canonical_ref:py://module#select_tests"],
+            "pi_analysis_ms": 10,
+        }
+        result["pi_activation"] = _activation_assessment(result)
+        results.append(result)
+    report = {
+        "source_revision": subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+        ).strip(),
+        "schedule": {"scope": "b0a-activation"},
+        "results": results,
+        "activation_gate": _activation_gate(results),
+        "provider_queue": {
+            "host-default": {
+                "status": "PAUSED_PROVIDER_GAP",
+                "failure": "RATE_LIMIT",
+            }
+        },
+    }
+    path = tmp_path / "activation.json"
+    path.write_text(json.dumps(report))
+    evidence = _require_activation_report(path, require_comprehensive=True)
+    assert evidence["status"] == "PARTIAL_PROVIDER_GAP"
+    assert evidence["provider_queue"]["host-default"]["status"] == ("PAUSED_PROVIDER_GAP")
+
+
+def test_promoted_pilot_requires_a_fully_reusable_sealed_audit(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+) -> None:
+    gate = {
+        "decision": "PROCEED_TO_COMPREHENSIVE",
+        "activation_plan_seal": json.loads(ACTIVATION_PLAN.read_text())["seal"][
+            "canonical_payload"
+        ],
+        "passes": {"native": 0, "off": 0, "active": 1},
+        "active_pass_delta_over_best_control": 1,
+    }
+    source = {
+        "source_revision": "old",
+        "schedule": {"scope": "b0a-pilot"},
+        "executed_cells": 1,
+        "results": [{"cell_id": "cell"}],
+        "pilot_gate": gate,
+    }
+    source_path = tmp_path / "pilot.json"
+    source_path.write_text(json.dumps(source))
+    audit_body: dict[str, Any] = {
+        "source_checkpoint_sha256": hashlib.sha256(source_path.read_bytes()).hexdigest(),
+        "trace_integrity": "PASS",
+        "counts": {"REUSABLE": 1},
+        "compatibility_manifest": "manifest.json",
+        "compatibility_manifest_seal": "manifest-seal",
+    }
+    audit_path = tmp_path / "audit.json"
+    audit_path.write_text(
+        json.dumps(
+            {
+                **audit_body,
+                "seal": {"algorithm": "sha256", "canonical_payload": _digest(audit_body)},
+            }
+        )
+    )
+    monkeypatch.setattr(evaluation_runner, "_require_clean_worktree", lambda: None)
+    monkeypatch.setattr(evaluation_runner, "_pilot_gate", lambda results: gate)
+    promoted = promote_pilot(source_path, audit_path)
+    assert promoted["decision"] == "PROCEED_TO_COMPREHENSIVE"
+    assert promoted["latency_merge_permitted"] is False
 
 
 def test_effect_pilot_requires_objective_gain_observed_pi_and_bounded_time() -> None:

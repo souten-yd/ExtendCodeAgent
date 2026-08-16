@@ -1390,6 +1390,8 @@ def run(
                     "migration_summary",
                 )
             }
+    if activation_evidence:
+        provider_queue.update(activation_evidence.get("provider_queue", {}))
     current_revision = subprocess.check_output(
         ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
     ).strip()
@@ -1697,13 +1699,30 @@ def _require_activation_report(path: Path | None, *, require_comprehensive: bool
     recomputed = _activation_gate(list(report.get("results", ())))
     if gate != recomputed:
         raise EvaluationError("B0a PI activation report does not match its result cells")
+    if not isinstance(gate, dict):
+        raise EvaluationError("B0a PI activation report is absent")
+    provider_queue = dict(report.get("provider_queue", {}))
+    paused_models = {
+        model
+        for model, state in provider_queue.items()
+        if state.get("status") == "PAUSED_PROVIDER_GAP"
+    }
+    missing_models = set(gate.get("missing_models", ()))
+    partial_provider_gap = (
+        gate.get("status") == "FAIL"
+        and bool(paused_models)
+        and missing_models == paused_models
+        and not gate.get("assessment_mismatches")
+        and not gate.get("failed_models")
+        and not gate.get("capability_route_gaps")
+    )
+    if gate.get("status") != "PASS" and not partial_provider_gap:
+        raise EvaluationError("B0a PI activation report did not pass or isolate provider gaps")
     if (
-        not isinstance(gate, dict)
-        or gate.get("status") != "PASS"
-        or gate.get("pilot_permitted") is not True
+        require_comprehensive
+        and gate.get("comprehensive_evaluation_permitted") is not True
+        and not partial_provider_gap
     ):
-        raise EvaluationError("B0a PI activation report is absent or did not pass")
-    if require_comprehensive and gate.get("comprehensive_evaluation_permitted") is not True:
         raise EvaluationError("B0a PI activation report has unresolved capability route gaps")
     current_revision = subprocess.check_output(
         ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
@@ -1713,13 +1732,16 @@ def _require_activation_report(path: Path | None, *, require_comprehensive: bool
     expected_seal = _load(B0A_ACTIVATION_PLAN)["seal"]["canonical_payload"]
     if gate.get("activation_plan_seal") != expected_seal:
         raise EvaluationError("B0a PI activation report uses a stale activation contract")
-    if set(gate.get("observed_models", ())) != set(B0A_ACTIVATION_MODELS):
+    expected_observed = set(B0A_ACTIVATION_MODELS) - paused_models
+    if set(gate.get("observed_models", ())) != expected_observed:
         raise EvaluationError("B0a PI activation report is missing a permitted model route")
     return {
         "path": str(path.resolve()),
         "activation_plan_seal": expected_seal,
         "source_revision": current_revision,
-        "status": "PASS",
+        "status": "PARTIAL_PROVIDER_GAP" if partial_provider_gap else "PASS",
+        "activated_models": gate.get("observed_models", []),
+        "provider_queue": provider_queue,
     }
 
 
@@ -1727,6 +1749,26 @@ def _require_pilot_report(path: Path | None) -> dict[str, Any]:
     if path is None:
         raise EvaluationError("--pilot-report is required for comprehensive B0a execution")
     report = _load(path.resolve())
+    if report.get("classification") == "B0A_PI_PILOT_COMPATIBILITY_EVIDENCE":
+        verify_seal(report, "promoted B0a pilot evidence")
+        current_revision = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+        ).strip()
+        if report.get("source_revision") != current_revision:
+            raise EvaluationError("promoted B0a pilot evidence is stale")
+        if report.get("decision") != "PROCEED_TO_COMPREHENSIVE":
+            raise EvaluationError("promoted B0a pilot did not permit comprehensive evaluation")
+        expected_seal = _load(B0A_ACTIVATION_PLAN)["seal"]["canonical_payload"]
+        if report.get("activation_plan_seal") != expected_seal:
+            raise EvaluationError("promoted B0a pilot uses a stale effect contract")
+        return {
+            "path": str(path.resolve()),
+            "activation_plan_seal": expected_seal,
+            "source_revision": current_revision,
+            "decision": report["decision"],
+            "result_origin": "promoted_compatible_pilot",
+            "compatibility_audit_seal": report["compatibility_audit_seal"],
+        }
     if report.get("schedule", {}).get("scope") != "b0a-pilot":
         raise EvaluationError("B0a PI pilot report has the wrong scope")
     gate = report.get("pilot_gate")
@@ -1753,6 +1795,51 @@ def _require_pilot_report(path: Path | None) -> dict[str, Any]:
         "source_revision": current_revision,
         "decision": gate["decision"],
     }
+
+
+def promote_pilot(source_path: Path, audit_path: Path) -> dict[str, Any]:
+    """Promote an unchanged, fully reusable pilot without rerunning its 27 cells."""
+    _require_clean_worktree()
+    source = _load(source_path.resolve())
+    audit = _load(audit_path.resolve())
+    verify_seal(audit, "pilot compatibility audit")
+    if hashlib.sha256(source_path.resolve().read_bytes()).hexdigest() != audit.get(
+        "source_checkpoint_sha256"
+    ):
+        raise EvaluationError("pilot source does not match compatibility audit")
+    if audit.get("trace_integrity") != "PASS" or audit.get("counts") != {
+        "REUSABLE": source.get("executed_cells")
+    }:
+        raise EvaluationError("pilot compatibility audit is not fully reusable")
+    if source.get("schedule", {}).get("scope") != "b0a-pilot":
+        raise EvaluationError("pilot source has the wrong scope")
+    gate = _pilot_gate(list(source.get("results", ())))
+    if gate != source.get("pilot_gate"):
+        raise EvaluationError("pilot source gate does not match its result cells")
+    if gate.get("decision") != "PROCEED_TO_COMPREHENSIVE":
+        raise EvaluationError("pilot source did not permit comprehensive evaluation")
+    current_revision = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+    ).strip()
+    body = {
+        "schema": 1,
+        "classification": "B0A_PI_PILOT_COMPATIBILITY_EVIDENCE",
+        "source_revision": current_revision,
+        "original_runner_revision": source["source_revision"],
+        "original_pilot": str(source_path.resolve()),
+        "original_pilot_sha256": audit["source_checkpoint_sha256"],
+        "compatibility_manifest": audit["compatibility_manifest"],
+        "compatibility_manifest_seal": audit["compatibility_manifest_seal"],
+        "compatibility_audit": str(audit_path.resolve()),
+        "compatibility_audit_seal": audit["seal"]["canonical_payload"],
+        "activation_plan_seal": gate["activation_plan_seal"],
+        "decision": gate["decision"],
+        "passes": gate["passes"],
+        "active_pass_delta_over_best_control": gate["active_pass_delta_over_best_control"],
+        "latency_status": "LEGACY_RUNNER_SEPARATE",
+        "latency_merge_permitted": False,
+    }
+    return {**body, "seal": {"algorithm": "sha256", "canonical_payload": digest(body)}}
 
 
 def _report(
@@ -2088,6 +2175,10 @@ def main() -> int:
     migrate_parser.add_argument("--bridge", type=Path, required=True)
     migrate_parser.add_argument("--output", type=Path, required=True)
     migrate_parser.add_argument("--raw-root", type=Path, required=True)
+    promote_parser = sub.add_parser("promote-pilot")
+    promote_parser.add_argument("--source", type=Path, required=True)
+    promote_parser.add_argument("--audit", type=Path, required=True)
+    promote_parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     try:
         if args.command == "validate":
@@ -2176,7 +2267,7 @@ def main() -> int:
             )
         elif args.command == "probe-provider":
             probe_provider(args.model_tier, args.output)
-        else:
+        elif args.command == "migrate-checkpoint":
             _require_clean_worktree()
             _write_report(
                 args.output,
@@ -2188,6 +2279,8 @@ def main() -> int:
                     args.raw_root.resolve() / "traces.jsonl",
                 ),
             )
+        else:
+            _write_report(args.output, promote_pilot(args.source, args.audit))
     except (
         CompatibilityError,
         EvaluationError,
