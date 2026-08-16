@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import pytest
 
+from extendcodeagent.core.config.schema import CapabilityName
 from extendcodeagent.core.model_routing import FakeModelAdapter
+from extendcodeagent.core.policy import CapabilityPolicy, CapabilityUnavailable
 from extendcodeagent.strategy import (
     ModelStrategySynthesis,
     ProposedAlternative,
@@ -23,7 +27,9 @@ class FakeSynthesis:
         return self.alternatives
 
 
-def test_strategy_scores_project_facts_deterministically_and_llm_only_proposes_text() -> None:
+def test_strategy_scores_project_facts_deterministically_and_llm_only_proposes_text(
+    policy: CapabilityPolicy,
+) -> None:
     synthesis = FakeSynthesis(
         (
             ProposedAlternative("narrow", ("a.py",), "small change", "revert one commit"),
@@ -46,6 +52,7 @@ def test_strategy_scores_project_facts_deterministically_and_llm_only_proposes_t
             uncertainty_by_file={"c.py": 0.6},
         ),
         synthesis,
+        policy=policy,
     )
     assert result.selected_id == "narrow"
     assert result.alternatives[0].score > result.alternatives[1].score
@@ -55,12 +62,18 @@ def test_strategy_scores_project_facts_deterministically_and_llm_only_proposes_t
     assert set(synthesis.payloads[0]) == {"goal", "constraints", "candidate_files"}
 
 
-def test_strategy_has_no_generic_fallback_when_synthesis_is_unavailable() -> None:
+def test_strategy_has_no_generic_fallback_when_synthesis_is_unavailable(
+    policy: CapabilityPolicy,
+) -> None:
     with pytest.raises(StrategyError, match="no alternatives"):
-        build_strategy(StrategyRequest("plan", ()), StrategySignals(), FakeSynthesis(()))
+        build_strategy(
+            StrategyRequest("plan", ()), StrategySignals(), FakeSynthesis(()), policy=policy
+        )
 
 
-def test_strategy_does_not_select_an_arbitrary_id_when_scores_tie() -> None:
+def test_strategy_does_not_select_an_arbitrary_id_when_scores_tie(
+    policy: CapabilityPolicy,
+) -> None:
     result = build_strategy(
         StrategyRequest("choose", ()),
         StrategySignals(),
@@ -70,9 +83,20 @@ def test_strategy_does_not_select_an_arbitrary_id_when_scores_tie() -> None:
                 ProposedAlternative("z", ("same.py",), "second", "revert"),
             )
         ),
+        policy=policy,
     )
     assert result.selected_id is None
     assert result.reasons[-1] == "tie_requires_decision"
+
+
+def test_strategy_is_unavailable_when_the_capability_is_off(
+    policy_factory: Callable[..., CapabilityPolicy],
+) -> None:
+    off = policy_factory("advisory", overrides={CapabilityName.STRATEGY: "off"})
+    synthesis = FakeSynthesis((ProposedAlternative("a", ("x.py",), "only", "revert"),))
+    with pytest.raises(CapabilityUnavailable, match="strategy"):
+        build_strategy(StrategyRequest("plan", ()), StrategySignals(), synthesis, policy=off)
+    assert synthesis.payloads == []
 
 
 def test_model_synthesis_accepts_only_explicit_structured_alternatives() -> None:

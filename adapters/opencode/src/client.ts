@@ -3,6 +3,29 @@ import { createInterface } from "node:readline"
 
 export const INTERFACE_VERSION = "extendcodeagent.local.v1"
 
+export type RolloutMode = "off" | "shadow" | "advisory" | "active"
+
+export type CapabilityImplementation = "implemented" | "not_implemented"
+
+/** One entry of the per-capability inventory reported by `pi_status`. */
+export type CapabilityStatus = {
+  readonly name: string
+  readonly implementation: CapabilityImplementation
+  readonly mode: RolloutMode
+  /** Set when another capability's rollout mode governs this one. */
+  readonly governed_by: string | null
+}
+
+export type PiStatus = {
+  readonly interface: string
+  readonly readiness: "ready" | "absent" | "disabled"
+  readonly mode: RolloutMode
+  readonly revision_id: string | null
+  readonly nodes: number
+  readonly edges: number
+  readonly capabilities: readonly CapabilityStatus[]
+}
+
 export type SidecarClientOptions = {
   root: string
   database: string

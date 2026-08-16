@@ -47,6 +47,66 @@ ALL_CAPABILITIES = tuple(CapabilityName)
 KNOWN_ANALYZERS = ("python", "javascript_typescript")
 
 
+class CapabilityImplementation(StrEnum):
+    """Whether a declared capability has a real implementation behind it."""
+
+    IMPLEMENTED = "implemented"
+    NOT_IMPLEMENTED = "not_implemented"
+
+
+#: Capabilities that are declared but have no implementation. Configuring one to
+#: anything other than ``off`` is rejected rather than silently ignored, so an
+#: evaluation arm can never believe it enabled a capability that does not run.
+NOT_IMPLEMENTED_CAPABILITIES: frozenset[CapabilityName] = frozenset(
+    {
+        CapabilityName.CFG,
+        CapabilityName.DATA_FLOW,
+        CapabilityName.STATE_EVENT,
+        CapabilityName.SIDE_EFFECTS,
+        CapabilityName.API_SCHEMA_DB,
+        CapabilityName.UI_GRAPH,
+        CapabilityName.MEMORY,
+    }
+)
+
+#: Capabilities that are implemented but whose authority is owned by another
+#: capability, because they cannot be switched independently without making the
+#: artifact they contribute to depend on the rollout mode. The key is governed by
+#: the value's rollout mode and is not separately configurable.
+CAPABILITY_FOLDED_INTO: Mapping[CapabilityName, CapabilityName] = MappingProxyType(
+    {CapabilityName.CALL_GRAPH: CapabilityName.SEMANTIC}
+)
+
+
+def capability_implementation(capability: CapabilityName) -> CapabilityImplementation:
+    if capability in NOT_IMPLEMENTED_CAPABILITIES:
+        return CapabilityImplementation.NOT_IMPLEMENTED
+    return CapabilityImplementation.IMPLEMENTED
+
+
+def governing_capability(capability: CapabilityName) -> CapabilityName:
+    """Return the capability whose rollout mode decides this one."""
+
+    return CAPABILITY_FOLDED_INTO.get(capability, capability)
+
+
+def unconfigurable_reason(capability: CapabilityName) -> str | None:
+    """Explain why a capability may only be left at ``off``, or ``None`` if it is free."""
+
+    if capability in NOT_IMPLEMENTED_CAPABILITIES:
+        return "is declared but not implemented"
+    folded = CAPABILITY_FOLDED_INTO.get(capability)
+    if folded is not None:
+        return f"is governed by '{folded.value}'; configure that capability instead"
+    return None
+
+
+#: Capabilities a user may set to a non-``off`` rollout mode.
+CONFIGURABLE_CAPABILITIES = tuple(
+    name for name in ALL_CAPABILITIES if unconfigurable_reason(name) is None
+)
+
+
 class ModelRole(StrEnum):
     FAST_CLASSIFIER = "fast_classifier"
     SMALL_STRUCTURED = "small_structured"

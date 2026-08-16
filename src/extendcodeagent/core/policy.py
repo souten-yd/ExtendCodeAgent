@@ -6,7 +6,19 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 
-from .config.schema import CapabilityName, ProjectIntelligenceConfig, RolloutMode
+from .config.schema import (
+    NOT_IMPLEMENTED_CAPABILITIES,
+    CapabilityImplementation,
+    CapabilityName,
+    ProjectIntelligenceConfig,
+    RolloutMode,
+    capability_implementation,
+    governing_capability,
+)
+
+
+class CapabilityUnavailable(RuntimeError):
+    """Raised when a capability is used beyond the authority its rollout mode grants."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,11 +32,24 @@ class CapabilityPolicy:
     def from_config(cls, config: ProjectIntelligenceConfig) -> CapabilityPolicy:
         if not config.enabled or config.mode is RolloutMode.OFF:
             return cls({name: RolloutMode.OFF for name in CapabilityName})
-        modes = {
+        bounded = {
             name: _bounded_mode(config.mode, configured_mode)
             for name, configured_mode in config.capabilities.items()
         }
+        modes = {
+            name: RolloutMode.OFF
+            if name in NOT_IMPLEMENTED_CAPABILITIES
+            else bounded[governing_capability(name)]
+            for name in CapabilityName
+        }
         return cls(modes)
+
+    def implementation(self, capability: CapabilityName) -> CapabilityImplementation:
+        return capability_implementation(capability)
+
+    def require_explicit_use(self, capability: CapabilityName) -> None:
+        if not self.allows_explicit_use(capability):
+            raise CapabilityUnavailable(f"{capability.value} is not available for explicit use")
 
     def mode(self, capability: CapabilityName) -> RolloutMode:
         return self.modes[capability]

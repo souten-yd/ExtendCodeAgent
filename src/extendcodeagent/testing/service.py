@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from extendcodeagent.analysis import ImpactReport
+from extendcodeagent.core.config.schema import CapabilityName
 from extendcodeagent.core.contracts import CanonicalRef, SourceRevision
+from extendcodeagent.core.policy import CapabilityPolicy
 from extendcodeagent.runtime import ObservationStatus
 
 from .contracts import (
@@ -38,8 +40,12 @@ def select_tests(report: ImpactReport, *, minimum_confidence: float = 0.7) -> Te
 
 
 def evaluate_test_health(
-    signals: TestHealthSignals, *, current_revision: SourceRevision
+    signals: TestHealthSignals,
+    *,
+    current_revision: SourceRevision,
+    policy: CapabilityPolicy,
 ) -> TestHealthResult:
+    policy.require_explicit_use(CapabilityName.TEST_OBSOLESCENCE)
     if not signals.exists:
         return _health(signals, TestHealthState.MISSING, "test target does not exist")
     if signals.redundant_with is not None:

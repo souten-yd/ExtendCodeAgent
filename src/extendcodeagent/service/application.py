@@ -34,7 +34,12 @@ from extendcodeagent.convergence import (
     evaluate_convergence,
 )
 from extendcodeagent.convergence.storage import SqliteConvergenceRepository
-from extendcodeagent.core.config.schema import KNOWN_ANALYZERS, CapabilityName, RolloutMode
+from extendcodeagent.core.config.schema import (
+    KNOWN_ANALYZERS,
+    CapabilityName,
+    RolloutMode,
+    governing_capability,
+)
 from extendcodeagent.core.contracts import (
     CanonicalRef,
     ProjectRef,
@@ -42,7 +47,7 @@ from extendcodeagent.core.contracts import (
     SourceRevision,
     TwinRevisionRef,
 )
-from extendcodeagent.core.policy import CapabilityPolicy
+from extendcodeagent.core.policy import CapabilityPolicy, CapabilityUnavailable
 from extendcodeagent.graph import GraphSnapshot
 from extendcodeagent.graph.analyzers import (
     CompositeGraphAnalyzer,
@@ -64,9 +69,7 @@ from extendcodeagent.twin import TwinService
 
 INTERFACE_VERSION = "extendcodeagent.local.v1"
 
-
-class CapabilityUnavailable(RuntimeError):
-    pass
+__all__ = ["CapabilityUnavailable", "ProjectIntelligenceApplication", "INTERFACE_VERSION"]
 
 
 class ProjectIntelligenceApplication:
@@ -117,6 +120,7 @@ class ProjectIntelligenceApplication:
                 "revision_id": None,
                 "nodes": 0,
                 "edges": 0,
+                "capabilities": self._capability_status(),
             }
         snapshot = self._ensure_twin().snapshot(self.project)
         return {
@@ -126,7 +130,22 @@ class ProjectIntelligenceApplication:
             "revision_id": snapshot.revision.revision_id if snapshot.revision else None,
             "nodes": len(snapshot.nodes),
             "edges": len(snapshot.edges),
+            "capabilities": self._capability_status(),
         }
+
+    def _capability_status(self) -> list[dict[str, Any]]:
+        entries: list[dict[str, Any]] = []
+        for capability in CapabilityName:
+            governed_by = governing_capability(capability)
+            entries.append(
+                {
+                    "name": capability.value,
+                    "implementation": self.policy.implementation(capability).value,
+                    "mode": self.policy.mode(capability).value,
+                    "governed_by": governed_by.value if governed_by is not capability else None,
+                }
+            )
+        return entries
 
     def process_event(self, paths: tuple[str, ...], kind: str) -> dict[str, Any]:
         if not all(
@@ -240,6 +259,9 @@ class ProjectIntelligenceApplication:
             limit=self.max_items,
         )
         current_revision = snapshot.revision.source_revision if snapshot.revision else None
+        # test_obsolescence is a separate capability: test selection stays available
+        # when obsolescence classification is switched off for ablation.
+        obsolescence = self.policy.allows_explicit_use(CapabilityName.TEST_OBSOLESCENCE)
         health = (
             [
                 _health_json(
@@ -251,11 +273,12 @@ class ProjectIntelligenceApplication:
                             observations=observations,
                         ),
                         current_revision=current_revision,
+                        policy=self.policy,
                     )
                 )
                 for candidate in selection.candidates
             ]
-            if current_revision
+            if current_revision and obsolescence
             else []
         )
         return _result(
@@ -492,8 +515,7 @@ class ProjectIntelligenceApplication:
         return self._snapshot(open_if_missing=True)
 
     def _require_explicit(self, capability: CapabilityName) -> None:
-        if not self.policy.allows_explicit_use(capability):
-            raise CapabilityUnavailable(f"{capability.value} is not available for explicit use")
+        self.policy.require_explicit_use(capability)
 
     def _snapshot(self, *, open_if_missing: bool) -> GraphSnapshot:
         if self._twin is None:

@@ -15,7 +15,9 @@ function jsonResult(value: unknown): string {
 export function createTools(request: Requester): Record<string, ToolDefinition> {
   return {
     pi_status: tool({
-      description: "Show ExtendCodeAgent Project Intelligence status and graph revision.",
+      description:
+        "Show ExtendCodeAgent Project Intelligence status, graph revision, and the " +
+        "implementation state and rollout mode of every declared capability.",
       args: {},
       async execute() {
         return jsonResult(await request("status"))
