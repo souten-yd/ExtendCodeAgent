@@ -176,6 +176,62 @@ def test_query_view_rejects_unknown_projection(tmp_path: Path) -> None:
             application.tests(("py://service#leaf",), view="unknown")
 
 
+def test_compact_impact_counts_source_uses_and_tests_cover_structural_scope(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "obligations"
+    root.mkdir()
+    _write(root, "src/pkg/checks.py", "def allowed(value):\n    return bool(value)\n")
+    _write(
+        root,
+        "src/pkg/service.py",
+        "from src.pkg.checks import allowed\n\n"
+        "def validate(left, right):\n"
+        "    return allowed(left) and allowed(right)\n",
+    )
+    _write(
+        root,
+        "tests/unit/test_checks.py",
+        "from src.pkg.checks import allowed\n\ndef test_allowed():\n    assert allowed(1)\n",
+    )
+    _write(
+        root,
+        "tests/integration/test_checks.py",
+        "from src.pkg.service import validate\n\ndef test_validate():\n    assert validate(1, 2)\n",
+    )
+    _write(
+        root,
+        "tests/architecture/test_checks_projection.py",
+        "from pathlib import Path\n\n"
+        'PACKAGE = Path(__file__).parents[2] / "src" / "pkg"\n\n'
+        "def test_package_projection():\n"
+        '    assert list(PACKAGE.glob("*.py"))\n',
+    )
+    changed = ("py://src.pkg.checks#allowed",)
+    with ProjectIntelligenceApplication(
+        root, tmp_path / "obligations.db", _policy("advisory")
+    ) as application:
+        impact = application.impact(changed, view="compact")
+        selected = application.tests(changed, view="compact")
+
+    assert impact["production_methods"] == ["validate"]
+    assert impact["direct_use_count"] == 2
+    assert impact["focused_tests"] == [
+        "tests/architecture/test_checks_projection.py",
+        "tests/integration/test_checks.py",
+        "tests/unit/test_checks.py",
+    ]
+    assert selected["selected_tests"] == impact["focused_tests"]
+    assert selected["covered_obligations"] == [
+        "architecture_boundary",
+        "integration_boundary",
+        "unit_behavior",
+    ]
+    assert selected["coverage_complete"] is True
+    assert selected["uncovered_obligations"] == []
+    assert selected["fallback_search_required"] is False
+
+
 def test_runtime_ingest_persists_and_marks_old_green_test_stale(tmp_path: Path) -> None:
     root = _repo(tmp_path)
     database = tmp_path / "graph.db"

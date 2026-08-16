@@ -23,7 +23,7 @@ from .contracts import GraphAnalysis
 if TYPE_CHECKING:
     from extendcodeagent.twin.source_snapshot import SourceSnapshot
 
-PYTHON_ANALYZER_VERSION = "python_ast.v1"
+PYTHON_ANALYZER_VERSION = "python_ast.v2"
 _BUILTINS = frozenset(dir(builtins))
 
 
@@ -120,6 +120,26 @@ class PythonGraphAnalyzer:
             properties: dict[str, object] | None = None,
         ) -> None:
             key = f"{source}\0{kind}\0{target}"
+            existing = edges.get(key)
+            if existing is not None and kind in {"calls", "may_call"}:
+                previous_value = existing.properties.get("occurrences", 1)
+                additional_value = (properties or {}).get("occurrences", 1)
+                previous = previous_value if isinstance(previous_value, int) else 1
+                additional = additional_value if isinstance(additional_value, int) else 1
+                edges[key] = GraphEdge(
+                    existing.edge_id,
+                    existing.source,
+                    existing.target,
+                    existing.edge_type,
+                    existing.source_ref,
+                    existing.provenance,
+                    existing.confidence,
+                    existing.status,
+                    existing.revision,
+                    {**existing.properties, "occurrences": previous + additional},
+                    existing.evidence,
+                )
+                return
             edges.setdefault(
                 key,
                 GraphEdge(
@@ -204,6 +224,11 @@ class PythonGraphAnalyzer:
                     "qualname": definition.qualname,
                     "start_line": definition.node.lineno,
                     "end_line": getattr(definition.node, "end_lineno", definition.node.lineno),
+                    **(
+                        {"intent_tokens": list(_intent_tokens(definition.node))}
+                        if _is_test(definition)
+                        else {}
+                    ),
                 },
             )
             add_edge(
@@ -212,6 +237,32 @@ class PythonGraphAnalyzer:
                 "defines",
                 definition.path,
             )
+
+        for module in modules:
+            if selected is not None and module.path not in selected:
+                continue
+            bindings = _module_path_scopes(root, module.tree)
+            test_definitions = [
+                item
+                for item in definitions.values()
+                if item.module == module.dotted and _is_test(item)
+            ]
+            for definition in test_definitions:
+                loaded_names = {
+                    node.id
+                    for node in ast.walk(definition.node)
+                    if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)
+                }
+                for scope in sorted({bindings[name] for name in loaded_names if name in bindings}):
+                    target_path = root / scope
+                    target_ref = f"dir://{scope}" if target_path.is_dir() else f"file://{scope}"
+                    add_edge(
+                        definition.ref,
+                        target_ref,
+                        "structurally_covers",
+                        module.path,
+                        properties={"scope": scope},
+                    )
 
         by_module_name = {(item.module, item.name): item for item in definitions.values()}
         classes = {item.ref: item for item in definitions.values() if item.kind == "class"}
@@ -316,6 +367,7 @@ def _emit_semantic_edges(
             definition.path,
             confidence=confidence,
             status=FactStatus.DECLARED if resolved else FactStatus.INFERRED,
+            properties={"occurrences": 1},
         )
     for child in ast.walk(node):
         if not isinstance(child, ast.Name) or not isinstance(child.ctx, ast.Load):
@@ -462,6 +514,65 @@ def _is_test(definition: _Definition) -> bool:
     filename = Path(definition.path).name
     return definition.name.startswith("test_") and (
         filename.startswith("test_") or filename.endswith("_test.py")
+    )
+
+
+def _module_path_scopes(root: Path, tree: ast.Module) -> dict[str, str]:
+    bindings: dict[str, tuple[str, ...]] = {}
+    scopes: dict[str, str] = {}
+    for node in tree.body:
+        target: ast.expr
+        value: ast.expr | None
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            target, value = node.targets[0], node.value
+        elif isinstance(node, ast.AnnAssign):
+            target, value = node.target, node.value
+        else:
+            continue
+        if not isinstance(target, ast.Name) or value is None:
+            continue
+        segments = _path_segments(value, bindings)
+        if segments is None:
+            continue
+        bindings[target.id] = segments
+        if not segments or segments[0] not in {"src", "lib"}:
+            continue
+        relative = Path(*segments).as_posix()
+        if (root / relative).exists():
+            scopes[target.id] = relative
+    return scopes
+
+
+def _path_segments(node: ast.AST, bindings: dict[str, tuple[str, ...]]) -> tuple[str, ...] | None:
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+        left = _path_segments(node.left, bindings)
+        right = _path_segments(node.right, bindings)
+        return (*left, *right) if left is not None and right is not None else None
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        path = Path(node.value)
+        return tuple(part for part in path.parts if part not in {"", "."})
+    if isinstance(node, ast.Subscript | ast.Attribute):
+        return _path_segments(node.value, bindings)
+    if isinstance(node, ast.Call) and _expression_name(node.func) in {"Path", "pathlib.Path"}:
+        return ()
+    if isinstance(node, ast.Name) and node.id == "__file__":
+        return ()
+    if isinstance(node, ast.Name):
+        return bindings.get(node.id)
+    return None
+
+
+def _intent_tokens(node: ast.AST) -> tuple[str, ...]:
+    values = {node.name} if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) else set()
+    for child in ast.walk(node):
+        if isinstance(child, ast.Name):
+            values.add(child.id)
+        elif isinstance(child, ast.Attribute):
+            values.add(child.attr)
+    return tuple(
+        sorted(
+            {token for value in values for token in value.casefold().split("_") if len(token) >= 4}
+        )
     )
 
 

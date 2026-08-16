@@ -32,6 +32,7 @@ class Service(Base):
     def handler(self, value):
         selected = run_helper
         run_helper(value)
+        run_helper(value)
         self.save()
         client.unknown(value)
         return value
@@ -68,6 +69,14 @@ class Service(Base):
         "py://pkg.util#helper",
         1.0,
     ) in edges
+    helper_call = next(
+        edge
+        for edge in first.edges
+        if edge.edge_type == "calls"
+        and edge.source.value == "py://pkg.service#Service.handler"
+        and edge.target.value == "py://pkg.util#helper"
+    )
+    assert helper_call.properties["occurrences"] == 2
     assert (
         "calls",
         "py://pkg.service#Service.handler",
@@ -103,3 +112,25 @@ def test_parse_failure_is_truthful_and_preserves_structural_file(tmp_path: Path)
 
     assert any(node.canonical_ref.value == "file://broken.py" for node in result.nodes)
     assert any(diagnostic.code == "python_parse_error" for diagnostic in result.diagnostics)
+
+
+def test_architecture_test_path_scope_emits_structural_coverage(tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    root.mkdir()
+    _write(root, "src/pkg/feature.py", "def feature():\n    return 1\n")
+    _write(
+        root,
+        "tests/architecture/test_structure.py",
+        "from pathlib import Path\n\n"
+        'PACKAGE = Path(__file__).parents[2] / "src" / "pkg"\n\n'
+        "def test_package_structure():\n"
+        '    assert list(PACKAGE.glob("*.py"))\n',
+    )
+    project = ProjectRef("p", "w", root.resolve().as_uri())
+    result = PythonGraphAnalyzer().analyze(project, SourceSnapshotter().snapshot(project))
+
+    relation = next(edge for edge in result.edges if edge.edge_type == "structurally_covers")
+    assert relation.source.value == "py://tests.architecture.test_structure#test_package_structure"
+    assert relation.target.value == "dir://src/pkg"
+    assert relation.source_ref == "tests/architecture/test_structure.py"
+    assert relation.properties == {"scope": "src/pkg"}

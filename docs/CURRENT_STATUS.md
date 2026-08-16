@@ -156,6 +156,14 @@ public export, production source caller and two existing tests for `select_tests
 separates focused tests from the wider candidate set and keeps `coverage_complete=false` plus an
 explicit unresolved boundary. This is projection evidence only pending the sealed pilot rerun.
 
+The next bounded structural-obligation slice upgrades the Python analyzer to `python_ast.v2`. It
+retains repeated call occurrences, derives direct `structurally_covers` relations when a test uses a
+module-level `Path` source scope, and stores deterministic test-intent tokens. Compact selection uses
+those facts conservatively. On the clean ECA task workspace, `_edge_meets_confidence` now projects
+the exact 3 production methods, 4 source uses and 2 focused tests; required-verification selection
+returns exactly the unit, integration and architecture files with all three bounded obligations
+covered. This is task-grounded repair evidence, not general TestIntent completeness.
+
 The bootstrap blocker has a bounded B1 repair at exact head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`. A matching current-edge identity index and schema-5
 migration reduce exact-pin three-run cold medians to 15,825ms for KasaneCore and 6,368ms for PEDS;

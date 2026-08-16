@@ -58,8 +58,17 @@ Current task: prove real PI activation and repair missing capability routes befo
   ECA task workspace, symbol compact returns the exact `select_tests` definition, export, production
   source caller and two test paths. Impact compact returns the exact three production methods and
   narrows focused tests to `tests/unit/test_graph_analysis.py`, while retaining all candidates and
-  `coverage_complete=false`. Do not rerun the pilot until structural obligation coverage and source
-  use counts are repaired.
+  `coverage_complete=false`. Structural obligation coverage and source use counts were the next
+  measured repair and are closed below.
+- Python analyzer `v2` now preserves call occurrence multiplicity and emits `structurally_covers`
+  only when a test directly uses a resolved module-level `Path` scope. Compact projection combines
+  that relation with deterministic test-intent tokens; broad structural scans are retained as
+  candidates but not called focused without intent overlap.
+- Clean ECA task-workspace proof now matches both remaining pilot schemas: impact returns the exact
+  three methods, direct-use count 4, and capability-depth plus unit graph tests; test selection
+  returns exactly architecture projection, Twin integration and unit verification, with
+  `architecture_boundary`, `integration_boundary`, and `unit_behavior` covered and no fallback.
+  This bounded evidence does not claim a complete generic TestIntent/Coverage Graph.
 - Comprehensive B0a execution now requires passing same-exact-head activation and pilot reports. Current
   deterministic reachability audit blocks it because `blueprint`, `convergence`, `traceability` and
   `strategy` have no OpenCode tool/task route. Next: finish focused/full gates, publish this guard,
