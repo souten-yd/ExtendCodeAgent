@@ -850,3 +850,36 @@ PI-enabled screening does not measure avoidable quadratic storage work.
 Three fresh exact-pin runs, rather than the first successful diagnostic, are the acceptance evidence.
 KasaneCore and PEDS now pass their size-class cold-index budgets and may enter held-out confirmation.
 The original timeout record remains immutable and is superseded, not rewritten.
+
+## 2026-08-16 — B0a requires observed PI activation before comprehensive evaluation
+
+Decision: a separately sealed exact-head activation gate precedes the long native/off baseline and
+active/ablation screen. Each permitted available model route must actually call `pi_status` and a
+task-bearing PI tool and expose observed modes/depths, ready Twin revision, canonical evidence and
+positive PI time. Visibility of tool names or planned capability state is insufficient.
+
+The first 137 baseline cells remain diagnostic history because they used the old protocol and pure
+OpenCode `native` never exercised PI. They are not resumed into the final comparison. Corrected
+baseline and screening evidence must start from zero at the same implementation head as the passing
+activation report.
+
+The activation contract also fails closed on capability reachability. `blueprint`, `convergence`,
+`traceability` and `strategy` are implemented in core but currently have no OpenCode tool/task path;
+running their ablations would measure non-execution and could falsely report no effect. This is a B1
+adapter/productization gap to repair before the 714-cell screen, not a reason to weaken the screen.
+
+Activation alone is not a reason to spend the full matrix. A 27-cell port-8090 pilot compares
+`native`, installed-but-off and active over three representative tasks at three repetitions. Active
+must show an objective PASS gain over the better control, every PI-enabled/disabled observation must
+match its contract, provider errors/timeouts are forbidden, and active median wall time must stay
+within 2x of the slower control. Any failure produces `REPAIR_AND_RETEST`; the pilot is rerun at the
+repaired exact head before comprehensive evaluation.
+
+Evaluation agent shells must not inherit the runner's editable environment. The runner removes its
+`.venv/bin`, `VIRTUAL_ENV` and root `PYTHONPATH` before launching OpenCode and requires pip to have an
+isolated virtualenv. The ECA sidecar still receives its explicit interpreter. This prevents a model
+task from changing later cells by retargeting the shared runner installation.
+
+Resume is exact-head only. The runner rejects a checkpoint whose source revision, sealed schedule,
+activation/pilot evidence or trace path differs, and rejects non-resume execution into an existing
+report/trace. Old-protocol cells cannot be combined with corrected evaluation by operator mistake.

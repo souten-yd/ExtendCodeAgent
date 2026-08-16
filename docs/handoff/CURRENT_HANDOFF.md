@@ -2,18 +2,34 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/b1-edge-index` (repair worktree); B0a baseline runs from merged head `86e8061`
+Current branch: `agent/b0a-pi-activation-gate`; latest merged base `c0cfa61`
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
-Current task: merge B1 blocker repair, complete B0a baseline, then screen on the repaired head
+Current task: prove real PI activation and repair missing capability routes before comprehensive B0a
 
 ## B0a contract checkpoint (2026-08-16)
+
+- Stopped the pre-activation baseline after 137/306 atomically checkpointed cells at exact old head
+  `86e8061`. No runner/OpenCode process remains. These cells are diagnostic OpenCode model-variance
+  history and will not be mixed with corrected-protocol results.
+- Added sealed `docs/evaluation/b0a-activation-plan-v1.json`. Its four one-cell routes are port-8090
+  Qwen, host-default, GitHub Copilot Sonnet and GitHub Copilot Codex, all in active mode through the
+  ControlDeck-managed OpenCode executable.
+- A passing route must observe `pi_status`, `pi_symbol`, all configurable modes/depths, ready Twin,
+  Twin revision, canonical evidence and positive PI time. Task-oracle quality remains a separate
+  field.
+- Added a 27-cell causal pilot: port-8090 Qwen, `native/off/active`, symbol/impact/test-selection,
+  three repetitions. It proceeds only on an objective active PASS gain, complete active/off PI
+  observations, no provider/timeout failure and active median wall ratio at most 2x.
+- Comprehensive B0a execution now requires passing same-exact-head activation and pilot reports. Current
+  deterministic reachability audit blocks it because `blueprint`, `convergence`, `traceability` and
+  `strategy` have no OpenCode tool/task route. Next: finish focused/full gates, publish this guard,
+  then add the missing bounded runtime paths and tasks before rerunning activation and all matrices.
 
 - Conditional B1 repair exact head `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7` adds the missing
   current-edge identity index. Three cold exact-pin runs changed KasaneCore/PEDS from >300-second
   timeout to medians of 15,825ms/6,368ms; both are now bootstrap-eligible and within budget.
-- The resumable native/off baseline remains bound to merged schedule head `86e8061`; its first
-  53 cells are checkpointed. PI-enabled screening must start only after the repair merges, so the
-  known storage defect is not mixed into capability attribution.
+- The historical native/off baseline at merged schedule head `86e8061` is stopped at 137 cells and
+  is not resumable into corrected evidence. It remains only as diagnostic model-variance history.
 - Evidence: `docs/evidence/final/b1-edge-index-repair.json`. No PI effect claim follows from this
   performance repair.
 

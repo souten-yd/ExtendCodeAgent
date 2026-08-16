@@ -12,6 +12,7 @@ import sys
 import time
 from collections import Counter
 from pathlib import Path
+from statistics import median
 from typing import Any
 
 from extendcodeagent.evaluation import EvaluationTrace, EvaluationTraceLog
@@ -23,6 +24,7 @@ LABELS = ROOT / "docs/evaluation/labels-v1/graph-quality-labels.json"
 METRICS = ROOT / "docs/evaluation/pi-verification-integrated-metrics-v1.json"
 CORPUS = ROOT / "docs/evaluation/test-portfolio-corpus-v1.json"
 B0A_PLAN = ROOT / "docs/evaluation/b0a-screening-plan-v1.json"
+B0A_ACTIVATION_PLAN = ROOT / "docs/evaluation/b0a-activation-plan-v1.json"
 B0A_BOOTSTRAP = ROOT / "docs/evidence/final/b0a-bootstrap-environment-v1.json"
 E3_HARNESS = ROOT / "tools/local/e3_task_suite.py"
 PYTHON = ROOT / ".venv/bin/python"
@@ -42,6 +44,12 @@ CONFIGURABLE_CAPABILITIES = (
     "research",
     "traceability",
     "strategy",
+)
+B0A_ACTIVATION_MODELS = (
+    "local-practical",
+    "host-default",
+    "frontier-sonnet",
+    "frontier-codex",
 )
 LOCAL_SOURCES = {
     "extendcodeagent": ROOT,
@@ -91,6 +99,7 @@ def validate() -> None:
     metrics = _load(METRICS)
     corpus = _load(CORPUS)
     b0a_plan = _load(B0A_PLAN)
+    activation_plan = _load(B0A_ACTIVATION_PLAN)
     bootstrap = _load(B0A_BOOTSTRAP)
     _verify_seal(matrix, "matrix")
     _verify_seal(labels, "Layer A labels")
@@ -129,12 +138,36 @@ def validate() -> None:
     if not corpus.get("repositories") or corpus.get("corpus_id") != "test-portfolio-v1":
         raise EvaluationError("quality corpus is empty or unsupported")
     _verify_seal(b0a_plan, "B0a screening plan")
+    _verify_seal(activation_plan, "B0a PI activation plan")
     if b0a_plan["inputs"]["matrix_seal"] != matrix["seal"]["canonical_payload"]:
         raise EvaluationError("B0a plan matrix seal is stale")
     if b0a_plan["inputs"]["task_suite_seal"] != tasks["seal"]["canonical_payload"]:
         raise EvaluationError("B0a plan task-suite seal is stale")
     if bootstrap["screening_plan_seal"] != b0a_plan["seal"]["canonical_payload"]:
         raise EvaluationError("B0a bootstrap evidence does not match the screening plan")
+    activation_inputs = activation_plan["inputs"]
+    if activation_inputs["matrix_seal"] != matrix["seal"]["canonical_payload"]:
+        raise EvaluationError("B0a activation-plan matrix seal is stale")
+    if activation_inputs["task_suite_seal"] != tasks["seal"]["canonical_payload"]:
+        raise EvaluationError("B0a activation-plan task-suite seal is stale")
+    if activation_inputs["screening_plan_seal"] != b0a_plan["seal"]["canonical_payload"]:
+        raise EvaluationError("B0a activation plan does not match the screening plan")
+    if tuple(activation_plan["models"]) != B0A_ACTIVATION_MODELS:
+        raise EvaluationError("B0a activation plan does not cover every permitted model route")
+    pilot = activation_plan["pilot"]
+    if pilot["model"] != "local-practical" or pilot["repetitions"] != 3:
+        raise EvaluationError("B0a PI pilot must use three port-8090 local-practical repetitions")
+    if tuple(pilot["arms"]) != ("native", "off", "active"):
+        raise EvaluationError("B0a PI pilot must preserve native/off/active controls")
+    if not set(pilot["tasks"]) <= {item["id"] for item in tasks["tasks"]}:
+        raise EvaluationError("B0a PI pilot references an unknown task")
+    route_capabilities = {
+        capability
+        for route in activation_plan["capability_routes"]
+        for capability in route["capabilities"]
+    }
+    if route_capabilities != set(CONFIGURABLE_CAPABILITIES):
+        raise EvaluationError("B0a activation plan does not classify every configurable capability")
     assigned_tiers = set(b0a_plan["screening"]["capability_model_tiers"].values())
     if assigned_tiers != {"local-practical"}:
         raise EvaluationError("B0a screening runner only supports the sealed local-practical tier")
@@ -145,6 +178,10 @@ def validate() -> None:
 
 def _arms(matrix: dict[str, Any], scope: str) -> list[str]:
     base = [item["id"] for item in matrix["base_arms"]]
+    if scope == "b0a-activation":
+        return ["active"]
+    if scope == "b0a-pilot":
+        return list(_load(B0A_ACTIVATION_PLAN)["pilot"]["arms"])
     if scope == "b0a-baseline":
         return ["native", "off"]
     if scope == "b0a-screening":
@@ -180,17 +217,24 @@ def plan(
     elif scope == "screening":
         wanted = set(matrix["screening"]["tuning_task_subset"])
         tasks = [item for item in tasks if item["id"] in wanted]
-    elif scope in {"b0a-baseline", "b0a-screening"}:
+    elif scope in {"b0a-activation", "b0a-pilot", "b0a-baseline", "b0a-screening"}:
         b0a_plan = _load(B0A_PLAN)
         bootstrap = _load(B0A_BOOTSTRAP)
         eligibility = {item["id"]: item["eligibility"] for item in bootstrap["repositories"]}
         included = {key for key, value in eligibility.items() if value == "INCLUDED"}
         tasks = [item for item in tasks if item["repository_id"] in included]
-        if scope == "b0a-screening":
+        if scope == "b0a-activation":
+            wanted = {_load(B0A_ACTIVATION_PLAN)["task_id"]}
+            tasks = [item for item in tasks if item["id"] in wanted]
+        elif scope == "b0a-pilot":
+            wanted = set(_load(B0A_ACTIVATION_PLAN)["pilot"]["tasks"])
+            tasks = [item for item in tasks if item["id"] in wanted]
+        elif scope == "b0a-screening":
             wanted = set(b0a_plan["screening"]["task_subset"])
             tasks = [item for item in tasks if item["id"] in wanted]
         b0a = {
             "screening_plan_seal": b0a_plan["seal"]["canonical_payload"],
+            "activation_plan_seal": _load(B0A_ACTIVATION_PLAN)["seal"]["canonical_payload"],
             "included_repositories": sorted(included),
             "excluded_repositories": sorted(set(eligibility) - included),
         }
@@ -201,16 +245,17 @@ def plan(
             raise EvaluationError(f"unknown arms for {scope}: {sorted(unknown)}")
         arms = [item for item in arms if item in selected_arms]
     models = matrix["model_tiers"]
-    if scope in {"smoke", "screening", "b0a-screening"}:
-        models = (
-            [item for item in models if item["id"] == "host-default"]
-            if scope == "smoke"
-            else (
-                [item for item in models if item["id"] == "local-practical"]
-                if scope == "b0a-screening"
-                else [item for item in models if item["id"] in {"local-low", "local-practical"}]
-            )
-        )
+    if scope == "smoke":
+        models = [item for item in models if item["id"] == "host-default"]
+    elif scope == "b0a-activation":
+        models = [item for item in models if item["id"] in B0A_ACTIVATION_MODELS]
+    elif scope == "b0a-pilot":
+        pilot_model = _load(B0A_ACTIVATION_PLAN)["pilot"]["model"]
+        models = [item for item in models if item["id"] == pilot_model]
+    elif scope == "b0a-screening":
+        models = [item for item in models if item["id"] == "local-practical"]
+    elif scope == "screening":
+        models = [item for item in models if item["id"] in {"local-low", "local-practical"}]
     if selected_models is not None:
         unknown = selected_models - {item["id"] for item in models}
         if unknown:
@@ -225,10 +270,14 @@ def plan(
     for arm in arms:
         for model in models:
             for task in tasks:
-                for repetition in range(1, int(model["minimum_repetitions"]) + 1):
+                repetitions = 1 if scope == "b0a-activation" else int(model["minimum_repetitions"])
+                for repetition in range(1, repetitions + 1):
+                    prefix = f"{scope}--" if scope in {"b0a-activation", "b0a-pilot"} else ""
                     cells.append(
                         {
-                            "cell_id": f"{arm}--{model['id']}--{task['id']}--r{repetition}",
+                            "cell_id": (
+                                f"{prefix}{arm}--{model['id']}--{task['id']}--r{repetition}"
+                            ),
                             "arm": arm,
                             "model_tier": model["id"],
                             "model_id": model.get("model_id"),
@@ -238,6 +287,8 @@ def plan(
                             "task_class": task["task_class"],
                             "split": task["split"],
                             "repetition": repetition,
+                            "pi_activation_gate": scope == "b0a-activation",
+                            "pi_effect_pilot": scope == "b0a-pilot",
                         }
                     )
     result = {
@@ -383,13 +434,33 @@ def _environment(arm: str, model_tier: str, workspace: Path) -> tuple[dict[str, 
             }
         }
     env = {
-        **os.environ,
+        **_isolated_agent_environment(),
         "OPENCODE_CONFIG_CONTENT": json.dumps(config, separators=(",", ":")),
-        "PYTHONPATH": str(ROOT / "src"),
         "EXTENDCODEAGENT_PYTHON": str(PYTHON),
         "EXTENDCODEAGENT_MODE": mode,
     }
     return env, model_id
+
+
+def _isolated_agent_environment() -> dict[str, str]:
+    env = dict(os.environ)
+    root_venv_bin = (ROOT / ".venv/bin").resolve()
+    path_entries = []
+    for entry in env.get("PATH", "").split(os.pathsep):
+        if not entry:
+            continue
+        try:
+            resolved = Path(entry).resolve()
+        except OSError:
+            resolved = Path(entry)
+        if resolved != root_venv_bin:
+            path_entries.append(entry)
+    env["PATH"] = os.pathsep.join(path_entries)
+    env.pop("VIRTUAL_ENV", None)
+    env.pop("PYTHONHOME", None)
+    env.pop("PYTHONPATH", None)
+    env["PIP_REQUIRE_VIRTUALENV"] = "true"
+    return env
 
 
 def _metrics(log_path: Path) -> dict[str, Any]:
@@ -407,6 +478,7 @@ def _metrics(log_path: Path) -> dict[str, Any]:
         "twin_revision_ids": [],
         "observed_capability_modes": {},
         "observed_capability_depths": {},
+        "observed_pi_readiness": None,
         "pi_analysis_ms": 0,
     }
     pi_tools: set[str] = set()
@@ -476,6 +548,9 @@ def _observe_pi_output(
     if isinstance(revision, str) and revision:
         revision_ids.add(revision)
     if tool_name.endswith("pi_status"):
+        readiness = value.get("readiness")
+        if isinstance(readiness, str):
+            metrics["observed_pi_readiness"] = readiness
         capabilities = value.get("capabilities")
         if isinstance(capabilities, list):
             for capability in capabilities:
@@ -518,7 +593,26 @@ def _execute(cell: dict[str, Any], task: dict[str, Any], raw_root: Path) -> dict
     env, model_id = _environment(cell["arm"], cell["model_tier"], workspace)
     mode, _ = _arm_mode(cell["arm"])
     instruction = task["instruction"]
-    if mode in {"advisory", "active"}:
+    if cell.get("pi_activation_gate"):
+        instruction = (
+            "This is a Project Intelligence activation gate. You MUST first call pi_status, then "
+            "call pi_symbol with query select_tests, use the returned PI evidence, and only then "
+            "complete the task. " + instruction
+        )
+    elif cell.get("pi_effect_pilot") and mode == "active":
+        required = _load(B0A_ACTIVATION_PLAN)["pilot"]["tasks"][task["id"]]
+        instruction = (
+            "This is a Project Intelligence effect pilot. You MUST call these PI tools before "
+            f"completing the task: {', '.join(required)}. Use their returned evidence in your "
+            "analysis, then complete the original task. " + instruction
+        )
+    elif cell.get("pi_effect_pilot") and mode == "off":
+        instruction = (
+            "This is the disabled-extension control. You MUST call pi_status once to confirm PI is "
+            "disabled, must not call another pi_* tool, and then complete the original task using "
+            "normal OpenCode capabilities. " + instruction
+        )
+    elif mode in {"advisory", "active"}:
         instruction = (
             "Use the available pi_* Project Intelligence tools where relevant. " + instruction
         )
@@ -579,7 +673,7 @@ def _execute(cell: dict[str, Any], task: dict[str, Any], raw_root: Path) -> dict
         outcome = "FAIL"
     else:
         outcome = "PASS"
-    return {
+    result = {
         **cell,
         "model_id": model_id,
         "outcome": outcome,
@@ -588,6 +682,214 @@ def _execute(cell: dict[str, Any], task: dict[str, Any], raw_root: Path) -> dict
         "oracle_diagnostic": oracle.stderr.strip()[-500:],
         "wall_ms": round((time.monotonic() - started) * 1000),
         **measured,
+    }
+    if cell.get("pi_activation_gate"):
+        result["pi_activation"] = _activation_assessment(result)
+    if cell.get("pi_effect_pilot") and mode == "active":
+        result["pi_effect_observation"] = _pilot_active_assessment(result)
+    elif cell.get("pi_effect_pilot") and mode == "off":
+        result["pi_off_observation"] = _pilot_off_assessment(result)
+    return result
+
+
+def _activation_assessment(result: dict[str, Any]) -> dict[str, Any]:
+    contract = _load(B0A_ACTIVATION_PLAN)["required_observations"]
+    reasons: list[str] = []
+    required_tools = set(contract["tools"])
+    observed_tools = set(result.get("pi_tools", ()))
+    if not required_tools <= observed_tools:
+        reasons.append("required_pi_tools_not_observed")
+    if result.get("observed_pi_readiness") != contract["readiness"]:
+        reasons.append("pi_readiness_not_ready")
+    expected_mode = contract["configurable_capability_mode"]
+    modes = result.get("observed_capability_modes") or {}
+    if any(modes.get(capability) != expected_mode for capability in CONFIGURABLE_CAPABILITIES):
+        reasons.append("configurable_capability_mode_not_observed")
+    expected_depth = contract["configurable_capability_depth"]
+    depths = result.get("observed_capability_depths") or {}
+    if any(depths.get(capability) != expected_depth for capability in CONFIGURABLE_CAPABILITIES):
+        reasons.append("configurable_capability_depth_not_observed")
+    if contract["twin_revision"] and not result.get("twin_revision_ids"):
+        reasons.append("twin_revision_not_observed")
+    evidence = result.get("selected_evidence_ids") or []
+    if contract["selected_canonical_evidence"] and not any(
+        str(item).startswith("canonical_ref:") for item in evidence
+    ):
+        reasons.append("canonical_evidence_not_observed")
+    if contract["positive_pi_analysis_time"] and int(result.get("pi_analysis_ms") or 0) <= 0:
+        reasons.append("pi_analysis_time_not_observed")
+    if result.get("process_exit") != 0:
+        reasons.append("opencode_process_failed")
+    if result.get("errors"):
+        reasons.append("opencode_reported_error")
+    return {
+        "status": "PASS" if not reasons else "FAIL",
+        "reasons": reasons,
+        "task_oracle_outcome": result.get("outcome"),
+    }
+
+
+def _pilot_active_assessment(result: dict[str, Any]) -> dict[str, Any]:
+    assessment = _activation_assessment(result)
+    required = set(_load(B0A_ACTIVATION_PLAN)["pilot"]["tasks"][result["task_id"]])
+    if not required <= set(result.get("pi_tools", ())):
+        reasons = [*assessment["reasons"], "task_required_pi_tools_not_observed"]
+        return {**assessment, "status": "FAIL", "reasons": reasons}
+    return assessment
+
+
+def _pilot_off_assessment(result: dict[str, Any]) -> dict[str, Any]:
+    reasons: list[str] = []
+    tools = set(result.get("pi_tools", ()))
+    if tools != {"pi_status"}:
+        reasons.append("off_control_tool_use_invalid")
+    if result.get("observed_pi_readiness") != "disabled":
+        reasons.append("off_control_not_disabled")
+    modes = result.get("observed_capability_modes") or {}
+    if any(modes.get(capability) != "off" for capability in CONFIGURABLE_CAPABILITIES):
+        reasons.append("off_capability_mode_not_observed")
+    if result.get("twin_revision_ids"):
+        reasons.append("off_control_created_twin_revision")
+    if result.get("process_exit") != 0 or result.get("errors"):
+        reasons.append("off_control_process_failed")
+    return {"status": "PASS" if not reasons else "FAIL", "reasons": reasons}
+
+
+def _activation_gate(results: list[dict[str, Any]]) -> dict[str, Any]:
+    activation_plan = _load(B0A_ACTIVATION_PLAN)
+    expected_models = set(activation_plan["models"])
+    observed_models = {item["model_tier"] for item in results}
+    missing_models = sorted(expected_models - observed_models)
+    unexpected_models = sorted(observed_models - expected_models)
+    duplicate_models = sorted(
+        model
+        for model, count in Counter(item["model_tier"] for item in results).items()
+        if count != 1
+    )
+    assessment_mismatches = sorted(
+        item["model_tier"]
+        for item in results
+        if item.get("pi_activation") != _activation_assessment(item)
+    )
+    failed_models = sorted(
+        item["model_tier"]
+        for item in results
+        if _activation_assessment(item).get("status") != "PASS"
+    )
+    route_gaps = [
+        {
+            "capabilities": route["capabilities"],
+            "status": route["status"],
+        }
+        for route in activation_plan["capability_routes"]
+        if route["status"] != "REACHABLE"
+    ]
+    if (
+        missing_models
+        or unexpected_models
+        or duplicate_models
+        or assessment_mismatches
+        or failed_models
+    ):
+        status = "FAIL"
+    else:
+        status = "PASS"
+    return {
+        "status": status,
+        "activation_plan_seal": activation_plan["seal"]["canonical_payload"],
+        "expected_models": sorted(expected_models),
+        "observed_models": sorted(observed_models),
+        "missing_models": missing_models,
+        "unexpected_models": unexpected_models,
+        "duplicate_models": duplicate_models,
+        "assessment_mismatches": assessment_mismatches,
+        "failed_models": failed_models,
+        "capability_route_gaps": route_gaps,
+        "pilot_permitted": status == "PASS",
+        "comprehensive_evaluation_permitted": status == "PASS" and not route_gaps,
+    }
+
+
+def _pilot_gate(results: list[dict[str, Any]]) -> dict[str, Any]:
+    contract = _load(B0A_ACTIVATION_PLAN)["pilot"]
+    expected = {
+        f"b0a-pilot--{arm}--{contract['model']}--{task_id}--r{repetition}"
+        for arm in contract["arms"]
+        for task_id in contract["tasks"]
+        for repetition in range(1, int(contract["repetitions"]) + 1)
+    }
+    by_id = {item["cell_id"]: item for item in results}
+    missing = sorted(expected - set(by_id))
+    unexpected = sorted(set(by_id) - expected)
+    active = [item for item in results if item["arm"] == "active"]
+    off = [item for item in results if item["arm"] == "off"]
+    native = [item for item in results if item["arm"] == "native"]
+    active_observation_failures = sorted(
+        item["cell_id"]
+        for item in active
+        if item.get("pi_effect_observation") != _pilot_active_assessment(item)
+        or _pilot_active_assessment(item)["status"] != "PASS"
+    )
+    off_observation_failures = sorted(
+        item["cell_id"]
+        for item in off
+        if item.get("pi_off_observation") != _pilot_off_assessment(item)
+        or _pilot_off_assessment(item)["status"] != "PASS"
+    )
+    provider_or_timeout = sorted(
+        item["cell_id"] for item in results if item.get("outcome") in {"UNAVAILABLE", "TIMEOUT"}
+    )
+    passes = {
+        arm: sum(item.get("outcome") == "PASS" for item in results if item["arm"] == arm)
+        for arm in contract["arms"]
+    }
+    control_pass = max(passes.get("native", 0), passes.get("off", 0))
+    pass_delta = passes.get("active", 0) - control_pass
+    medians = {
+        "native": median([item["wall_ms"] for item in native]) if native else None,
+        "off": median([item["wall_ms"] for item in off]) if off else None,
+        "active": median([item["wall_ms"] for item in active]) if active else None,
+    }
+    control_medians = [value for value in (medians["native"], medians["off"]) if value is not None]
+    slower_control = max(control_medians) if control_medians else None
+    wall_ratio = (
+        medians["active"] / slower_control
+        if medians["active"] is not None and slower_control
+        else None
+    )
+    effect = contract["effect_gate"]
+    reasons: list[str] = []
+    if missing or unexpected:
+        reasons.append("pilot_cells_incomplete")
+    if active_observation_failures:
+        reasons.append("active_pi_not_observed")
+    if off_observation_failures:
+        reasons.append("off_inertness_not_observed")
+    if provider_or_timeout:
+        reasons.append("provider_error_or_timeout")
+    if pass_delta < int(effect["minimum_active_pass_delta_over_best_control"]):
+        reasons.append("no_objective_pass_effect")
+    if wall_ratio is None or wall_ratio > float(
+        effect["maximum_active_median_wall_ratio_over_slower_control"]
+    ):
+        reasons.append("active_wall_time_abnormal")
+    decision = effect["no_effect_action"] if reasons else effect["pass_action"]
+    return {
+        "decision": decision,
+        "activation_plan_seal": _load(B0A_ACTIVATION_PLAN)["seal"]["canonical_payload"],
+        "expected_cells": len(expected),
+        "observed_cells": len(expected & set(by_id)),
+        "missing_cells": missing,
+        "unexpected_cells": unexpected,
+        "passes": passes,
+        "active_pass_delta_over_best_control": pass_delta,
+        "median_wall_ms": medians,
+        "active_median_wall_ratio_over_slower_control": wall_ratio,
+        "active_observation_failures": active_observation_failures,
+        "off_observation_failures": off_observation_failures,
+        "provider_or_timeout_cells": provider_or_timeout,
+        "reasons": reasons,
+        "comprehensive_evaluation_permitted": not reasons,
     }
 
 
@@ -615,7 +917,22 @@ def run(
     selected_tasks: set[str] | None,
     resume: bool,
     raw_root_override: Path | None,
+    activation_report: Path | None,
+    pilot_report: Path | None,
 ) -> None:
+    activation_evidence: dict[str, Any] | None = None
+    pilot_evidence: dict[str, Any] | None = None
+    if scope == "b0a-pilot":
+        activation_evidence = _require_activation_report(
+            activation_report, require_comprehensive=False
+        )
+    if scope in {"b0a-baseline", "b0a-screening"}:
+        activation_evidence = _require_activation_report(
+            activation_report, require_comprehensive=True
+        )
+        pilot_evidence = _require_pilot_report(pilot_report)
+    if scope.startswith("b0a-"):
+        _require_clean_worktree()
     schedule = plan(
         scope,
         selected_arms=selected_arms,
@@ -632,10 +949,25 @@ def run(
     )
     raw_root.mkdir(parents=True, exist_ok=True)
     trace_log = EvaluationTraceLog(raw_root / "traces.jsonl")
+    if not resume and (output.exists() or trace_log.path.exists()):
+        raise EvaluationError(
+            "evaluation output/raw trace already exists; use a fresh path or --resume"
+        )
+    if resume and output.is_file():
+        previous = _load(output)
+        _validate_resume(
+            previous,
+            scope,
+            schedule,
+            activation_evidence,
+            pilot_evidence,
+            trace_log.path,
+        )
+    elif resume and trace_log.path.exists():
+        raise EvaluationError("resume trace exists without its atomic report checkpoint")
     trace_log.replay()
     results: list[dict[str, Any]] = []
     if resume and output.is_file():
-        previous = _load(output)
         results = list(previous.get("results", []))
     completed = {item["cell_id"] for item in results}
     for cell in cells:
@@ -644,8 +976,145 @@ def run(
         result = _execute(cell, tasks[cell["task_id"]], raw_root)
         _append_trace(trace_log, result, tasks[cell["task_id"]])
         results.append(result)
-        _write_report(output, _report(scope, schedule, results, trace_log.path))
-    _write_report(output, _report(scope, schedule, results, trace_log.path))
+        _write_report(
+            output,
+            _report(
+                scope,
+                schedule,
+                results,
+                trace_log.path,
+                activation_evidence,
+                pilot_evidence,
+            ),
+        )
+    report = _report(
+        scope,
+        schedule,
+        results,
+        trace_log.path,
+        activation_evidence,
+        pilot_evidence,
+    )
+    _write_report(output, report)
+    if scope == "b0a-activation" and report["activation_gate"]["status"] != "PASS":
+        raise EvaluationError(
+            f"B0a PI activation gate did not pass: {report['activation_gate']['status']}"
+        )
+    if scope == "b0a-pilot" and report["pilot_gate"]["decision"] != "PROCEED_TO_COMPREHENSIVE":
+        raise EvaluationError(
+            f"B0a PI effect pilot requires repair: {report['pilot_gate']['reasons']}"
+        )
+
+
+def _validate_resume(
+    previous: dict[str, Any],
+    scope: str,
+    schedule: dict[str, Any],
+    activation_evidence: dict[str, Any] | None,
+    pilot_evidence: dict[str, Any] | None,
+    trace_path: Path,
+) -> None:
+    current_revision = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+    ).strip()
+    if previous.get("source_revision") != current_revision:
+        raise EvaluationError("resume report was produced at a different source revision")
+    expected_schedule = {key: value for key, value in schedule.items() if key != "cells"}
+    if previous.get("schedule") != expected_schedule:
+        raise EvaluationError("resume report schedule does not match the current sealed schedule")
+    if previous.get("activation_evidence") != activation_evidence:
+        raise EvaluationError("resume report activation evidence does not match")
+    if previous.get("pilot_evidence") != pilot_evidence:
+        raise EvaluationError("resume report pilot evidence does not match")
+    if previous.get("trace_log") != str(trace_path):
+        raise EvaluationError("resume report points at a different trace log")
+    results = list(previous.get("results", ()))
+    if results and not trace_path.is_file():
+        raise EvaluationError("resume report has result cells but its trace log is missing")
+    result_ids = [item.get("cell_id") for item in results]
+    if len(result_ids) != len(set(result_ids)):
+        raise EvaluationError("resume report contains duplicate cells")
+    expected_ids = {item["cell_id"] for item in schedule["cells"]}
+    if not set(result_ids) <= expected_ids:
+        raise EvaluationError("resume report contains cells outside the current schedule")
+
+
+def _require_clean_worktree() -> None:
+    dirty = subprocess.check_output(
+        ["git", "status", "--porcelain"],
+        cwd=ROOT,
+        text=True,
+    ).strip()
+    if dirty:
+        raise EvaluationError("B0a evaluation requires a clean tracked worktree at an exact head")
+
+
+def _require_activation_report(path: Path | None, *, require_comprehensive: bool) -> dict[str, Any]:
+    if path is None:
+        raise EvaluationError("--activation-report is required for comprehensive B0a execution")
+    report = _load(path.resolve())
+    gate = report.get("activation_gate")
+    if report.get("schedule", {}).get("scope") != "b0a-activation":
+        raise EvaluationError("B0a PI activation report has the wrong scope")
+    recomputed = _activation_gate(list(report.get("results", ())))
+    if gate != recomputed:
+        raise EvaluationError("B0a PI activation report does not match its result cells")
+    if (
+        not isinstance(gate, dict)
+        or gate.get("status") != "PASS"
+        or gate.get("pilot_permitted") is not True
+    ):
+        raise EvaluationError("B0a PI activation report is absent or did not pass")
+    if require_comprehensive and gate.get("comprehensive_evaluation_permitted") is not True:
+        raise EvaluationError("B0a PI activation report has unresolved capability route gaps")
+    current_revision = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+    ).strip()
+    if report.get("source_revision") != current_revision:
+        raise EvaluationError("B0a PI activation report was not produced at the current exact head")
+    expected_seal = _load(B0A_ACTIVATION_PLAN)["seal"]["canonical_payload"]
+    if gate.get("activation_plan_seal") != expected_seal:
+        raise EvaluationError("B0a PI activation report uses a stale activation contract")
+    if set(gate.get("observed_models", ())) != set(B0A_ACTIVATION_MODELS):
+        raise EvaluationError("B0a PI activation report is missing a permitted model route")
+    return {
+        "path": str(path.resolve()),
+        "activation_plan_seal": expected_seal,
+        "source_revision": current_revision,
+        "status": "PASS",
+    }
+
+
+def _require_pilot_report(path: Path | None) -> dict[str, Any]:
+    if path is None:
+        raise EvaluationError("--pilot-report is required for comprehensive B0a execution")
+    report = _load(path.resolve())
+    if report.get("schedule", {}).get("scope") != "b0a-pilot":
+        raise EvaluationError("B0a PI pilot report has the wrong scope")
+    gate = report.get("pilot_gate")
+    recomputed = _pilot_gate(list(report.get("results", ())))
+    if gate != recomputed:
+        raise EvaluationError("B0a PI pilot report does not match its result cells")
+    if (
+        not isinstance(gate, dict)
+        or gate.get("decision") != "PROCEED_TO_COMPREHENSIVE"
+        or gate.get("comprehensive_evaluation_permitted") is not True
+    ):
+        raise EvaluationError("B0a PI pilot requires repair and retest")
+    current_revision = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+    ).strip()
+    if report.get("source_revision") != current_revision:
+        raise EvaluationError("B0a PI pilot report was not produced at the current exact head")
+    expected_seal = _load(B0A_ACTIVATION_PLAN)["seal"]["canonical_payload"]
+    if gate.get("activation_plan_seal") != expected_seal:
+        raise EvaluationError("B0a PI pilot report uses a stale effect contract")
+    return {
+        "path": str(path.resolve()),
+        "activation_plan_seal": expected_seal,
+        "source_revision": current_revision,
+        "decision": gate["decision"],
+    }
 
 
 def _report(
@@ -653,13 +1122,19 @@ def _report(
     schedule: dict[str, Any],
     results: list[dict[str, Any]],
     trace_path: Path,
+    activation_evidence: dict[str, Any] | None = None,
+    pilot_evidence: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    return {
+    report = {
         "schema": 1,
         "run_id": f"unified-v1-{scope}",
         "classification": (
             "E4_RUNNER_PROOF"
             if scope == "smoke"
+            else "B0A_PI_ACTIVATION_RESULT"
+            if scope == "b0a-activation"
+            else "B0A_PI_EFFECT_PILOT_RESULT"
+            if scope == "b0a-pilot"
             else "B0A_EVALUATION_RESULT"
             if scope.startswith("b0a-")
             else "EVALUATION_RESULT"
@@ -676,6 +1151,15 @@ def _report(
         "integrated_metrics": _metric_projection(),
         "results": results,
     }
+    if scope == "b0a-activation":
+        report["activation_gate"] = _activation_gate(results)
+    elif scope == "b0a-pilot":
+        report["pilot_gate"] = _pilot_gate(results)
+    if activation_evidence is not None:
+        report["activation_evidence"] = activation_evidence
+    if pilot_evidence is not None:
+        report["pilot_evidence"] = pilot_evidence
+    return report
 
 
 def _append_trace(
@@ -820,24 +1304,44 @@ def main() -> int:
     sub.add_parser("validate")
     sub.add_parser("metrics")
     seal_parser = sub.add_parser("seal")
-    seal_parser.add_argument("target", choices=["matrix", "labels"])
+    seal_parser.add_argument("target", choices=["matrix", "labels", "activation"])
     plan_parser = sub.add_parser("plan")
     plan_parser.add_argument(
         "--scope",
-        choices=["smoke", "base", "screening", "full", "b0a-baseline", "b0a-screening"],
+        choices=[
+            "smoke",
+            "base",
+            "screening",
+            "full",
+            "b0a-activation",
+            "b0a-pilot",
+            "b0a-baseline",
+            "b0a-screening",
+        ],
         default="full",
     )
     _selection_arguments(plan_parser)
     run_parser = sub.add_parser("run")
     run_parser.add_argument(
         "--scope",
-        choices=["smoke", "base", "screening", "full", "b0a-baseline", "b0a-screening"],
+        choices=[
+            "smoke",
+            "base",
+            "screening",
+            "full",
+            "b0a-activation",
+            "b0a-pilot",
+            "b0a-baseline",
+            "b0a-screening",
+        ],
         required=True,
     )
     run_parser.add_argument("--output", type=Path, required=True)
     run_parser.add_argument("--max-cells", type=int)
     run_parser.add_argument("--resume", action="store_true")
     run_parser.add_argument("--raw-root", type=Path)
+    run_parser.add_argument("--activation-report", type=Path)
+    run_parser.add_argument("--pilot-report", type=Path)
     _selection_arguments(run_parser)
     screen_parser = sub.add_parser("screen")
     screen_parser.add_argument("--input", type=Path, required=True)
@@ -850,7 +1354,12 @@ def main() -> int:
             validate()
             print(json.dumps(_metric_projection(), ensure_ascii=False, indent=2))
         elif args.command == "seal":
-            seal(MATRIX if args.target == "matrix" else LABELS)
+            target = {
+                "matrix": MATRIX,
+                "labels": LABELS,
+                "activation": B0A_ACTIVATION_PLAN,
+            }[args.target]
+            seal(target)
         elif args.command == "plan":
             print(
                 json.dumps(
@@ -876,6 +1385,8 @@ def main() -> int:
                 _selected(args.task),
                 args.resume,
                 args.raw_root,
+                args.activation_report,
+                args.pilot_report,
             )
         else:
             _write_report(args.output, screening_table(_load(args.input)))

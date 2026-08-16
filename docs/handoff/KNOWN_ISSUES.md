@@ -146,3 +146,21 @@
   204,116ms against a 20,000ms M budget; Vite completed in 184,488ms against a 180,000ms L budget;
   React Hook Form, Flask and HTTPX also missed their size budgets. Express and ExtendCodeAgent passed.
   Only one cold run per repository exists, so required three-run medians remain NOT TESTED.
+
+## B0a PI activation and capability reachability
+
+- The old 306-cell baseline began without an observed-PI activation precondition. It stopped at 137
+  cells; pure `native` results measure OpenCode/model behavior, not PI effect, and will not be reused
+  as corrected-protocol evidence.
+- One old refactor cell ran an editable install and retargeted the shared runner `.venv` to its
+  temporary workspace. The root editable install was restored. Corrected runs remove the runner venv
+  and `PYTHONPATH` from the agent shell environment and require an isolated virtualenv for pip, while
+  the ECA sidecar keeps its explicit interpreter.
+- Core PI is known to be callable in earlier single-cell route proofs, but comprehensive readiness is
+  blocked until the new four-model exact-head activation gate and 27-cell port-8090 effect pilot pass.
+- The pilot is intentionally small and cannot promote a capability. It only prevents spending the
+  comprehensive schedules when active PI has no objective gain, was not actually used, or has
+  abnormal latency; any such result requires repair and the same pilot again.
+- `blueprint`, `convergence`, `traceability` and `strategy` are configurable/ablatable but lack a
+  current OpenCode tool and covered screening task. Their runtime paths must be added before a
+  13-capability screen can make truthful `proceed` or `no screened effect` classifications.
