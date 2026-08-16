@@ -1,0 +1,124 @@
+{
+  "schema": 1,
+  "label_set_id": "project-graph-quality-labels-v1",
+  "created_at": "2026-08-16",
+  "review_volume": {
+    "cases": 12,
+    "new_human_reviews": 0,
+    "promotion_source": "Existing manually reviewed PR-C and PR-H ground-truth reports"
+  },
+  "source_evidence": [
+    "docs/evidence/pr-c/ground-truth-report.md",
+    "docs/evidence/pr-h/ground-truth-report.md"
+  ],
+  "repositories": [
+    {
+      "id": "extendcodeagent-pr-c",
+      "revision": "ef6db532f74be97cbd86483b0bbe89ee6ac95a29",
+      "language": "python"
+    },
+    {
+      "id": "controldeck-pr-h",
+      "revision": "fdeeb4e694fa7f416bb3ac7e92f49952d31e1767",
+      "language": "javascript-typescript"
+    }
+  ],
+  "cases": [
+    {
+      "id": "py-function-caller",
+      "repository_id": "extendcodeagent-pr-c",
+      "expected": "resolved reverse calls reaches the direct caller",
+      "observed": "PASS",
+      "classification": "true_positive"
+    },
+    {
+      "id": "py-route-handler",
+      "repository_id": "extendcodeagent-pr-c",
+      "expected": "handled_by forward expansion marks the handler direct",
+      "observed": "PASS",
+      "classification": "true_positive"
+    },
+    {
+      "id": "py-handler-db-effect",
+      "repository_id": "extendcodeagent-pr-c",
+      "expected": "typed side-effect traversal reaches the database write",
+      "observed": "PASS",
+      "classification": "true_positive"
+    },
+    {
+      "id": "py-implementation-test",
+      "repository_id": "extendcodeagent-pr-c",
+      "expected": "reverse call chain projects the test candidate",
+      "observed": "PASS",
+      "classification": "true_positive"
+    },
+    {
+      "id": "py-transitive-confidence",
+      "repository_id": "extendcodeagent-pr-c",
+      "expected": "transitive dependency retains weakest-edge confidence",
+      "observed": "PASS",
+      "classification": "true_positive"
+    },
+    {
+      "id": "py-ambiguous-call",
+      "repository_id": "extendcodeagent-pr-c",
+      "expected": "dynamic same-name candidate remains inferred may_call at confidence 0.35",
+      "observed": "PASS",
+      "classification": "intentional_uncertain_candidate"
+    },
+    {
+      "id": "js-imported-function-caller",
+      "repository_id": "controldeck-pr-h",
+      "expected": "import alias resolves to a file-qualified definition",
+      "observed": "PASS",
+      "classification": "true_positive"
+    },
+    {
+      "id": "js-inherited-method",
+      "repository_id": "controldeck-pr-h",
+      "expected": "direct and inherited receivers resolve with reduced inherited confidence",
+      "observed": "PASS",
+      "classification": "true_positive"
+    },
+    {
+      "id": "js-implementation-test",
+      "repository_id": "controldeck-pr-h",
+      "expected": "reverse call path recommends the named test",
+      "observed": "PASS",
+      "classification": "true_positive"
+    },
+    {
+      "id": "js-playwright-inline-test",
+      "repository_id": "controldeck-pr-h",
+      "expected": "all 92 textual Playwright test calls become stable test nodes",
+      "observed": "PASS: 92 of 92 nodes; 39 with static evidence",
+      "classification": "true_positive_with_known_recall_boundary"
+    },
+    {
+      "id": "js-ambiguous-dynamic-call",
+      "repository_id": "controldeck-pr-h",
+      "expected": "unresolved receiver remains inferred may_call at confidence 0.35",
+      "observed": "PASS",
+      "classification": "intentional_uncertain_candidate"
+    },
+    {
+      "id": "js-same-name-definitions",
+      "repository_id": "controldeck-pr-h",
+      "expected": "file-qualified references keep same-name definitions distinct",
+      "observed": "PASS",
+      "classification": "true_positive"
+    }
+  ],
+  "known_false_positive_boundaries": [
+    "Python pyname candidates may bridge unrelated same-named symbols.",
+    "JavaScript jsname candidates may bridge unrelated same-named members."
+  ],
+  "known_false_negative_boundaries": [
+    "Python reflection, monkey patching, generated imports, and runtime-only dispatch are not inferred.",
+    "Browser/API behavior, runtime dependency injection, computed members, library callbacks, and JSX rendering are not verified static calls."
+  ],
+  "seal": {
+    "algorithm": "sha256",
+    "canonical_payload": "70710dfe82680afd8ab0c2ad3a735b7f82648c65554dbf93d878e0550a986427"
+  }
+}
