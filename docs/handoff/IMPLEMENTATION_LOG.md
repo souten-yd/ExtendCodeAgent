@@ -557,3 +557,9 @@
   OpenCode provider config. Resealed matrix, screening and activation plans. Validation passed
   `tools/local/all-fast` (191 Python plus 9 adapter), `tools/local/test-integration` (42 Python plus
   9 adapter), unified evaluation validation and B0a bootstrap validation.
+- The first post-PR #63 activation failed local-practical in 488ms before OpenCode initialization.
+  Direct reproduction exposed `Missing key ... limit.context`; `debug config` had rendered the
+  incomplete object without enforcing the run-time schema. Added sealed context 262,144 alongside
+  output 8,192 and regenerated dependent seals. This failed activation is not pilot evidence.
+- A direct real `opencode run --pure` against the ControlDeck port-8090 model with the completed
+  limits exited 0, returned the requested `hi`, emitted 69 output tokens and no stderr.

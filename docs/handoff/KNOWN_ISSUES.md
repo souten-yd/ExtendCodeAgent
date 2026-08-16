@@ -224,3 +224,6 @@
   an off-control Qwen first response generated 27,998 tokens and hit its 420-second timeout. This is
   not PI latency. The new 8,192-token arm-neutral output bound changes the matrix/plan seals, so all
   prior pilot cells are diagnostic and cannot be resumed into the repaired protocol.
+- PR #63's output-only model limit passed debug rendering but failed real OpenCode runtime validation
+  because `limit.context` was absent. The final pair is context 262,144/output 8,192. A fresh real
+  activation remains required; the 488ms configuration failure observed no model or PI activity.

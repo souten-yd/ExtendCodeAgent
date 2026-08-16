@@ -220,6 +220,9 @@ and no observation failures. Confirmation was stopped at 14/27 after off impact 
 its sealed 420-second timeout. ControlDeck llama.cpp logs show the first Qwen response continuously
 generated 27,998 tokens at about 67 tokens/second; PI was not involved. The replacement matrix now
 caps local-practical output at 8,192 tokens for every arm, is resealed, and requires a fresh run.
+OpenCode runtime validation additionally requires the model context limit; the final sealed provider
+pair is context 262,144 and output 8,192, matching the ControlDeck llama.cpp server. The intermediate
+output-only activation failed before any model or PI call and is not effect evidence.
 
 The bootstrap blocker has a bounded B1 repair at exact head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`. A matching current-edge identity index and schema-5

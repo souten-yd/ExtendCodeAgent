@@ -951,3 +951,6 @@ confirmation off-control generated 27,998 tokens in its first response and hit t
 timeout before any tool event, so this is a model runaway boundary rather than PI latency. The cap is
 arm-neutral, remains well above ordinary observed outputs, and changes the matrix seal; old runs are
 diagnostic only and a fresh activation/pilot is mandatory.
+OpenCode custom-model runtime validation requires both `limit.context` and `limit.output`; debug
+config rendering alone is insufficient proof. The context value is sealed to 262,144 to match the
+actual ControlDeck llama.cpp `--ctx-size`, and real `opencode run` is required before activation.
