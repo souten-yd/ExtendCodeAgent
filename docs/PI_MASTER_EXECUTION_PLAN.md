@@ -54,6 +54,16 @@ Language scope is currently **Python and JavaScript/TypeScript only** (`KNOWN_AN
 Project Truth claim is bounded by that until another analyzer is measured, and the pinned corpus
 (§7.3) reflects the same limit. This is a stated product boundary, not an oversight.
 
+**Target project profile.** The differentiation hypothesis is conditional on the cost of the
+alternative. Where a full test suite runs in seconds, running it is faster, simpler and more certain
+than any obligation-driven selection, and this product should lose. The claim is therefore scoped to
+projects where at least one holds: the full suite is slow or expensive enough that running it on every
+change is impractical; verification crosses process, service or UI boundaries that a unit suite does
+not cover; or the agent operates across sessions and worktrees where prior evidence would otherwise be
+lost. Outside that profile, ExtendCodeAgent should be honest that native OpenCode plus a fast test
+command is the better answer. §7.3 pins a slow-suite repository so the profile is actually represented
+in the evaluation.
+
 Everything else is delegated to the runtime (`COMPETITIVE_ANALYSIS_AND_FEATURE_GAP_ROADMAP.md` §11
 non-goals remain binding).
 
@@ -74,7 +84,7 @@ non-goals remain binding).
 | `PI_VERIFICATION_OBSERVABILITY_INTEGRATED_DESIGN.md` | Design detail for observability/environment/certificate. `VI-X0..VI-XFINAL` superseded → V0/V5 and Deferred set. |
 | `TEST_PORTFOLIO_INTELLIGENCE_AND_BROAD_EVALUATION_PLAN.md` | Design detail for portfolio/bootstrap/GUI and the pinned external corpus. `TP-0..TP-7` superseded → E4/V-series/Deferred. |
 | `OPENCODE_VALIDATION_AND_ADOPTION_PLAN.md` | Canonical evidence rule and ControlDeck ruling. Sequencing folded into §8. |
-| `OMO_COEXISTENCE_AND_COMPATIBILITY_PLAN.md` | Compatibility reference. Its coexistence smoke subset runs at B0 and R0; the full comparative benchmark is P4. |
+| `OMO_COEXISTENCE_AND_COMPATIBILITY_PLAN.md` | **Canonical coexistence reference.** Its §4 conflict taxonomy, §9 `OMO-C0` gate and §11 stop rules are live: smoke subset at B0/R0 (§10.1 item 17), `OMO-C0` as stage **B2**, `OMO-C1` as the P3 entry condition, full comparison at P4. |
 | `KASANECORE_MIGRATION_AUDIT.md` | Historical migration reference. No active obligations. |
 | `CODEX_IMPLEMENTATION_GUIDE.md`, `CODEX_PRODUCTIZATION_EXECUTION_GUIDE.md` | Agent working rules. Their read orders and first-task sections are replaced by §8 and `handoff/NEXT_TASK.md`. |
 | `CURRENT_STATUS.md` | Program state and evidence ledger only. No sequencing. |
@@ -222,7 +232,8 @@ Stages do not define private metric lists.
 
 ### 7.1 Arms
 
-Mandatory per claim, minimum sufficient subset allowed with a written justification:
+Mandatory per claim, minimum sufficient subset allowed with a written justification. §7.5 defines how
+that subset is chosen, because the full product is not executable.
 
 ```text
 A  native            OpenCode without ExtendCodeAgent
@@ -288,11 +299,21 @@ available. Report distributions, never a best run.
 
 ### 7.3 Corpora and their roles
 
-| Role | Repositories | Used for |
-|---|---|---|
-| Realistic-task corpus | ExtendCodeAgent, KasaneCore, ControlDeck | agent-outcome tasks (Layer B), scale/performance (Layer C) |
-| Pinned quality corpus (`docs/evaluation/test-portfolio-corpus-v1.json`) | flask, httpx, express, vite | Layer A ground truth, verification-quality stages |
-| Held-out | react-hook-form + one reserved realistic repository | anti-overfit confirmation only; never used for tuning |
+| Role | Repositories | Full-suite time | Used for |
+|---|---|---|---|
+| Realistic-task corpus | ExtendCodeAgent, KasaneCore, ControlDeck | record at B0a | agent-outcome tasks (Layer B), scale/performance (Layer C) |
+| Pinned quality corpus (`docs/evaluation/test-portfolio-corpus-v1.json`) | flask, httpx, express, vite | record at B0a | Layer A ground truth, verification-quality stages |
+| **Slow-suite repository** (required, to be selected and pinned at E3) | one repository whose full suite exceeds **10 minutes** | > 10 min, measured | the condition under which selective verification can pay for itself |
+| Held-out | react-hook-form + one reserved realistic repository | record at B0a | anti-overfit confirmation only; never used for tuning |
+
+**Why the slow-suite row is mandatory.** Selective verification only has value when running everything
+is expensive. On a suite that finishes in thirty seconds, "run the whole thing" is faster, simpler and
+strictly more certain than any obligation-driven selection — and correctly beats this product. The
+existing corpus (flask, httpx, express, vite) is fast-testing, so the current design would measure the
+primary differentiation hypothesis under precisely the conditions where it cannot win, and then record
+a fair negative. Full-suite wall time is therefore recorded for every corpus repository and reported
+alongside every selective-verification result: a required-set precision number is uninterpretable
+without knowing what the alternative cost.
 
 Corpus pins are immutable within a corpus version. Refreshing upstream creates a new version.
 Third-party sources are cloned into ignored evaluation roots and never vendored.
@@ -308,6 +329,51 @@ For each capability and each depth, using the arms above:
 - **Reject** when ablation shows no degradation and Layer C cost is material.
 
 Every promotion and demotion is recorded in `handoff/DECISIONS.md` with the evidence path.
+
+### 7.5 Screening before confirmation — the matrix is not executable in full
+
+The arm set multiplied out is not a schedule anyone can run:
+
+```text
+arms      5 base (A..E) + 13 ablation (F) + 5 depth (G)      = 23
+tiers×reps  local-low ×5, local-practical ×3,
+            host-default ×3, frontier ×3                     = 14
+runs      23 × 14 × tasks                                    = 322 × tasks
+```
+
+At 20 tasks that is **6,440 agent runs**; at 40 tasks, 12,880. The one real measurement on record
+(`pr-g`) took 15.8 s for a *trivial* local-medium scenario with no tool calls; a genuine agentic task
+with reads, edits and test runs is minutes. At three minutes per run, 20 tasks is roughly **320 hours
+of continuous execution**, before B0's environment freeze, bootstrap conformance, integration
+revalidation, OMO smoke and GUI causal measurement are counted at all.
+
+A plan that cannot be executed produces no evidence, which is the same outcome as having no plan.
+Repetition minimums alone do not fix this: they say how many times to repeat a cell, never which cells
+to skip. So the matrix is run in two passes.
+
+**Screening.** Wide and shallow. Each `ablation(X)` runs at **one** model tier — the tier whose claim
+the capability is supposed to serve — over a fixed subset of the tuning split, at default depth, with
+the minimum repetitions for that tier. Depth arms run only for capabilities that make a depth-dependent
+claim. Screening cannot promote anything and cannot demote anything; it only decides what is worth
+confirming.
+
+**Confirmation.** Narrow and deep. Only capabilities whose screening result crosses the effect
+threshold proceed to the full tier set, full repetitions and the held-out split. Promotion and demotion
+decisions under §7.4 may cite **confirmation results only**.
+
+Rules that keep this honest:
+
+- the screening subset, the effect threshold and the tier assignment per capability are fixed **before**
+  the first run and recorded, so the subset cannot be tuned toward a desired outcome;
+- a capability that screens out is recorded as `no screened effect`, not as `rejected` — screening is
+  under-powered by construction and its negatives are weaker than its positives;
+- any capability whose screening result is within noise of the threshold goes to confirmation, since
+  the cost of a wrong skip exceeds the cost of an extra run;
+- `native` (A) and `off` (B) always run at full tiers and repetitions: they are the baselines every
+  other number is read against, and a cheap baseline corrupts everything above it.
+
+This is a sampling design, not a reduction in evidence standards. Invariant 1 and §7.4 are unchanged;
+what changes is that effort is spent where an effect might exist.
 
 ## 8. Unified backlog
 
@@ -329,8 +395,37 @@ Exit: architecture test green; `off` inertness re-verified per capability.
 
 **E2 — Capability depth contract**
 Scope: depth axis (`D0..D4`) in the central config with min/max/preferred/auto, orthogonal to
-`RolloutMode`; no adaptive selection yet; depth recorded in every PI response. Exit: config/architecture
-tests; depth visible in `pi_status`; no behavior change at default depth.
+`RolloutMode`; no adaptive selection yet; depth recorded in every PI response.
+
+Also in scope: **bind the inferred-relation confidence threshold to depth.** E1 folded `call_graph`
+into `semantic` on the reasoning that `may_call` stays in the graph and is controlled at *use* time by
+confidence and depth rather than at *production* time by a gate. That control point does not exist
+yet. E2 defines it: each depth carries a minimum confidence for inferred relations, so `D1` excludes
+`may_call` at confidence 0.35 while `D3` admits it. Without this the folding decision is only half
+implemented — the edges are produced unconditionally and nothing bounds their use.
+
+Exit: config/architecture tests; depth visible in `pi_status`; inferred-relation threshold observable
+per depth; no behavior change at default depth.
+
+**V0a — Verification contract slice (shadow, evaluation-only)**
+Entry: E2. Deliberately named `V0a`, not `E3` — it is a pulled-forward slice of stage V0, and the
+E-series was renumbered once already; a second renumber would cost more than the naming irregularity.
+
+Why it moves into Phase 0: §1 designates Verification Intelligence the primary differentiation
+hypothesis, yet the entire V-series sits in Phase 3, behind Phase 0, B0 and Phase 2. Everything built
+so far — 13 capabilities, all of Project Truth — is the part §1 concedes is at parity with mature code
+intelligence. So the baseline would measure only the conceded part, and §10.2's verification-only pivot
+would have nothing to pivot *to*. A programme cannot test its central hypothesis four phases after it
+tests everything else.
+
+Scope, minimal and shadow-only: `SemanticChangeSet` and `VerificationObligation` as projections over
+the existing Twin/Graph/Impact/Test/Runtime model, plus derivation of a **required verification set**
+from a change. No evidence reuse, no failure taxonomy, no oracle assessment, no certificate — those
+stay in V0/V2–V5. No behavior change: computed in shadow, recorded in the E5 trace, never applied.
+
+Exit: contracts defined once; architecture test proving no second truth store; required-set quality
+(precision/recall against the executed suite) measurable on the pinned corpus, so B0b returns a first
+number on the differentiation hypothesis rather than deferring it to Phase 3.
 
 **E3 — Layer B task suite and outcome ground truth**
 Entry: E1 and E2 complete, so an arm can be described by `(capability set, depth)`.
@@ -360,7 +455,16 @@ Requirements:
 - minimum suite size and per-class counts are fixed in the manifest and justified, so later stages
   cannot quietly shrink the suite;
 - a negative-control class and at least one task whose correct answer is "the change is unsafe /
-  insufficient evidence" must be present, so the suite can detect PI-induced overconfidence.
+  insufficient evidence" must be present, so the suite can detect PI-induced overconfidence;
+- **`OpenCode + OMO + ExtendCodeAgent` at `local-low` is a required arm on a subset of the suite.**
+  This is the intended production configuration and simultaneously the worst case for context budget:
+  both extensions inject into the same window, and `local-low` has the least room. The only real
+  measurement on record (`pr-g`) shows ECA alone taking `local-low` input tokens from 236 to 840 —
+  an overhead ratio of about 2.6 against the §7.2 weak-local budget of 0.5. Those were trivial
+  scenarios and the ratio will differ on real tasks, but the direction is the concern, and adding OMO
+  can only compress the window further. Conflict class C2 of
+  `OMO_COEXISTENCE_AND_COMPATIBILITY_PLAN.md` §4 is measured here or nowhere before release. Record
+  `UNAVAILABLE` if OMO is not installable at the pinned OpenCode version.
 
 Exit: `task-suite-v1.json` versioned and sealed; every task executed once natively to confirm the
 oracle is reachable and non-trivial (native success rate is neither 0% nor 100% across the suite);
@@ -383,8 +487,9 @@ the depth actually used, in a shape that later accepts the `VerificationFeature`
 sub-capability ablation does not require a trace format change mid-programme.
 Exit: trace present for every runner arm; ablation attribution demonstrated on one task class.
 
-Phase 0 gate: `F` and `G` arms are executable, run against a sealed task suite, and produce
-attributable results.
+Phase 0 gate: `F` and `G` arms are executable under the §7.5 screening design, run against a sealed
+task suite, and produce attributable results; and the V0a slice can report required-set quality, so
+B0b measures the primary differentiation hypothesis rather than deferring it to Phase 3.
 
 ### Phase 1 — Baseline
 
@@ -407,26 +512,57 @@ A repository that cannot reach this baseline is excluded from the arm matrix and
 bootstrap gap, not as a capability result. The imported baseline is never treated as verified
 correctness.
 
+B0 runs in two passes, per §7.5. Running it as one pass is not schedulable.
+
+**B0a — Environment, integration and screening**
 Scope: freeze and record environment (ECA commit, OpenCode version, provider/model tiers and
 availability, repository/workspace identity and SHA, hardware); re-run local lint/typecheck/unit/
 integration/build; revalidate adapter/plugin/MCP/edit/restart/reconnect/off/shadow/advisory paths;
-reproduce provider failures with PI disabled first; establish native baselines before any PI
-optimization; execute the arm matrix on the realistic corpus with repetition; run the first
-`ablation(X)` sweep over the 13 independently ablatable capabilities (§6; `call_graph` has no arm of
-its own and is covered by `semantic`); measure the competition-derived concerns
-(weak-local prefix/tool-output efficiency, lifecycle observability, worktree/subagent capability
-availability, completion correctness, cross-session evidence loss, host-native overlap); run the OMO
-coexistence smoke of §10.1 item 17 so a namespace or duplicate-execution defect surfaces before R0
-rather than at P4; record how far PI follows the E3 cross-boundary GUI/runtime task, since that
-measurement is the entry condition for stage X0 and V5.
+reproduce provider failures with PI disabled first; run the OMO coexistence smoke of §10.1 item 17 so
+a namespace or duplicate-execution defect surfaces before R0 rather than at P4; establish `native` and
+`off` baselines at **full** tiers and repetitions, since every later number is read against them; then
+run the **screening** pass — each `ablation(X)` at its one assigned tier over the fixed tuning subset,
+depth arms only where a depth-dependent claim exists.
+Fix before the first run and record: the screening subset, the effect threshold, and the tier assigned
+to each of the 13 ablatable capabilities (§6; `call_graph` has no arm of its own and is covered by
+`semantic`).
+Exit: environment frozen; integration paths pass or are classified; a screening table naming which
+capabilities proceed to B0b and which are recorded `no screened effect`. **No promotion or demotion
+decision may be taken here.**
+
+**B0b — Confirmation and gap report**
+Entry: B0a screening table.
+Scope: full tier set, full repetitions and the held-out split, for the capabilities that screened
+through; measure the competition-derived concerns (weak-local prefix/tool-output efficiency, lifecycle
+observability, worktree/subagent capability availability, completion correctness, cross-session
+evidence loss, host-native overlap); record how far PI follows the E3 cross-boundary GUI/runtime task,
+since that measurement is the entry condition for stages X0 and V5; record the required-verification-set
+quality produced by the V0a slice, which is the first evidence bearing on the primary differentiation
+hypothesis.
 Exit: `docs/evidence/final/baseline-gap-report.md` with every failure classified as OpenCode runtime,
 model/provider, PI adapter, PI core, task selection, verification or performance; a ranked gap list;
-and an explicit skip/keep decision for every later stage.
+an explicit skip/keep decision for every later stage; and the §10.2 program-level criteria evaluated
+against the result.
 
 **B1 — Blocking host/productization repair** (conditional; was `RV-1`)
 Entry: B0 records lifecycle, config, adapter, version-drift or provider friction attributable to
 ExtendCodeAgent. Scope: bootstrap/lifecycle simplification, health diagnostics, version compatibility,
 reconnect/event coalescing, MCP-only fallback hardening. Exit: repaired paths re-measured against B0.
+
+**B2 — OMO coexistence baseline** (conditional; was `OMO-C0`)
+Entry: B0 stable, and OMO installable at the recorded OpenCode version. Restored to the backlog — the
+E0 consolidation recorded the OMO plan as "executed only at stage P4" and thereby dropped a stage its
+own §9 defines as required **before any claim that OMO + ECA is a recommended stack**. Since
+`OpenCode + OMO + ExtendCodeAgent` is an intended production configuration, that claim cannot wait for
+a post-release benchmark.
+Scope, per `OMO_COEXISTENCE_AND_COMPATIBILITY_PLAN.md` §9: recorded OpenCode / OMO / ECA version tuple;
+Team Mode off; startup, tool, session, basic coding and verification compatibility; **both plugin load
+orders** where meaningful; classification of every observed conflict against the C0–C6 taxonomy.
+Exit: a version tuple marked `compatible`, `degraded` or `incompatible` with reproducible evidence, and
+a recorded decision for each conflict following the §11 stop rules — ECA namespacing/idempotence first,
+never patching OpenCode or OMO to force compatibility. `UNAVAILABLE` if OMO cannot be installed; the
+recommended-stack claim is then withheld rather than assumed.
+This is narrower than P4: B2 asks "does the stack work", P4 asks "is the stack better".
 
 ### Phase 2 — Task-aware intelligence
 
@@ -460,9 +596,12 @@ This phase absorbs the former `RV-3`, `VI-0`, `AL-2`, `CV-*`, `TP-0..TP-3`, `VI-
 failure-driven sequence. Each object is defined once, in V0.
 
 **V0 — Verification contracts** (design detail: four documents, one implementation)
-Scope: `SemanticChangeSet`, `VerificationObligation`, `TestIntent`, `OracleAssessment`,
-`EvidenceSegment` + dependency closure, `FailureEvidence` + result-state taxonomy. All are projections
-over the existing Twin/Graph/Impact/Runtime/Traceability/Convergence model — no parallel truth store.
+Entry: V0a, which already defined `SemanticChangeSet`, `VerificationObligation` and required-set
+derivation in Phase 0. V0 is the **remainder**, and must extend those objects rather than redefine
+them — the whole point of one contract stage is that each object exists once.
+Scope: `TestIntent`, `OracleAssessment`, `EvidenceSegment` + dependency closure, `FailureEvidence` +
+result-state taxonomy. All are projections over the existing Twin/Graph/Impact/Runtime/Traceability/
+Convergence model — no parallel truth store.
 
 **Also in scope: a verification feature policy, so the V-series is ablatable from the inside.** E1 made
 the 13 top-level capabilities ablatable, but V2–V5 each add several independent mechanisms underneath a
@@ -592,6 +731,8 @@ Each item re-enters the backlog only through §7.4 with a measured failure it is
 | `RV-5` / `DA-0` | X1 |
 | `RV-FINAL` | R0 |
 | `RV-X` | P4 |
+| `OMO-C0` | B2 |
+| `OMO-C1` | P3 entry condition |
 | `RA-0` / `RA-1` / `RA-2` / `RA-3` | C0 / P1 / P1 / P2 |
 | `TA-1` | C3 |
 | `TA-2` / `TA-3` | A0 / A1 |
@@ -715,6 +856,10 @@ Per-PR evidence directories (`docs/evidence/pr-*`) are historical and are not re
 | Single-repository overfit | ControlDeck previously dominant | corpus roles in §7.3; held-out reserved |
 | Plan re-proliferation | root cause of this consolidation | §13 |
 | Evaluation harness drift | per-PR scripts | E4 retires them into one runner |
+| **Execution capacity** | single maintainer; B0 at full matrix is ~320 h of continuous runs (§7.5) | screening/confirmation split; `no screened effect` is a valid recorded outcome; §10.2 permits stopping |
+| **Unbudgeted human review** | C1 expected plans, V4 injected faults, E4 Layer A labels all need manual work that is not sized | each stage must state its review volume in its own entry before starting; a stage whose review cost is unknown does not start |
+| **Differentiator is unbuilt** | 13 capabilities of conceded-parity Project Truth exist; the V-series is 0 lines | V0a pulls the minimum contract slice into Phase 0 so B0b returns a first number on the hypothesis |
+| **KasaneCore reuse is conceptual, not code** | audit records 80–90% algorithmic reuse but 25–40% direct source reuse, and `src/` contains no KasaneCore-derived module | estimate remaining work from scratch-implementation rates, never from "already solved in KasaneCore" |
 
 ## 13. Maintenance rule
 
@@ -729,7 +874,7 @@ Per-PR evidence directories (`docs/evidence/pr-*`) are historical and are not re
 
 ## 14. Immediate next action
 
-Phase 0, stages E0 and E1 are complete. Next is E2.
+Phase 0, stages E0 and E1 are complete. Next is E2, then V0a, E3, E4, E5.
 
 ```bash
 cd /home/souten/ExtendCodeAgent
@@ -742,6 +887,6 @@ tools/local/build
 git switch -c agent/e2-capability-depth-contract
 ```
 
-Do not start B0 before E1–E5 are complete. A baseline measured without total capability gating,
+Do not start B0 before E1–E5 and V0a are complete. A baseline measured without total capability gating,
 a depth contract, a unified runner and attributable traces cannot support any refinement decision,
 and would have to be repeated.
