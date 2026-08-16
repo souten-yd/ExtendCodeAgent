@@ -1,0 +1,68 @@
+{
+  "schema": 1,
+  "classification": "B1_CONFIRMED_FUNCTIONAL_EFFECT",
+  "source_revision": "7e58751b05ec310412c3406c8b9ae1142fdd1c6c",
+  "matrix_seal": "7bfa9f1dd8be5bf44fcf3f018c4ccbe2b6a3266846cd7a994f08eb5d4886a0c5",
+  "activation_plan_seal": "53c289a1c5916689ef2e4e47acbc28fe9408ce332a354f66e5165a0ede723691",
+  "activation_status": "PASS",
+  "pilot_gate": "PROCEED_TO_COMPREHENSIVE",
+  "cells": 27,
+  "passes": {
+    "native": 0,
+    "off": 0,
+    "active": 6
+  },
+  "active_pass_delta_over_best_control": 6,
+  "task_passes": {
+    "eca-symbol-001": {
+      "native": 0,
+      "off": 0,
+      "active": 1
+    },
+    "eca-impact-001": {
+      "native": 0,
+      "off": 0,
+      "active": 3
+    },
+    "eca-tests-001": {
+      "native": 0,
+      "off": 0,
+      "active": 2
+    }
+  },
+  "active_pi_required_fact_recall": {
+    "eca-symbol-001": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "eca-impact-001": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "eca-tests-001": [
+      0.333333,
+      1.0,
+      1.0
+    ]
+  },
+  "median_wall_ms": {
+    "native": 105688,
+    "off": 109601,
+    "active": 72100
+  },
+  "active_median_wall_ratio_over_slower_control": 0.6578407131321794,
+  "active_pi_timing_median_ms": {
+    "cold_twin_build": 525.561,
+    "snapshot_load": 218.582,
+    "adjacency_index_build": 5.044,
+    "query_execution": 3.186,
+    "json_serialization": 0.079,
+    "model_reasoning_after_tool": 20310
+  },
+  "active_observation_failures": [],
+  "off_observation_failures": [],
+  "provider_or_timeout_cells": [],
+  "conclusion": "The sealed pilot confirms functional advantage and actual PI use. Impact is stable at 3/3 active PASS versus 0/3 controls. Symbol final-schema projection and test objective projection remain variable and must be measured rather than hidden in comprehensive evaluation."
+}
