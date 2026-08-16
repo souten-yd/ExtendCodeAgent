@@ -444,6 +444,7 @@ def prove_bridge(
     new_by_id = {item["cell_id"]: item for item in bridge_run.get("results", [])}
     comparisons: list[dict[str, Any]] = []
     replay_classes: set[str] = set()
+    unavailable_classes: set[str] = set()
     fields = (
         "outcome",
         "process_exit",
@@ -458,16 +459,24 @@ def prove_bridge(
     attribution_fields = ("schema_valid", "final_exact_pass")
     for planned in bridge_plan["cells"]:
         cell_id = planned["cell_id"]
+        class_key = f"{planned['model_tier']}:{planned['task_class']}"
         old = old_by_id.get(cell_id)
         new = new_by_id.get(cell_id)
         mismatches: list[str] = []
         if old is None:
-            mismatches.append("source_result_missing")
+            raise CompatibilityError(f"bridge source result is missing: {cell_id}")
         elif digest(old) != planned["source_result_sha256"]:
-            mismatches.append("source_result_hash_mismatch")
+            raise CompatibilityError(f"bridge source result hash mismatch: {cell_id}")
         if new is None:
-            mismatches.append("bridge_result_missing")
-        if old is not None and new is not None:
+            comparison_status = "INCOMPLETE"
+            unavailable_classes.add(class_key)
+        elif new.get("outcome") not in {"PASS", "FAIL"}:
+            comparison_status = "UNAVAILABLE"
+            unavailable_classes.add(class_key)
+            mismatches.append("bridge_provider_or_execution_gap")
+        else:
+            comparison_status = "MATCH"
+        if old is not None and new is not None and comparison_status == "MATCH":
             mismatches.extend(field for field in fields if old.get(field) != new.get(field))
             old_attr = old.get("outcome_attribution", {})
             new_attr = new.get("outcome_attribution", {})
@@ -476,26 +485,38 @@ def prove_bridge(
                 for field in attribution_fields
                 if old_attr.get(field) != new_attr.get(field)
             )
-            if new.get("outcome") not in {"PASS", "FAIL"}:
-                mismatches.append("bridge_provider_or_execution_gap")
-        class_key = f"{planned['model_tier']}:{planned['task_class']}"
-        if mismatches:
+        if comparison_status == "MATCH" and mismatches:
+            comparison_status = "MISMATCH"
             replay_classes.add(class_key)
         comparisons.append(
             {
                 "cell_id": cell_id,
                 "model_tier": planned["model_tier"],
                 "task_class": planned["task_class"],
-                "status": "MATCH" if not mismatches else "MISMATCH",
+                "status": comparison_status,
                 "mismatches": sorted(set(mismatches)),
             }
         )
-    status = "PASS" if not replay_classes else "FAIL"
+    status = (
+        "PASS"
+        if not replay_classes and not unavailable_classes
+        else "PARTIAL"
+        if comparisons
+        else "FAIL"
+    )
+    matched_classes = sorted(
+        {
+            f"{item['model_tier']}:{item['task_class']}"
+            for item in comparisons
+            if item["status"] == "MATCH"
+        }
+    )
     report = {
         "schema": 1,
         "classification": "EVALUATION_CHECKPOINT_BRIDGE_PROOF",
         "status": status,
         "migration_permitted": status == "PASS",
+        "partial_migration_permitted": bool(matched_classes),
         "latency_merge_permitted": False,
         "bridge_plan": str(bridge_plan_path.resolve()),
         "bridge_plan_seal": bridge_plan["seal"]["canonical_payload"],
@@ -505,6 +526,8 @@ def prove_bridge(
         "matched_cells": sum(item["status"] == "MATCH" for item in comparisons),
         "total_cells": len(comparisons),
         "replay_required_classes": sorted(replay_classes),
+        "unavailable_classes": sorted(unavailable_classes),
+        "migration_permitted_classes": matched_classes,
         "comparisons": comparisons,
     }
     return {**report, "seal": {"algorithm": "sha256", "canonical_payload": digest(report)}}

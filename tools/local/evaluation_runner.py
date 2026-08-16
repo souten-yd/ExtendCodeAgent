@@ -10,6 +10,7 @@ import os
 import signal
 import subprocess
 import sys
+import tempfile
 import time
 from collections import Counter
 from pathlib import Path
@@ -35,9 +36,7 @@ CORPUS = ROOT / "docs/evaluation/test-portfolio-corpus-v1.json"
 B0A_PLAN = ROOT / "docs/evaluation/b0a-screening-plan-v1.json"
 B0A_ACTIVATION_PLAN = ROOT / "docs/evaluation/b0a-activation-plan-v1.json"
 B0A_BOOTSTRAP = ROOT / "docs/evidence/final/b0a-bootstrap-environment-v1.json"
-B0A_CHECKPOINT_COMPATIBILITY = (
-    ROOT / "docs/evaluation/b0a-checkpoint-compatibility-v1.json"
-)
+B0A_CHECKPOINT_COMPATIBILITY = ROOT / "docs/evaluation/b0a-checkpoint-compatibility-v1.json"
 E3_HARNESS = ROOT / "tools/local/e3_task_suite.py"
 PYTHON = ROOT / ".venv/bin/python"
 PLUGIN = ROOT / "adapters/opencode/dist/src/plugin.js"
@@ -1317,6 +1316,7 @@ def run(
     raw_root_override: Path | None,
     activation_report: Path | None,
     pilot_report: Path | None,
+    availability_proof_paths: list[Path],
 ) -> None:
     activation_evidence: dict[str, Any] | None = None
     pilot_evidence: dict[str, Any] | None = None
@@ -1365,15 +1365,34 @@ def run(
         raise EvaluationError("resume trace exists without its atomic report checkpoint")
     trace_log.replay()
     results: list[dict[str, Any]] = []
+    provider_attempts: list[dict[str, Any]] = []
+    provider_queue: dict[str, dict[str, Any]] = {}
     if resume and output.is_file():
         results = list(previous.get("results", []))
+        provider_attempts = list(previous.get("provider_attempts", []))
+        provider_queue = dict(previous.get("provider_queue", {}))
+    current_revision = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+    ).strip()
+    for provider_tier in _available_provider_tiers(availability_proof_paths, current_revision):
+        provider_queue[provider_tier] = {"status": "AVAILABLE"}
     completed = {item["cell_id"] for item in results}
     for cell in cells:
         if cell["cell_id"] in completed:
             continue
+        if provider_queue.get(cell["model_tier"], {}).get("status") == ("PAUSED_PROVIDER_GAP"):
+            continue
         result = _execute(cell, tasks[cell["task_id"]], raw_root)
-        _append_trace(trace_log, result, tasks[cell["task_id"]])
-        results.append(result)
+        if result.get("provider_failure"):
+            provider_attempts.append(result)
+            provider_queue[cell["model_tier"]] = {
+                "status": "PAUSED_PROVIDER_GAP",
+                "failure": result["provider_failure"],
+                "trigger_cell": cell["cell_id"],
+            }
+        else:
+            _append_trace(trace_log, result, tasks[cell["task_id"]])
+            results.append(result)
         _write_report(
             output,
             _report(
@@ -1383,6 +1402,8 @@ def run(
                 trace_log.path,
                 activation_evidence,
                 pilot_evidence,
+                provider_queue,
+                provider_attempts,
             ),
         )
     report = _report(
@@ -1392,6 +1413,8 @@ def run(
         trace_log.path,
         activation_evidence,
         pilot_evidence,
+        provider_queue,
+        provider_attempts,
     )
     _write_report(output, report)
     if scope == "b0a-activation" and report["activation_gate"]["status"] != "PASS":
@@ -1419,6 +1442,7 @@ def run_bridge(
     raw_root: Path,
     selected_models: set[str] | None,
     resume: bool,
+    availability_proof_paths: list[Path],
 ) -> None:
     _require_clean_worktree()
     bridge_plan = _load(bridge_plan_path.resolve())
@@ -1432,6 +1456,8 @@ def run_bridge(
     raw_root.mkdir(parents=True, exist_ok=True)
     trace_log = EvaluationTraceLog(raw_root / "traces.jsonl")
     results: list[dict[str, Any]] = []
+    provider_attempts: list[dict[str, Any]] = []
+    provider_queue: dict[str, dict[str, Any]] = {}
     if output.exists():
         if not resume:
             raise EvaluationError("bridge output exists; use a fresh path or --resume")
@@ -1444,11 +1470,24 @@ def run_bridge(
         if previous.get("trace_log") != str(trace_log.path):
             raise EvaluationError("bridge resume trace log mismatch")
         results = list(previous.get("results", []))
+        provider_attempts = list(previous.get("provider_attempts", []))
+        provider_queue = dict(previous.get("provider_queue", {}))
     elif resume and trace_log.path.exists():
         raise EvaluationError("bridge trace exists without its atomic report checkpoint")
     elif trace_log.path.exists():
         raise EvaluationError("bridge trace already exists; use a fresh raw root")
     trace_log.replay()
+    for provider_tier in _available_provider_tiers(availability_proof_paths, current_revision):
+        provider_queue[provider_tier] = {
+            "status": "AVAILABLE",
+            "availability_proof": str(
+                next(
+                    path.resolve()
+                    for path in availability_proof_paths
+                    if _load(path.resolve()).get("model_tier") == provider_tier
+                )
+            ),
+        }
     baseline_cells = {item["cell_id"]: item for item in plan("b0a-baseline")["cells"]}
     planned_ids = [item["cell_id"] for item in bridge_plan["cells"]]
     completed = {item["cell_id"] for item in results}
@@ -1459,11 +1498,21 @@ def run_bridge(
             raise EvaluationError(f"bridge cell is absent from current baseline: {cell_id}")
         if selected_models and cell["model_tier"] not in selected_models:
             continue
+        if provider_queue.get(cell["model_tier"], {}).get("status") == ("PAUSED_PROVIDER_GAP"):
+            continue
         if cell_id in completed:
             continue
         result = _execute(cell, tasks[cell["task_id"]], raw_root)
-        _append_trace(trace_log, result, tasks[cell["task_id"]])
-        results.append(result)
+        if result.get("provider_failure"):
+            provider_attempts.append(result)
+            provider_queue[cell["model_tier"]] = {
+                "status": "PAUSED_PROVIDER_GAP",
+                "failure": result["provider_failure"],
+                "trigger_cell": cell_id,
+            }
+        else:
+            _append_trace(trace_log, result, tasks[cell["task_id"]])
+            results.append(result)
         body = {
             "schema": 1,
             "classification": "EVALUATION_CHECKPOINT_BRIDGE_RUN",
@@ -1473,6 +1522,8 @@ def run_bridge(
             "trace_log": str(trace_log.path),
             "executed_cells": len(results),
             "pending_cells": sorted(set(planned_ids) - {item["cell_id"] for item in results}),
+            "provider_queue": provider_queue,
+            "provider_attempts": provider_attempts,
             "results": results,
         }
         _write_report(
@@ -1489,12 +1540,84 @@ def run_bridge(
             "trace_log": str(trace_log.path),
             "executed_cells": 0,
             "pending_cells": planned_ids,
+            "provider_queue": provider_queue,
+            "provider_attempts": provider_attempts,
             "results": [],
         }
         _write_report(
             output,
             {**body, "seal": {"algorithm": "sha256", "canonical_payload": digest(body)}},
         )
+
+
+def _available_provider_tiers(paths: list[Path], current_revision: str) -> set[str]:
+    available: set[str] = set()
+    for path in paths:
+        proof = _load(path.resolve())
+        verify_seal(proof, "provider availability proof")
+        if proof.get("classification") != "EVALUATION_PROVIDER_AVAILABILITY_PROBE":
+            raise EvaluationError("availability proof has the wrong classification")
+        if proof.get("source_revision") != current_revision:
+            raise EvaluationError("availability proof was not produced at the current exact head")
+        if proof.get("status") != "AVAILABLE":
+            raise EvaluationError("availability proof did not establish provider recovery")
+        available.add(str(proof["model_tier"]))
+    return available
+
+
+def probe_provider(model_tier: str, output: Path) -> None:
+    """Run a small provider-only request that is never included in quality results."""
+    _require_clean_worktree()
+    current_revision = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+    ).strip()
+    with tempfile.TemporaryDirectory(prefix="eca-provider-probe-") as temporary:
+        workspace = Path(temporary)
+        env, model_id = _environment("native", model_tier, workspace)
+        command = [
+            _load(MATRIX)["execution"]["opencode_executable"],
+            "run",
+            "--format",
+            "json",
+            "--print-logs",
+            "--log-level",
+            "ERROR",
+            "--auto",
+            "--model",
+            model_id,
+            "--dir",
+            str(workspace),
+            "--pure",
+            "Reply with exactly AVAILABLE.",
+        ]
+        started = time.monotonic()
+        stdout, stderr, process_exit, timed_out, provider_failure = _run_opencode(
+            command, cwd=ROOT, env=env, timeout=60
+        )
+    status = (
+        "AVAILABLE"
+        if process_exit == 0 and not timed_out and provider_failure is None
+        else "UNAVAILABLE"
+    )
+    body = {
+        "schema": 1,
+        "classification": "EVALUATION_PROVIDER_AVAILABILITY_PROBE",
+        "source_revision": current_revision,
+        "model_tier": model_tier,
+        "model_id": model_id,
+        "status": status,
+        "provider_failure": provider_failure,
+        "process_exit": process_exit,
+        "timed_out": timed_out,
+        "wall_ms": round((time.monotonic() - started) * 1000),
+        "probe_only_not_quality_result": True,
+        "response_observed": bool(stdout.strip()),
+        "error_observed": bool(stderr.strip()),
+    }
+    _write_report(
+        output,
+        {**body, "seal": {"algorithm": "sha256", "canonical_payload": digest(body)}},
+    )
 
 
 def _validate_resume(
@@ -1615,6 +1738,8 @@ def _report(
     trace_path: Path,
     activation_evidence: dict[str, Any] | None = None,
     pilot_evidence: dict[str, Any] | None = None,
+    provider_queue: dict[str, dict[str, Any]] | None = None,
+    provider_attempts: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     report = {
         "schema": 1,
@@ -1642,6 +1767,10 @@ def _report(
         "integrated_metrics": _metric_projection(),
         "results": results,
     }
+    if provider_queue:
+        report["provider_queue"] = provider_queue
+    if provider_attempts:
+        report["provider_attempts"] = provider_attempts
     report["failure_attribution"] = dict(
         Counter(
             item.get("outcome_attribution", {}).get("classification", "NOT_CLASSIFIED")
@@ -1858,9 +1987,7 @@ def main() -> int:
     sub.add_parser("validate")
     sub.add_parser("metrics")
     seal_parser = sub.add_parser("seal")
-    seal_parser.add_argument(
-        "target", choices=["matrix", "labels", "activation", "compatibility"]
-    )
+    seal_parser.add_argument("target", choices=["matrix", "labels", "activation", "compatibility"])
     plan_parser = sub.add_parser("plan")
     plan_parser.add_argument(
         "--scope",
@@ -1898,6 +2025,7 @@ def main() -> int:
     run_parser.add_argument("--raw-root", type=Path)
     run_parser.add_argument("--activation-report", type=Path)
     run_parser.add_argument("--pilot-report", type=Path)
+    run_parser.add_argument("--availability-proof", type=Path, action="append")
     _selection_arguments(run_parser)
     screen_parser = sub.add_parser("screen")
     screen_parser.add_argument("--input", type=Path, required=True)
@@ -1916,11 +2044,15 @@ def main() -> int:
     bridge_run_parser.add_argument("--raw-root", type=Path, required=True)
     bridge_run_parser.add_argument("--model-tier", action="append")
     bridge_run_parser.add_argument("--resume", action="store_true")
+    bridge_run_parser.add_argument("--availability-proof", type=Path, action="append")
     bridge_proof_parser = sub.add_parser("prove-bridge")
     bridge_proof_parser.add_argument("--bridge-plan", type=Path, required=True)
     bridge_proof_parser.add_argument("--bridge-run", type=Path, required=True)
     bridge_proof_parser.add_argument("--source", type=Path, required=True)
     bridge_proof_parser.add_argument("--output", type=Path, required=True)
+    probe_parser = sub.add_parser("probe-provider")
+    probe_parser.add_argument("--model-tier", required=True)
+    probe_parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     try:
         if args.command == "validate":
@@ -1963,6 +2095,7 @@ def main() -> int:
                 args.raw_root,
                 args.activation_report,
                 args.pilot_report,
+                args.availability_proof or [],
             )
         elif args.command == "screen":
             _write_report(args.output, screening_table(_load(args.input)))
@@ -1985,9 +2118,7 @@ def main() -> int:
             _require_clean_worktree()
             _write_report(
                 args.output,
-                create_bridge_plan(
-                    ROOT, args.audit.resolve(), args.compatibility.resolve()
-                ),
+                create_bridge_plan(ROOT, args.audit.resolve(), args.compatibility.resolve()),
             )
         elif args.command == "run-bridge":
             run_bridge(
@@ -1996,8 +2127,9 @@ def main() -> int:
                 args.raw_root,
                 _selected(args.model_tier),
                 args.resume,
+                args.availability_proof or [],
             )
-        else:
+        elif args.command == "prove-bridge":
             _require_clean_worktree()
             _write_report(
                 args.output,
@@ -2007,6 +2139,8 @@ def main() -> int:
                     args.source.resolve(),
                 ),
             )
+        else:
+            probe_provider(args.model_tier, args.output)
     except (
         CompatibilityError,
         EvaluationError,

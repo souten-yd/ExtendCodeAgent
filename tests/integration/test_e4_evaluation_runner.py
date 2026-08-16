@@ -14,6 +14,7 @@ from pytest import MonkeyPatch
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
+import tools.local.evaluation_runner as evaluation_runner  # noqa: E402
 from tools.local.evaluation_runner import (  # noqa: E402
     CONFIGURABLE_CAPABILITIES,
     _activation_assessment,
@@ -49,6 +50,48 @@ def _digest(value: dict[str, object]) -> str:
         payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
     ).encode()
     return hashlib.sha256(canonical).hexdigest()
+
+
+def test_provider_gap_pauses_only_its_queue_and_other_models_continue(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+) -> None:
+    planned = evaluation_runner.plan("b0a-baseline")["cells"]
+    host = [item for item in planned if item["model_tier"] == "host-default"][:2]
+    local = next(item for item in planned if item["model_tier"] == "local-practical")
+    schedule = {"scope": "base", "counts": {"cells": 3}, "cells": [*host, local]}
+    invoked: list[str] = []
+
+    monkeypatch.setattr(evaluation_runner, "plan", lambda *args, **kwargs: schedule)
+    monkeypatch.setattr(evaluation_runner, "_append_trace", lambda *args: None)
+
+    def execute(cell: dict[str, Any], task: dict[str, Any], raw_root: Path) -> dict[str, Any]:
+        invoked.append(cell["cell_id"])
+        return {
+            **cell,
+            "outcome": "UNAVAILABLE" if cell["model_tier"] == "host-default" else "FAIL",
+            "provider_failure": ("RATE_LIMIT" if cell["model_tier"] == "host-default" else None),
+        }
+
+    monkeypatch.setattr(evaluation_runner, "_execute", execute)
+    output = tmp_path / "result.json"
+    evaluation_runner.run(
+        "base",
+        output,
+        None,
+        None,
+        None,
+        None,
+        False,
+        tmp_path / "raw",
+        None,
+        None,
+        [],
+    )
+    report = json.loads(output.read_text())
+    assert invoked == [host[0]["cell_id"], local["cell_id"]]
+    assert report["provider_queue"]["host-default"]["status"] == "PAUSED_PROVIDER_GAP"
+    assert len(report["provider_attempts"]) == 1
+    assert [item["cell_id"] for item in report["results"]] == [local["cell_id"]]
 
 
 def test_opencode_provider_failure_is_classified_and_stops_early(tmp_path: Path) -> None:
