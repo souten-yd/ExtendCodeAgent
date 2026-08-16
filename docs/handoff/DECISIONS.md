@@ -933,3 +933,9 @@ Test selection requires a natural-language objective and accepts canonical refs 
 additional evidence. It deterministically ranks existing test intent per unit, integration and
 architecture obligation, returns one best path per required class, and leaves uncovered obligations
 explicit. This is a bounded projection repair, not a claim of generic semantic TestIntent coverage.
+
+Requested answer keys are interpreted as an exact schema in every evaluation arm because the sealed
+oracle performs exact equality while the natural-language tasks previously allowed models to append
+explanation objects. Active PI receives one additional causal rule: matching compact fields are known
+facts to preserve, not suggestions to delete or enrich. This does not change task facts or weaken the
+oracle; it removes a presentation ambiguity equally for controls and tests PI's intended projection.

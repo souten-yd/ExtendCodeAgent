@@ -672,9 +672,7 @@ def _collect_evidence_refs(value: object, evidence_ids: set[str]) -> None:
                 evidence_ids.add(f"{key}:{item}")
             elif (key == "symbols" or key.endswith("_refs")) and isinstance(item, list):
                 evidence_ids.update(
-                    f"canonical_ref:{ref}"
-                    for ref in item
-                    if isinstance(ref, str) and "://" in ref
+                    f"canonical_ref:{ref}" for ref in item if isinstance(ref, str) and "://" in ref
                 )
             else:
                 _collect_evidence_refs(item, evidence_ids)
@@ -701,6 +699,53 @@ def _screening_required_tool(cell: dict[str, Any], task: dict[str, Any]) -> str 
     return None
 
 
+def _task_instruction(cell: dict[str, Any], task: dict[str, Any], mode: str) -> str:
+    instruction = str(task["instruction"])
+    if any(check["kind"] == "answer" for check in task["oracle"]["checks"]):
+        instruction = (
+            "Treat the requested .eca-eval/answer.json keys as an exact schema: include every "
+            "requested key, preserve the requested scalar/list types, and add no explanation, "
+            "evidence, or other unrequested keys. " + instruction
+        )
+    if cell.get("pi_activation_gate"):
+        return (
+            "This is a Project Intelligence activation gate. You MUST first call pi_status, then "
+            "call pi_symbol with query select_tests, use the returned PI evidence, and only then "
+            "complete the task. " + instruction
+        )
+    if cell.get("pi_effect_pilot") and mode == "active":
+        required = _load(B0A_ACTIVATION_PLAN)["pilot"]["tasks"][task["id"]]
+        return (
+            "This is a Project Intelligence effect pilot. You MUST call these PI tools before "
+            f"completing the task: {', '.join(required)}. Use their returned evidence in your "
+            "analysis. When a compact PI response contains a field requested by the answer, copy "
+            "that field without removing paths or expanding scalar/path values into explanation "
+            "objects; a singular requested field may use the sole item from a one-item PI list. "
+            "Then complete the original task. " + instruction
+        )
+    if cell.get("pi_effect_pilot") and mode == "off":
+        return (
+            "This is the disabled-extension control. You MUST call pi_status once to confirm PI is "
+            "disabled, must not call another pi_* tool, and then complete the original task using "
+            "normal OpenCode capabilities. " + instruction
+        )
+    required_tool = _screening_required_tool(cell, task)
+    if cell.get("pi_screening") and required_tool is not None:
+        return (
+            "This capability screening cell MUST use pi_status and "
+            f"{required_tool}. Use pi_symbol or pi_path first when canonical refs are needed. "
+            "Treat an unavailable capability as unavailable; do not fabricate its result. Then "
+            "complete the original task and its exact output contract. " + instruction
+        )
+    if mode in {"advisory", "active"}:
+        return (
+            "Use the available pi_* Project Intelligence tools where relevant. Preserve compact PI "
+            "fields that match requested answer fields without removing paths or expanding them "
+            "into explanation objects. " + instruction
+        )
+    return instruction
+
+
 def _execute(cell: dict[str, Any], task: dict[str, Any], raw_root: Path) -> dict[str, Any]:
     if cell["model_status"] == "UNAVAILABLE":
         return {**cell, "outcome": "UNAVAILABLE", "reason": "sealed model-tier status"}
@@ -715,38 +760,7 @@ def _execute(cell: dict[str, Any], task: dict[str, Any], raw_root: Path) -> dict
     _prepare(task, workspace)
     env, model_id = _environment(cell["arm"], cell["model_tier"], workspace)
     mode, _ = _arm_mode(cell["arm"])
-    instruction = task["instruction"]
-    if cell.get("pi_activation_gate"):
-        instruction = (
-            "This is a Project Intelligence activation gate. You MUST first call pi_status, then "
-            "call pi_symbol with query select_tests, use the returned PI evidence, and only then "
-            "complete the task. " + instruction
-        )
-    elif cell.get("pi_effect_pilot") and mode == "active":
-        required = _load(B0A_ACTIVATION_PLAN)["pilot"]["tasks"][task["id"]]
-        instruction = (
-            "This is a Project Intelligence effect pilot. You MUST call these PI tools before "
-            f"completing the task: {', '.join(required)}. Use their returned evidence in your "
-            "analysis, then complete the original task. " + instruction
-        )
-    elif cell.get("pi_effect_pilot") and mode == "off":
-        instruction = (
-            "This is the disabled-extension control. You MUST call pi_status once to confirm PI is "
-            "disabled, must not call another pi_* tool, and then complete the original task using "
-            "normal OpenCode capabilities. " + instruction
-        )
-    elif cell.get("pi_screening") and _screening_required_tool(cell, task) is not None:
-        required_tool = _screening_required_tool(cell, task)
-        instruction = (
-            "This capability screening cell MUST use pi_status and "
-            f"{required_tool}. Use pi_symbol or pi_path first when canonical refs are needed. "
-            "Treat an unavailable capability as unavailable; do not fabricate its result. Then "
-            "complete the original task and its exact output contract. " + instruction
-        )
-    elif mode in {"advisory", "active"}:
-        instruction = (
-            "Use the available pi_* Project Intelligence tools where relevant. " + instruction
-        )
+    instruction = _task_instruction(cell, task, mode)
     command = [
         _load(MATRIX)["execution"]["opencode_executable"],
         "run",

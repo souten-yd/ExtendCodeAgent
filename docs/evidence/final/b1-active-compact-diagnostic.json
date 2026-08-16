@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "classification": "B1_ACTIVE_ONLY_DIAGNOSTIC",
+  "source_revision": "130f0a28b947ed2f39409a34b58aa9e823c31e99",
+  "activation_status": "PASS",
+  "scope_limit": "One active Qwen repetition over the three pilot tasks; controls were not run and this is not pilot-gate evidence.",
+  "results": [
+    {
+      "task_id": "eca-symbol-001",
+      "outcome": "FAIL",
+      "wall_ms": 86499,
+      "required_fact_recall": 0.8,
+      "pi_required_fact_recall": 1.0,
+      "schema_valid": true,
+      "classification": "AGENT_REASONING_ERROR",
+      "diagnosis": "The compact response contained both required test paths; the agent removed one."
+    },
+    {
+      "task_id": "eca-impact-001",
+      "outcome": "FAIL",
+      "wall_ms": 72369,
+      "required_fact_recall": 0.857143,
+      "pi_required_fact_recall": 1.0,
+      "schema_valid": false,
+      "classification": "PROJECTION_SCHEMA_ERROR",
+      "diagnosis": "All required compact values were present; the agent expanded definition into prose and added unrequested objects."
+    },
+    {
+      "task_id": "eca-tests-001",
+      "outcome": "PASS",
+      "wall_ms": 80684,
+      "required_fact_recall": 1.0,
+      "pi_required_fact_recall": 1.0,
+      "schema_valid": true,
+      "classification": "PASS"
+    }
+  ],
+  "conclusion": "Compact retrieval reached 1.0 required-fact recall on all three tasks and produced the first post-repair functional PASS. Remaining misses are final exact-schema projection, so the next repair clarifies exact answer keys for every arm and exact compact-field preservation for active PI."
+}

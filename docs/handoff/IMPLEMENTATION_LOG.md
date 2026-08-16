@@ -525,3 +525,14 @@
   deterministic collector defect would invalidate all four models.
 - Extended evidence collection to treat URI values in `symbols` and `*_refs` arrays as canonical
   evidence, with an integration assertion. This changes attribution only, not task/oracle truth.
+- PR #60 merged compact evidence collection as `130f0a28b947ed2f39409a34b58aa9e823c31e99`.
+  Fresh exact-head activation passed Qwen, host-default, Copilot Sonnet and Copilot Codex.
+- Stopped an active-only diagnostic after one Qwen repetition over all three pilot tasks. Compact PI
+  required-fact recall was 1.0 in every task; tests PASS, symbol dropped one returned path, and impact
+  added prose/objects. This 1/3 result has no controls and is diagnostic only.
+- Clarified orchestration without changing tasks/oracles: every answer task treats requested keys as
+  an exact schema with no extra keys; active cells preserve matching compact values without removing
+  paths or expanding them into explanation objects. Added a direct instruction-contract test.
+- Validation at the pre-PR working tree passed `tools/local/all-fast` (191 Python plus 9 adapter),
+  `tools/local/test-integration` (40 Python plus 9 adapter), `git diff --check`, and unified
+  evaluation validation.
