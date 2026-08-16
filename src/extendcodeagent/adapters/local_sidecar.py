@@ -196,6 +196,7 @@ def _dispatch(
     if operation == "tests":
         return application.tests(
             _string_tuple(params.get("changed_refs", []), "changed_refs"),
+            objective=_optional_string(params.get("objective"), "objective") or "",
             view=_optional_string(params.get("view"), "view") or "detail",
         )
     if operation == "context":

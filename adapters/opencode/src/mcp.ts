@@ -38,13 +38,12 @@ server.registerTool(
 server.registerTool(
   "pi_symbol",
   {
-    description: "Find task-ready symbol context or detailed graph facts.",
+    description: "Find compact task-ready definition, export, caller, and test paths.",
     inputSchema: {
       query: z.string().min(1),
-      view: z.enum(["compact", "detail"]).default("compact"),
     },
   },
-  async (args) => result(await client.request("symbol", args)),
+  async (args) => result(await client.request("symbol", { ...args, view: "compact" })),
 )
 server.registerTool(
   "pi_references",
@@ -78,21 +77,20 @@ server.registerTool(
       min_confidence: z.number().min(0).max(1).optional(),
       max_depth: z.number().int().min(0).optional(),
       include_historical: z.boolean().optional(),
-      view: z.enum(["compact", "detail"]).default("compact"),
     },
   },
-  async (args) => result(await client.request("impact", args)),
+  async (args) => result(await client.request("impact", { ...args, view: "compact" })),
 )
 server.registerTool(
   "pi_tests",
   {
-    description: "Recommend task-ready tests and expose incomplete obligation coverage.",
+    description: "Select task-ready tests by verification objective and optional changed refs.",
     inputSchema: {
-      changed_refs: z.array(z.string()).min(1),
-      view: z.enum(["compact", "detail"]).default("compact"),
+      objective: z.string().min(1),
+      changed_refs: z.array(z.string()).optional(),
     },
   },
-  async (args) => result(await client.request("tests", args)),
+  async (args) => result(await client.request("tests", { ...args, view: "compact" })),
 )
 server.registerTool(
   "pi_context",

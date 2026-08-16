@@ -202,3 +202,10 @@
   invent arbitrary designs. `pi_verify` currently reports Twin materialization and gaps but accepts
   no external verification-evidence payload. Those boundaries are intentional for the screening
   route and must not be described as full planning or certificate support.
+- The first post-route 9-cell pilot at `b67f951` had no functional gain because OpenCode still
+  exposed `view=detail`, and Qwen explicitly chose it in symbol/impact. This bypassed compact facts
+  and produced a truncated impact payload. The repair removes that public choice while preserving
+  direct application detail compatibility; effect remains NOT TESTED until the same pilot is rerun.
+- Objective-aware test projection is deterministic token/obligation ranking, not calibrated generic
+  TestIntent. It is exact on the sealed ECA pilot workspace but held-out precision/recall remains
+  unmeasured. Any missing obligation continues to require native fallback.

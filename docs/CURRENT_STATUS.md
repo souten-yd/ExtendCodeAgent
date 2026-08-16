@@ -181,6 +181,22 @@ The activation contract maps `eca-refactor-001` to `pi_plan` and `cd-cross-bound
 `pi_verify`; screening refuses a no-effect classification when those required calls/capability traces
 are absent. The sealed task suite and exact oracles are unchanged.
 
+At merged route head `b67f9514937d62a1f235baf95f2e2581183dabc3`, fresh activation passed Qwen,
+host-default and both GitHub Copilot frontier routes with no capability gap. The following sealed
+9-cell pilot completed without timeout/provider/PI-observation failures, but PASS remained 0/0/0 and
+correctly returned `REPAIR_AND_RETEST`. Active median was 113,474ms versus the slower control's
+114,317ms (0.993x), so this run shows neither time penalty nor functional gain.
+
+Raw trace inspection found the active agent explicitly requested `view=detail` for symbol and impact,
+so none of the repaired compact projections was exercised. The detailed impact response was also
+large enough for OpenCode to truncate. Test selection received four source-directory strings rather
+than canonical refs and returned `full_suite`; the agent then found only two of three required tests.
+The next bounded repair removes the detail choice from OpenCode while retaining core compatibility,
+and makes compact test selection accept a task objective plus optional refs. On the exact pilot
+workspace, current compact projection returns every sealed symbol and impact fact, while objective
+selection returns the exact unit/integration/architecture triplet. This deterministic proof precedes
+another real-model pilot and is not itself effect evidence.
+
 The bootstrap blocker has a bounded B1 repair at exact head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`. A matching current-edge identity index and schema-5
 migration reduce exact-pin three-run cold medians to 15,825ms for KasaneCore and 6,368ms for PEDS;

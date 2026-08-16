@@ -81,8 +81,14 @@ Current task: prove real PI activation and repair missing capability routes befo
   for Traceability/Convergence. Both routes are proven through MCP against the real sidecar;
   persistence is opt-in and materialized facts are not mislabeled verified. The runner records
   composite `capabilities_used`, fixes one covered task per route, and refuses a no-effect decision
-  if required route observations are absent. Next: publish this slice, then rerun activation and a
-  fresh sealed 9-cell pilot before any 27/306/714 continuation.
+  if required route observations are absent. PR #58 merged this as `b67f951`; same-head activation
+  passed all four routes, but the fresh 9-cell pilot produced 0/0/0 PASS and stopped correctly.
+- Raw traces show Qwen explicitly selected detailed symbol/impact views, bypassing compact output;
+  the impact payload was truncated. It also passed directories to detailed test selection and hit
+  full-suite fallback. Current bounded repair makes OpenCode compact-only and projects tests from a
+  required objective plus optional refs. Direct proof on the pilot workspace now matches all three
+  sealed fact sets. Next: merge this repair, then rerun activation and the same 9 cells before any
+  27/306/714 continuation.
 
 - Conditional B1 repair exact head `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7` adds the missing
   current-edge identity index. Three cold exact-pin runs changed KasaneCore/PEDS from >300-second

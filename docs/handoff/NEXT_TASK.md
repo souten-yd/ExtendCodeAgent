@@ -65,9 +65,11 @@ Therefore the old partial confirmation must not continue. Failure attribution, t
 timing trace, compact task projection, obligation-aware structural coverage, revision-scoped query
 indexes, and the missing OpenCode routes are now implemented. `pi_plan` covers Blueprint/Strategy on
 `eca-refactor-001`; `pi_verify` covers Traceability/Convergence on `cd-cross-boundary-001`, with
-fail-closed route observation in screening. After this slice is merged, rerun the four-model
-activation and a fresh sealed 9-cell pilot at that exact head. Continue to 27 only if the initial
-gate again shows objective gain with bounded time. Current effect remains NOT TESTED.
+fail-closed route observation in screening. PR #58 merged that slice and same-head activation passed,
+but the fresh pilot produced 0/0/0 PASS because Qwen explicitly selected detailed graph views and
+never exercised compact projection. Finish and merge the compact-only OpenCode/objective-test repair,
+then rerun activation and the same 9 cells at the new exact head. Continue to 27 only if the initial
+gate shows objective gain with bounded time. Current effect remains NOT TESTED.
 
 The conditional B1 storage blocker is repaired at exact implementation head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`: KasaneCore and PEDS now pass three-run cold-index
