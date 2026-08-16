@@ -331,9 +331,10 @@ Consequences:
   `CapabilityPolicy` — including `strategy` and `test_obsolescence`, which have real implementations —
   so per-capability ablation is currently impossible and no keep/demote decision could be supported.
   Phase 0 adds gating conformance (E1), the capability depth contract (E2), a unified evaluation runner
-  with a versioned ground-truth label set (E3) and a minimal attributable PI trace (E4).
-- The minimal PI trace is promoted from P1 to Phase 0 as evaluation infrastructure. Durable Project
-  Evidence Memory remains P1.
+  with a Layer B task suite (E3), a versioned Layer A label set and unified runner (E4), and a
+  minimal attributable PI trace (E5).
+- The minimal PI trace is promoted into Phase 0 as evaluation infrastructure. Durable Project
+  Evidence Memory becomes the first post-baseline stage, `P0`.
 - The frontier model path becomes a conditional release gate with a documented exception rule. A
   provider outage outside the repository can no longer block the baseline indefinitely; the exception
   records the error category, the native reproduction, the withdrawn claims and the re-test trigger.
@@ -416,3 +417,90 @@ is policy-gated, folded into a gated capability, or declared unimplemented, and 
 inventory counts so a new capability cannot be added silently.
 
 GitHub Actions: not added. Validation stays local.
+
+## 2026-08-16 — Plan review corrections and evaluation scope
+
+Context: a full read-through of the consolidated plan found three residual inconsistencies that E0 was
+supposed to eliminate, and four scope gaps that would have surfaced as unusable results at B0.
+
+### Corrections
+
+1. **Project Evidence Memory was scheduled at both P0 and P1.** §3 row 6 and this file said P1; §8 and
+   the §9 legacy mapping said P0. Resolved to **P0**, matching §8/§9.
+2. **`D0` denoted two different things** — capability depth level 0 (§7.1 arm G, E2, V2) and the
+   Phase 5 runtime-bridge stage. In a document whose purpose was retiring ambiguous identifiers this is
+   a defect. Phase 5 stages are renamed **X0** and **X1**; `D0..D4` now means depth only, and §8
+   Phase 5 states the rule explicitly.
+3. **B0 scheduled an ablation sweep over "the 14 implemented capabilities".** After E1 folded
+   `call_graph` into `semantic` there are 14 implemented but only **13** ablatable. Corrected to 13
+   with a pointer to §6. This was missed in the E1 documentation pass.
+
+### Decision — a Layer B task suite is a stage, not part of the runner
+
+Phase 0 gains a new stage **E3 (Layer B task suite and outcome ground truth)**; the former E3 and E4
+become **E4** and **E5**.
+
+Reason: Layer A had a versioned label set while Layer B — the layer the entire product claim rests on
+— had no defined task set, no per-task oracle, and no sealed held-out split. B0 would have produced
+outcome numbers that could not be compared between arms or between runs, and the fix would have
+required repeating B0. Folding the suite into the runner stage was rejected because it lets the suite
+be shaped by what the runner happens to make easy, which is the standard way an evaluation ends up
+measuring the implementation instead of the claim. E3 seals the suite before the runner exists.
+
+The renumbering cost is accepted because no stage past E1 has started. §9, §11, §12, the handoff
+documents and `CURRENT_STATUS.md` were updated in the same commit.
+
+The suite must include a negative-control task class expected not to benefit from PI, and at least one
+task whose correct answer is "insufficient evidence", so the suite can detect PI-induced
+overconfidence rather than only rewarding recall.
+
+### Decision — Layer C budgets become numeric thresholds in the master plan
+
+§7.4 gated promotion on "Layer C stays within budget" while §7.2 listed only metric names, and the
+qualitative budgets lived in a document whose sequencing was superseded. That made the condition
+unfalsifiable. §7.2 now carries a numeric table by repository size class, plus an advisory context
+overhead ratio. The numbers are provisional and calibrated at B0; changing one requires a decision
+entry with the measurement. A budget breach blocks promotion even when Layer A and Layer B improve —
+the response is lower depth or a scoped rollout, never a raised budget.
+
+Recorded honestly: the PR-B measurement (182.145 ms incremental vs 185.638 ms cold on 50 files) means
+the S-class incremental budget is **not currently met** by the fingerprint path.
+
+### Decision — repository content is untrusted input (new invariant 8)
+
+The plan treated privacy as outbound-only (`RemoteCodePolicy`). Nothing addressed the inbound
+direction, even though every capability reads repository text and delivers it into an agent context —
+a direct injection channel. New invariant 8 requires PI output to be structured data rather than
+prose, forbids repository content from changing rollout mode, depth, capability selection, privacy
+policy or verification verdicts, and requires the E3 suite to contain injection-shaped strings so B0
+measures propagation instead of assuming absence. Propagation is a release blocker.
+
+### Decision — the moat is Verification Intelligence; Project Truth is substrate
+
+The competitive analysis scored Project Graph and Impact Analysis only against agent harnesses, where
+they look like a 5-vs-1 advantage. That is the wrong comparison set: static code intelligence
+(Sourcegraph, CodeQL, IDE indexers, LSP) has built code graphs for years with wider language coverage
+and greater scale. A **CI column** is added to §3.3, and rows 22–23 are scored at parity or behind.
+
+Consequently §2 no longer lists five co-equal moat areas — which made the strategy unfalsifiable,
+since any result could be credited to some other pillar. Verification Intelligence is the single
+defended area; the other four are supporting. Master plan §1 is restated to match, and now also states
+the Python/JS-TS language boundary explicitly.
+
+### Decision — program-level stop and pivot criteria (new §10.2)
+
+Invariant 10 was a per-capability stop rule only. Nothing said what happens if B0 disproves the
+premise, so the default outcome was indefinite continuation. §10.2 adds two pivots (verification-only,
+weak-local-only) and a three-condition stop requiring a confirming repeat run. A stop is written up as
+a negative result to the same evidence standard as a positive one. Provider unavailability, a single
+tier regressing, language coverage and OpenCode drift explicitly do not trigger it.
+
+### Recorded — no existing evidence supports the product thesis
+
+`docs/evidence/pr-g/model-evaluation.json` is 6 scenarios, 1 repetition, `tool_calls = 0` in every arm.
+Zero tool calls means no agentic work occurred; it is a context-injection A/B, and 1/6 → 6/6 is close
+to tautological when the needed facts are placed in the prompt. Under invariant 1 it is real evidence
+that the model-routing path functions, and nothing more. §5 now states this, and no claim may cite it
+as outcome evidence.
+
+GitHub Actions: not added. This change is documentation only.
