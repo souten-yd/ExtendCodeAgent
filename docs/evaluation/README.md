@@ -72,3 +72,17 @@ tools/local/evaluation-runner run-bridge --resume --availability-proof <availabi
 
 The same `--availability-proof` option applies to normal `run`. A probe is never an evaluation retry
 and is never included in correctness or latency aggregates.
+
+After a Bridge Proof, copy only permitted classes into a new checkpoint and a new trace chain:
+
+```bash
+tools/local/evaluation-runner migrate-checkpoint --source <old-result.json> \
+  --audit <audit.json> --bridge <bridge-proof.json> \
+  --raw-root <new-raw-root> --output <new-result.json>
+```
+
+Migration never edits the source. Every copied result records its original result hash, old runner,
+validating runner, manifest/proof and `LEGACY_RUNNER` latency status. A Bridge mismatch excludes that
+class, a Bridge-unavailable provider excludes that model tier, and sealed unavailable model cells
+remain reusable without pretending they executed. The migrated checkpoint is sealed and binds fresh
+activation/pilot evidence on its first current-head resume.

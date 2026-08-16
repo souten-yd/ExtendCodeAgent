@@ -6,6 +6,7 @@ import hashlib
 import json
 import subprocess
 from collections import Counter
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -511,6 +512,10 @@ def prove_bridge(
             if item["status"] == "MATCH"
         }
     )
+    required_models = set(bridge_plan["policy"]["required_model_tiers"])
+    unavailable_models = {item.split(":", 1)[0] for item in unavailable_classes}
+    matched_models = {item.split(":", 1)[0] for item in matched_classes}
+    migration_models = sorted((required_models & matched_models) - unavailable_models)
     report = {
         "schema": 1,
         "classification": "EVALUATION_CHECKPOINT_BRIDGE_PROOF",
@@ -528,6 +533,121 @@ def prove_bridge(
         "replay_required_classes": sorted(replay_classes),
         "unavailable_classes": sorted(unavailable_classes),
         "migration_permitted_classes": matched_classes,
+        "migration_permitted_model_tiers": migration_models,
+        "bridge_unavailable_model_tiers": sorted(unavailable_models),
         "comparisons": comparisons,
     }
     return {**report, "seal": {"algorithm": "sha256", "canonical_payload": digest(report)}}
+
+
+def migrate_checkpoint(
+    root: Path,
+    source_path: Path,
+    audit_path: Path,
+    bridge_proof_path: Path,
+    trace_output_path: Path,
+) -> dict[str, Any]:
+    """Copy only bridge-authorized functional cells into a current-run checkpoint."""
+    source = json.loads(source_path.read_text(encoding="utf-8"))
+    audit = json.loads(audit_path.read_text(encoding="utf-8"))
+    proof = json.loads(bridge_proof_path.read_text(encoding="utf-8"))
+    verify_seal(audit, "checkpoint audit")
+    verify_seal(proof, "bridge proof")
+    source_hash = hashlib.sha256(source_path.read_bytes()).hexdigest()
+    if source_hash != audit.get("source_checkpoint_sha256"):
+        raise CompatibilityError("migration source does not match checkpoint audit")
+    if source_hash != proof.get("source_checkpoint_sha256"):
+        raise CompatibilityError("migration source does not match bridge proof")
+    if audit.get("trace_integrity") != "PASS":
+        raise CompatibilityError("migration requires valid source trace integrity")
+    if proof.get("partial_migration_permitted") is not True:
+        raise CompatibilityError("bridge proof permits no migration")
+    current_revision = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=root, text=True
+    ).strip()
+    reusable_by_id = {
+        item["cell_id"]: item
+        for item in audit.get("cells", [])
+        if item.get("classification") == REUSABLE
+    }
+    permitted_models = set(proof.get("migration_permitted_model_tiers", []))
+    replay_classes = set(proof.get("replay_required_classes", []))
+    migrated: list[dict[str, Any]] = []
+    migrated_ids: set[str] = set()
+    for result in source.get("results", []):
+        cell_id = result.get("cell_id")
+        audited = reusable_by_id.get(cell_id)
+        if audited is None:
+            continue
+        class_key = f"{result.get('model_tier')}:{result.get('task_class')}"
+        sealed_unavailable = (
+            result.get("model_status") == "UNAVAILABLE"
+            and result.get("outcome") == "UNAVAILABLE"
+            and result.get("reason") == "sealed model-tier status"
+        )
+        if not sealed_unavailable and (
+            result.get("model_tier") not in permitted_models or class_key in replay_classes
+        ):
+            continue
+        migrated.append(
+            {
+                **result,
+                "result_origin": "migrated_checkpoint",
+                "original_runner_revision": audit["source_runner_revision"],
+                "validated_by_runner_revision": current_revision,
+                "compatibility_manifest": audit["compatibility_manifest"],
+                "compatibility_proof": str(bridge_proof_path.resolve()),
+                "compatibility_proof_seal": proof["seal"]["canonical_payload"],
+                "original_result_sha256": audited["source_result_sha256"],
+                "latency_status": ("NOT_APPLICABLE" if sealed_unavailable else "LEGACY_RUNNER"),
+            }
+        )
+        migrated_ids.add(str(cell_id))
+    source_trace_path = Path(str(source["trace_log"]))
+    if hashlib.sha256(source_trace_path.read_bytes()).hexdigest() != audit.get(
+        "source_trace_log_sha256"
+    ):
+        raise CompatibilityError("migration source trace hash mismatch")
+    source_traces = EvaluationTraceLog(source_trace_path).replay()
+    migrated_trace_ids = {item.get("trace_id") for item in migrated}
+    selected_traces = [item for item in source_traces if item.trace_id in migrated_trace_ids]
+    if len(selected_traces) != len(migrated):
+        raise CompatibilityError("migration trace coverage is incomplete")
+    if trace_output_path.exists():
+        raise CompatibilityError("migration trace output already exists")
+    trace_output_path.parent.mkdir(parents=True, exist_ok=True)
+    migrated_trace_log = EvaluationTraceLog(trace_output_path)
+    for trace in selected_traces:
+        migrated_trace_log.append(trace)
+    body = {
+        **{key: value for key, value in source.items() if key not in {"results", "outcomes"}},
+        "source_revision": current_revision,
+        "captured_at": datetime.now(UTC).isoformat(),
+        "trace_log": str(trace_output_path.resolve()),
+        "executed_cells": len(migrated),
+        "outcomes": dict(sorted(Counter(item["outcome"] for item in migrated).items())),
+        "results": migrated,
+        "result_origin": "migrated_checkpoint",
+        "original_runner_revision": audit["source_runner_revision"],
+        "validated_by_runner_revision": current_revision,
+        "compatibility_manifest": audit["compatibility_manifest"],
+        "compatibility_audit": str(audit_path.resolve()),
+        "compatibility_audit_seal": audit["seal"]["canonical_payload"],
+        "compatibility_proof": str(bridge_proof_path.resolve()),
+        "compatibility_proof_seal": proof["seal"]["canonical_payload"],
+        "latency_status": "LEGACY_RUNNER_SEPARATE",
+        "latency_merge_permitted": False,
+        "activation_evidence": None,
+        "pilot_evidence": None,
+        "migration_summary": {
+            "migrated_cells": len(migrated),
+            "source_reusable_cells": len(reusable_by_id),
+            "remaining_schedule_cells": int(
+                source.get("schedule", {}).get("counts", {}).get("cells", audit["source_cells"])
+            )
+            - len(migrated_ids),
+            "replay_required_classes": sorted(replay_classes),
+            "bridge_unavailable_model_tiers": proof.get("bridge_unavailable_model_tiers", []),
+        },
+    }
+    return {**body, "seal": {"algorithm": "sha256", "canonical_payload": digest(body)}}
