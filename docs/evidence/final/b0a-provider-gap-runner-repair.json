@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "classification": "B0A_EVALUATION_RUNNER_REPAIR",
+  "status": "PASS",
+  "repair_revision": "602a455145ad6370cff1340caab71018a5f9b834",
+  "superseded_checkpoint": {
+    "implementation_revision": "7e58751b05ec310412c3406c8b9ae1142fdd1c6c",
+    "executed_cells": 229,
+    "reason": "host-default rate limits were reported as task TIMEOUT with projection attribution",
+    "affected_observed_cells": [
+      "off--host-default--eca-symbol-001--r1",
+      "off--host-default--eca-symbol-001--r2",
+      "off--host-default--eca-symbol-001--r3",
+      "off--host-default--eca-impact-001--r1"
+    ],
+    "disposition": "DIAGNOSTIC_ONLY_DO_NOT_RESUME"
+  },
+  "repair": {
+    "opencode_logging": ["--print-logs", "--log-level", "ERROR"],
+    "early_stop_after_retry_exhaustion": true,
+    "stable_categories": [
+      "RATE_LIMIT",
+      "AUTHENTICATION",
+      "MODEL_NOT_FOUND",
+      "PROVIDER_RETRY_EXHAUSTED"
+    ],
+    "outcome": "UNAVAILABLE",
+    "attribution": "PROVIDER_GAP",
+    "process_group_cleanup": "SIGTERM_THEN_SIGKILL_AFTER_2_SECONDS"
+  },
+  "real_route_proof": {
+    "route": "opencode/big-pickle",
+    "opencode_source": "ControlDeck installed executable",
+    "task": "eca-symbol-001",
+    "outcome": "UNAVAILABLE",
+    "provider_failure": "RATE_LIMIT",
+    "attribution": "PROVIDER_GAP",
+    "wall_ms": 9103,
+    "task_timeout_ms": 300000,
+    "process_exit": -15
+  },
+  "validation": {
+    "runner_integration": "20 passed",
+    "lint": "PASS",
+    "typecheck": "PASS",
+    "diff_check": "PASS"
+  },
+  "next_gate": "merge repair, rerun exact-head activation and pilot, then restart baseline from zero after provider recovery",
+  "ollama_started_or_modified": false,
+  "port_8090_modified": false
+}
