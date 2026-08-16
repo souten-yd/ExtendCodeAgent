@@ -22,6 +22,8 @@ TASK_SUITE = ROOT / "docs/evaluation/task-suite-v1.json"
 LABELS = ROOT / "docs/evaluation/labels-v1/graph-quality-labels.json"
 METRICS = ROOT / "docs/evaluation/pi-verification-integrated-metrics-v1.json"
 CORPUS = ROOT / "docs/evaluation/test-portfolio-corpus-v1.json"
+B0A_PLAN = ROOT / "docs/evaluation/b0a-screening-plan-v1.json"
+B0A_BOOTSTRAP = ROOT / "docs/evidence/final/b0a-bootstrap-environment-v1.json"
 E3_HARNESS = ROOT / "tools/local/e3_task_suite.py"
 PYTHON = ROOT / ".venv/bin/python"
 PLUGIN = ROOT / "adapters/opencode/dist/src/plugin.js"
@@ -88,6 +90,8 @@ def validate() -> None:
     labels = _load(LABELS)
     metrics = _load(METRICS)
     corpus = _load(CORPUS)
+    b0a_plan = _load(B0A_PLAN)
+    bootstrap = _load(B0A_BOOTSTRAP)
     _verify_seal(matrix, "matrix")
     _verify_seal(labels, "Layer A labels")
     expected_inputs = {
@@ -124,10 +128,34 @@ def validate() -> None:
         raise EvaluationError("metric contract does not bind the quality corpus")
     if not corpus.get("repositories") or corpus.get("corpus_id") != "test-portfolio-v1":
         raise EvaluationError("quality corpus is empty or unsupported")
+    _verify_seal(b0a_plan, "B0a screening plan")
+    if b0a_plan["inputs"]["matrix_seal"] != matrix["seal"]["canonical_payload"]:
+        raise EvaluationError("B0a plan matrix seal is stale")
+    if b0a_plan["inputs"]["task_suite_seal"] != tasks["seal"]["canonical_payload"]:
+        raise EvaluationError("B0a plan task-suite seal is stale")
+    if bootstrap["screening_plan_seal"] != b0a_plan["seal"]["canonical_payload"]:
+        raise EvaluationError("B0a bootstrap evidence does not match the screening plan")
+    assigned_tiers = set(b0a_plan["screening"]["capability_model_tiers"].values())
+    if assigned_tiers != {"local-practical"}:
+        raise EvaluationError("B0a screening runner only supports the sealed local-practical tier")
+    eligibility = {item["id"]: item["eligibility"] for item in bootstrap["repositories"]}
+    if not eligibility or set(eligibility.values()) - {"INCLUDED", "EXCLUDED_BOOTSTRAP_GAP"}:
+        raise EvaluationError("B0a bootstrap eligibility is incomplete or invalid")
 
 
 def _arms(matrix: dict[str, Any], scope: str) -> list[str]:
     base = [item["id"] for item in matrix["base_arms"]]
+    if scope == "b0a-baseline":
+        return ["native", "off"]
+    if scope == "b0a-screening":
+        b0a_plan = _load(B0A_PLAN)
+        ablations = [f"ablation:{item}" for item in matrix["ablation_capabilities"]]
+        depths = [
+            f"depth:{capability}:{depth}"
+            for capability in b0a_plan["screening"]["depth_claim_capabilities"]
+            for depth in matrix["depths"]
+        ]
+        return ["active", *ablations, *depths]
     if scope in {"smoke", "base"}:
         return ["native"] if scope == "smoke" else base
     ablations = [f"ablation:{item}" for item in matrix["ablation_capabilities"]]
@@ -146,11 +174,26 @@ def plan(
     matrix = _load(MATRIX)
     suite = _load(TASK_SUITE)
     tasks = suite["tasks"]
+    b0a: dict[str, Any] | None = None
     if scope == "smoke":
         tasks = [tasks[0]]
     elif scope == "screening":
         wanted = set(matrix["screening"]["tuning_task_subset"])
         tasks = [item for item in tasks if item["id"] in wanted]
+    elif scope in {"b0a-baseline", "b0a-screening"}:
+        b0a_plan = _load(B0A_PLAN)
+        bootstrap = _load(B0A_BOOTSTRAP)
+        eligibility = {item["id"]: item["eligibility"] for item in bootstrap["repositories"]}
+        included = {key for key, value in eligibility.items() if value == "INCLUDED"}
+        tasks = [item for item in tasks if item["repository_id"] in included]
+        if scope == "b0a-screening":
+            wanted = set(b0a_plan["screening"]["task_subset"])
+            tasks = [item for item in tasks if item["id"] in wanted]
+        b0a = {
+            "screening_plan_seal": b0a_plan["seal"]["canonical_payload"],
+            "included_repositories": sorted(included),
+            "excluded_repositories": sorted(set(eligibility) - included),
+        }
     arms = _arms(matrix, scope)
     if selected_arms is not None:
         unknown = selected_arms - set(arms)
@@ -158,11 +201,15 @@ def plan(
             raise EvaluationError(f"unknown arms for {scope}: {sorted(unknown)}")
         arms = [item for item in arms if item in selected_arms]
     models = matrix["model_tiers"]
-    if scope in {"smoke", "screening"}:
+    if scope in {"smoke", "screening", "b0a-screening"}:
         models = (
             [item for item in models if item["id"] == "host-default"]
             if scope == "smoke"
-            else [item for item in models if item["id"] in {"local-low", "local-practical"}]
+            else (
+                [item for item in models if item["id"] == "local-practical"]
+                if scope == "b0a-screening"
+                else [item for item in models if item["id"] in {"local-low", "local-practical"}]
+            )
         )
     if selected_models is not None:
         unknown = selected_models - {item["id"] for item in models}
@@ -193,7 +240,7 @@ def plan(
                             "repetition": repetition,
                         }
                     )
-    return {
+    result = {
         "schema": 1,
         "matrix_id": matrix["matrix_id"],
         "matrix_seal": matrix["seal"]["canonical_payload"],
@@ -206,6 +253,9 @@ def plan(
             "unavailable": sum(item["model_status"] == "UNAVAILABLE" for item in cells),
         },
     }
+    if b0a is not None:
+        result["b0a"] = b0a
+    return result
 
 
 def _run(argv: list[str], cwd: Path, timeout: int) -> subprocess.CompletedProcess[str]:
@@ -243,6 +293,14 @@ def _arm_mode(arm: str) -> tuple[str, str | None]:
     kind, _, value = arm.partition(":")
     if kind == "ablation" and value in CONFIGURABLE_CAPABILITIES:
         return "active", value
+    if kind == "depth":
+        capability, separator, depth = value.partition(":")
+        if (
+            separator
+            and capability in CONFIGURABLE_CAPABILITIES
+            and depth in {"D0", "D1", "D2", "D3", "D4"}
+        ):
+            return "active", value
     if kind == "depth" and value in {"D0", "D1", "D2", "D3", "D4"}:
         return "active", value
     raise EvaluationError(f"unknown arm: {arm}")
@@ -256,8 +314,12 @@ def _trace_capabilities(arm: str) -> tuple[dict[str, str], dict[str, str]]:
         capability: ("off" if mode == "off" or modifier == capability else mode)
         for capability in CONFIGURABLE_CAPABILITIES
     }
-    depth = modifier if modifier in {"D0", "D1", "D2", "D3", "D4"} else "D2"
-    depths = {capability: depth for capability, value in modes.items() if value != "off"}
+    depths = {capability: "D2" for capability, value in modes.items() if value != "off"}
+    if modifier in {"D0", "D1", "D2", "D3", "D4"}:
+        depths = {capability: modifier for capability in depths}
+    elif modifier and ":" in modifier:
+        capability, depth = modifier.split(":", 1)
+        depths[capability] = depth
     return modes, depths
 
 
@@ -295,6 +357,12 @@ def _environment(arm: str, model_tier: str, workspace: Path) -> tuple[dict[str, 
                 "capabilities": {
                     capability: {"preferred": modifier} for capability in CONFIGURABLE_CAPABILITIES
                 },
+            }
+        elif modifier and ":" in modifier:
+            capability, depth = modifier.split(":", 1)
+            pi["depth"] = {
+                "profile": "balanced",
+                "capabilities": {capability: {"preferred": depth}},
             }
         project_config = workspace.parent / f"{workspace.name}-eca-config.json"
         project_config.write_text(
@@ -589,7 +657,13 @@ def _report(
     return {
         "schema": 1,
         "run_id": f"unified-v1-{scope}",
-        "classification": "E4_RUNNER_PROOF" if scope == "smoke" else "EVALUATION_RESULT",
+        "classification": (
+            "E4_RUNNER_PROOF"
+            if scope == "smoke"
+            else "B0A_EVALUATION_RESULT"
+            if scope.startswith("b0a-")
+            else "EVALUATION_RESULT"
+        ),
         "captured_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
         "source_revision": subprocess.check_output(
             ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
@@ -665,6 +739,81 @@ def _write_report(output: Path, report: dict[str, Any]) -> None:
     temporary.replace(output)
 
 
+def screening_table(report: dict[str, Any]) -> dict[str, Any]:
+    schedule = plan("b0a-screening")
+    comparison_cells = [
+        item
+        for item in schedule["cells"]
+        if item["arm"] == "active" or item["arm"].startswith("ablation:")
+    ]
+    expected = {item["cell_id"] for item in comparison_cells}
+    results = {item["cell_id"]: item for item in report.get("results", []) if "cell_id" in item}
+    missing = sorted(expected - set(results))
+    unexpected = sorted(set(results) - {item["cell_id"] for item in schedule["cells"]})
+    plan_value = _load(B0A_PLAN)
+    # The primary phrase is versioned for readers; derive the exact integer from the paired rate so
+    # the machine decision cannot silently drift from 2/21.
+    pair_count = len([item for item in comparison_cells if item["arm"] == "active"])
+    threshold = round(
+        float(plan_value["screening"]["effect_threshold"]["minimum_absolute_pass_rate_delta"])
+        * pair_count
+    )
+    entries: list[dict[str, Any]] = []
+    for capability in CONFIGURABLE_CAPABILITIES:
+        ablation = f"ablation:{capability}"
+        active_cells = [item for item in comparison_cells if item["arm"] == "active"]
+        pairs = []
+        for active in active_cells:
+            ablated_id = active["cell_id"].replace("active--", f"{ablation}--", 1)
+            if active["cell_id"] in results and ablated_id in results:
+                pairs.append((results[active["cell_id"]], results[ablated_id]))
+        unavailable = sum(
+            active["outcome"] == "UNAVAILABLE" or ablated["outcome"] == "UNAVAILABLE"
+            for active, ablated in pairs
+        )
+        active_pass = sum(active["outcome"] == "PASS" for active, _ in pairs)
+        ablation_pass = sum(ablated["outcome"] == "PASS" for _, ablated in pairs)
+        critical = any(
+            active["outcome"] == "PASS"
+            and ablated["outcome"] != "PASS"
+            and active.get("task_class") in {"negative-control", "unsafe-or-insufficient-evidence"}
+            for active, ablated in pairs
+        )
+        if missing or len(pairs) != pair_count:
+            decision = "NOT_TESTED_INCOMPLETE"
+        elif unavailable:
+            decision = "NOT_TESTED_PROVIDER_GAP"
+        elif active_pass - ablation_pass >= threshold or critical:
+            decision = "proceed_to_b0b"
+        else:
+            decision = "no_screened_effect"
+        entries.append(
+            {
+                "capability": capability,
+                "paired_cells": len(pairs),
+                "active_pass": active_pass,
+                "ablation_pass": ablation_pass,
+                "pass_delta": active_pass - ablation_pass,
+                "unavailable_pairs": unavailable,
+                "critical_override": critical,
+                "decision": decision,
+            }
+        )
+    return {
+        "schema": 1,
+        "classification": "B0A_SCREENING_TABLE" if not missing else "B0A_SCREENING_INCOMPLETE",
+        "screening_plan_seal": plan_value["seal"]["canonical_payload"],
+        "source_report_revision": report.get("source_revision"),
+        "expected_comparison_cells": len(expected),
+        "observed_comparison_cells": len(expected & set(results)),
+        "missing_cells": missing,
+        "unexpected_cells": unexpected,
+        "effect_threshold_pass_delta": threshold,
+        "adoption_decisions_forbidden": True,
+        "capabilities": entries,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
@@ -674,18 +823,25 @@ def main() -> int:
     seal_parser.add_argument("target", choices=["matrix", "labels"])
     plan_parser = sub.add_parser("plan")
     plan_parser.add_argument(
-        "--scope", choices=["smoke", "base", "screening", "full"], default="full"
+        "--scope",
+        choices=["smoke", "base", "screening", "full", "b0a-baseline", "b0a-screening"],
+        default="full",
     )
     _selection_arguments(plan_parser)
     run_parser = sub.add_parser("run")
     run_parser.add_argument(
-        "--scope", choices=["smoke", "base", "screening", "full"], required=True
+        "--scope",
+        choices=["smoke", "base", "screening", "full", "b0a-baseline", "b0a-screening"],
+        required=True,
     )
     run_parser.add_argument("--output", type=Path, required=True)
     run_parser.add_argument("--max-cells", type=int)
     run_parser.add_argument("--resume", action="store_true")
     run_parser.add_argument("--raw-root", type=Path)
     _selection_arguments(run_parser)
+    screen_parser = sub.add_parser("screen")
+    screen_parser.add_argument("--input", type=Path, required=True)
+    screen_parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     try:
         if args.command == "validate":
@@ -708,7 +864,7 @@ def main() -> int:
                     indent=2,
                 )
             )
-        else:
+        elif args.command == "run":
             if args.max_cells is not None and args.max_cells < 1:
                 raise EvaluationError("--max-cells must be positive")
             run(
@@ -721,10 +877,12 @@ def main() -> int:
                 args.resume,
                 args.raw_root,
             )
+        else:
+            _write_report(args.output, screening_table(_load(args.input)))
     except (EvaluationError, KeyError, TypeError, ValueError, subprocess.TimeoutExpired) as error:
         print(f"unified evaluation error: {error}", file=sys.stderr)
         return 1
-    if args.command not in {"plan", "metrics"}:
+    if args.command not in {"plan", "metrics", "screen"}:
         print(f"unified evaluation {args.command}: PASS")
     return 0
 
