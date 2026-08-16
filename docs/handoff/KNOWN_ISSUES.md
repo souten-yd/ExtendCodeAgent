@@ -130,3 +130,11 @@
   empty/null.
 - E5 is a serial evaluation log without cross-process locking and is not durable cross-session
   Project Evidence Memory. The sealed runner is serial; broader durability/replay belongs to P0.
+
+## B0a bootstrap performance observation
+
+- The first pinned KasaneCore initial Twin spent multiple minutes applying edges in
+  `SqliteGraphStore._close_current`. The schema indexes current nodes by canonical reference but has
+  no equivalent current-edge ID index, so the per-edge supersession update is a suspected scaling
+  defect. This is observed diagnosis, not yet a confirmed repair; B0a records bounded timeout/build
+  evidence and B1 owns a product fix if the completed gap report confirms it is blocking.

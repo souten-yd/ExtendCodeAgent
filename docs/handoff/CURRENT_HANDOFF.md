@@ -21,6 +21,10 @@ Current task: B0a bootstrap and screening contract; no screening cell has run
   `unavailable` rather than silently skipped. Imported code correctness always starts `unknown`.
 - No B0a evaluation cell has run. Merge this contract before freezing the exact environment and
   generating bootstrap evidence.
+- The first merged-head bootstrap attempt exposed two real gaps before any arm ran: the harness did
+  not checkpoint until all repositories finished, and KasaneCore's initial Twin spent minutes in
+  SQLite edge supersession. The harness now checkpoints atomically per repository, resumes, and
+  classifies a bounded Twin timeout; the store performance defect remains a B0 gap, not a silent fix.
 
 ## E5 closeout (2026-08-16)
 

@@ -13,6 +13,10 @@
 - Final gates pass: `all-fast` (182 Python, 9 adapter), integration (29 Python, 9 adapter), and
   Python/TypeScript build.
 - No repository bootstrap evidence or agent screening result is claimed in this contract checkpoint.
+- The first post-merge nine-repository run was interrupted after KasaneCore spent several minutes in
+  `SqliteGraphStore._close_current` and earlier completed repository results remained only in memory.
+  Added per-repository child isolation, timeout classification, atomic checkpoint/report writes and
+  resume. Dirty or wrong-origin corpus clones are archived rather than force-reset.
 
 ## 2026-08-16 — E5 minimal attributable PI trace
 
