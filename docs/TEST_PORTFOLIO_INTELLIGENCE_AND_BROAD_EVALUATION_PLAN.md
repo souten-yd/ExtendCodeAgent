@@ -1,5 +1,7 @@
 # Test Portfolio Intelligence and Broad Evaluation Plan
 
+> **Consolidated 2026-08-16.** Design detail for portfolio intelligence and the pinned corpus. `TP-0..TP-7` are superseded; see stages E3, V0, V2 and the deferred set of `docs/PI_MASTER_EXECUTION_PLAN.md`.
+
 Status: canonical enhancement plan
 Date: 2026-08-16
 Scope: existing-project bootstrap, Test/Verification Portfolio Intelligence, GUI/runtime verification, broad multi-repository evaluation

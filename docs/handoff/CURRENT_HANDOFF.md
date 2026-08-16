@@ -2,20 +2,22 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/opencode-equivalence-evaluation`
-Milestone: A-I implementation complete; evidence-driven Productization active
-Current task: merge the OpenCode-equivalence planning correction, then start RV-0
+Current branch: `agent/pi-master-execution-plan`
+Milestone: A-I implementation complete; Phase 0 (evaluation enablement) active
+Current task: merge the planning consolidation, then start stage E1
 
 ## Current source of truth
 
-Canonical strategic overlays:
+`docs/PI_MASTER_EXECUTION_PLAN.md` is the single canonical execution plan. It owns product scope, the
+capability inventory, the evaluation framework, the stage backlog and the release gates.
 
-1. `docs/COMPETITIVE_ANALYSIS_AND_FEATURE_GAP_ROADMAP.md`
-2. `docs/OPENCODE_VALIDATION_AND_ADOPTION_PLAN.md`
-3. `docs/handoff/NEXT_TASK.md`
+1. `docs/PI_MASTER_EXECUTION_PLAN.md`
+2. `docs/handoff/NEXT_TASK.md`
+3. `docs/CURRENT_STATUS.md`
 
-Existing architecture/productization plans remain valid unless these overlays explicitly consolidate
-execution order.
+All other planning documents remain valid as design detail and are registered in section 2 of the
+master plan with an explicit disposition. Legacy stage identifiers are mapped in section 9 and must not
+be used to schedule work.
 
 ## Corrected runtime decision
 
@@ -88,24 +90,26 @@ Explicitly do not duplicate runtime-owned team orchestration, scheduler/backgrou
 shell/edit engine, sandbox/permissions, provider/model management, generic session recovery,
 worktree/checkpoint engine, generic conversational memory or host UI.
 
-## Updated execution sequence
+## Execution sequence
 
-1. Merge this OpenCode-equivalence planning correction.
-2. RV-0 OpenCode baseline and measured multi-repository gap report.
-3. RV-1 blocking OpenCode/ECA/model-provider repair if measured.
-4. RA-0 minimum OpenCode runtime contract used by PI.
-5. TA-0 shadow Task-aware planner.
-6. WL-0 weak-local evidence protocol if evidence justifies it.
-7. TA-1 advisory automatic capability/context selection.
-8. VI-0 consolidated confidence/Test Intelligence/Convergence quality work.
-9. TA-2 bounded active.
-10. TA-3 progressive expansion.
-11. conditional Runtime Bridge and bounded deep analysis.
-12. RV-FINAL OpenCode production baseline across representative and held-out repositories.
-13. EM-0 Project Evidence Memory/PI Trace if not pulled earlier by measured need.
-14. optional OpenCode/OMO complementarity benchmark.
-15. RA-3 one second-harness portability proof.
-16. MA-0 PI-aware parallel/worktree intelligence after stable runtime identity signals are proven.
+Owned by master plan section 8. Summary:
+
+```text
+Phase 0  E0 consolidation -> E1 gating conformance -> E2 depth contract
+         -> E3 evaluation runner + labels -> E4 minimal PI trace
+Phase 1  B0 baseline validation and gap report -> B1 blocking repair (conditional)
+Phase 2  C0 runtime contract -> C1 shadow planner -> C2 weak-local (conditional)
+         -> C3 advisory selection + adaptive depth
+Phase 3  V0 verification contracts -> V1 calibration -> V2 required verification set
+         -> V3 evidence reuse -> V4 failure-driven re-evaluation -> V5 observability (conditional)
+Phase 4  A0 bounded active -> A1 progressive expansion
+Phase 5  D0 runtime bridge (conditional) -> D1 bounded deep analysis (conditional)
+Phase 6  R0 production-capable baseline
+Phase 7  P0 evidence memory -> P1 conformance -> P2 second harness -> P3 parallel intelligence
+         -> P4 comparative benchmark
+```
+
+B0 does not start before E1-E4 are complete.
 
 ## Future ControlDeck deep integration
 
@@ -126,19 +130,11 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/release-validation-baseline
+git switch -c agent/e1-capability-gating-conformance
 ```
 
-RV-0 first records:
-
-- ExtendCodeAgent exact commit;
-- current OpenCode version and integration mode;
-- model/provider tiers and availability;
-- repository/workspace identity and SHA/fingerprint;
-- hardware/runtime environment;
-- OpenCode-native baseline before PI optimization.
-
-Then execute paired mode/model comparisons across representative and held-out tasks and produce
-`docs/evidence/final/baseline-gap-report.md` before production feature changes.
+E1 gates `strategy`, `test_obsolescence` and `call_graph`, declares the seven unimplemented
+capabilities truthfully, adds the architecture test that makes gating total, reports capability
+implementation state through `pi_status`, and re-verifies `off` inertness per capability.
 
 Rollback path: switch to synchronized `main`; this branch changes documentation only.

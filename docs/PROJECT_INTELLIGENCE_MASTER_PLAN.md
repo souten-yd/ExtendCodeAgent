@@ -1,5 +1,7 @@
 # ExtendCodeAgent — Project Intelligence Master Plan
 
+> **Consolidated 2026-08-16.** Canonical domain reference. Sequencing (section 21) is superseded by `docs/PI_MASTER_EXECUTION_PLAN.md`.
+
 Status: canonical strategic master plan
 Date: 2026-08-13
 Target host: OpenCode

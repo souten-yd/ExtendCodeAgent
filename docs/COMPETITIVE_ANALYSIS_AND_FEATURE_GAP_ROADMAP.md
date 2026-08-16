@@ -1,5 +1,7 @@
 # ExtendCodeAgent Competitive Analysis and Feature-Gap Roadmap
 
+> **Consolidated 2026-08-16.** Canonical adopt/delegate/reject decisions. The execution sequence (section 10) is superseded by `docs/PI_MASTER_EXECUTION_PLAN.md` section 8.
+
 Status: canonical strategic overlay
 Date: 2026-08-16
 Scope: OpenCode + ExtendCodeAgent positioning against current coding-agent harnesses

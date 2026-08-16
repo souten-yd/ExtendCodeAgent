@@ -1,30 +1,33 @@
 # ExtendCodeAgent — Current Status
 
-Status date: 2026-08-14
+Status date: 2026-08-16
 
 ## Program state
 
-Overall: **A-I IMPLEMENTATION COMPLETE — PRODUCTIZATION ACTIVE — RV-0 NEXT**
+Overall: **A-I IMPLEMENTATION COMPLETE — PHASE 0 (EVALUATION ENABLEMENT) ACTIVE — E1 NEXT**
 
 PRs A-I are merged and the implementation baseline is complete. Planning PRs
 [#20](https://github.com/souten-yd/ExtendCodeAgent/pull/20) and
-[#21](https://github.com/souten-yd/ExtendCodeAgent/pull/21) are also merged, defining the active
-evidence-driven productization phase and the planned transparent task-aware Project Intelligence
-sequence. The latest synchronized `main` is
-`a87d2fc6453c2f0d7bb9d1ccb8e48e16e2b7f1a7`.
+[#21](https://github.com/souten-yd/ExtendCodeAgent/pull/21) are also merged. All planning documents
+have since been consolidated into a single canonical execution plan,
+`docs/PI_MASTER_EXECUTION_PLAN.md`, which replaced eight parallel stage-numbering schemes with one
+backlog.
 
-This is not a production-capable designation. RV-0 Baseline Release Validation is next and must
-establish current real OpenCode, model-tier, repository, lifecycle, performance, privacy, and
-verified-task evidence before any task-aware implementation begins.
+This is not a production-capable designation. Baseline release validation (stage B0, formerly RV-0) is
+deliberately **not** the next step: ten of twenty-one declared capabilities are not policy-gated, the
+capability depth axis is unimplemented, evaluation is a set of per-PR scripts, and there is no
+attributable PI trace. Phase 0 (E1-E4) closes those gaps first so that baseline results can support
+keep/demote decisions.
 
 ## Canonical read order
 
-1. `docs/PRODUCTIZATION_AND_MODEL_EVALUATION_PLAN.md`
-2. `docs/TRANSPARENT_PI_ORCHESTRATION_PLAN.md`
-3. `docs/CODEX_PRODUCTIZATION_EXECUTION_GUIDE.md`
-4. `docs/handoff/NEXT_TASK.md`
-5. this file
-6. earlier plans, implementation/evidence, and tests only as needed for the active slice
+1. `docs/PI_MASTER_EXECUTION_PLAN.md` — the single execution plan
+2. `docs/handoff/NEXT_TASK.md` — the active stage
+3. this file — program state and evidence ledger
+4. the design detail registered in master plan section 2, for the active stage only
+
+Legacy stage identifiers (`RV-x`, `TA-x`, `AL-x`, `CV-x`, `TP-x`, `VI-Xx`, `RA-x`, `EM-0`, `MA-0`) are
+mapped in master plan section 9 and must not be used to schedule work.
 
 ## Accepted architectural baseline
 
@@ -60,13 +63,15 @@ verified-task evidence before any task-aware implementation begins.
 
 ## Immediate next action
 
-Merge the documentation-only productization closeout, synchronize `main`, and create
-`agent/release-validation-baseline` for RV-0. Do not add production features or hide unavailable
-model paths. The current installed and npm-stable OpenCode version is still `1.18.18` as of
-2026-08-14 and must be re-evaluated rather than assumed compatible from PR-D evidence. The known
-frontier route remains unavailable (`0/18`, OpenCode `APIError`) until native-provider diagnosis
-proves otherwise. Qwen3 0.6B local-low results remain stochastic and require repeated distributions,
-not a best-run claim.
+Phase 0, stage E1: capability gating conformance. Gate `strategy`, `test_obsolescence` and
+`call_graph`; declare the seven unimplemented capabilities truthfully; add the architecture test that
+makes gating total; re-verify `off` inertness per capability. See `docs/handoff/NEXT_TASK.md`.
+
+The current installed and npm-stable OpenCode version is still `1.18.18` as of 2026-08-14 and must be
+re-evaluated at B0 rather than assumed compatible from PR-D evidence. The known frontier route remains
+unavailable (`0/18`, OpenCode `APIError`); it is now a conditional release gate under master plan
+section 10.2, not an indefinite blocker. Qwen3 0.6B local-low results remain stochastic and require
+repeated distributions, not a best-run claim.
 
 PR-C provides
 deterministic structural/Python AST facts, analyzer-owned Python alias resolution, persisted

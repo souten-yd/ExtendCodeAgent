@@ -1,5 +1,7 @@
 # Failure-Driven PI Re-evaluation Plan
 
+> **Consolidated 2026-08-16.** Design detail for failure triage. Its implementation sequence is superseded; see stages V0 and V4 of `docs/PI_MASTER_EXECUTION_PLAN.md`.
+
 Status: canonical refinement
 Date: 2026-08-16
 Scope: Test/Verification Portfolio Intelligence, failure triage, adaptive PI expansion, Test Intent, Oracle quality, Test Obsolescence, Convergence

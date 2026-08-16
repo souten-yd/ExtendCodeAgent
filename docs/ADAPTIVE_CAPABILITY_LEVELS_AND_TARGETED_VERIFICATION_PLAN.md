@@ -1,5 +1,7 @@
 # Adaptive Capability Levels and Targeted Verification Plan
 
+> **Consolidated 2026-08-16.** Design detail for the capability depth axis. `AL-0..AL-4` are superseded; see stages E2, E3, V2 and C3 of `docs/PI_MASTER_EXECUTION_PLAN.md`.
+
 Status: canonical enhancement policy
 Date: 2026-08-16
 Scope: configurable Project Intelligence depth, evidence-driven tuning, targeted verification/test selection

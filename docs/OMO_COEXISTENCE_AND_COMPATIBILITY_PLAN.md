@@ -1,5 +1,7 @@
 # OpenCode + OMO + ExtendCodeAgent Coexistence and Compatibility Plan
 
+> **Consolidated 2026-08-16.** Conditional compatibility reference. Executed only at stage P4 of `docs/PI_MASTER_EXECUTION_PLAN.md`.
+
 Status: canonical compatibility plan
 Date: 2026-08-16
 Runtime target: OpenCode

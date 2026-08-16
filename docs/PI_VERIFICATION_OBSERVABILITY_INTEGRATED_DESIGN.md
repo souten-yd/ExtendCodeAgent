@@ -1,5 +1,7 @@
 # PI Verification / Observability Integrated Design
 
+> **Consolidated 2026-08-16.** Design detail for observability, environment and certificates. `VI-X0..VI-XFINAL` are superseded; see stages V0 and V5 and the deferred set of `docs/PI_MASTER_EXECUTION_PLAN.md`.
+
 Status: canonical detailed design
 Date: 2026-08-16
 Scope: Project Intelligence-wide verification refinement using existing ECA capabilities
