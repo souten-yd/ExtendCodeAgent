@@ -210,5 +210,9 @@
   TestIntent. It is exact on the sealed ECA pilot workspace but held-out precision/recall remains
   unmeasured. Any missing obligation continues to require native fallback.
 - The first `b128ade` activation attempt stopped after one cell because evaluation evidence parsing
-  did not recognize canonical URIs in compact `symbols`/`*_refs` arrays. The collector repair is
-  deterministic and must merge before activation restarts from a fresh output path.
+  did not recognize canonical URIs in compact `symbols`/`*_refs` arrays. PR #60 repaired the
+  collector and the fresh `130f0a2` four-model activation passed.
+- At `130f0a2`, active compact PI supplied every required fact for all three pilot tasks and test
+  selection passed, but Qwen still deleted one symbol path and enriched the impact schema. Exact
+  answer/field-preservation instructions are pending merge and real controlled rerun; 1/3 active-only
+  is not evidence of advantage over native/off.

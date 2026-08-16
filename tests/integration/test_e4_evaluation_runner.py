@@ -23,6 +23,7 @@ from tools.local.evaluation_runner import (  # noqa: E402
     _pilot_active_assessment,
     _pilot_gate,
     _pilot_off_assessment,
+    _task_instruction,
 )
 
 RUNNER = ROOT / "tools/local/evaluation-runner"
@@ -286,6 +287,19 @@ def test_effect_pilot_requires_objective_gain_observed_pi_and_bounded_time() -> 
     repaired = _pilot_gate(results)
     assert repaired["decision"] == "REPAIR_AND_RETEST"
     assert "active_wall_time_abnormal" in repaired["reasons"]
+
+
+def test_answer_instruction_is_exact_for_all_arms_and_preserves_compact_pi_fields() -> None:
+    suite = json.loads((ROOT / "docs/evaluation/task-suite-v1.json").read_text())
+    task = next(item for item in suite["tasks"] if item["id"] == "eca-impact-001")
+
+    native = _task_instruction({"arm": "native"}, task, "native")
+    active = _task_instruction({"arm": "active", "pi_effect_pilot": True}, task, "active")
+
+    assert "keys as an exact schema" in native
+    assert "add no explanation" in native
+    assert "copy that field without removing paths" in active
+    assert "expanding scalar/path values into explanation objects" in active
 
 
 def test_agent_environment_cannot_retarget_the_shared_runner_venv(

@@ -197,6 +197,15 @@ workspace, current compact projection returns every sealed symbol and impact fac
 selection returns the exact unit/integration/architecture triplet. This deterministic proof precedes
 another real-model pilot and is not itself effect evidence.
 
+After PR #59 and the compact-evidence collector repair in PR #60, exact-head activation passed all
+four required routes. A bounded active-only Qwen diagnostic then produced one PASS in three tasks:
+test selection passed exactly, while symbol and impact each had PI required-fact recall 1.0 but failed
+the final answer. Symbol dropped one known test; impact converted a path into prose and added
+unrequested objects. This is the first post-repair functional success but has no controls and is not
+pilot-gate evidence. The remaining repair clarifies that requested answer keys are an exact schema
+for every arm and that matching active compact fields must be preserved verbatim before the full
+sealed 9-cell comparison is rerun.
+
 The bootstrap blocker has a bounded B1 repair at exact head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`. A matching current-edge identity index and schema-5
 migration reduce exact-pin three-run cold medians to 15,825ms for KasaneCore and 6,368ms for PEDS;
