@@ -14,6 +14,8 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from extendcodeagent.evaluation import EvaluationTrace, EvaluationTraceLog
+
 ROOT = Path(__file__).resolve().parents[2]
 MATRIX = ROOT / "docs/evaluation/evaluation-matrix-v1.json"
 TASK_SUITE = ROOT / "docs/evaluation/task-suite-v1.json"
@@ -246,6 +248,19 @@ def _arm_mode(arm: str) -> tuple[str, str | None]:
     raise EvaluationError(f"unknown arm: {arm}")
 
 
+def _trace_capabilities(arm: str) -> tuple[dict[str, str], dict[str, str]]:
+    mode, modifier = _arm_mode(arm)
+    if mode == "native":
+        return {}, {}
+    modes = {
+        capability: ("off" if mode == "off" or modifier == capability else mode)
+        for capability in CONFIGURABLE_CAPABILITIES
+    }
+    depth = modifier if modifier in {"D0", "D1", "D2", "D3", "D4"} else "D2"
+    depths = {capability: depth for capability, value in modes.items() if value != "off"}
+    return modes, depths
+
+
 def _environment(arm: str, model_tier: str, workspace: Path) -> tuple[dict[str, str], str]:
     matrix = _load(MATRIX)
     model = next(item for item in matrix["model_tiers"] if item["id"] == model_tier)
@@ -454,6 +469,7 @@ def run(
     selected_models: set[str] | None,
     selected_tasks: set[str] | None,
     resume: bool,
+    raw_root_override: Path | None,
 ) -> None:
     schedule = plan(
         scope,
@@ -464,8 +480,14 @@ def run(
     suite = _load(TASK_SUITE)
     tasks = {item["id"]: item for item in suite["tasks"]}
     cells = schedule["cells"][:max_cells] if max_cells is not None else schedule["cells"]
-    raw_root = ROOT / _load(MATRIX)["execution"]["raw_root"] / scope
+    raw_root = (
+        raw_root_override.resolve()
+        if raw_root_override is not None
+        else ROOT / _load(MATRIX)["execution"]["raw_root"] / scope
+    )
     raw_root.mkdir(parents=True, exist_ok=True)
+    trace_log = EvaluationTraceLog(raw_root / "traces.jsonl")
+    trace_log.replay()
     results: list[dict[str, Any]] = []
     if resume and output.is_file():
         previous = _load(output)
@@ -474,12 +496,19 @@ def run(
     for cell in cells:
         if cell["cell_id"] in completed:
             continue
-        results.append(_execute(cell, tasks[cell["task_id"]], raw_root))
-        _write_report(output, _report(scope, schedule, results))
-    _write_report(output, _report(scope, schedule, results))
+        result = _execute(cell, tasks[cell["task_id"]], raw_root)
+        _append_trace(trace_log, result, tasks[cell["task_id"]])
+        results.append(result)
+        _write_report(output, _report(scope, schedule, results, trace_log.path))
+    _write_report(output, _report(scope, schedule, results, trace_log.path))
 
 
-def _report(scope: str, schedule: dict[str, Any], results: list[dict[str, Any]]) -> dict[str, Any]:
+def _report(
+    scope: str,
+    schedule: dict[str, Any],
+    results: list[dict[str, Any]],
+    trace_path: Path,
+) -> dict[str, Any]:
     return {
         "schema": 1,
         "run_id": f"unified-v1-{scope}",
@@ -490,11 +519,57 @@ def _report(scope: str, schedule: dict[str, Any], results: list[dict[str, Any]])
         ).strip(),
         "schedule": {key: value for key, value in schedule.items() if key != "cells"},
         "inputs": _load(MATRIX)["inputs"],
+        "trace_log": str(trace_path),
         "executed_cells": len(results),
         "outcomes": dict(Counter(item["outcome"] for item in results)),
         "integrated_metrics": _metric_projection(),
         "results": results,
     }
+
+
+def _append_trace(
+    trace_log: EvaluationTraceLog, result: dict[str, Any], task: dict[str, Any]
+) -> None:
+    matrix = _load(MATRIX)
+    suite = _load(TASK_SUITE)
+    repository = next(
+        item for item in suite["repositories"] if item["id"] == result["repository_id"]
+    )
+    capability_modes, capability_depths = _trace_capabilities(result["arm"])
+    trace_id = (
+        "trace-"
+        + hashlib.sha256(
+            f"{matrix['seal']['canonical_payload']}:{result['cell_id']}".encode()
+        ).hexdigest()[:24]
+    )
+    input_seals = {
+        "layer_a": matrix["inputs"]["layer_a_seal"],
+        "layer_b": matrix["inputs"]["layer_b_seal"],
+        "matrix": matrix["seal"]["canonical_payload"],
+    }
+    trace_log.append(
+        EvaluationTrace(
+            trace_id=trace_id,
+            plan_id=matrix["matrix_id"],
+            cell_id=result["cell_id"],
+            task_id=result["task_id"],
+            task_class=result["task_class"],
+            oracle_id=f"e3-oracle:{result['task_id']}",
+            input_seals=input_seals,
+            capability_modes=capability_modes,
+            capability_depths=capability_depths,
+            used_features={},
+            selected_evidence_ids=(),
+            source_revision_id=repository["revision"],
+            twin_revision_id=None,
+            model_tier=result["model_tier"],
+            model_id=result.get("model_id"),
+            verification_outcome=result["outcome"],
+            fallback="model_unavailable" if result["outcome"] == "UNAVAILABLE" else None,
+            timings_ms={"agent_wall": result.get("wall_ms")},
+        )
+    )
+    result["trace_id"] = trace_id
 
 
 def _write_report(output: Path, report: dict[str, Any]) -> None:
@@ -523,6 +598,7 @@ def main() -> int:
     run_parser.add_argument("--output", type=Path, required=True)
     run_parser.add_argument("--max-cells", type=int)
     run_parser.add_argument("--resume", action="store_true")
+    run_parser.add_argument("--raw-root", type=Path)
     _selection_arguments(run_parser)
     args = parser.parse_args()
     try:
@@ -557,6 +633,7 @@ def main() -> int:
                 _selected(args.model_tier),
                 _selected(args.task),
                 args.resume,
+                args.raw_root,
             )
     except (EvaluationError, KeyError, TypeError, ValueError, subprocess.TimeoutExpired) as error:
         print(f"unified evaluation error: {error}", file=sys.stderr)

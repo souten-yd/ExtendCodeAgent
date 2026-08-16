@@ -105,6 +105,8 @@ def test_unavailable_cell_is_checkpointed_and_resume_does_not_duplicate(tmp_path
         "1",
         "--output",
         str(output),
+        "--raw-root",
+        str(tmp_path / "raw"),
     )
     first = _run(*arguments)
     assert first.returncode == 0, first.stderr
@@ -114,3 +116,44 @@ def test_unavailable_cell_is_checkpointed_and_resume_does_not_duplicate(tmp_path
     assert report["executed_cells"] == 1
     assert report["outcomes"] == {"UNAVAILABLE": 1}
     assert report["results"][0]["reason"] == "sealed model-tier status"
+    assert report["results"][0]["trace_id"].startswith("trace-")
+    assert report["trace_log"] == str((tmp_path / "raw/traces.jsonl").resolve())
+
+
+def test_every_arm_emits_trace_and_semantic_ablation_is_attributable(tmp_path: Path) -> None:
+    output = tmp_path / "all-arms.json"
+    result = _run(
+        "run",
+        "--scope",
+        "full",
+        "--model-tier",
+        "local-low",
+        "--task",
+        "eca-symbol-001",
+        "--output",
+        str(output),
+        "--raw-root",
+        str(tmp_path / "raw"),
+    )
+    assert result.returncode == 0, result.stderr
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert report["executed_cells"] == 115
+    assert len({item["arm"] for item in report["results"]}) == 23
+    assert all(item["trace_id"].startswith("trace-") for item in report["results"])
+
+    records = [
+        json.loads(line)["record"]
+        for line in (tmp_path / "raw/traces.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    active = next(item for item in records if item["cell_id"].startswith("active--"))
+    ablated = next(item for item in records if item["cell_id"].startswith("ablation:semantic--"))
+    assert active["task_id"] == ablated["task_id"] == "eca-symbol-001"
+    assert active["oracle_id"] == ablated["oracle_id"]
+    differences = {
+        key
+        for key in active["capability_modes"]
+        if active["capability_modes"][key] != ablated["capability_modes"][key]
+    }
+    assert differences == {"semantic"}
+    assert active["capability_modes"]["semantic"] == "active"
+    assert ablated["capability_modes"]["semantic"] == "off"
