@@ -19,24 +19,24 @@ Do not schedule work from the legacy identifiers (`RV-x`, `TA-x`, `AL-x`, `CV-x`
 
 ## Current stage
 
-**Phase 0 — E5: minimal PI trace as evaluation infrastructure.**
+**Phase 1 — B0a: environment, integration and screening.**
 
-Entry conditions satisfied: E3 has sealed Layer B; E4 has sealed Layer A labels and one resumable
-runner for the fixed arm/repository/task/model/repetition matrix.
+Entry conditions satisfied: E1-E5 and V0a are complete. The sealed Layer A/Layer B inputs, fixed
+matrix, resumable runner, verification projection and attributable append-only trace are available.
 
 Scope:
 
-- define a compact append-only trace from plan to selected evidence IDs, Twin/source revisions,
-  actual capability modes/depths, model route, verification outcome, fallback and timings;
-- store no raw model transcripts or secrets;
-- reserve `used_features` for the `VerificationFeature` policy V0 introduces, without implementing
-  those later capabilities early;
-- emit one trace for every runner arm and demonstrate attributable ablation on one task class;
-- make the PI portion replayable from versioned inputs and trace IDs.
+- freeze ECA/OpenCode/provider/model/repository/workspace/hardware identities;
+- establish Existing Project Bootstrap conformance for every evaluation repository before any arm
+  runs; exclude and report bootstrap failures instead of attributing them to a capability;
+- rerun lint, typecheck, unit, integration, build and adapter/plugin/MCP lifecycle paths;
+- reproduce provider failures with PI disabled first and run the blocking OMO coexistence smoke;
+- fix and version the B0a tuning subset, effect threshold and one assigned model tier per ablation;
+- run full-tier/repetition `native` and `off` baselines, then the bounded screening pass;
+- emit the screening table with `proceed` or `no screened effect`, without promotion/demotion.
 
-Exit evidence: every runner result carries a compact trace reference; one task class demonstrates
-that changing one capability arm changes the recorded capability set without changing the sealed
-task/oracle identity. See master plan section 8.
+Exit evidence: frozen environment and bootstrap records, classified integration results, and a
+screening table naming which capabilities proceed to B0b. See master plan sections 7.5 and 8.
 
 Evaluation environment mandated by the user:
 
@@ -47,11 +47,13 @@ Evaluation environment mandated by the user:
 - use Sonnet and Codex through OpenCode's registered GitHub Copilot provider as the two mandatory
   frontier model arms; discover and seal their exact installed identifiers before the first run.
 
-## Why B0 (baseline validation) is not the current task
+## E5 closeout
 
-The sealed task suite, unified evaluation runner/labels and attributable PI trace are not complete. A
-baseline measured in that state cannot support the required attribution and keep/demote decisions.
-E3–E5 must complete first. See master plan sections 6 and 8.
+E5 exact-head evidence produced 115 unique traces over all 23 arms. The required local-low route was
+UNAVAILABLE for every cell, which proves trace coverage but no quality outcome. A real
+ControlDeck-managed OpenCode advisory cell recorded `pi_status`-observed capability state and failed
+the objective task oracle. The append-only trace rejects conflicting IDs and tampering and stores no
+prompt or transcript. See `docs/evidence/final/e5-trace-proof.json`.
 
 ## Phase 0 stage state
 
@@ -64,10 +66,11 @@ E3–E5 must complete first. See master plan sections 6 and 8.
   756-second PEDS slow suite, and truthful OMO/local-low evidence;
 - **E4** unified evaluation runner plus versioned Layer A label set — done: sealed 12-case labels,
   fixed 5,083-cell schedule, exact route proof, checkpoint/resume and metric-key projection;
-- **E5** minimal PI trace as evaluation infrastructure — current, with a `used_features` shape
-  reserved for the `VerificationFeature` policy V0 introduces.
+- **E5** minimal PI trace as evaluation infrastructure — done, including explicit
+  planned-versus-observed state provenance and reserved `used_features` shape.
 
-Then **B0** baseline release validation and gap report.
+**B0a** environment/integration freeze and screening is current; B0b confirmation follows only for
+capabilities that screen through.
 
 ## Ablation arms available after E1
 
@@ -96,7 +99,7 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/e3-layer-b-task-suite
+git switch -c agent/b0a-baseline-screening
 ```
 
 Update `CURRENT_HANDOFF.md` after each stage.

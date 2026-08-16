@@ -1,5 +1,26 @@
 # Implementation Log
 
+## 2026-08-16 — E5 minimal attributable PI trace
+
+- Added immutable `EvaluationTrace` records and an append-only hash-chained JSONL log with
+  idempotent append, replay verification, conflict rejection, tamper detection and fsync.
+- Integrated one trace per unified-runner result, including sealed inputs, capability/depth state,
+  reserved `used_features`, selected evidence/source/Twin IDs, exact model route, outcome/fallback
+  and timings. Prompts, transcripts and secret-shaped fields are rejected.
+- Corrected the first implementation so selected PI evidence/Twin IDs and `pi_status` modes/depths
+  come from actual tool output where present. Added explicit `capability_state_source` to distinguish
+  that observation from a scheduled matrix state when a provider is unavailable.
+- Exact-head `9c29aa32eb57c61a394a989b1319423bb4092359` emitted 115 unique traces across
+  all 23 arms for one task. Every local-low cell was correctly `UNAVAILABLE`; the active/semantic
+  ablation pair differed only in semantic mode with identical sealed task/oracle identity.
+- A real ControlDeck-managed OpenCode advisory run called `pi_status` and `pi_symbol`, recorded
+  observed capability state, and returned objective `FAIL` because it selected one of two required
+  tests. This is truthful trace/runtime evidence, not B0 quality evidence.
+- Focused E5 tests (10), scoped Ruff and scoped mypy passed. Final gates passed: `all-fast` (182
+  Python, 9 adapter), integration (27 Python, 9 adapter), and Python/TypeScript build.
+- Versioned proof: `docs/evidence/final/e5-trace-proof.json`; raw workspaces and JSONL logs remain
+  ignored.
+
 ## 2026-08-16 — E4 unified evaluation runner and Layer A labels
 
 - Promoted 12 PR-C/PR-H reviewed cases into a machine-readable sealed Layer A label set; no new human

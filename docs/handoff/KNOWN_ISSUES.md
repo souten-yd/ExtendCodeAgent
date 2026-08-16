@@ -119,3 +119,14 @@
 - External evidence is deliberately never promoted to verified project fact. A claim needing both
   external truth and implementation verification must carry separate external and current project
   evidence; this may leave more explicit coverage gaps but prevents false completion.
+
+## E5 trace limitations
+
+- The required local-low route is not registered under the permitted environment, so the all-arm
+  E5 demonstration has 115 `UNAVAILABLE` outcomes. Its capability states are scheduled matrix values,
+  not observed runtime values, and it provides no quality comparison.
+- The real advisory trace observed capability state through `pi_status`, but its `pi_symbol` output
+  exposed neither a selected evidence ID nor a Twin revision ID. Those trace fields correctly remain
+  empty/null.
+- E5 is a serial evaluation log without cross-process locking and is not durable cross-session
+  Project Evidence Memory. The sealed runner is serial; broader durability/replay belongs to P0.

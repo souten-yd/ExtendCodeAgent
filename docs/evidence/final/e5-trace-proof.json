@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "classification": "E5_TRACE_PROOF",
+  "captured_at": "2026-08-16T15:50:09+0900",
+  "implementation_revision": "9c29aa32eb57c61a394a989b1319423bb4092359",
+  "inputs": {
+    "layer_a_seal": "70710dfe82680afd8ab0c2ad3a735b7f82648c65554dbf93d878e0550a986427",
+    "layer_b_seal": "23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632",
+    "matrix_seal": "13d3e854234efbc302ff7d6c0ab5f4f2dfd3eea9cc11d98c2760e03ca4b6f16e"
+  },
+  "all_arm_trace": {
+    "arms": 23,
+    "executed_cells": 115,
+    "unique_trace_ids": 115,
+    "outcomes": {
+      "UNAVAILABLE": 115
+    },
+    "classification_note": "The sealed local-low route is unavailable. These cells prove trace coverage and attribution shape only; none is a passing quality result."
+  },
+  "attribution_demo": {
+    "task_id": "eca-symbol-001",
+    "oracle_id": "e3-oracle:eca-symbol-001",
+    "active": {
+      "trace_id": "trace-e93fa0f143e329105cd4460d",
+      "sequence": 21,
+      "record_hash": "56dde9de25c0ff4e2b8ce02417733c36f4c21c55957c0269ffb49322e179d0ab",
+      "semantic_mode": "active"
+    },
+    "semantic_ablation": {
+      "trace_id": "trace-4e8d3b0d2bb1833dbf6a2641",
+      "sequence": 36,
+      "record_hash": "c2db68df62bdac04897d42fb9a1ef0cccaa958be82421db75299105bcaf3f8da",
+      "semantic_mode": "off"
+    },
+    "capability_state_source": "planned_matrix",
+    "same_task_oracle_input_seals_and_repository_revision": true,
+    "only_capability_mode_difference": "semantic",
+    "quality_interpretation": "NOT_TESTED because both cells are UNAVAILABLE"
+  },
+  "real_opencode_trace": {
+    "cell_id": "advisory--host-default--eca-symbol-001--r1",
+    "trace_id": "trace-84dc6d7e6baf3b926afd65cb",
+    "sequence": 116,
+    "record_hash": "5b82bd04a18e894062c199efa20a64860342d069974d1fc010711b7a1fe603cf",
+    "model_id": "opencode/big-pickle",
+    "model_status": "AVAILABLE",
+    "capability_state_source": "observed_pi_status",
+    "pi_tools": [
+      "pi_status",
+      "pi_symbol"
+    ],
+    "selected_evidence_ids": [],
+    "twin_revision_id": null,
+    "timings_ms": {
+      "agent_wall": 25533,
+      "pi_analysis": 8332
+    },
+    "tool_calls": 11,
+    "outcome": "FAIL",
+    "oracle_diagnostic": "answer tests mismatch: one returned test versus two required tests"
+  },
+  "integrity": {
+    "format": "hash-chained JSONL",
+    "append_is_idempotent": true,
+    "conflicting_trace_id_fails_closed": true,
+    "tampering_fails_replay": true,
+    "raw_prompt_or_transcript_stored": false,
+    "raw_runtime_log_committed": false
+  },
+  "limitations": [
+    "This is evaluation-infrastructure evidence, not B0 benefit evidence.",
+    "The all-arm attribution demonstration records planned matrix state because no local-low model ran.",
+    "The real OpenCode cell observed capability state but selected no evidence ID and exposed no Twin revision in its tool outputs.",
+    "Durable cross-session Project Evidence Memory remains P0 scope."
+  ]
+}

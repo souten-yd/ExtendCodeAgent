@@ -4,7 +4,7 @@ Status date: 2026-08-16
 
 ## Program state
 
-Overall: **A-I COMPLETE — PHASE 0 ACTIVE — E0/E1/E2/V0a/E3/E4 COMPLETE — E5 NEXT**
+Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0 NEXT**
 
 PRs A-I are merged and the implementation baseline is complete. Planning PRs
 [#20](https://github.com/souten-yd/ExtendCodeAgent/pull/20) and
@@ -13,11 +13,10 @@ have since been consolidated into a single canonical execution plan,
 `docs/PI_MASTER_EXECUTION_PLAN.md`, which replaced eight parallel stage-numbering schemes with one
 backlog.
 
-This is not a production-capable designation. Baseline release validation (stage B0, formerly RV-0) is
-deliberately **not** the next step: the verification contract slice, sealed task suite, unified
-evaluation runner/labels and attributable PI trace remain incomplete. Phase 0 closes those gaps first
-so baseline results can support attribution and keep/demote decisions. E0, E1, E2 and V0a are
-complete; E3 sealed Layer B and E4 added the unified runner plus Layer A labels. E5 is next.
+This is not a production-capable designation. Phase 0 now provides the verification contract slice,
+sealed task suite, unified evaluation runner/labels and attributable PI trace. Baseline release
+validation (stage B0, formerly RV-0) is next; it must first establish Existing Project Bootstrap
+conformance and then run the schedulable B0a screening/B0b confirmation split.
 
 ## Canonical read order
 
@@ -98,9 +97,10 @@ for the `call_graph` folding and the `ConfigError` policy: `docs/handoff/DECISIO
 
 ## Immediate next action
 
-Phase 0, stage E5: add the minimal append-only PI trace needed to attribute each unified-runner
-outcome to the capability set, depth, evidence/revision IDs, model route, verification result,
-fallback and timings. See `docs/handoff/NEXT_TASK.md`.
+Phase 1, stage B0a: freeze the evaluation environment, establish Existing Project Bootstrap
+conformance per repository, rerun the integration gates, fix the screening subset/effect threshold/
+model-tier assignments, and execute the baseline plus screening cells. See
+`docs/handoff/NEXT_TASK.md`.
 
 E3 sealed 13 tasks across three task repositories and nine required classes at
 `23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632`. The ControlDeck-managed
@@ -115,6 +115,12 @@ every versioned input, emits every integrated metric key, archives incomplete wo
 each cell atomically and resumes without duplicating results. Exact-head route proof exercised native,
 advisory, port-8090 Qwen3.6 27B, GitHub Copilot Sonnet and GitHub Copilot Codex through the
 ControlDeck-managed OpenCode executable. This is runner/route evidence, not a B0 quality result.
+
+E5 added a compact hash-chained append-only trace with idempotent append, fail-closed replay,
+explicit planned-versus-observed capability-state provenance, and no prompts/transcripts/secrets.
+Exact-head evidence emitted 115 unique traces over all 23 arms. All local-low cells remain correctly
+`UNAVAILABLE`; a real ControlDeck-managed OpenCode advisory cell recorded `pi_status`-observed state
+and failed its task oracle. This closes attribution infrastructure only, not the product thesis.
 
 No recorded evidence yet supports the product thesis. The only real-model result,
 `docs/evidence/pr-g/model-evaluation.json`, is 6 scenarios at 1 repetition with `tool_calls = 0` in
