@@ -797,3 +797,20 @@ The 115-cell local-low run demonstrates trace coverage and semantic-ablation att
 cells are `UNAVAILABLE`. The real host advisory cell demonstrates observed capability-state capture
 but failed its objective oracle. Neither result supports a Project Intelligence benefit claim; B0
 owns repeated outcome distributions.
+
+## 2026-08-16 — B0a screening contract and bootstrap exclusion rule
+
+Decision: B0a has its own sealed pre-run contract referencing, not modifying, the E4 matrix and E3
+suite seals. The seven existing tuning tasks are screened as paired active/ablation cells. A
+capability proceeds when active gains at least two objective PASS outcomes (minimum absolute delta
+2/21) or an ablation introduces a critical completion/unsafe-claim
+failure absent from active. This threshold selects B0b candidates only and cannot promote, demote or
+reject a capability.
+
+All 13 ablations use local-practical for the wide screen. This keeps the screen schedulable and tests
+the bounded-evidence claim against the user-mandated port-8090 Qwen route; it does not remove mandatory
+Sonnet/Codex GitHub Copilot arms from the full native/off baselines or later confirmation.
+
+Every repository from the task suite and quality corpus must first reach an exact pinned initial Twin.
+Pin/Twin failures exclude it as a bootstrap gap. Test-runner or inventory absence is instead recorded
+as `unavailable`, and imported correctness remains `unknown`; neither is silently converted to PASS.

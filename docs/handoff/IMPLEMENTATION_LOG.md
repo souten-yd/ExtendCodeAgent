@@ -1,5 +1,19 @@
 # Implementation Log
 
+## 2026-08-16 — B0a bootstrap and screening contract
+
+- Added sealed `b0a-screening-plan-v1.json` referencing the unchanged E3/E4 seals and fixing the
+  subset, paired effect threshold, per-capability tier assignment, depth claims and forbidden
+  adoption decisions before any screen runs.
+- Added `tools/local/b0a-bootstrap`, which unions nine repositories from both canonical manifests,
+  acquires exact detached pins and emits initial Twin/test baseline records with explicit evidence
+  classifications and bootstrap eligibility.
+- Added an isolated exact-pin fixture proving acquisition, Twin creation, test discovery, inventory
+  and unknown correctness. Focused Ruff, mypy and two integration tests pass.
+- Final gates pass: `all-fast` (182 Python, 9 adapter), integration (29 Python, 9 adapter), and
+  Python/TypeScript build.
+- No repository bootstrap evidence or agent screening result is claimed in this contract checkpoint.
+
 ## 2026-08-16 — E5 minimal attributable PI trace
 
 - Added immutable `EvaluationTrace` records and an append-only hash-chained JSONL log with

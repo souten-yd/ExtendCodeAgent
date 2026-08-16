@@ -38,6 +38,10 @@ Scope:
 Exit evidence: frozen environment and bootstrap records, classified integration results, and a
 screening table naming which capabilities proceed to B0b. See master plan sections 7.5 and 8.
 
+The pre-run contract is sealed in `docs/evaluation/b0a-screening-plan-v1.json`. Use
+`tools/local/b0a-bootstrap` to acquire exact pins and emit the initial per-repository baseline; do
+not run an arm for a repository classified `EXCLUDED_BOOTSTRAP_GAP`.
+
 Evaluation environment mandated by the user:
 
 - launch/use OpenCode through ControlDeck's existing path where available; do not add ControlDeck

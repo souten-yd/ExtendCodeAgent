@@ -2,9 +2,25 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/e5-minimal-pi-trace`
+Current branch: `agent/b0a-bootstrap-screening-contract`
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
-Current task: E5 complete and locally verified; publish/merge E5, then start B0a
+Current task: B0a bootstrap and screening contract; no screening cell has run
+
+## B0a contract checkpoint (2026-08-16)
+
+- Added a separately sealed B0a plan without changing the E4 matrix seal. It fixes the seven-task
+  tuning subset, paired active/ablation comparison, screening-only effect threshold, four
+  depth-claim capabilities and one explicit model-tier assignment for each of 13 ablations.
+- The wide screen assigns every capability to the permitted port-8090 local-practical route. Full
+  `native`/`off` baselines retain every tier, including GitHub Copilot Sonnet and Codex; local-low
+  absence remains visible as UNAVAILABLE.
+- Added a local bootstrap harness that unions the task and quality manifests (nine repositories),
+  acquires exact detached pins, creates an initial Twin, discovers test runners/inventory and records
+  observed/inferred/unknown classifications plus unsupported capabilities.
+- Exact-pin or Twin failure yields `EXCLUDED_BOOTSTRAP_GAP`; absent test runner/inventory is recorded
+  `unavailable` rather than silently skipped. Imported code correctness always starts `unknown`.
+- No B0a evaluation cell has run. Merge this contract before freezing the exact environment and
+  generating bootstrap evidence.
 
 ## E5 closeout (2026-08-16)
 
