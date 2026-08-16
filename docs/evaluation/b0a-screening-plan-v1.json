@@ -1,0 +1,102 @@
+{
+  "schema": 1,
+  "plan_id": "b0a-screening-plan-v1",
+  "created_at": "2026-08-16",
+  "inputs": {
+    "evaluation_matrix": "docs/evaluation/evaluation-matrix-v1.json",
+    "matrix_seal": "13d3e854234efbc302ff7d6c0ab5f4f2dfd3eea9cc11d98c2760e03ca4b6f16e",
+    "task_suite": "docs/evaluation/task-suite-v1.json",
+    "task_suite_seal": "23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632",
+    "quality_corpus": "docs/evaluation/test-portfolio-corpus-v1.json"
+  },
+  "bootstrap": {
+    "repositories": "union of task-suite repositories and quality-corpus repositories",
+    "required_fields": [
+      "workspace_identity",
+      "source_revision",
+      "worktree_fingerprint",
+      "twin_revision",
+      "node_count",
+      "edge_count",
+      "build_time_ms",
+      "test_runner_discovery",
+      "test_inventory",
+      "baseline_evidence_classification",
+      "unsupported_or_degraded_analysis"
+    ],
+    "exclusion_rule": "Exclude a repository from arm execution when its exact pin or initial Twin cannot be established; report runner or inventory absence as unavailable rather than silently excluding it.",
+    "baseline_correctness": "unknown"
+  },
+  "screening": {
+    "task_subset": [
+      "eca-symbol-001",
+      "eca-impact-001",
+      "eca-tests-001",
+      "eca-refactor-001",
+      "eca-negative-001",
+      "cd-bug-001",
+      "cd-cross-boundary-001"
+    ],
+    "comparison": "paired active versus ablation(X) cells at identical task, tier and repetition",
+    "effect_threshold": {
+      "primary": "at least 2 more objective PASS outcomes for active than ablation(X)",
+      "minimum_absolute_pass_rate_delta": 0.09523809523809523,
+      "critical_override": "proceed when ablation introduces any completion-correctness or unsafe-claim failure absent from active",
+      "interpretation": "candidate selection for B0b only; never promotion or demotion evidence"
+    },
+    "capability_model_tiers": {
+      "graph": "local-practical",
+      "twin": "local-practical",
+      "semantic": "local-practical",
+      "impact": "local-practical",
+      "test_selection": "local-practical",
+      "test_obsolescence": "local-practical",
+      "context": "local-practical",
+      "runtime": "local-practical",
+      "blueprint": "local-practical",
+      "convergence": "local-practical",
+      "research": "local-practical",
+      "traceability": "local-practical",
+      "strategy": "local-practical"
+    },
+    "tier_rationale": "The wide screen uses the permitted port-8090 practical-local route for every capability so it remains schedulable and tests the bounded-evidence claim. Full native/off baselines still cover every available tier, including both required GitHub Copilot frontier routes.",
+    "depth_claim_capabilities": [
+      "semantic",
+      "impact",
+      "test_selection",
+      "context"
+    ],
+    "depth_model_tier": "local-practical",
+    "minimum_repetitions": 3
+  },
+  "baseline": {
+    "arms": [
+      "native",
+      "off"
+    ],
+    "tiers": [
+      "local-low",
+      "local-practical",
+      "host-default",
+      "frontier-sonnet",
+      "frontier-codex"
+    ],
+    "unavailable_policy": "retain and report cells as UNAVAILABLE",
+    "frontier_policy": "Sonnet and Codex run only through GitHub Copilot registered in ControlDeck-managed OpenCode"
+  },
+  "decision_policy": {
+    "allowed": [
+      "proceed_to_b0b",
+      "no_screened_effect"
+    ],
+    "forbidden": [
+      "promote",
+      "demote",
+      "reject"
+    ]
+  },
+  "seal": {
+    "algorithm": "sha256",
+    "canonical_payload": "2603866634a789831822d05edc95d331d4a025a5d84a7bda242a016bd5b21882"
+  }
+}
