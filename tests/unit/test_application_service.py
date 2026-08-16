@@ -8,7 +8,12 @@ import pytest
 from extendcodeagent.blueprint import BlueprintElement
 from extendcodeagent.convergence import ActualElement, ActualSnapshot, ConvergenceDecision
 from extendcodeagent.core.config import ConfigLayer, ConfigResolver
-from extendcodeagent.core.config.schema import CapabilityName
+from extendcodeagent.core.config.schema import (
+    CONFIGURABLE_CAPABILITIES,
+    NOT_IMPLEMENTED_CAPABILITIES,
+    CapabilityImplementation,
+    CapabilityName,
+)
 from extendcodeagent.core.contracts import (
     CanonicalRef,
     EvidenceRef,
@@ -28,24 +33,9 @@ def _write(root: Path, relative: str, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
-def _policy(mode: str) -> CapabilityPolicy:
-    capabilities = {
-        name: mode
-        for name in (
-            "graph",
-            "twin",
-            "semantic",
-            "impact",
-            "test_selection",
-            "test_obsolescence",
-            "runtime",
-            "context",
-            "blueprint",
-            "convergence",
-            "research",
-            "traceability",
-        )
-    }
+def _policy(mode: str, **overrides: str) -> CapabilityPolicy:
+    capabilities = {name.value: mode for name in CONFIGURABLE_CAPABILITIES}
+    capabilities.update(overrides)
     resolved = ConfigResolver().resolve(
         ConfigLayer(
             "test",
@@ -166,6 +156,67 @@ def test_runtime_ingest_persists_and_marks_old_green_test_stale(tmp_path: Path) 
     with ProjectIntelligenceApplication(root, database, _policy("active")) as reopened:
         evidence = reopened.runtime_evidence(("py://service#leaf",))
     assert evidence["items"][0]["observation_id"] == "pytest-1"
+
+
+def test_test_obsolescence_switches_off_independently_of_test_selection(tmp_path: Path) -> None:
+    """Ablating test_obsolescence must leave test_selection fully working."""
+
+    root = _repo(tmp_path)
+    with ProjectIntelligenceApplication(
+        root, tmp_path / "graph.db", _policy("active", test_obsolescence="off")
+    ) as application:
+        selected = application.tests(("py://service#leaf",))
+
+    assert {item["canonical_ref"] for item in selected["items"]} == {
+        "py://test_service#test_caller"
+    }
+    assert selected["health"] == []
+
+
+def test_test_selection_switches_off_without_disabling_the_rest(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    with ProjectIntelligenceApplication(
+        root, tmp_path / "graph.db", _policy("active", test_selection="off")
+    ) as application:
+        with pytest.raises(CapabilityUnavailable, match="test_selection"):
+            application.tests(("py://service#leaf",))
+        assert application.impact(("py://service#leaf",))["direct"]
+
+
+def test_status_reports_implementation_state_and_mode_for_every_capability(
+    tmp_path: Path,
+) -> None:
+    root = _repo(tmp_path)
+    with ProjectIntelligenceApplication(
+        root, tmp_path / "graph.db", _policy("advisory", strategy="off")
+    ) as application:
+        status = application.status()
+
+    entries = {item["name"]: item for item in status["capabilities"]}
+    assert set(entries) == {name.value for name in CapabilityName}
+    for name in NOT_IMPLEMENTED_CAPABILITIES:
+        assert entries[name.value]["implementation"] == CapabilityImplementation.NOT_IMPLEMENTED
+        assert entries[name.value]["mode"] == "off"
+    assert entries["impact"]["implementation"] == CapabilityImplementation.IMPLEMENTED
+    assert entries["impact"]["mode"] == "advisory"
+    assert entries["strategy"]["mode"] == "off"
+    assert entries["call_graph"]["governed_by"] == "semantic"
+    assert entries["call_graph"]["mode"] == entries["semantic"]["mode"]
+    assert entries["impact"]["governed_by"] is None
+
+
+def test_status_reports_capabilities_even_when_disabled(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    database = tmp_path / "graph.db"
+    with ProjectIntelligenceApplication(root, database, _policy("off")) as application:
+        status = application.status()
+
+    assert status["readiness"] == "disabled"
+    assert {item["name"] for item in status["capabilities"]} == {
+        name.value for name in CapabilityName
+    }
+    assert all(item["mode"] == "off" for item in status["capabilities"])
+    assert not database.exists()
 
 
 def test_runtime_off_is_inert(tmp_path: Path) -> None:
