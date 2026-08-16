@@ -3,7 +3,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod"
 
-import { SidecarClient } from "./client.js"
+import { SidecarClient, type RolloutMode } from "./client.js"
 
 const root = resolve(process.env.EXTENDCODEAGENT_ROOT ?? process.cwd())
 const client = new SidecarClient({
@@ -11,10 +11,18 @@ const client = new SidecarClient({
   database:
     process.env.EXTENDCODEAGENT_DATABASE ?? join(root, ".extendcodeagent", "graph.db"),
   python: process.env.EXTENDCODEAGENT_PYTHON,
-  mode: "advisory",
+  mode: readMode(process.env.EXTENDCODEAGENT_MODE),
   userConfig: process.env.EXTENDCODEAGENT_USER_CONFIG,
   projectConfig: process.env.EXTENDCODEAGENT_PROJECT_CONFIG,
 })
+
+function readMode(value: string | undefined): RolloutMode | undefined {
+  if (value === undefined) return undefined
+  if (value === "off" || value === "shadow" || value === "advisory" || value === "active") {
+    return value
+  }
+  return undefined
+}
 
 const server = new McpServer({ name: "extendcodeagent", version: "0.1.0" })
 

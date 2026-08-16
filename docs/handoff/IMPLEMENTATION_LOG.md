@@ -409,3 +409,12 @@
   capabilities (`blueprint`, `convergence`, `traceability`, `strategy`) currently lack OpenCode
   runtime/task routes, so the activation contract blocks comprehensive execution pending bounded B1
   adapter repair.
+- PR #48 merged the activation guard as `0a1a9f4e4b289fdef7c8a4ac225000b537e4a37b` after all-fast
+  (183 Python, 9 adapter), integration (36 Python, 9 adapter), build and schedule-count gates passed.
+- Ran the four-cell activation gate at that exact head through port-8090 Qwen, host-default, Copilot
+  Sonnet and Copilot Codex. Every cell called `pi_status` and `pi_symbol`, returned a ready Twin,
+  revision, canonical evidence and positive PI time, and had no provider error. The aggregate
+  correctly failed because three configured capabilities were observed off; no pilot cell ran.
+- Traced the common failure to split OpenCode integration configuration: the MCP child received the
+  generated project config but the plugin process did not, and the MCP entry point hard-coded
+  advisory. Began a bounded repair to propagate one config/mode to both routes before rerunning.

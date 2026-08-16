@@ -2,11 +2,21 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/b0a-pi-activation-gate`; latest merged base `c0cfa61`
+Current branch: `agent/b0a-activation-config-repair`; latest merged base `0a1a9f4`
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
 Current task: prove real PI activation and repair missing capability routes before comprehensive B0a
 
 ## B0a contract checkpoint (2026-08-16)
+
+- PR #48 merged the activation/effect guard as exact main head
+  `0a1a9f4e4b289fdef7c8a4ac225000b537e4a37b`.
+- The first four-model activation run at that head observed `pi_status`, `pi_symbol`, ready Twin,
+  revision, canonical evidence and positive PI time on every route, with no provider error. It
+  correctly stopped before the pilot because all routes reported `blueprint`, `strategy` and
+  `convergence` off despite the sealed active configuration.
+- Root cause: the runner supplied the generated project config only inside the MCP environment, not
+  to OpenCode's plugin process; the MCP entry point also hard-coded advisory instead of consuming
+  `EXTENDCODEAGENT_MODE`. The current bounded repair makes plugin and MCP resolve the same config.
 
 - Stopped the pre-activation baseline after 137/306 atomically checkpointed cells at exact old head
   `86e8061`. No runner/OpenCode process remains. These cells are diagnostic OpenCode model-variance

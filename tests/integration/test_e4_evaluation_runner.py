@@ -16,6 +16,7 @@ from tools.local.evaluation_runner import (  # noqa: E402
     CONFIGURABLE_CAPABILITIES,
     _activation_assessment,
     _activation_gate,
+    _environment,
     _isolated_agent_environment,
     _pilot_active_assessment,
     _pilot_gate,
@@ -288,6 +289,24 @@ def test_agent_environment_cannot_retarget_the_shared_runner_venv(
     assert "VIRTUAL_ENV" not in isolated
     assert "PYTHONPATH" not in isolated
     assert isolated["PIP_REQUIRE_VIRTUALENV"] == "true"
+
+
+def test_active_environment_shares_the_sealed_project_config_with_plugin_and_mcp(
+    tmp_path: Path,
+) -> None:
+    env, _ = _environment("active", "local-practical", tmp_path / "workspace")
+    project_config = Path(env["EXTENDCODEAGENT_PROJECT_CONFIG"])
+    resolved = json.loads(project_config.read_text(encoding="utf-8"))
+    assert resolved["project_intelligence"]["capabilities"] == {
+        capability: "active" for capability in CONFIGURABLE_CAPABILITIES
+    }
+    opencode = json.loads(env["OPENCODE_CONFIG_CONTENT"])
+    assert opencode["mcp"]["extendcodeagent"]["environment"][
+        "EXTENDCODEAGENT_PROJECT_CONFIG"
+    ] == str(project_config)
+
+    native, _ = _environment("native", "local-practical", tmp_path / "native")
+    assert "EXTENDCODEAGENT_PROJECT_CONFIG" not in native
 
 
 def test_b0a_screening_table_uses_paired_threshold_without_adoption_decision(
