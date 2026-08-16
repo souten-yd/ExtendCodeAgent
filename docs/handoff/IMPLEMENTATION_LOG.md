@@ -1,5 +1,17 @@
 # Implementation Log
 
+## 2026-08-17 — Partial activation and compatible pilot promotion
+
+- Latest activation at `c95bdfb` passed PI route activation for local-practical, Copilot Sonnet and
+  Copilot Codex with ready Twin/revision/evidence observations. host-default alone remained
+  `RATE_LIMIT`; its single trigger attempt paused that queue.
+- Added fail-closed `PARTIAL_PROVIDER_GAP`: missing activation models must exactly equal paused
+  provider queues and every observed route must pass with no capability gap. This allows unaffected
+  baseline queues to proceed but does not claim full activation/baseline completion.
+- Audited the immutable 27-cell pilot: all 27 are `REUSABLE`, trace integrity is PASS and the original
+  active/control gain remains 6. Added sealed `promote-pilot`; any invalid pilot cell rejects reuse,
+  and its latency remains legacy/separate.
+
 ## 2026-08-17 — Class-scoped checkpoint migration
 
 - Added `migrate-checkpoint`, which requires sealed audit and Bridge proof, verifies source report and

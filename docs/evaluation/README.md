@@ -86,3 +86,17 @@ validating runner, manifest/proof and `LEGACY_RUNNER` latency status. A Bridge m
 class, a Bridge-unavailable provider excludes that model tier, and sealed unavailable model cells
 remain reusable without pretending they executed. The migrated checkpoint is sealed and binds fresh
 activation/pilot evidence on its first current-head resume.
+
+A current-head activation may be `PARTIAL_PROVIDER_GAP` only when every missing model exactly matches
+a paused provider queue and every observed model passed PI route activation with no capability gap.
+This permits unaffected providers to continue; it does not complete the activation gate or baseline.
+
+An unchanged 27-cell pilot can be promoted only after its own checkpoint audit reports every cell
+`REUSABLE` with valid trace integrity:
+
+```bash
+tools/local/evaluation-runner promote-pilot --source <old-pilot.json> \
+  --audit <pilot-audit.json> --output <current-pilot-evidence.json>
+```
+
+Promoted pilot latency remains legacy and separate. Any non-reusable pilot cell rejects promotion.
