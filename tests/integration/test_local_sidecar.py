@@ -80,6 +80,17 @@ def test_sidecar_round_trip_and_interface_rejection(tmp_path: Path) -> None:
         )
         assert symbol["ok"] is True
         assert symbol["result"]["items"][0]["canonical_ref"] == "py://service#leaf"
+        timing = symbol["result"]["timing"]
+        assert set(timing) == {
+            "cold_twin_build_ms",
+            "snapshot_load_ms",
+            "adjacency_index_build_ms",
+            "query_execution_ms",
+            "json_serialization_ms",
+        }
+        assert all(isinstance(value, int | float) and value >= 0 for value in timing.values())
+        assert timing["cold_twin_build_ms"] > 0
+        assert timing["snapshot_load_ms"] > 0
         with pytest.raises(urllib.error.HTTPError) as wrong_version:
             _request(
                 server,

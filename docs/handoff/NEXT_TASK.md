@@ -59,7 +59,12 @@ the four recorded depth claims. Neither may run until the separately sealed four
 `b0a-activation` gate and staged Qwen `b0a-pilot` pass at the same exact head. The pilot requires a
 positive interleaved 9-cell tranche before extending to 27 total, with an objective active PASS gain,
 observed task-specific PI and bounded latency; otherwise the next
-action is repair and retest, not the full matrix. The gate currently classifies missing OpenCode
+action is repair and retest, not the full matrix. The first valid 9-cell tranche at `6064e311`
+showed active gain +1, but confirmation stopped at 12/27 on a 300,157ms active-symbol timeout.
+Therefore the current action is B1 repair and a fresh sealed 9-cell rerun, not continuation of the
+partial confirmation. First add failure attribution and the six-part PI/model timing trace; then
+implement compact task projection, obligation-aware structural coverage and revision-scoped query
+indexes based on those measurements. The gate currently classifies missing OpenCode
 runtime routes for `blueprint`, `convergence`, `traceability` and `strategy`; repair those paths and
 add covered tasks before restarting comprehensive evaluation. The schedule proof and activation
 alone are not PI effect evidence; current effect remains NOT TESTED.

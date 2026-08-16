@@ -890,3 +890,18 @@ task from changing later cells by retargeting the shared runner installation.
 Resume is exact-head only. The runner rejects a checkpoint whose source revision, sealed schedule,
 activation/pilot evidence or trace path differs, and rejects non-resume execution into an existing
 report/trace. Old-protocol cells cannot be combined with corrected evaluation by operator mistake.
+
+## 2026-08-16 — B1 effect repair is projection-first and measurement-gated
+
+Decision: the initial 9-cell active gain permits diagnosis but the 300,157ms confirmation timeout
+forbids continuing the 27/306/714 schedules. Preserve the sealed tasks and exact oracles. Before
+changing graph depth, classify failures as retrieval missing, projection/schema error or agent
+reasoning error, with required-fact recall, schema validity and final exact pass retained separately.
+
+Every PI cell must split cold Twin build, snapshot load, adjacency/index build, query execution,
+JSON serialization and post-PI agent/model residual after subtracting later tool execution. Optimize
+the observed boundary rather
+than attributing total wall time to PI. The implementation priority is compact task-shaped projection,
+obligation-aware structural test coverage, revision-scoped query indexes/cache, missing OpenCode
+routes, then a fresh sealed 9-cell pilot. CFG/DFG expansion and comprehensive evaluation do not
+precede this repair.

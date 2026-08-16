@@ -556,6 +556,15 @@ control, has no provider error/timeout or missing PI observation, and its median
 `REPAIR_AND_RETEST`, fix the measured PI/oracle/performance cause, and repeat this same pilot before
 spending the comprehensive matrix.
 
+For `REPAIR_AND_RETEST`, keep the task/oracle sealed and record `required_fact_recall`,
+`schema_valid`, and `final_exact_pass`. Classify the miss as retrieval, task-schema projection, or
+agent reasoning. Split latency into cold Twin build, snapshot load, adjacency/index construction,
+query execution, JSON serialization, and post-PI agent/model residual after subtracting later tool
+execution. Repair compact
+task projection and obligation gaps before deeper graph construction; optimize query indexes only
+from the segmented trace. A partial 27-cell confirmation is not resumable as final evidence after a
+timeout or repair-head change.
+
 After that gate passes, establish `native` and `off` baselines at **full** tiers and repetitions,
 since every later number is read against them; then run the **screening** pass — each `ablation(X)` at
 its one assigned tier over the fixed tuning subset, depth arms only where a depth-dependent claim

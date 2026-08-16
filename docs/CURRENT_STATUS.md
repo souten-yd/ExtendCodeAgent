@@ -128,18 +128,20 @@ blocking OpenCode reachability gap: `blueprint`, `convergence`,
 misclassify non-execution as no effect. Comprehensive evaluation stays stopped until those B1 adapter
 paths and covered tasks are repaired; PI effect remains NOT TESTED.
 
-PR #49 repaired split plugin/MCP configuration and merged as
-`ebe2a197fddf019bd2e40bbd372349a5f835d482`. The corrected exact-head activation passed on all four
-models with no provider error. The first pilot ordering then spent eight completed native cells
-before reaching any active comparison; one test-selection response took 256,319ms. That diagnostic
-run was stopped without a partial ninth cell. A staged interleaved pilot repair is in progress so the
-first nine cells measure all three arms before confirmation work is authorized.
+PRs #49-#51 repaired configuration propagation, staged task-interleaved execution and duplicate
+plugin/MCP routing. At exact merged head `6064e311c3f98fe37ab87c6c1e71603ef08db7b2`, activation
+passed all four required routes. The first sealed 9-cell tranche then produced native/off/active
+PASS counts of 0/0/1; active won only the test-selection task, had no observation failure and its
+124,194ms median was 1.051x the slower control. This is a positive pilot signal, not comprehensive
+effect evidence.
 
-The first interleaved symbol triplet then found another fail-closed integration issue: native and
-active completed, with active PI observation valid, but off selected the duplicate qualified MCP
-tool and OpenCode returned a result-shape error instead of disabled state. The attempt stopped after
-that three-cell comparison. Evaluation is being narrowed to the canonical plugin namespace and one
-sidecar; MCP remains independently tested.
+The same-head confirmation stopped after 12/27 checkpointed cells when repetition-2 active symbol
+timed out at 300,157ms. This triggers `REPAIR_AND_RETEST`; neither 27-cell confirmation nor 306/714
+evaluation may continue. B1 now first separates `RETRIEVAL_MISSING`, `PROJECTION_SCHEMA_ERROR` and
+`AGENT_REASONING_ERROR`, and traces cold Twin build, snapshot load, adjacency/index build, query,
+JSON serialization and post-tool model reasoning. The measured repair order is compact task
+projection, obligation-aware/structural test coverage, revision-scoped query indexes, then missing
+OpenCode runtime routes. The sealed tasks and exact oracles remain unchanged.
 
 The bootstrap blocker has a bounded B1 repair at exact head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`. A matching current-edge identity index and schema-5

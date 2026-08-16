@@ -163,6 +163,17 @@
   an OpenCode tool-result shape error. Native and active completed; active PI observation passed.
   This is not an effect result. Causal cells must expose one plugin namespace/sidecar, while MCP is
   validated separately, before the 9-cell tranche is rerun from zero.
+- PR #51 removed that duplicate causal route. At `6064e311`, the initial 9-cell tranche showed a
+  real but narrow active gain (0/0/1 PASS); only test selection passed. Confirmation then hit a
+  300,157ms active-symbol TIMEOUT at cell 12/27 and was stopped. This is a B1 repair condition, not
+  evidence that Project Truth is ineffective.
+- Current `pi_symbol` and `pi_references` scan materialized snapshots, while impact/path construct a
+  fresh `GraphAnalysisService` adjacency index. Until segmented timing is collected, the timeout
+  cannot truthfully be assigned to PI query work versus post-tool model reasoning. The runner now
+  records those components separately before revision-cache optimization.
+- Exact-answer misses are not treated as one failure class. Required fact recall, schema validity
+  and final exact pass distinguish retrieval gaps from task-schema projection and downstream agent
+  reasoning. The exact oracle is not weakened.
 
 - The old 306-cell baseline began without an observed-PI activation precondition. It stopped at 137
   cells; pure `native` results measure OpenCode/model behavior, not PI effect, and will not be reused

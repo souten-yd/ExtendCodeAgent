@@ -7,6 +7,7 @@ import json
 import secrets
 import signal
 import threading
+import time
 from collections.abc import Mapping
 from datetime import datetime
 from http import HTTPStatus
@@ -93,7 +94,18 @@ class _Handler(BaseHTTPRequestHandler):
             raw_params = request.get("params", {})
             if not isinstance(raw_params, dict):
                 raise ValueError("params must be an object")
+            self.server.application.begin_timing()
+            request_started = time.perf_counter_ns()
             result = _dispatch(self.server.application, operation, raw_params)
+            request_ms = (time.perf_counter_ns() - request_started) / 1_000_000
+            timing = self.server.application.finish_timing(request_ms)
+            serialization_started = time.perf_counter_ns()
+            json.dumps(result, sort_keys=True, separators=(",", ":"))
+            timing["json_serialization_ms"] = round(
+                (time.perf_counter_ns() - serialization_started) / 1_000_000,
+                3,
+            )
+            result["timing"] = timing
         except CapabilityUnavailable as exc:
             self._json(
                 HTTPStatus.CONFLICT,

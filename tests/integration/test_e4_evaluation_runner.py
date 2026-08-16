@@ -18,6 +18,8 @@ from tools.local.evaluation_runner import (  # noqa: E402
     _activation_gate,
     _environment,
     _isolated_agent_environment,
+    _metrics,
+    _outcome_attribution,
     _pilot_active_assessment,
     _pilot_gate,
     _pilot_off_assessment,
@@ -306,6 +308,151 @@ def test_agent_environment_cannot_retarget_the_shared_runner_venv(
     assert isolated["PIP_REQUIRE_VIRTUALENV"] == "true"
 
 
+def test_metrics_split_pi_and_post_tool_model_time(tmp_path: Path) -> None:
+    log_path = tmp_path / "events.jsonl"
+    events = [
+        {
+            "type": "tool_use",
+            "part": {
+                "tool": "extendcodeagent_pi_symbol",
+                "state": {
+                    "time": {"start": 1_000, "end": 1_120},
+                    "output": json.dumps(
+                        {
+                            "items": [
+                                {
+                                    "path": "src/extendcodeagent/testing/service.py",
+                                    "canonical_ref": "py://testing.service#select_tests",
+                                }
+                            ],
+                            "revision_id": "twin-1",
+                            "timing": {
+                                "cold_twin_build_ms": 80.0,
+                                "snapshot_load_ms": 7.0,
+                                "adjacency_index_build_ms": 0.0,
+                                "query_execution_ms": 4.0,
+                                "json_serialization_ms": 1.0,
+                            },
+                        }
+                    ),
+                },
+            },
+        },
+        {
+            "type": "tool_use",
+            "part": {
+                "tool": "grep",
+                "state": {
+                    "time": {"start": 1_220, "end": 1_270},
+                    "output": "native search output",
+                },
+            },
+        },
+        {
+            "type": "text",
+            "part": {"type": "text", "time": {"start": 1_120, "end": 1_420}},
+        },
+    ]
+    log_path.write_text("\n".join(json.dumps(event) for event in events), encoding="utf-8")
+
+    measured = _metrics(log_path)
+
+    assert measured["pi_analysis_ms"] == 120
+    assert measured["pi_timing_ms"] == {
+        "cold_twin_build_ms": 80.0,
+        "snapshot_load_ms": 7.0,
+        "adjacency_index_build_ms": 0.0,
+        "query_execution_ms": 4.0,
+        "json_serialization_ms": 1.0,
+        "model_reasoning_after_tool_ms": 250,
+    }
+    assert "src/extendcodeagent/testing/service.py" in measured["observed_pi_facts"]
+
+
+def test_outcome_attribution_separates_retrieval_projection_and_reasoning(
+    tmp_path: Path,
+) -> None:
+    expected = {
+        "status": "completed",
+        "definition": "src/service.py",
+        "tests": ["tests/unit/test_service.py"],
+    }
+    task = {
+        "oracle": {
+            "checks": [
+                {
+                    "kind": "answer",
+                    "path": ".eca-eval/answer.json",
+                    "equals": expected,
+                }
+            ]
+        }
+    }
+    answer_path = tmp_path / ".eca-eval/answer.json"
+    answer_path.parent.mkdir()
+    answer_path.write_text(
+        json.dumps({"status": "completed", "definition": "src/service.py", "tests": []}),
+        encoding="utf-8",
+    )
+
+    retrieval = _outcome_attribution(
+        task,
+        tmp_path,
+        arm="active",
+        oracle_exit=1,
+        observed_pi_facts=["src/service.py"],
+    )
+    assert retrieval == {
+        "classification": "RETRIEVAL_MISSING",
+        "required_fact_recall": 0.5,
+        "pi_required_fact_recall": 0.5,
+        "schema_valid": True,
+        "final_exact_pass": False,
+    }
+
+    answer_path.write_text(
+        json.dumps({**expected, "tests": "tests/unit/test_service.py"}), encoding="utf-8"
+    )
+    projection = _outcome_attribution(
+        task,
+        tmp_path,
+        arm="active",
+        oracle_exit=1,
+        observed_pi_facts=["src/service.py", "tests/unit/test_service.py"],
+    )
+    assert projection["classification"] == "PROJECTION_SCHEMA_ERROR"
+    assert projection["required_fact_recall"] == 1.0
+    assert projection["pi_required_fact_recall"] == 1.0
+    assert projection["schema_valid"] is False
+
+    answer_path.write_text(
+        json.dumps(
+            {"status": "completed", "definition": "src/other.py", "tests": expected["tests"]}
+        ),
+        encoding="utf-8",
+    )
+    reasoning = _outcome_attribution(
+        task,
+        tmp_path,
+        arm="active",
+        oracle_exit=1,
+        observed_pi_facts=["src/service.py", "tests/unit/test_service.py"],
+    )
+    assert reasoning["classification"] == "AGENT_REASONING_ERROR"
+    assert reasoning["schema_valid"] is True
+
+    answer_path.write_text(json.dumps(expected), encoding="utf-8")
+    passed = _outcome_attribution(
+        task,
+        tmp_path,
+        arm="active",
+        oracle_exit=0,
+        observed_pi_facts=["src/service.py", "tests/unit/test_service.py"],
+    )
+    assert passed["classification"] == "PASS"
+    assert passed["final_exact_pass"] is True
+
+
 def test_active_environment_uses_one_plugin_route_with_the_sealed_project_config(
     tmp_path: Path,
 ) -> None:
@@ -498,3 +645,13 @@ def test_every_arm_emits_trace_and_semantic_ablation_is_attributable(tmp_path: P
     assert differences == {"semantic"}
     assert active["capability_modes"]["semantic"] == "active"
     assert ablated["capability_modes"]["semantic"] == "off"
+    assert set(active["timings_ms"]) == {
+        "agent_wall",
+        "pi_analysis",
+        "cold_twin_build",
+        "snapshot_load",
+        "adjacency_index_build",
+        "query_execution",
+        "json_serialization",
+        "model_reasoning_after_tool",
+    }
