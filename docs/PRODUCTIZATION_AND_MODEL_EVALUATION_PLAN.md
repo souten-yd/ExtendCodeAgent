@@ -1,5 +1,7 @@
 # ExtendCodeAgent Productization and Model Evaluation Plan
 
+> **Consolidated 2026-08-16.** Reference for productization principles and metrics. The `RV-0..RV-FINAL` sequence (section 15) and release gates (section 17) are superseded by `docs/PI_MASTER_EXECUTION_PLAN.md` sections 8 and 10.
+
 Status: proposed execution baseline after PR-I
 Date: 2026-08-14
 

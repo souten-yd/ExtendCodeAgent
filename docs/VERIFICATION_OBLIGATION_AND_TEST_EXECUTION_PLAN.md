@@ -1,5 +1,7 @@
 # Verification Obligation and Test Execution Plan
 
+> **Consolidated 2026-08-16.** Design detail for verification obligations. Its implementation sequence is superseded; see stages V0 and V2 of `docs/PI_MASTER_EXECUTION_PLAN.md`.
+
 Status: canonical refinement of targeted verification policy
 Date: 2026-08-16
 Scope: ExtendCodeAgent Test Intelligence / Impact / Convergence / capability-depth interaction

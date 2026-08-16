@@ -309,3 +309,39 @@ KasaneCore research/requirement behavior:
 External research evidence is always external provenance and cannot verify a Project Graph fact or
 requirement implementation by itself. Keyword/candidate matching may produce an observed link or a
 coverage gap, never `verified`. Completion continues to require current project/runtime evidence.
+
+## 2026-08-16 — Planning consolidation into a single execution plan
+
+Context: the repository contained 26 planning documents (~10,650 lines) with three conflicting
+"canonical read order" lists, eight parallel stage-numbering schemes (`RV-x`, `COMP-0/RA-x/TA-x/WL-0/
+VI-0/RB-0/DA-0/EM-0/MA-0/RV-X`, `AL-x`, `CV-x`, `TP-x`, `VI-Xx`, plus two unnumbered ordered lists),
+two incompatible evaluation corpora, one declared-but-unapplied absorption (`VI-0` absorbing `RV-3`),
+and a release-gate list whose blocking items included an externally unavailable provider path.
+
+Decision: `docs/PI_MASTER_EXECUTION_PLAN.md` becomes the single canonical execution plan. It owns
+product scope, the capability inventory, the evaluation framework, one stage backlog and the release
+gates. Every other planning document keeps its design detail and is registered there with an explicit
+disposition. Legacy stage identifiers are mapped and retired from scheduling.
+
+Consequences:
+
+- Verification work that was split across five documents (`RV-3`/`VI-0`, `AL-2`, `CV-*`, `TP-0..TP-3`,
+  `VI-X0..VI-X7`, failure-driven sequence) becomes one V-series with each object defined exactly once.
+- A new Phase 0 precedes baseline validation. Ten of twenty-one declared capabilities are not gated by
+  `CapabilityPolicy` — including `strategy` and `test_obsolescence`, which have real implementations —
+  so per-capability ablation is currently impossible and no keep/demote decision could be supported.
+  Phase 0 adds gating conformance (E1), the capability depth contract (E2), a unified evaluation runner
+  with a versioned ground-truth label set (E3) and a minimal attributable PI trace (E4).
+- The minimal PI trace is promoted from P1 to Phase 0 as evaluation infrastructure. Durable Project
+  Evidence Memory remains P1.
+- The frontier model path becomes a conditional release gate with a documented exception rule. A
+  provider outage outside the repository can no longer block the baseline indefinitely; the exception
+  records the error category, the native reproduction, the withdrawn claims and the re-test trigger.
+  It is never recorded as a pass.
+- Both corpora are retained with distinct roles: the realistic-task corpus (ExtendCodeAgent,
+  KasaneCore, ControlDeck) for agent outcomes and scale, and the pinned external corpus for
+  deterministic quality ground truth. Held-out material stays outside tuning.
+- Future strategy changes edit the master plan. A new design document requires a section 2 registration
+  and a stage owner in the same commit.
+
+GitHub Actions: not added. This change is documentation only.

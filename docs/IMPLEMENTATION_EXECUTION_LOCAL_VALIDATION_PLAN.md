@@ -1,5 +1,7 @@
 # ExtendCodeAgent — Implementation, Local Validation, and Model Routing Plan
 
+> **Consolidated 2026-08-16.** Canonical reference for configuration, routing, performance budgets and merge/CI policy. The PR waves in section 14 are history; scheduling lives in `docs/PI_MASTER_EXECUTION_PLAN.md`.
+
 Status: canonical implementation execution plan
 Date: 2026-08-13
 Target host: OpenCode

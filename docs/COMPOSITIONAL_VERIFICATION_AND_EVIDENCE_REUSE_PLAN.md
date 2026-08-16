@@ -1,5 +1,7 @@
 # Compositional Verification and Evidence Reuse Plan
 
+> **Consolidated 2026-08-16.** Design detail for evidence reuse. `CV-0..CV-FINAL` are superseded; see stages V0 and V3 of `docs/PI_MASTER_EXECUTION_PLAN.md`.
+
 Status: canonical refinement
 Date: 2026-08-16
 Scope: Test/Verification Portfolio Intelligence, evidence reuse, GUI/runtime verification, Convergence

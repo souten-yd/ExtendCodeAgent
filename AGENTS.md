@@ -2,16 +2,14 @@
 
 For Codex work in this repository, read and follow in this order:
 
-1. `docs/handoff/CODEX_OMO_COMPATIBILITY_INSTRUCTION.md`
-2. `docs/handoff/NEXT_TASK.md`
-3. `docs/ADAPTIVE_CAPABILITY_LEVELS_AND_TARGETED_VERIFICATION_PLAN.md`
-4. `docs/VERIFICATION_OBLIGATION_AND_TEST_EXECUTION_PLAN.md`
-5. `docs/TEST_PORTFOLIO_INTELLIGENCE_AND_BROAD_EVALUATION_PLAN.md`
-6. `docs/COMPOSITIONAL_VERIFICATION_AND_EVIDENCE_REUSE_PLAN.md`
-7. `docs/FAILURE_DRIVEN_PI_REEVALUATION_PLAN.md`
-8. `docs/PI_VERIFICATION_OBSERVABILITY_INTEGRATED_DESIGN.md`
-9. `docs/handoff/CURRENT_HANDOFF.md`
-10. the canonical plans referenced by those files.
+1. `docs/PI_MASTER_EXECUTION_PLAN.md` — canonical product definition, unified backlog (§8), release gates.
+2. `docs/handoff/NEXT_TASK.md` — the currently assigned stage.
+3. `docs/CURRENT_STATUS.md` — program state and evidence ledger.
+4. only the design detail registered in master plan §2 that the active stage actually needs.
+
+No individual plan document is standing required reading. §2 of the master plan records each document's disposition; pull in a design detail when the active stage calls for it, not by default.
+
+Do not schedule work by legacy identifiers (`RV-x`, `TA-x`, `AL-x`, `CV-x`, `TP-x`, `VI-Xx`, `RA-x`, `EM-0`, `MA-0`) — they are mapped to current stages in master plan §9 and must not be used for scheduling.
 
 Current responsibility: develop ExtendCodeAgent for OpenCode and evaluate/fix coexistence with OMO. Do not implement ControlDeck installation/UI/stack-management logic here.
 

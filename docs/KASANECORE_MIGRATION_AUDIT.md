@@ -1,5 +1,7 @@
 # KasaneCore -> ExtendCodeAgent / OpenCode Migration Audit
 
+> **Consolidated 2026-08-16.** Historical migration reference. No active obligations.
+
 Status: architecture and migration audit
 Date: 2026-08-13
 Source repository: `souten-yd/KasaneCore` `main`

@@ -1,5 +1,7 @@
 # OpenCode Validation and Adoption Plan
 
+> **Consolidated 2026-08-16.** Canonical evidence rule and ControlDeck ruling. Sequencing is folded into `docs/PI_MASTER_EXECUTION_PLAN.md` section 8.
+
 Status: canonical immediate validation policy
 Date: 2026-08-16
 Primary runtime/product target: OpenCode

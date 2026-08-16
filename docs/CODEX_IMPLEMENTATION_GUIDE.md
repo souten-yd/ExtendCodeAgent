@@ -1,5 +1,7 @@
 # ExtendCodeAgent — Codex Implementation Guide
 
+> **Consolidated 2026-08-16.** Agent working rules. Read order and task selection are owned by `docs/PI_MASTER_EXECUTION_PLAN.md` and `docs/handoff/NEXT_TASK.md`.
+
 Status: execution rules for implementation agents
 Date: 2026-08-13
 

@@ -1,5 +1,7 @@
 # Codex Productization Execution Guide
 
+> **Consolidated 2026-08-16.** Agent working rules. Read order (section 1) and first task (section 4) are superseded by `docs/PI_MASTER_EXECUTION_PLAN.md` and `docs/handoff/NEXT_TASK.md`.
+
 Status: execution instructions for post-PR-I productization
 Date: 2026-08-14
 

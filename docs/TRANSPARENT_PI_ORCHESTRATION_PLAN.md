@@ -1,5 +1,7 @@
 # Transparent Task-Aware Project Intelligence Plan
 
+> **Consolidated 2026-08-16.** Design detail for the task-aware controller. Consumed by stages C1 and C3 of `docs/PI_MASTER_EXECUTION_PLAN.md`.
+
 Status: proposed productization architecture after PR #20
 Date: 2026-08-14
 

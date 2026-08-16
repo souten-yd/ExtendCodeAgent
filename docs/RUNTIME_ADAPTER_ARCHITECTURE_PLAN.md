@@ -1,5 +1,7 @@
 # ExtendCodeAgent Runtime Adapter Architecture Plan
 
+> **Consolidated 2026-08-16.** Canonical architecture reference. Sequencing (section 11) is superseded by `docs/PI_MASTER_EXECUTION_PLAN.md`.
+
 Status: accepted architecture proposal for the productization phase
 Date: 2026-08-16
 
