@@ -126,6 +126,8 @@ def validate() -> None:
         raise EvaluationError("local-practical is not sealed to port 8090")
     if models["local-practical"].get("max_output_tokens") != 8192:
         raise EvaluationError("local-practical output must remain bounded to 8192 tokens")
+    if models["local-practical"].get("context_window_tokens") != 262144:
+        raise EvaluationError("local-practical context must match the port-8090 server")
     if models["frontier-sonnet"]["model_id"] != "github-copilot/claude-sonnet-5":
         raise EvaluationError("Sonnet is not routed through the sealed Copilot model")
     if models["frontier-codex"]["model_id"] != "github-copilot/gpt-5.3-codex":
@@ -412,7 +414,10 @@ def _environment(arm: str, model_tier: str, workspace: Path) -> tuple[dict[str, 
                 "models": {
                     model_id: {
                         "name": "Qwen3.6 27B on port 8090",
-                        "limit": {"output": model["max_output_tokens"]},
+                        "limit": {
+                            "context": model["context_window_tokens"],
+                            "output": model["max_output_tokens"],
+                        },
                     }
                 },
             }

@@ -80,6 +80,8 @@ That initial gate passed after PR #62, but confirmation encountered a 420-second
 off-control at 14/27. Merge the sealed 8,192-token local-practical output bound, then use fresh
 activation and pilot paths; do not resume the superseded-seal report. Only a clean 27-cell
 `PROCEED_TO_COMPREHENSIVE` result permits the 306/714 schedules.
+Use the completed limit pair (context 262,144/output 8,192), not the intermediate output-only
+configuration. After merge, prove it with real OpenCode activation before starting the fresh pilot.
 
 The conditional B1 storage blocker is repaired at exact implementation head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`: KasaneCore and PEDS now pass three-run cold-index

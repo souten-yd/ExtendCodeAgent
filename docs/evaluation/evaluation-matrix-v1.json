@@ -73,6 +73,7 @@
       "provider": "llama-compatible",
       "model_id": "llama",
       "base_url": "http://127.0.0.1:8090/v1",
+      "context_window_tokens": 262144,
       "max_output_tokens": 8192
     },
     {
@@ -131,6 +132,6 @@
   },
   "seal": {
     "algorithm": "sha256",
-    "canonical_payload": "9059fd04eac641f892f788675c2b7d0b9c2d92851bcb28362f27264af4598a32"
+    "canonical_payload": "7bfa9f1dd8be5bf44fcf3f018c4ccbe2b6a3266846cd7a994f08eb5d4886a0c5"
   }
 }

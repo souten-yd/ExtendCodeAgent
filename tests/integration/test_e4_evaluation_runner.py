@@ -338,7 +338,8 @@ def test_local_practical_output_is_bounded_for_every_arm(tmp_path: Path) -> None
 
         assert model_id == "eca-local-practical/llama"
         assert config["provider"]["eca-local-practical"]["models"]["llama"]["limit"] == {
-            "output": 8192
+            "context": 262144,
+            "output": 8192,
         }
 
 
