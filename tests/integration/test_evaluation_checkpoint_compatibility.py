@@ -296,6 +296,17 @@ def test_bridge_plan_and_proof_require_semantic_match(tmp_path: Path) -> None:
     assert migrated["results"][0]["result_origin"] == "migrated_checkpoint"
     assert migrated["results"][0]["latency_status"] == "LEGACY_RUNNER"
     assert len(EvaluationTraceLog(migrated_trace).replay()) == 1
+    different_audit = {**audit, "validated_by_runner_revision": "different"}
+    different_audit_path = tmp_path / "different-audit.json"
+    different_audit_path.write_text(json.dumps(_sealed(different_audit)))
+    with pytest.raises(CompatibilityError, match="audit and bridge plan seals differ"):
+        migrate_checkpoint(
+            ROOT,
+            source,
+            different_audit_path,
+            proof_path,
+            tmp_path / "different-audit-raw" / "traces.jsonl",
+        )
 
     run_body["results"][0]["outcome"] = "FAIL"
     run_path.write_text(json.dumps(_sealed(run_body)))
