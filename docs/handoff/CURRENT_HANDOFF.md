@@ -2,9 +2,9 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/plan-corrections-and-evaluation-scope`
+Current branch: `agent/plan-cleanup-and-review-followups`
 Milestone: A-I implementation complete; Phase 0 (evaluation enablement) active
-Current task: E1 complete and a plan review pass applied, both unmerged; next is stage E2
+Current task: E0/E1 and both plan passes are merged to `main` (`86a6a37`); next is stage E2
 
 ## Plan review pass (2026-08-16)
 
@@ -17,6 +17,23 @@ Verification Intelligence with Project Truth as substrate, scored against a new 
 column in the competitive analysis. Full rationale in `DECISIONS.md`.
 
 Phase 0 is now E0–E5; the former E3/E4 became E4/E5.
+
+## External review follow-ups (2026-08-16)
+
+An external review confirmed the plan direction and raised six points. Its top finding — E1 and the
+corrections not being on `main` — was correct and is resolved: the stacked PRs #34/#35 had merged into
+their intermediate bases rather than `main` (GitHub retargets a stacked PR only when its base branch is
+deleted), and PR #36 merged the full content forward. The other five are applied:
+
+- **Existing Project Bootstrap** is now a B0 entry condition, per evaluation repository.
+- **E3 must include a cross-boundary GUI/runtime causal task**, framed as a measurement of how far
+  current PI follows the chain. `ui_graph` stays `not_implemented`.
+- **V0 defines `VerificationFeature`** so the V-series is ablatable from the inside, without adding
+  `CapabilityName` members. E5's trace shape widened to accept `used_features`.
+- **OMO coexistence smoke** becomes blocking gate 17 at B0/R0; the full benchmark stays P4.
+- **"moat" downgraded to "primary differentiation hypothesis"**, resolving a contradiction with §5.
+
+Invariant 8 was also clarified so it does not read as forbidding explanations.
 
 ## Current source of truth
 

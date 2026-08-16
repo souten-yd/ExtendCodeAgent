@@ -34,16 +34,23 @@ The durable product position is:
 > agents persistent, revision-aware project truth; bounded evidence; impact/test/runtime reasoning;
 > evidence-backed completion; weak-local-model efficiency; and cross-agent/worktree consistency.
 
-The moat is **one** area, with four supporting ones. Ranking them is deliberate: an earlier version of
-this document listed five co-equal areas, which made the strategy unfalsifiable because any measured
-result could be attributed to some other pillar. Section 3.3 shows why the ranking is what it is.
+The differentiation is **one** area, with four supporting ones. Ranking them is deliberate: an earlier
+version of this document listed five co-equal areas, which made the strategy unfalsifiable because any
+measured result could be attributed to some other pillar. Section 3.3 shows why the ranking is what it
+is.
 
-**The moat:**
+**The primary differentiation hypothesis:**
 
 1. **Verification Intelligence** — obligation-driven required verification sets, evidence reuse with
    dependency closure and invalidation, failure-driven re-evaluation, evidence-backed completion.
-   Nothing in the compared runtimes does this, and static code-intelligence products (§3.3 column CI)
+   No compared runtime is known to do this, and static code-intelligence products (§3.3 column CI)
    answer a different question. This is what the product must be judged on.
+
+   Stated as a **hypothesis**, not an established moat. The scores in §3 are planning heuristics, and
+   the master plan §5 records that no measurement yet supports the product thesis. Calling it a moat
+   before B0 would repeat the overclaiming that the PR-G reading already produced once. Promote the
+   wording to "moat" only when B0 measures it against native OpenCode and against the tooling a
+   developer would otherwise use.
 
 **Supporting, not differentiating on their own:**
 
@@ -187,8 +194,9 @@ Three properties produce it, and none of them are present in a static indexer:
    pipelines. Fitting evidence into a weak local model's context window under a token budget, with
    confidence and provenance attached, is a distinct engineering problem.
 
-Consequence for positioning: **the moat is Verification Intelligence; Project Truth is its
-substrate, not the selling point.** Section 2 is restated accordingly.
+Consequence for positioning: **the primary differentiation hypothesis is Verification Intelligence;
+Project Truth is its substrate, not the selling point.** Section 2 is restated accordingly. It stays a
+hypothesis until B0 measures it.
 
 ## 4. What to adopt from Atomic Agent
 

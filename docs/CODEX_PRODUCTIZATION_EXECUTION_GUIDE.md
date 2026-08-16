@@ -26,14 +26,7 @@ Secondary objectives:
 
 ## 1. Required read order
 
-At the start of a new session read only:
-
-1. `docs/handoff/CURRENT_HANDOFF.md`
-2. `docs/handoff/NEXT_TASK.md`
-3. `docs/PRODUCTIZATION_AND_MODEL_EVALUATION_PLAN.md`
-4. the relevant slice of `docs/IMPLEMENTATION_EXECUTION_LOCAL_VALIDATION_PLAN.md`
-5. source/tests for the active task
-6. prior compact evidence for the feature under test
+Owned by `AGENTS.md` and `docs/PI_MASTER_EXECUTION_PLAN.md` §2. Do not maintain a read order here.
 
 Do not repeatedly load the full historical planning set unless a design conflict requires it.
 
@@ -96,7 +89,11 @@ Each PR must state:
 - performance/quality delta;
 - limitations and rollback.
 
-## 4. First task: baseline release validation
+## 4. Baseline release validation detail (consumed by stage B0)
+
+This is **not** a first task. Stage sequencing is owned by `docs/PI_MASTER_EXECUTION_PLAN.md` §8 and
+`docs/handoff/NEXT_TASK.md`; B0 does not start until Phase 0 (E1–E5) is complete. The environment
+capture list and the integration checklist below are the detail B0 executes.
 
 Start from current `main` after syncing.
 

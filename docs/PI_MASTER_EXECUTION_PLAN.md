@@ -32,11 +32,16 @@ parallel roadmap (section 13).
 OpenCode is the current reference and production-target runtime. The core remains portable by
 architecture; no second harness is a current production dependency.
 
-The **primary** defended area is **Verification Intelligence**: deriving what must be verified from a
-semantic change, reusing still-valid evidence under an explicit dependency closure, re-evaluating
-failures without weakening tests, and backing completion with executed revision-matched evidence.
-Project Truth, Task-aware Intelligence, Weak-local Efficiency and Cross-agent Consistency are
+The **primary differentiation hypothesis** is **Verification Intelligence**: deriving what must be
+verified from a semantic change, reusing still-valid evidence under an explicit dependency closure,
+re-evaluating failures without weakening tests, and backing completion with executed revision-matched
+evidence. Project Truth, Task-aware Intelligence, Weak-local Efficiency and Cross-agent Consistency are
 supporting areas that exist to make the primary one possible.
+
+It is deliberately called a **hypothesis**, not a moat. §5 records that no evidence yet supports the
+product thesis; asserting a moat in the same document would be the same overclaiming this plan exists
+to prevent. It becomes a moat when B0 measures it against native OpenCode and against the existing
+tooling a developer would otherwise use — not before. §10.2 states what happens if it does not.
 
 Project Truth is **not** the differentiator. Mature code-intelligence products (Sourcegraph, CodeQL,
 IDE indexers, LSP servers) already build code graphs with wider language coverage and greater scale
@@ -69,7 +74,7 @@ non-goals remain binding).
 | `PI_VERIFICATION_OBSERVABILITY_INTEGRATED_DESIGN.md` | Design detail for observability/environment/certificate. `VI-X0..VI-XFINAL` superseded → V0/V5 and Deferred set. |
 | `TEST_PORTFOLIO_INTELLIGENCE_AND_BROAD_EVALUATION_PLAN.md` | Design detail for portfolio/bootstrap/GUI and the pinned external corpus. `TP-0..TP-7` superseded → E4/V-series/Deferred. |
 | `OPENCODE_VALIDATION_AND_ADOPTION_PLAN.md` | Canonical evidence rule and ControlDeck ruling. Sequencing folded into §8. |
-| `OMO_COEXISTENCE_AND_COMPATIBILITY_PLAN.md` | Conditional compatibility reference. Executed only at stage P4. |
+| `OMO_COEXISTENCE_AND_COMPATIBILITY_PLAN.md` | Compatibility reference. Its coexistence smoke subset runs at B0 and R0; the full comparative benchmark is P4. |
 | `KASANECORE_MIGRATION_AUDIT.md` | Historical migration reference. No active obligations. |
 | `CODEX_IMPLEMENTATION_GUIDE.md`, `CODEX_PRODUCTIZATION_EXECUTION_GUIDE.md` | Agent working rules. Their read orders and first-task sections are replaced by §8 and `handoff/NEXT_TASK.md`. |
 | `CURRENT_STATUS.md` | Program state and evidence ledger only. No sequencing. |
@@ -117,6 +122,19 @@ These apply to every stage and are not restated per stage.
    - PI output is **data, never instruction**. Every PI payload is structured (`canonical_ref`, `kind`,
      `confidence`, `provenance`, `revision`), and free text from the repository appears only inside
      clearly delimited value fields, never as top-level prose that could read as a directive.
+
+     This does **not** mean PI may not produce prose. Three kinds of text must stay distinguishable,
+     and only the third carries authority:
+
+     | Kind | Example | Trust |
+     |---|---|---|
+     | Repository-origin text | a docstring, a test name, a commit message | quoted value, untrusted, always attributed to its source |
+     | PI-generated explanation | `"reason": "foo() is affected because bar() calls it"` | analysis with provenance — required, and must not be suppressed |
+     | Control instruction | rollout mode, depth, capability selection, privacy policy | trusted configuration and deterministic analysis only |
+
+     Explanations are a product requirement, not a risk: an impact result without a reason is not
+     usable evidence. The rule forbids repository-origin text from being *promoted* into the second or
+     third row, not the existence of the second row.
    - PI never escalates its own authority from repository content. Rollout mode, depth, capability
      selection, privacy policy and verification verdicts are decided by configuration and
      deterministic analysis only. No repository text can change them.
@@ -328,6 +346,15 @@ Requirements:
   assessment, test selection, cross-file refactor, bug localization from a failing test,
   requirement-to-code tracing, and at least one task class expected to *not* benefit from PI as a
   negative control;
+- **a cross-boundary GUI/runtime causal task class is mandatory.** At least one task must require
+  tracing a user-visible flow across a boundary — button press → command → backend → process → visible
+  state — on a real mixed UI/backend repository. This is a *measurement*, not a feature request: it
+  is scored on how far current PI can follow the chain and where it loses the thread, and a low score
+  is an expected, reportable outcome. `ui_graph` stays `not_implemented`; nothing here authorizes
+  building it. The purpose is to produce the evidence that decides whether stage X0 (runtime bridge)
+  and V5 (observability) are justified, and the plan already requires that such decisions come from
+  measured failures at a real user-visible boundary rather than from assumption. Without this class,
+  X0's entry condition can never be satisfied or refuted;
 - every task's oracle is machine-checkable, so scoring does not drift between runs;
 - tasks are split into tuning and held-out sets before any tuning, and the held-out split is sealed;
 - minimum suite size and per-class counts are fixed in the manifest and justified, so later stages
@@ -350,8 +377,11 @@ manifest. Exit: one command reproduces a full matrix run into `docs/evidence/fin
 **E5 — Minimal PI trace (evaluation infrastructure)**
 Scope: compact append-only record of plan → selected evidence IDs → revision IDs → model route →
 verification outcome → fallback → timings. No raw model transcripts, no secrets. Enough to attribute
-an outcome to a capability and to replay the PI portion. Exit: trace present for every runner arm;
-ablation attribution demonstrated on one task class.
+an outcome to a capability and to replay the PI portion. The record includes the capability set and
+the depth actually used, in a shape that later accepts the `VerificationFeature` entries V0 defines
+(`used_features: {evidence_reuse: D2, oracle_assessment: D1, environment_selection: off}`), so
+sub-capability ablation does not require a trace format change mid-programme.
+Exit: trace present for every runner arm; ablation attribution demonstrated on one task class.
 
 Phase 0 gate: `F` and `G` arms are executable, run against a sealed task suite, and produce
 attributable results.
@@ -359,6 +389,24 @@ attributable results.
 ### Phase 1 — Baseline
 
 **B0 — Baseline release validation and gap report** (was `RV-0`)
+Entry — **Existing Project Bootstrap conformance**. Every capability here assumes a project the tool
+has never seen before can be brought to a usable baseline; `TEST_PORTFOLIO_INTELLIGENCE_AND_BROAD_
+EVALUATION_PLAN.md` treats existing-project bootstrap as a first-class lifecycle, but no stage
+previously asserted it. Measuring PI on repositories whose baseline silently failed to build would
+attribute a bootstrap failure to a capability. For **each** evaluation repository, record before any
+arm runs:
+
+- workspace and project identity established;
+- initial Twin revision established, with node/edge counts and build time;
+- test runner discovered, or explicitly `unavailable` with the reason;
+- test inventory established, or explicitly `unavailable`;
+- baseline evidence classified `observed` / `inferred` / `unknown` — never `verified` from import;
+- every unsupported analysis explicitly degraded rather than silently skipped.
+
+A repository that cannot reach this baseline is excluded from the arm matrix and reported as a
+bootstrap gap, not as a capability result. The imported baseline is never treated as verified
+correctness.
+
 Scope: freeze and record environment (ECA commit, OpenCode version, provider/model tiers and
 availability, repository/workspace identity and SHA, hardware); re-run local lint/typecheck/unit/
 integration/build; revalidate adapter/plugin/MCP/edit/restart/reconnect/off/shadow/advisory paths;
@@ -367,7 +415,10 @@ optimization; execute the arm matrix on the realistic corpus with repetition; ru
 `ablation(X)` sweep over the 13 independently ablatable capabilities (§6; `call_graph` has no arm of
 its own and is covered by `semantic`); measure the competition-derived concerns
 (weak-local prefix/tool-output efficiency, lifecycle observability, worktree/subagent capability
-availability, completion correctness, cross-session evidence loss, host-native overlap).
+availability, completion correctness, cross-session evidence loss, host-native overlap); run the OMO
+coexistence smoke of §10.1 item 17 so a namespace or duplicate-execution defect surfaces before R0
+rather than at P4; record how far PI follows the E3 cross-boundary GUI/runtime task, since that
+measurement is the entry condition for stage X0 and V5.
 Exit: `docs/evidence/final/baseline-gap-report.md` with every failure classified as OpenCode runtime,
 model/provider, PI adapter, PI core, task selection, verification or performance; a ranked gap list;
 and an explicit skip/keep decision for every later stage.
@@ -412,7 +463,27 @@ failure-driven sequence. Each object is defined once, in V0.
 Scope: `SemanticChangeSet`, `VerificationObligation`, `TestIntent`, `OracleAssessment`,
 `EvidenceSegment` + dependency closure, `FailureEvidence` + result-state taxonomy. All are projections
 over the existing Twin/Graph/Impact/Runtime/Traceability/Convergence model — no parallel truth store.
-Exit: contracts, shadow computation, architecture tests proving no second store.
+
+**Also in scope: a verification feature policy, so the V-series is ablatable from the inside.** E1 made
+the 13 top-level capabilities ablatable, but V2–V5 each add several independent mechanisms underneath a
+single `impact` / `test_selection` / `runtime` capability. Without handles, "Environment Matrix helped
+but Certificate did nothing" is unanswerable and the E1 problem recurs one level down — a set of
+mechanisms that can be built but never demoted.
+
+V0 therefore defines `VerificationFeature` with at least `required_set`, `evidence_reuse`,
+`failure_reevaluation`, `oracle_assessment`, `test_intent`, `observability`, `environment_selection`
+and `certificate`, each carrying its own depth on the same `D0..D4` axis as E2. These are **not** new
+`CapabilityName` members: the top-level inventory stays at 21, its counts stay pinned by
+`tests/architecture/test_capability_gating.py`, and the feature policy is nested under the capability
+that owns it. Every feature and depth actually used is recorded in the E5 trace, which is what makes
+`ablation(evidence_reuse)` and `ablation(certificate)` real arms rather than notional ones.
+
+This is the same rule as invariant 6 applied one level down: a mechanism that cannot be switched off
+cannot be shown to be worth its cost, and stays forever by default.
+
+Exit: contracts, shadow computation, architecture tests proving no second store, and a feature-policy
+test asserting every `VerificationFeature` is either gated or declared unimplemented — the E1 test
+shape, reused.
 
 **V1 — Confidence calibration and ground truth**
 Scope: precision/recall by relation class and confidence band (definition/reference, resolved call,
@@ -553,7 +624,19 @@ Each item re-enters the backlog only through §7.4 with a measured failure it is
 13. installation, configuration and recovery verified on a clean environment;
 14. held-out repository confirmation for every `active-default` capability;
 15. known limitations documented honestly;
-16. handoff documents updated so another agent can reproduce every gate.
+16. handoff documents updated so another agent can reproduce every gate;
+17. **OMO coexistence smoke**, if OMO is installable at the recorded OpenCode version: plugin load with
+    both extensions present, `pi_*` tool visibility, OMO tool visibility, no tool-ID namespace
+    collision, no duplicate execution of the same observation, ExtendCodeAgent sidecar failure isolated
+    from OMO, clean shutdown of both. If OMO is not installable, record `UNAVAILABLE` with the reason
+    rather than passing the gate.
+
+    This is a **compatibility** check, not a comparison. `OpenCode + OMO + ExtendCodeAgent` is a
+    realistic user configuration, and a namespace collision or duplicated execution there is a defect
+    that ships to users regardless of how the P4 benchmark turns out. Deferring all OMO contact to P4 —
+    after the release — would mean discovering it in production. The full A/B, Team Mode, hook order,
+    context overhead, model-routing conflict and worktree behavior stay at P4 under the C0–C6 conflict
+    taxonomy.
 
 ### 10.2 Program-level stop and pivot criteria
 
