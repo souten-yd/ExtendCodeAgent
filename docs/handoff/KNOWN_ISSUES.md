@@ -149,6 +149,12 @@
 
 ## B0a PI activation and capability reachability
 
+- The exact-head `0a1a9f4` activation run proved real PI tool execution on all four required model
+  routes but failed the configuration-integrity gate: `blueprint`, `strategy` and `convergence`
+  appeared off. This is a confirmed runner/adapter propagation defect, not model variance. The
+  generated project config was scoped only to MCP while OpenCode used plugin tools, and MCP also
+  forced advisory. Comprehensive evaluation and the pilot remain blocked until repair and rerun.
+
 - The old 306-cell baseline began without an observed-PI activation precondition. It stopped at 137
   cells; pure `native` results measure OpenCode/model behavior, not PI effect, and will not be reused
   as corrected-protocol evidence.

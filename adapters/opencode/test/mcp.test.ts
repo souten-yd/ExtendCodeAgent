@@ -18,6 +18,7 @@ test("MCP stdio handshake lists and calls the shared tools", async () => {
       PYTHONPATH: resolve("../../src"),
       EXTENDCODEAGENT_ROOT: root,
       EXTENDCODEAGENT_PYTHON: resolve("../../.venv/bin/python"),
+      EXTENDCODEAGENT_MODE: "active",
     },
     stderr: "pipe",
   })
@@ -52,6 +53,16 @@ test("MCP stdio handshake lists and calls the shared tools", async () => {
     if (content?.type !== "text" || !content.text) throw new Error("expected text content")
     const result = JSON.parse(content.text) as { items: Array<{ canonical_ref: string }> }
     assert.equal(result.items[0]?.canonical_ref, "py://service#leaf")
+    const statusResponse = (await client.callTool({
+      name: "pi_status",
+      arguments: {},
+    })) as { content: Array<{ type: string; text?: string }> }
+    const statusContent = statusResponse.content[0]
+    if (statusContent?.type !== "text" || !statusContent.text) {
+      throw new Error("expected status text content")
+    }
+    const status = JSON.parse(statusContent.text) as { mode: string }
+    assert.equal(status.mode, "active")
     const planResponse = (await client.callTool({
       name: "pi_research_plan",
       arguments: { query: "SQLite durability", depth: "micro", facets: ["official docs"] },

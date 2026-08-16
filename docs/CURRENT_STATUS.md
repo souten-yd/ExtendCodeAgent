@@ -127,6 +127,13 @@ blocking OpenCode reachability gap: `blueprint`, `convergence`,
 misclassify non-execution as no effect. Comprehensive evaluation stays stopped until those B1 adapter
 paths and covered tasks are repaired; PI effect remains NOT TESTED.
 
+PR #48 merged this guard at `0a1a9f4e4b289fdef7c8a4ac225000b537e4a37b`. Its first real
+four-model activation run proved PI calls on every required route without a provider error, but
+failed closed before the pilot: `blueprint`, `strategy` and `convergence` were observed off because
+the generated project config reached the MCP process but not OpenCode's plugin process, while the
+MCP entry point independently forced advisory mode. A bounded adapter/runner repair is in progress;
+activation and then the 27-cell pilot must be rerun at the repaired merged head.
+
 The bootstrap blocker has a bounded B1 repair at exact head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`. A matching current-edge identity index and schema-5
 migration reduce exact-pin three-run cold medians to 15,825ms for KasaneCore and 6,368ms for PEDS;

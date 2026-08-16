@@ -439,6 +439,11 @@ def _environment(arm: str, model_tier: str, workspace: Path) -> tuple[dict[str, 
         "EXTENDCODEAGENT_PYTHON": str(PYTHON),
         "EXTENDCODEAGENT_MODE": mode,
     }
+    if mode != "native":
+        # OpenCode loads the plugin in its own process, outside the MCP-specific
+        # environment block. Both integration routes must resolve the same sealed
+        # project configuration or pi_status can truthfully report different arms.
+        env["EXTENDCODEAGENT_PROJECT_CONFIG"] = str(project_config)
     return env, model_id
 
 
