@@ -216,3 +216,7 @@
   selection passed, but Qwen still deleted one symbol path and enriched the impact schema. Exact
   answer/field-preservation instructions are pending merge and real controlled rerun; 1/3 active-only
   is not evidence of advantage over native/off.
+- The first controlled post-projection pilot at `1706490` showed functional advantage (0/0/2 exact
+  PASS) but fail-closed attribution rejected the passing tests cell because repository-relative
+  `selected_tests` were not recognized as selected evidence. The collector repair is tested but must
+  merge and the same 9 cells must rerun before the initial gate can pass.

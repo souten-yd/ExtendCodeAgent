@@ -536,3 +536,14 @@
 - Validation at the pre-PR working tree passed `tools/local/all-fast` (191 Python plus 9 adapter),
   `tools/local/test-integration` (40 Python plus 9 adapter), `git diff --check`, and unified
   evaluation validation.
+- PR #61 merged exact answer projection as `170649043f502c41ebca119ff495b2e9809eda6d`.
+  Fresh four-model activation passed. The same sealed 9-cell pilot produced native/off/active exact
+  PASS counts 0/0/2 and active PI required-fact recall 1.0 on all three tasks. Median wall times were
+  91,611/100,609/70,107ms.
+- The gate correctly stopped before 27 cells because the tests cell had no canonical URI evidence.
+  Raw inspection proved `pi_tests` returned the exact three repository paths and Qwen copied them
+  into its passing answer. Added repository-path evidence collection and a pilot-only acceptance
+  rule while retaining the activation gate's canonical URI requirement.
+- Post-repair validation passed `tools/local/all-fast` (191 Python plus 9 adapter),
+  `tools/local/test-integration` (41 Python plus 9 adapter), `git diff --check`, and unified
+  evaluation validation.

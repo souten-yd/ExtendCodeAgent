@@ -2,7 +2,7 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `main`; latest merged base `130f0a28b947ed2f39409a34b58aa9e823c31e99`
+Current branch: `agent/b1-repo-path-evidence`; latest merged base `170649043f502c41ebca119ff495b2e9809eda6d`
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
 Current task: prove real PI activation and repair missing capability routes before comprehensive B0a
 
@@ -86,10 +86,11 @@ Current task: prove real PI activation and repair missing capability routes befo
 - Raw traces show Qwen explicitly selected detailed symbol/impact views, bypassing compact output;
   the impact payload was truncated. It also passed directories to detailed test selection and hit
   full-suite fallback. PRs #59/#60 now make OpenCode compact-only, project tests from an objective,
-  and collect compact canonical evidence; fresh four-model activation passes. One active-only Qwen
-  repetition gave PI fact recall 1.0 on all tasks and test-selection PASS, but symbol removed one
-  known path and impact enriched the answer schema. Next: merge exact-schema/field-preservation
-  orchestration, then rerun activation and the same 9 cells before any 27/306/714 continuation.
+  and collect compact canonical evidence; fresh four-model activation passes. PR #61 then clarified
+  exact answer projection. Its controlled 9-cell rerun produced native/off/active 0/0/2 PASS and PI
+  fact recall 1.0 on every active task. The gate stopped because repository-relative
+  `selected_tests` were not classified as selected evidence. Next: merge that bounded attribution
+  repair and rerun activation plus the same 9 cells before any 27/306/714 continuation.
 
 - Conditional B1 repair exact head `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7` adds the missing
   current-edge identity index. Three cold exact-pin runs changed KasaneCore/PEDS from >300-second

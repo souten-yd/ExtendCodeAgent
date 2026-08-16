@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "classification": "B1_INITIAL_FUNCTIONAL_EFFECT_WITH_ATTRIBUTION_GAP",
+  "source_revision": "170649043f502c41ebca119ff495b2e9809eda6d",
+  "activation_status": "PASS",
+  "cells": 9,
+  "passes": {
+    "native": 0,
+    "off": 0,
+    "active": 2
+  },
+  "active_pass_delta_over_best_control": 2,
+  "median_wall_ms": {
+    "native": 91611,
+    "off": 100609,
+    "active": 70107
+  },
+  "active_median_wall_ratio_over_slower_control": 0.696826327664523,
+  "active_pi_required_fact_recall": {
+    "eca-symbol-001": 1.0,
+    "eca-impact-001": 1.0,
+    "eca-tests-001": 1.0
+  },
+  "active_outcomes": {
+    "eca-symbol-001": "PROJECTION_SCHEMA_ERROR",
+    "eca-impact-001": "PASS",
+    "eca-tests-001": "PASS"
+  },
+  "pilot_gate": "REPAIR_AND_RETEST",
+  "gate_reason": "The tests task returned and used three exact repository-relative paths, but the evidence collector only recognized canonical URI evidence and reported canonical_evidence_not_observed.",
+  "conclusion": "This run demonstrates an initial functional advantage, but it does not authorize the 27-cell confirmation until repository-path evidence attribution is repaired and the sealed 9-cell pilot is rerun at the new exact head."
+}
