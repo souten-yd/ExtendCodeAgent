@@ -151,6 +151,11 @@
       "change-impact",
       "test-selection"
     ],
+    "required_tasks": {
+      "eca-symbol-001": "symbol-reference-lookup",
+      "eca-impact-001": "impact-assessment",
+      "eca-tests-001": "test-selection"
+    },
     "compare": [
       "oracle outcome",
       "answer schema",
@@ -171,6 +176,6 @@
   },
   "seal": {
     "algorithm": "sha256",
-    "canonical_payload": "9415745ab968914ccc721f5e3e37ea4bd860f130b7a21187beecdf4811c2b45f"
+    "canonical_payload": "d196f00f31b5096e91b806d44cc457ce41c41ada72237fd86c3c8920cf8db650"
   }
 }

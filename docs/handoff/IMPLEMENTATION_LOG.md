@@ -1,5 +1,18 @@
 # Implementation Log
 
+## 2026-08-17 — Sealed Bridge Sample runner
+
+- Added deterministic Bridge planning over the formally audited reuse candidates: one source cell
+  for each required local-practical, host-default, Copilot Sonnet and Copilot Codex by symbol,
+  impact and test-selection task, for 12 cells total.
+- Added exact-head Bridge execution with model-tier sharding/resume and sealed semantic comparison.
+  Outcome, oracle/process result, answer-schema validity, model route and PI/tool state must match;
+  mismatches expand replay to the related model/task class. Wall time is explicitly excluded.
+- The prior official audit was generated at merged runner `c8a295f` and confirmed 217 reusable
+  candidates, four provider gaps, eight timeouts and a valid trace chain. Because this PR extends the
+  sealed Bridge policy, the audit must be regenerated once more at this PR's clean merge head before
+  executing the Bridge.
+
 ## 2026-08-17 — Checkpoint compatibility audit foundation
 
 - Added sealed `b0a-checkpoint-compatibility-v1.json` for `7e58751` to current-main comparison.
