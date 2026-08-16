@@ -149,13 +149,7 @@ def test_activation_contract_blocks_comprehensive_run_until_every_route_is_reach
 ) -> None:
     activation = json.loads(ACTIVATION_PLAN.read_text(encoding="utf-8"))
     gaps = [item for item in activation["capability_routes"] if item["status"] != "REACHABLE"]
-    assert gaps == [
-        {
-            "tool": None,
-            "capabilities": ["blueprint", "convergence", "traceability", "strategy"],
-            "status": "MISSING_OPENCODE_RUNTIME_ROUTE",
-        }
-    ]
+    assert gaps == []
 
     output = tmp_path / "baseline.json"
     result = _run(
@@ -205,7 +199,8 @@ def test_activation_gate_requires_observed_runtime_state_and_provenance() -> Non
     assert gate["status"] == "PASS"
     assert gate["failed_models"] == []
     assert gate["pilot_permitted"] is True
-    assert gate["comprehensive_evaluation_permitted"] is False
+    assert gate["comprehensive_evaluation_permitted"] is True
+    assert gate["capability_route_gaps"] == []
 
     results[0]["selected_evidence_ids"] = []
     failed = _activation_gate(results)
@@ -326,6 +321,7 @@ def test_metrics_split_pi_and_post_tool_model_time(tmp_path: Path) -> None:
                                 }
                             ],
                             "revision_id": "twin-1",
+                            "capabilities_used": ["blueprint", "strategy"],
                             "timing": {
                                 "cold_twin_build_ms": 80.0,
                                 "snapshot_load_ms": 7.0,
@@ -377,6 +373,7 @@ def test_metrics_split_pi_and_post_tool_model_time(tmp_path: Path) -> None:
         "model_reasoning_after_tool_ms": 230,
     }
     assert "src/extendcodeagent/testing/service.py" in measured["observed_pi_facts"]
+    assert measured["pi_capabilities_used"] == ["blueprint", "strategy"]
 
 
 def test_outcome_attribution_separates_retrieval_projection_and_reasoning(
@@ -516,6 +513,7 @@ def test_b0a_screening_table_uses_paired_threshold_without_adoption_decision(
     assert table["adoption_decisions_forbidden"] is True
     assert entries["semantic"]["decision"] == "proceed_to_b0b"
     assert entries["graph"]["decision"] == "no_screened_effect"
+    assert entries["blueprint"]["decision"] == "NOT_TESTED_ROUTE_GAP"
 
 
 def test_plan_filters_select_a_resumable_bounded_slice() -> None:

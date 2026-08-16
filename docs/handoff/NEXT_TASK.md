@@ -61,13 +61,13 @@ positive interleaved 9-cell tranche before extending to 27 total, with an object
 observed task-specific PI and bounded latency; otherwise the next
 action is repair and retest, not the full matrix. The first valid 9-cell tranche at `6064e311`
 showed active gain +1, but confirmation stopped at 12/27 on a 300,157ms active-symbol timeout.
-Therefore the current action is B1 repair and a fresh sealed 9-cell rerun, not continuation of the
-partial confirmation. First add failure attribution and the six-part PI/model timing trace; then
-implement compact task projection, obligation-aware structural coverage and revision-scoped query
-indexes based on those measurements. The gate currently classifies missing OpenCode
-runtime routes for `blueprint`, `convergence`, `traceability` and `strategy`; repair those paths and
-add covered tasks before restarting comprehensive evaluation. The schedule proof and activation
-alone are not PI effect evidence; current effect remains NOT TESTED.
+Therefore the old partial confirmation must not continue. Failure attribution, the six-part PI/model
+timing trace, compact task projection, obligation-aware structural coverage, revision-scoped query
+indexes, and the missing OpenCode routes are now implemented. `pi_plan` covers Blueprint/Strategy on
+`eca-refactor-001`; `pi_verify` covers Traceability/Convergence on `cd-cross-boundary-001`, with
+fail-closed route observation in screening. After this slice is merged, rerun the four-model
+activation and a fresh sealed 9-cell pilot at that exact head. Continue to 27 only if the initial
+gate again shows objective gain with bounded time. Current effect remains NOT TESTED.
 
 The conditional B1 storage blocker is repaired at exact implementation head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`: KasaneCore and PEDS now pass three-run cold-index

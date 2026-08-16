@@ -550,6 +550,65 @@ def test_blueprint_and_convergence_use_policy_without_polluting_actual_graph(
     assert recommendation.decision is ConvergenceDecision.COMPLETE
 
 
+def test_plan_and_verify_routes_use_project_truth_without_overclaiming_evidence(
+    tmp_path: Path,
+) -> None:
+    root = _repo(tmp_path)
+    with ProjectIntelligenceApplication(
+        root, tmp_path / "graph.db", _policy("active")
+    ) as application:
+        plan = application.plan_change("change leaf safely", ("py://service#leaf",))
+        verification = application.verify_requirements(
+            (
+                Requirement(
+                    "leaf-exists",
+                    "leaf remains present",
+                    (CanonicalRef("py://service#leaf"),),
+                ),
+            )
+        )
+
+    assert plan["capabilities_used"] == ["blueprint", "strategy"]
+    assert plan["selected_alternative"] == "focused"
+    assert plan["blueprint"]["persisted"] is False
+    assert plan["blueprint"]["elements"][0]["expected_actual_refs"] == ["file://service.py"]
+    assert verification["capabilities_used"] == ["convergence", "traceability"]
+    assert verification["requirements"][0]["state"] == "materialized"
+    assert verification["coverage_complete"] is False
+    assert verification["unresolved"] == ["leaf-exists"]
+
+
+def test_composite_routes_fail_when_either_owned_capability_is_off(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    with (
+        ProjectIntelligenceApplication(
+            root,
+            tmp_path / "blueprint-off.db",
+            _policy("active", blueprint="off"),
+        ) as application,
+        pytest.raises(CapabilityUnavailable, match="blueprint"),
+    ):
+        application.plan_change("change leaf", ("py://service#leaf",))
+
+    with (
+        ProjectIntelligenceApplication(
+            root,
+            tmp_path / "convergence-off.db",
+            _policy("active", convergence="off"),
+        ) as application,
+        pytest.raises(CapabilityUnavailable, match="convergence"),
+    ):
+        application.verify_requirements(
+            (
+                Requirement(
+                    "leaf-exists",
+                    "leaf remains present",
+                    (CanonicalRef("py://service#leaf"),),
+                ),
+            )
+        )
+
+
 def test_blueprint_off_is_inert(tmp_path: Path) -> None:
     root = _repo(tmp_path)
     database = tmp_path / "graph.db"

@@ -60,6 +60,12 @@ from extendcodeagent.graph.analyzers import (
 from extendcodeagent.research import ResearchDepth, ResearchRequest, build_research_plan
 from extendcodeagent.runtime import ObservationKind, ObservationStatus, RuntimeObservation
 from extendcodeagent.storage import SqliteGraphStore
+from extendcodeagent.strategy import (
+    ProposedAlternative,
+    StrategyRequest,
+    StrategySignals,
+    build_strategy,
+)
 from extendcodeagent.testing import TestHealthSignals, evaluate_test_health, select_tests
 from extendcodeagent.traceability import (
     ProjectRequirementReport,
@@ -72,6 +78,17 @@ from extendcodeagent.twin import TwinService
 INTERFACE_VERSION = "extendcodeagent.local.v1"
 
 __all__ = ["CapabilityUnavailable", "ProjectIntelligenceApplication", "INTERFACE_VERSION"]
+
+
+class _FixedStrategySynthesis:
+    """Bounded adapter for alternatives derived from the current graph."""
+
+    def __init__(self, alternatives: tuple[ProposedAlternative, ...]) -> None:
+        self._alternatives = alternatives
+
+    def propose(self, payload: dict[str, object]) -> tuple[ProposedAlternative, ...]:
+        del payload
+        return self._alternatives
 
 
 class ProjectIntelligenceApplication:
@@ -708,6 +725,7 @@ class ProjectIntelligenceApplication:
         requirements: tuple[Requirement, ...],
         evidence: tuple[RequirementEvidence, ...],
     ) -> tuple[ConvergenceReport, ConvergenceRecommendation]:
+        self._require_explicit(CapabilityName.CONVERGENCE)
         snapshot = self._explicit_snapshot(CapabilityName.TRACEABILITY)
         if snapshot.revision is None:
             raise CapabilityUnavailable("traceability requires a Twin revision")
@@ -723,6 +741,161 @@ class ProjectIntelligenceApplication:
             result.convergence, result.recommendation
         )
         return result.convergence, result.recommendation
+
+    def plan_change(
+        self,
+        goal: str,
+        target_refs: tuple[str, ...],
+        constraints: tuple[str, ...] = (),
+        *,
+        persist_blueprint: bool = False,
+    ) -> dict[str, Any]:
+        """Project a bounded strategy into Blueprint-shaped change elements.
+
+        Strategy selection is deterministic from current Project Truth.  The
+        default route is read-only; callers must explicitly request persistence
+        before a Blueprint revision is stored.
+        """
+
+        if not goal.strip():
+            raise ValueError("goal must not be empty")
+        if not target_refs:
+            raise ValueError("target_refs must not be empty")
+        snapshot = self._explicit_snapshot(CapabilityName.STRATEGY)
+        self._require_explicit(CapabilityName.BLUEPRINT)
+        report = self._impact_report(snapshot, target_refs, capability=CapabilityName.STRATEGY)
+        nodes = {node.canonical_ref.value: node for node in snapshot.nodes}
+        focused_files = tuple(
+            sorted({nodes[ref].source_ref if ref in nodes else ref for ref in target_refs})
+        )
+        expanded_files = tuple(
+            sorted(
+                set(focused_files)
+                | {
+                    item.source_ref
+                    for item in (*report.direct_impacts, *report.transitive_impacts)
+                    if item.source_ref
+                }
+            )
+        )[: self.max_items]
+        proposals = [
+            ProposedAlternative(
+                "focused",
+                focused_files,
+                "Change only the requested project entities.",
+                "Revert the bounded target changes.",
+            )
+        ]
+        if expanded_files != focused_files:
+            proposals.append(
+                ProposedAlternative(
+                    "impact_aware",
+                    expanded_files,
+                    "Include directly and transitively impacted project files.",
+                    "Revert in reverse dependency order.",
+                )
+            )
+        impact_by_file: dict[str, int] = {}
+        for item in (*report.direct_impacts, *report.transitive_impacts):
+            impact_by_file[item.source_ref] = impact_by_file.get(item.source_ref, 0) + 1
+        tests_by_file: dict[str, int] = {}
+        for item in report.recommended_tests:
+            tests_by_file[item.source_ref] = tests_by_file.get(item.source_ref, 0) + 1
+        uncertainty_by_file = {
+            item.source_ref: 1.0 - item.confidence for item in report.uncertainty
+        }
+        strategy = build_strategy(
+            StrategyRequest(goal, constraints),
+            StrategySignals(
+                impact_by_file=impact_by_file,
+                tests_by_file=tests_by_file,
+                uncertainty_by_file=uncertainty_by_file,
+            ),
+            _FixedStrategySynthesis(tuple(proposals)),
+            policy=self.policy,
+        )
+        selected = next(
+            (item for item in strategy.alternatives if item.alternative_id == strategy.selected_id),
+            strategy.alternatives[0],
+        )
+        refs_by_source: dict[str, list[str]] = {}
+        for node in snapshot.nodes:
+            refs_by_source.setdefault(node.source_ref, []).append(node.canonical_ref.value)
+        elements = tuple(
+            BlueprintElement(
+                f"change-{index}",
+                CanonicalRef(f"planned://change/{index}"),
+                "file",
+                expected_actual_refs=(
+                    CanonicalRef(_preferred_actual_ref(path, refs_by_source.get(path, []))),
+                ),
+                acceptance_criteria=(goal,),
+            )
+            for index, path in enumerate(selected.changed_files, 1)
+        )
+        blueprint = self.create_blueprint(elements, durable=persist_blueprint)
+        return _result(
+            snapshot,
+            depth=self.policy.depth(CapabilityName.STRATEGY),
+            capabilities_used=[CapabilityName.BLUEPRINT.value, CapabilityName.STRATEGY.value],
+            goal=goal,
+            selected_alternative=strategy.selected_id,
+            decision_required=strategy.selected_id is None,
+            alternatives=[_strategy_json(item) for item in strategy.alternatives],
+            blueprint={
+                "persisted": blueprint is not None,
+                "revision_id": blueprint.revision.revision_id if blueprint else None,
+                "status": blueprint.status.value if blueprint else "draft",
+                "elements": [_blueprint_element_json(item) for item in elements],
+            },
+            unresolved=(
+                ["strategy alternatives tied; agent decision is required"]
+                if strategy.selected_id is None
+                else []
+            ),
+        )
+
+    def verify_requirements(
+        self,
+        requirements: tuple[Requirement, ...],
+        evidence: tuple[RequirementEvidence, ...] = (),
+        *,
+        requirement_revision_id: str = "pi-verify",
+    ) -> dict[str, Any]:
+        """Trace requirements to current Twin facts and evaluate convergence."""
+
+        report, recommendation = self.evaluate_project_requirements(
+            requirement_revision_id, requirements, evidence
+        )
+        return {
+            "interface": INTERFACE_VERSION,
+            "revision_id": (
+                report.actual_twin_revision.revision_id if report.actual_twin_revision else None
+            ),
+            "depth": self.policy.depth(CapabilityName.TRACEABILITY).value,
+            "capabilities_used": [
+                CapabilityName.CONVERGENCE.value,
+                CapabilityName.TRACEABILITY.value,
+            ],
+            "decision": recommendation.decision.value,
+            "reason_codes": list(recommendation.reason_codes),
+            "requirements": [
+                {
+                    "requirement_id": item.element_id,
+                    "state": item.state.value,
+                    "matched_actual_refs": [ref.value for ref in item.matched_actual_refs],
+                    "missing_actual_refs": [ref.value for ref in item.missing_actual_refs],
+                    "diagnostics": list(item.diagnostics),
+                }
+                for item in report.elements
+            ],
+            "coverage_complete": recommendation.decision.value == "complete",
+            "unresolved": [
+                item.element_id
+                for item in report.elements
+                if item.state.value not in {"verified", "observed"}
+            ],
+        }
 
     def _impact_report(
         self,
@@ -881,6 +1054,42 @@ def _result(
         "revision_id": snapshot.revision.revision_id if snapshot.revision else None,
         "depth": depth.value if depth is not None else None,
         **values,
+    }
+
+
+def _preferred_actual_ref(source_ref: str, candidates: list[str]) -> str:
+    file_refs = sorted(item for item in candidates if item.startswith("file://"))
+    if file_refs:
+        return file_refs[0]
+    if candidates:
+        return sorted(candidates)[0]
+    if "://" in source_ref:
+        return source_ref
+    return f"file://{source_ref}"
+
+
+def _strategy_json(item: Any) -> dict[str, Any]:
+    return {
+        "alternative_id": item.alternative_id,
+        "changed_files": list(item.changed_files),
+        "explanation": item.explanation,
+        "rollback_plan": item.rollback_plan,
+        "score": item.score,
+        "impact_size": item.impact_size,
+        "test_burden": item.test_burden,
+        "uncertainty": item.uncertainty,
+        "metric_provenance": item.metric_provenance,
+    }
+
+
+def _blueprint_element_json(item: BlueprintElement) -> dict[str, Any]:
+    return {
+        "element_id": item.element_id,
+        "planned_ref": item.planned_ref.value,
+        "element_type": item.element_type,
+        "expected_actual_refs": [ref.value for ref in item.expected_actual_refs],
+        "acceptance_criteria": list(item.acceptance_criteria),
+        "requires_verification": item.requires_verification,
     }
 
 

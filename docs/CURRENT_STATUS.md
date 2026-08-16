@@ -122,11 +122,10 @@ capability/depth state, Twin revision, canonical evidence and positive PI time b
 execution. Activation is followed by an interleaved 9-cell port-8090 `native/off/active` pilot
 tranche over three representative tasks; only a passing signal continues to 27 total cells. No
 objective active gain, missing PI use, provider/timeout failure or active
-median above 2x the slower control requires repair and the same pilot again. It also records a
-blocking OpenCode reachability gap: `blueprint`, `convergence`,
-`traceability` and `strategy` have no current tool/task route, so a 13-capability ablation sweep would
-misclassify non-execution as no effect. Comprehensive evaluation stays stopped until those B1 adapter
-paths and covered tasks are repaired; PI effect remains NOT TESTED.
+median above 2x the slower control requires repair and the same pilot again. It also found a blocking
+OpenCode reachability gap for `blueprint`, `convergence`, `traceability` and `strategy`; that B1
+adapter gap is now repaired as described below. Comprehensive evaluation remains stopped until the
+repaired exact-head activation and effect pilot pass; PI effect remains NOT TESTED.
 
 PRs #49-#51 repaired configuration propagation, staged task-interleaved execution and duplicate
 plugin/MCP routing. At exact merged head `6064e311c3f98fe37ab87c6c1e71603ef08db7b2`, activation
@@ -170,6 +169,17 @@ after every Twin open/refresh. On the clean ECA task workspace after one cold sy
 snapshot loads measured 0.045/0.018/0.016ms for impact/tests/symbol, adjacency rebuild stayed 0ms and
 query execution measured 1.697/0.739/0.244ms. These are one-process query-path measurements, not
 large-repository performance acceptance.
+
+The four previously unreachable capabilities now have two bounded OpenCode routes rather than four
+extra tools. `pi_plan` derives focused and impact-aware alternatives from graph facts, invokes
+deterministic Strategy scoring, and projects the selected result into Blueprint elements; persistence
+is explicit and defaults off. `pi_verify` maps requirements to current Twin facts and evaluates both
+Traceability and Convergence without upgrading materialized facts to verified evidence. Plugin and
+MCP routes are covered by real sidecar calls, and active-mode propagation now includes all four
+capabilities. Evaluation output records the capabilities actually reported by each composite tool.
+The activation contract maps `eca-refactor-001` to `pi_plan` and `cd-cross-boundary-001` to
+`pi_verify`; screening refuses a no-effect classification when those required calls/capability traces
+are absent. The sealed task suite and exact oracles are unchanged.
 
 The bootstrap blocker has a bounded B1 repair at exact head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`. A matching current-edge identity index and schema-5

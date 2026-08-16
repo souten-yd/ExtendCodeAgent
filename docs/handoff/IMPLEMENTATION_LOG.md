@@ -490,3 +490,17 @@
 - Revision-cache gates pass: `all-fast` (188 Python, 9 adapter), integration (39 Python, 9 adapter),
   strict mypy, refresh-invalidation test, clean-workspace segmented query measurement and
   Python/TypeScript build.
+- Added two composite OpenCode routes for the four remaining configurable capabilities. `pi_plan`
+  invokes Strategy scoring over Project Truth and projects a non-durable-by-default Blueprint;
+  `pi_verify` invokes Traceability plus Convergence and preserves the distinction between
+  materialized facts and verified evidence.
+- Fixed command-mode propagation so `blueprint`, `convergence`, `traceability` and `strategy` are
+  active in the real sidecar, then proved both tools through the MCP lifecycle test. Results expose
+  `capabilities_used`, and the evaluation runner records those observations in hash-chained trace
+  `used_features`.
+- Sealed covered-task routing without changing task/oracle truth: `eca-refactor-001` exercises
+  `pi_plan`; `cd-cross-boundary-001` exercises `pi_verify`. Screening now returns
+  `NOT_TESTED_ROUTE_GAP` rather than `no_screened_effect` if a required composite call or active
+  capability observation is missing.
+- Missing-route gates pass: `all-fast` (190 Python, 9 adapter), integration (39 Python, 9 adapter),
+  strict mypy, real sidecar/MCP calls and Python/TypeScript build.

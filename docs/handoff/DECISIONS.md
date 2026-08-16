@@ -905,3 +905,19 @@ than attributing total wall time to PI. The implementation priority is compact t
 obligation-aware structural test coverage, revision-scoped query indexes/cache, missing OpenCode
 routes, then a fresh sealed 9-cell pilot. CFG/DFG expansion and comprehensive evaluation do not
 precede this repair.
+
+## 2026-08-16 — Missing capabilities use two composite, fail-closed OpenCode routes
+
+Decision: expose `pi_plan` for Blueprint plus Strategy and `pi_verify` for Traceability plus
+Convergence. Do not add one tool per internal capability. Each result names the capabilities actually
+used so evaluation can attribute composite execution independently of the public tool name.
+
+`pi_plan` uses graph-derived bounded alternatives and deterministic Strategy scoring. It returns a
+Blueprint-shaped draft by default and persists only when explicitly requested. `pi_verify` evaluates
+requirements against current Twin facts but accepts no fabricated evidence; an existing fact that
+still requires verification remains materialized and unresolved.
+
+The existing sealed task/oracle truth is unchanged. The activation contract instead assigns
+`eca-refactor-001` to `pi_plan` and `cd-cross-boundary-001` to `pi_verify`. Relevant active and
+ablation cells must attempt those tools, and the screen reports `NOT_TESTED_ROUTE_GAP` rather than
+`no_screened_effect` when active capability use or required tool attempts are absent.
