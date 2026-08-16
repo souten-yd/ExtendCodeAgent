@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "evidence_id": "b0a-schedule-proof-v1",
+  "classification": "B0A_SCHEDULE_INFRASTRUCTURE_PROOF",
+  "captured_at": "2026-08-16",
+  "implementation_revision": "9bfc934fc46d5db9ffcb43e48a695e8e470c1f29",
+  "screening_plan_seal": "2603866634a789831822d05edc95d331d4a025a5d84a7bda242a016bd5b21882",
+  "bootstrap_evidence": "docs/evidence/final/b0a-bootstrap-environment-v1.json",
+  "baseline_schedule": {
+    "scope": "b0a-baseline",
+    "arms": ["native", "off"],
+    "model_tiers": [
+      "local-low",
+      "local-practical",
+      "host-default",
+      "frontier-sonnet",
+      "frontier-codex"
+    ],
+    "cells": 306,
+    "available_cells": 216,
+    "unavailable_cells": 90
+  },
+  "screening_schedule": {
+    "scope": "b0a-screening",
+    "model_tier": "local-practical",
+    "task_count": 7,
+    "repetitions": 3,
+    "active_arms": 1,
+    "ablation_arms": 13,
+    "targeted_depth_arms": 20,
+    "targeted_depth_capabilities": ["semantic", "impact", "test_selection", "context"],
+    "cells": 714,
+    "paired_effect_cells": 294,
+    "effect_threshold_pass_delta": 2
+  },
+  "repository_eligibility": {
+    "included": [
+      "controldeck",
+      "express",
+      "extendcodeagent",
+      "flask",
+      "httpx",
+      "react-hook-form",
+      "vite"
+    ],
+    "excluded_bootstrap_gap": ["kasanecore", "peds"]
+  },
+  "frontier_route_policy": {
+    "frontier-sonnet": "github-copilot/claude-sonnet-5",
+    "frontier-codex": "github-copilot/gpt-5.3-codex",
+    "provider": "github-copilot",
+    "runtime": "ControlDeck-managed OpenCode"
+  },
+  "validation": {
+    "schedule_contract": "PASS",
+    "synthetic_screening_analyzer": "PASS_TEST_ONLY",
+    "synthetic_analyzer_interpretation": "The fixture proves pairing and the 2/21 decision threshold; it is not a PI evaluation result.",
+    "b0a_baseline_results": "NOT_TESTED",
+    "b0a_screening_results": "NOT_TESTED",
+    "pi_effect": "NOT_TESTED"
+  }
+}

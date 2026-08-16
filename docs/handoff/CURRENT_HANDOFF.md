@@ -2,11 +2,23 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/b0a-bootstrap-evidence`
+Current branch: `agent/b0a-enforced-schedules`
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
-Current task: B0a bootstrap and screening contract; no screening cell has run
+Current task: B0a baseline and screening execution; no B0a result cell has run
 
 ## B0a contract checkpoint (2026-08-16)
+
+- Runner enforcement is now implemented at exact head
+  `9bfc934fc46d5db9ffcb43e48a695e8e470c1f29`: the baseline is 306 cells and the screen is
+  714 cells. Both consume the sealed plan and bootstrap eligibility rather than relying on operator
+  convention.
+- The screen contains 294 active/ablation comparison cells. Its remaining 420 cells are targeted
+  D0-D4 arms for the four capabilities with depth-dependent claims; only one capability depth moves
+  in each arm.
+- A machine screening table enforces the two-PASS threshold and preserves incomplete/provider-gap
+  states. Its synthetic test is not outcome evidence. Baseline, screening and PI effect remain
+  NOT TESTED pending the post-merge real runs.
+- Schedule proof: `docs/evidence/final/b0a-schedule-proof.json`.
 
 - Added a separately sealed B0a plan without changing the E4 matrix seal. It fixes the seven-task
   tuning subset, paired active/ablation comparison, screening-only effect threshold, four
@@ -19,8 +31,8 @@ Current task: B0a bootstrap and screening contract; no screening cell has run
   observed/inferred/unknown classifications plus unsupported capabilities.
 - Exact-pin or Twin failure yields `EXCLUDED_BOOTSTRAP_GAP`; absent test runner/inventory is recorded
   `unavailable` rather than silently skipped. Imported code correctness always starts `unknown`.
-- No B0a evaluation cell has run. Merge this contract before freezing the exact environment and
-  generating bootstrap evidence.
+- No B0a evaluation result cell has run. Merge the enforced schedules before beginning the long,
+  resumable baseline and screening executions.
 - The first merged-head bootstrap attempt exposed two real gaps before any arm ran: the harness did
   not checkpoint until all repositories finished, and KasaneCore's initial Twin spent minutes in
   SQLite edge supersession. The harness now checkpoints atomically per repository, resumes, and

@@ -826,3 +826,15 @@ The observed SQLite edge-supersession scaling path is not patched inside this ev
 B0a must first preserve exact repository results and classify the gap. If it blocks B0 completion,
 the conditional B1 repair stage owns the minimal indexed-store correction and exact remeasurement.
 One cold run is diagnostic; budget calibration still requires the master-plan repetition count.
+
+## 2026-08-16 — B0a depth attribution and executable schedule boundary
+
+Decision: B0a has separate executable scopes for the full-tier `native`/`off` baseline and the
+local-practical screen. Both consume the sealed B0a contract and bootstrap eligibility at runtime;
+an excluded repository cannot be reintroduced by a command-line selection.
+
+Depth screening changes one claimed capability at a time. The four depth-dependent claims
+(`semantic`, `impact`, `test_selection`, `context`) each receive D0-D4 arms while every other
+capability stays at D2. A global all-capability depth change is not acceptable B0a attribution.
+Depth cells do not enter the active-versus-ablation effect threshold; they are retained for the
+separate depth-dependent claim analysis.
