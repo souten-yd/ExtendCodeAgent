@@ -49,9 +49,11 @@ would have to be repeated. E2–E5 must complete first. See master plan sections
 - **E0** plan consolidation — done;
 - **E1** capability gating conformance — done (see `CURRENT_HANDOFF.md` and `DECISIONS.md`);
 - **E2** capability depth contract — current;
-- **E3** Layer B task suite and outcome ground truth (what B0 actually measures);
+- **E3** Layer B task suite and outcome ground truth (what B0 actually measures), including a
+  mandatory cross-boundary GUI/runtime causal task class;
 - **E4** unified evaluation runner plus versioned Layer A label set;
-- **E5** minimal PI trace as evaluation infrastructure.
+- **E5** minimal PI trace as evaluation infrastructure, with a `used_features` shape reserved for the
+  `VerificationFeature` policy V0 introduces.
 
 Then **B0** baseline release validation and gap report.
 

@@ -475,7 +475,7 @@ prose, forbids repository content from changing rollout mode, depth, capability 
 policy or verification verdicts, and requires the E3 suite to contain injection-shaped strings so B0
 measures propagation instead of assuming absence. Propagation is a release blocker.
 
-### Decision — the moat is Verification Intelligence; Project Truth is substrate
+### Decision — Verification Intelligence is the primary differentiation hypothesis
 
 The competitive analysis scored Project Graph and Impact Analysis only against agent harnesses, where
 they look like a 5-vs-1 advantage. That is the wrong comparison set: static code intelligence
@@ -502,5 +502,100 @@ Zero tool calls means no agentic work occurred; it is a context-injection A/B, a
 to tautological when the needed facts are placed in the prompt. Under invariant 1 it is real evidence
 that the model-routing path functions, and nothing more. §5 now states this, and no claim may cite it
 as outcome evidence.
+
+GitHub Actions: not added. This change is documentation only.
+
+## 2026-08-16 — External review follow-ups and stale-document cleanup
+
+Context: an external review of the consolidated plan raised six points. Its first and highest-priority
+finding — that E1 and the plan corrections had not reached `main` — was correct when written and is
+now resolved: `main` is `86a6a37`, whose tree is byte-identical to the verified branch. The stacked
+PRs #34 and #35 had merged into their intermediate base branches instead of `main`, because GitHub
+retargets a stacked PR only when its base branch is **deleted**. PR #36 merged the full content
+forward. The remaining five points are accepted and applied here.
+
+### Accepted — Existing Project Bootstrap becomes a B0 entry condition
+
+`TEST_PORTFOLIO_INTELLIGENCE_AND_BROAD_EVALUATION_PLAN.md` treats existing-project bootstrap as a
+first-class lifecycle, but no stage asserted it, so the ability to bring an unseen repository to a
+usable baseline was never going to be evaluated. Added as a **B0 entry condition** rather than a new
+stage, because it is a precondition for trustworthy arm results, not a work package: a repository whose
+baseline silently failed would attribute a bootstrap failure to a capability. Per repository B0 now
+records workspace/project identity, initial Twin revision, test-runner discovery, test inventory,
+baseline evidence classified `observed`/`inferred`/`unknown`, and explicit degradation of unsupported
+analysis. Imported baselines are never `verified`.
+
+### Accepted — E3 must include a cross-boundary GUI/runtime causal task class
+
+The E3 task classes covered symbol, impact, test selection, refactor, bug localization, traceability
+and negative controls, but nothing crossing a UI/runtime boundary — despite `AGENTS.md` requiring GUI
+verification to prove user-visible outcomes, and despite stage X0's entry condition being "repeated
+measured failures at a real user-visible boundary". That condition was unsatisfiable and unrefutable
+without such a task.
+
+Added as a mandatory class, framed explicitly as a **measurement of how far current PI follows the
+chain**, with a low score an expected and reportable outcome. `ui_graph` stays `not_implemented`;
+nothing here authorizes building it. This keeps "GUI matters" and "do not build a large UI graph before
+measuring" simultaneously true, and it produces the evidence that decides X0 and V5.
+
+### Accepted — the V-series needs internal ablation handles (`VerificationFeature`)
+
+E1 made the 13 top-level capabilities ablatable, but V2–V5 each add several independent mechanisms
+beneath a single capability. Without handles, "Environment Matrix helped, Certificate did not" is
+unanswerable, and the exact problem E1 solved recurs one level down: mechanisms that can be built but
+never demoted.
+
+V0 now also defines `VerificationFeature` (`required_set`, `evidence_reuse`, `failure_reevaluation`,
+`oracle_assessment`, `test_intent`, `observability`, `environment_selection`, `certificate`), each with
+its own depth on the same `D0..D4` axis. Deliberately **not** new `CapabilityName` members — the
+top-level inventory stays at 21 with its counts pinned by the E1 architecture test, and the feature
+policy nests under the capability that owns it. E5's trace shape is widened now to accept
+`used_features` so the format does not change mid-programme. V0's exit gains a feature-policy test of
+the same shape as the E1 one.
+
+This is invariant 6 applied one level down: a mechanism that cannot be switched off cannot be shown to
+be worth its cost, and therefore stays by default.
+
+### Accepted — OMO coexistence smoke moves to B0/R0; full benchmark stays P4
+
+`OpenCode + OMO + ExtendCodeAgent` is a realistic user configuration. A tool-ID namespace collision or
+a duplicated observation there is a defect that ships regardless of how the P4 comparison turns out,
+and deferring all OMO contact to P4 means discovering it after release. §10.1 gains blocking item 17
+(plugin load with both present, `pi_*` and OMO tool visibility, no namespace collision, no duplicate
+execution, sidecar failure isolation, clean shutdown), with `UNAVAILABLE` recorded rather than passed
+if OMO is not installable at the pinned OpenCode version. The full A/B, Team Mode, hook order, context
+overhead, model-routing conflict and worktree behavior stay at P4.
+
+### Accepted — "moat" is downgraded to "primary differentiation hypothesis"
+
+The review caught a contradiction introduced by the previous pass: §5 states that no evidence supports
+the product thesis, while §1 and competitive analysis §2 asserted Verification Intelligence **is** the
+moat. Both cannot hold. Since the §3 scores are explicitly planning heuristics, the honest form is a
+hypothesis, promoted to "moat" only when B0 measures it against native OpenCode and against the tooling
+a developer would otherwise use. Wording aligned in master plan §1, competitive analysis §2 and §3.3.
+
+### Clarified — invariant 8 does not forbid explanations
+
+"PI output is data, never instruction" risked being implemented as "return no prose", which would break
+a product requirement: an impact result without a reason is not usable evidence. Invariant 8 now
+distinguishes three kinds of text — repository-origin (quoted, untrusted, attributed), PI-generated
+explanation (analysis with provenance, required), and control instruction (trusted configuration and
+deterministic analysis only) — and forbids promotion from the first row into the others.
+
+### Cleanup
+
+- **Deleted** `docs/handoff/CODEX_OMO_COMPATIBILITY_INSTRUCTION.md`. It declared a fourth read order
+  and directed agents to "follow the current RV/RA/TA/VI/WL/EM roadmap" — the legacy identifiers §9
+  forbids for scheduling. It survived E0 because it sits under `handoff/` rather than `docs/`. Its OMO
+  substance is retained in the registered `OMO_COEXISTENCE_AND_COMPATIBILITY_PLAN.md`.
+- Read-order sections removed from `CODEX_IMPLEMENTATION_GUIDE.md` §2 and
+  `CODEX_PRODUCTIZATION_EXECUTION_GUIDE.md` §1 per maintenance rule 5; their working rules are kept.
+- `CODEX_PRODUCTIZATION_EXECUTION_GUIDE.md` §4 retitled from "First task" to B0 detail. Its content
+  (environment capture list, integration checklist) is what B0 executes and is kept in full.
+- All 36 merged remote branches deleted; only `main` remains.
+
+**Not deleted:** every planning document registered in §2, including `KASANECORE_MIGRATION_AUDIT.md`.
+§2 assigns each a live disposition as design detail; deleting them would discard the detail the
+consolidation deliberately preserved. Superseded *sequencing* inside them is already marked by banners.
 
 GitHub Actions: not added. This change is documentation only.

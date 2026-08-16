@@ -15,15 +15,11 @@ The implementation must remain effective with both weak local LLMs and frontier 
 
 ## 2. Required read order per task
 
-Read only what is necessary for the active slice:
+Owned by `AGENTS.md` and `docs/PI_MASTER_EXECUTION_PLAN.md` §2. Do not maintain a read order here.
 
-1. `docs/PROJECT_INTELLIGENCE_MASTER_PLAN.md` relevant section.
-2. `docs/KASANECORE_MIGRATION_AUDIT.md` relevant component classification.
-3. `docs/IMPLEMENTATION_EXECUTION_LOCAL_VALIDATION_PLAN.md` active PR/milestone section.
-4. `docs/CURRENT_STATUS.md`.
-5. target source, direct callers, tests, and dependencies.
-
-Do not repeatedly load all planning documents into context.
+The one rule that remains this document's own: read only what the active slice needs — the target
+source, its direct callers, its tests and its dependencies — and do not repeatedly load all planning
+documents into context.
 
 ## 3. Investigation before implementation
 
