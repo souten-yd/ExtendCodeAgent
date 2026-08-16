@@ -18,6 +18,17 @@
   `tools/local/benchmark_pr_b.py`. Normal all-fast/integration/build gates pass; E4 already owns
   retiring that per-PR benchmark into the unified runner.
 
+## E4 evaluation limitations
+
+- E4 route proof uses one repetition per representative cell. It proves wiring and objective scoring,
+  not comparative quality; B0 owns minimum-repetition distributions and screening/confirmation.
+- The sealed full schedule is 5,083 cells, of which 1,495 are visible local-low UNAVAILABLE cells.
+  Running all cells without screening would violate the execution-capacity design.
+- Integrated metric keys whose implementing verification stage does not yet exist are emitted as
+  `NOT_TESTED`. They must not be numerically aggregated or interpreted as zero.
+- Historical `benchmark_pr_b/c/h/i` and `pr_g_evaluate` remain executable only to reproduce their
+  original evidence. They contain obsolete route assumptions and are not current entry points.
+
 ## PR-A environment
 
 - The local machine has Python 3.12.3 but no Python 3.11 executable, so the declared 3.11 lower

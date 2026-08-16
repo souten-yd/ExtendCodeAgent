@@ -1,0 +1,135 @@
+{
+  "schema": 1,
+  "matrix_id": "unified-evaluation-matrix-v1",
+  "created_at": "2026-08-16",
+  "inputs": {
+    "layer_b_task_suite": "docs/evaluation/task-suite-v1.json",
+    "layer_b_seal": "23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632",
+    "layer_a_labels": "docs/evaluation/labels-v1/graph-quality-labels.json",
+    "layer_a_seal": "70710dfe82680afd8ab0c2ad3a735b7f82648c65554dbf93d878e0550a986427",
+    "quality_corpus": "docs/evaluation/test-portfolio-corpus-v1.json",
+    "metric_contract": "docs/evaluation/pi-verification-integrated-metrics-v1.json"
+  },
+  "base_arms": [
+    {
+      "id": "native",
+      "mode": "native",
+      "capabilities": "none"
+    },
+    {
+      "id": "off",
+      "mode": "off",
+      "capabilities": "all-off"
+    },
+    {
+      "id": "shadow",
+      "mode": "shadow",
+      "capabilities": "all-configurable"
+    },
+    {
+      "id": "advisory",
+      "mode": "advisory",
+      "capabilities": "all-configurable"
+    },
+    {
+      "id": "active",
+      "mode": "active",
+      "capabilities": "all-configurable"
+    }
+  ],
+  "ablation_capabilities": [
+    "graph",
+    "twin",
+    "semantic",
+    "impact",
+    "test_selection",
+    "test_obsolescence",
+    "context",
+    "runtime",
+    "blueprint",
+    "convergence",
+    "research",
+    "traceability",
+    "strategy"
+  ],
+  "depths": [
+    "D0",
+    "D1",
+    "D2",
+    "D3",
+    "D4"
+  ],
+  "model_tiers": [
+    {
+      "id": "local-low",
+      "status": "UNAVAILABLE",
+      "minimum_repetitions": 5,
+      "reason": "No permitted non-Ollama weak-local endpoint is registered."
+    },
+    {
+      "id": "local-practical",
+      "status": "AVAILABLE",
+      "minimum_repetitions": 3,
+      "provider": "llama-compatible",
+      "model_id": "llama",
+      "base_url": "http://127.0.0.1:8090/v1"
+    },
+    {
+      "id": "host-default",
+      "status": "AVAILABLE",
+      "minimum_repetitions": 3,
+      "model_id": "opencode/big-pickle"
+    },
+    {
+      "id": "frontier-sonnet",
+      "status": "REQUIRED_IF_AVAILABLE",
+      "minimum_repetitions": 3,
+      "model_id": "github-copilot/claude-sonnet-5"
+    },
+    {
+      "id": "frontier-codex",
+      "status": "REQUIRED_IF_AVAILABLE",
+      "minimum_repetitions": 3,
+      "model_id": "github-copilot/gpt-5.3-codex"
+    }
+  ],
+  "screening": {
+    "policy": "Wide and shallow. Screening can select confirmation candidates but cannot promote or demote a capability.",
+    "tuning_task_subset": [
+      "eca-symbol-001",
+      "eca-impact-001",
+      "eca-tests-001",
+      "eca-refactor-001",
+      "eca-negative-001",
+      "cd-bug-001",
+      "cd-cross-boundary-001"
+    ],
+    "ablation_tier": "local-practical",
+    "depth_claim_capabilities": [
+      "semantic",
+      "impact",
+      "test_selection",
+      "context"
+    ],
+    "depth_tier": "local-practical"
+  },
+  "confirmation": {
+    "policy": "Only a screened effect crossing the versioned threshold may enter confirmation. Promotion or demotion may cite confirmation only.",
+    "held_out_required": true,
+    "all_available_model_tiers_required": true,
+    "minimum_repetitions_from_model_tier": true
+  },
+  "execution": {
+    "opencode_distribution": "ControlDeck managed feature",
+    "opencode_executable": "/home/souten/.local/share/control-deck/features/opencode/node_modules/opencode-ai/bin/opencode.exe",
+    "opencode_version": "1.18.16",
+    "serial": true,
+    "ollama_forbidden": true,
+    "raw_root": ".evaluation/unified-v1",
+    "compact_output_root": "docs/evidence/final"
+  },
+  "seal": {
+    "algorithm": "sha256",
+    "canonical_payload": "13d3e854234efbc302ff7d6c0ab5f4f2dfd3eea9cc11d98c2760e03ca4b6f16e"
+  }
+}

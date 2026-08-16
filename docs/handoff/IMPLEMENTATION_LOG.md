@@ -1,5 +1,22 @@
 # Implementation Log
 
+## 2026-08-16 — E4 unified evaluation runner and Layer A labels
+
+- Promoted 12 PR-C/PR-H reviewed cases into a machine-readable sealed Layer A label set; no new human
+  review volume was introduced.
+- Added and sealed the full 5,083-cell matrix across five base arms, 13 capability ablations, five
+  depth arms, 13 E3 tasks, model-tier repetition minimums and explicit local-low unavailability.
+- Added a single ControlDeck-managed OpenCode runner with sealed-input validation, plan/filter/run,
+  objective E3 oracle scoring, all versioned metric keys, atomic checkpoints, resume and recoverable
+  incomplete-workspace archival.
+- Exact implementation head `7ec5f42` route proof passed at the runner level for native, advisory,
+  port-8090 Qwen3.6 27B, GitHub Copilot Sonnet and GitHub Copilot Codex. Objective task results were
+  3 PASS / 3 FAIL across six representative cells; no provider was unavailable.
+- Confirmed a host advisory symbol task called `pi_context`, `pi_status`, `pi_symbol` and `pi_tests`.
+  The one-run route proof is explicitly not a B0 comparison or promotion result.
+- Focused runner tests cover seals, the exact full schedule count, frontier IDs, visible unavailable
+  cells, bounded filters, every integrated metric key, atomic checkpointing and resume deduplication.
+
 ## 2026-08-16 — E3 Layer B task suite and outcome ground truth
 
 - Added the sealed 13-task Layer B suite, validation/preparation/oracle harness, serial native proof

@@ -19,26 +19,24 @@ Do not schedule work from the legacy identifiers (`RV-x`, `TA-x`, `AL-x`, `CV-x`
 
 ## Current stage
 
-**Phase 0 — E4: unified evaluation runner and ground truth.**
+**Phase 0 — E5: minimal PI trace as evaluation infrastructure.**
 
-Entry conditions satisfied: E3 is sealed with 13 machine-scored tasks and native outcome evidence;
-V0a can project required-verification quality deterministically.
+Entry conditions satisfied: E3 has sealed Layer B; E4 has sealed Layer A labels and one resumable
+runner for the fixed arm/repository/task/model/repetition matrix.
 
 Scope:
 
-- implement one runner for `arm × repository × task × model tier × repetition` over the sealed E3
-  suite;
-- emit the keys in `docs/evaluation/pi-verification-integrated-metrics-v1.json` and bind the pinned
-  corpus manifest;
-- promote the existing PR-C false-positive/false-negative review and PR-H ground truth into a
-  versioned Layer A label set;
-- retire the per-PR benchmark/evaluation scripts into the unified runner without losing their
-  evidence dimensions;
-- write a reproducible full-matrix result under `docs/evidence/final/` that references both the
-  Layer A labels and the sealed Layer B task suite.
+- define a compact append-only trace from plan to selected evidence IDs, Twin/source revisions,
+  actual capability modes/depths, model route, verification outcome, fallback and timings;
+- store no raw model transcripts or secrets;
+- reserve `used_features` for the `VerificationFeature` policy V0 introduces, without implementing
+  those later capabilities early;
+- emit one trace for every runner arm and demonstrate attributable ablation on one task class;
+- make the PI portion replayable from versioned inputs and trace IDs.
 
-Exit evidence: one command reproduces a full matrix run; the output references both versioned label
-sets and contains the integrated metrics required by the master plan. See master plan section 8.
+Exit evidence: every runner result carries a compact trace reference; one task class demonstrates
+that changing one capability arm changes the recorded capability set without changing the sealed
+task/oracle identity. See master plan section 8.
 
 Evaluation environment mandated by the user:
 
@@ -64,9 +62,10 @@ E3–E5 must complete first. See master plan sections 6 and 8.
 - **V0a** verification contract slice — done, shadow-only, with no second truth store;
 - **E3** Layer B task suite and outcome ground truth — done: 13 sealed tasks, native 4/13 PASS, clean
   756-second PEDS slow suite, and truthful OMO/local-low evidence;
-- **E4** unified evaluation runner plus versioned Layer A label set — current;
-- **E5** minimal PI trace as evaluation infrastructure, with a `used_features` shape reserved for the
-  `VerificationFeature` policy V0 introduces.
+- **E4** unified evaluation runner plus versioned Layer A label set — done: sealed 12-case labels,
+  fixed 5,083-cell schedule, exact route proof, checkpoint/resume and metric-key projection;
+- **E5** minimal PI trace as evaluation infrastructure — current, with a `used_features` shape
+  reserved for the `VerificationFeature` policy V0 introduces.
 
 Then **B0** baseline release validation and gap report.
 

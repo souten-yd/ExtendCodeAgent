@@ -2,9 +2,28 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/e3-layer-b-task-suite`
+Current branch: `agent/e4-unified-evaluation-runner`
 Milestone: A-I implementation complete; Phase 0 (evaluation enablement) active
-Current task: E0/E1/E2/V0a are merged; E3 is complete and locally verified; next is E4
+Current task: E0/E1/E2/V0a/E3 are merged; E4 is complete and locally verified; next is E5
+
+## E4 closeout (2026-08-16)
+
+- Promoted 12 already-reviewed PR-C/PR-H cases into sealed Layer A labels at
+  `70710dfe82680afd8ab0c2ad3a735b7f82648c65554dbf93d878e0550a986427`.
+- Sealed the unified matrix at
+  `13d3e854234efbc302ff7d6c0ab5f4f2dfd3eea9cc11d98c2760e03ca4b6f16e`: 5,083 full cells,
+  including 1,495 visible local-low UNAVAILABLE cells rather than silently dropping them.
+- Added one ControlDeck-OpenCode runner for plan/run/filter/checkpoint/resume. Every output binds the
+  Layer A/Layer B seals, quality corpus and integrated metric contract; unmeasured metrics remain
+  `NOT_TESTED`.
+- Exact implementation head `7ec5f42756bdd3035ec821fafa7256efebdb8152` ran native and advisory
+  host checks, port-8090 Qwen3.6 27B, Copilot Sonnet and Copilot Codex. All routes were callable; task
+  PASS/FAIL is retained as objective outcome, not a route verdict.
+- A symbol task exercised `pi_context`, `pi_status`, `pi_symbol` and `pi_tests`. Raw logs and cloned
+  workspaces remain ignored. The route proof is not a B0 quality or promotion result.
+- Historical per-PR benchmark scripts remain solely for reproducing their original evidence and are
+  retired as current entry points. New evaluation work uses `tools/local/evaluation-runner`.
+- Next: E5 compact append-only PI trace and one attributable ablation demonstration.
 
 ## E3 closeout (2026-08-16)
 
