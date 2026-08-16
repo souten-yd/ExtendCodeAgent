@@ -2,9 +2,9 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/pi-master-execution-plan`
+Current branch: `agent/e1-capability-gating-conformance`
 Milestone: A-I implementation complete; Phase 0 (evaluation enablement) active
-Current task: merge the planning consolidation, then start stage E1
+Current task: stage E1 complete and unmerged; next is stage E2 (capability depth contract)
 
 ## Current source of truth
 
@@ -120,7 +120,31 @@ Only introduce a distinct `ControlDeck + OpenCode` evaluation condition after an
 ControlDeck change is shown to alter relevant session/tool/context/model/workspace/verification or
 multi-agent semantics. Until then, treat it as OpenCode.
 
-## Immediate next work after merge
+## Stage E1 — done on this branch
+
+Delivered:
+
+- `strategy` gated at `build_strategy`, `test_obsolescence` gated at `evaluate_test_health`, both
+  through the shared `CapabilityPolicy.require_explicit_use` in `core/policy.py`. No new gate
+  mechanism; `service/application.py` now delegates `_require_explicit` to the same helper.
+- `test_obsolescence` is independent of `test_selection`: with it off, `pi_tests` still selects tests
+  and returns `health: []`.
+- `call_graph` folded into `semantic` (`CAPABILITY_FOLDED_INTO`). The rejected independent-gate option
+  and its reasons are in `DECISIONS.md`.
+- The seven unimplemented capabilities declared in `NOT_IMPLEMENTED_CAPABILITIES`, forced to `off`,
+  and rejected with `ConfigError` if configured to a non-`off` mode.
+- `tests/architecture/test_capability_gating.py`: AST scan asserting every `CapabilityName` is gated,
+  folded into a gated capability, or declared unimplemented; inventory counts pinned at 21/7/1/13 so a
+  new capability cannot be added silently.
+- `pi_status` reports `implementation`, `mode` and `governed_by` for all 21 capabilities;
+  `PiStatus`/`CapabilityStatus`/`RolloutMode` typed in `adapters/opencode/src/client.ts`.
+- Per-capability `off` inertness parametrized over all 13 configurable capabilities, in addition to
+  the existing global-`off` test.
+
+Evidence: `tools/local/all-fast`, `tools/local/test-integration`, `tools/local/build` all exit 0.
+Defaults unchanged — every capability still ships `off`.
+
+## Immediate next work
 
 ```bash
 cd /home/souten/ExtendCodeAgent
@@ -130,11 +154,12 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/e1-capability-gating-conformance
+git switch -c agent/e2-capability-depth-contract
 ```
 
-E1 gates `strategy`, `test_obsolescence` and `call_graph`, declares the seven unimplemented
-capabilities truthfully, adds the architecture test that makes gating total, reports capability
-implementation state through `pi_status`, and re-verifies `off` inertness per capability.
+E2 adds the depth axis (`D0..D4`) to the central config with min/max/preferred/auto, orthogonal to
+`RolloutMode`, with no adaptive selection yet, depth recorded in every PI response and visible in
+`pi_status`, and no behavior change at default depth.
 
-Rollback path: switch to synchronized `main`; this branch changes documentation only.
+Rollback path: switch to synchronized `main`. This branch changes host-neutral core gating, the
+OpenCode adapter status types, tests and documentation; it adds no capability and changes no default.

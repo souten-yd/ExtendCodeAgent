@@ -114,37 +114,44 @@ These apply to every stage and are not restated per stage.
 ## 6. Capability inventory and gating status
 
 Source of truth: `CapabilityName` in `src/extendcodeagent/core/config/schema.py` versus actual
-`CapabilityPolicy` use. Verified at this document's date: policy gating exists **only** in
-`src/extendcodeagent/service/application.py`.
+`CapabilityPolicy` use. **Closed by stage E1 (2026-08-16).** Gating is no longer confined to
+`service/application.py`; `strategy/service.py` and `testing/service.py` gate through the same
+`CapabilityPolicy.require_explicit_use`, and the declarations below are enforced by
+`tests/architecture/test_capability_gating.py`.
 
-| Capability | Implementation | Policy-gated | Required action |
+| Capability | Implementation | Policy-gated | Ablation arm |
 |---|---|---|---|
-| `graph` | yes | yes | — |
-| `twin` | yes | yes | — |
-| `semantic` | yes | yes | — |
-| `impact` | yes | yes | — |
-| `test_selection` | yes | yes | — |
-| `context` | yes | yes | — |
-| `runtime` | yes | yes | — |
-| `blueprint` | yes | yes | — |
-| `convergence` | yes | yes | — |
-| `research` | yes | yes | — |
-| `traceability` | yes | yes | — |
-| `call_graph` | yes (analyzer `may_call`, conf. 0.35) | **no** | E1: gate or fold into `semantic` |
-| `test_obsolescence` | yes (`testing/contracts.py` states) | **no** | E1: gate |
-| `strategy` | yes (`strategy/service.py`) | **no** | E1: gate |
-| `cfg` | no | no | E1: mark `not_implemented` |
-| `data_flow` | no | no | E1: mark `not_implemented` |
-| `state_event` | no | no | E1: mark `not_implemented` |
-| `side_effects` | no | no | E1: mark `not_implemented` |
-| `api_schema_db` | no | no | E1: mark `not_implemented` |
-| `ui_graph` | no | no | E1: mark `not_implemented` |
-| `memory` | no | no | E1: mark `not_implemented` |
+| `graph` | yes | yes | yes |
+| `twin` | yes | yes | yes |
+| `semantic` | yes | yes | yes (covers `call_graph`) |
+| `impact` | yes | yes | yes |
+| `test_selection` | yes | yes | yes |
+| `context` | yes | yes | yes |
+| `runtime` | yes | yes | yes |
+| `blueprint` | yes | yes | yes |
+| `convergence` | yes | yes | yes |
+| `research` | yes | yes | yes |
+| `traceability` | yes | yes | yes |
+| `strategy` | yes (`strategy/service.py`) | yes (E1) | yes |
+| `test_obsolescence` | yes (`testing/service.py`) | yes (E1), independent of `test_selection` | yes |
+| `call_graph` | yes (analyzer `may_call`, conf. 0.35) | folded into `semantic` (E1) | **no — use `semantic`** |
+| `cfg` | no | `not_implemented` (E1) | no |
+| `data_flow` | no | `not_implemented` (E1) | no |
+| `state_event` | no | `not_implemented` (E1) | no |
+| `side_effects` | no | `not_implemented` (E1) | no |
+| `api_schema_db` | no | `not_implemented` (E1) | no |
+| `ui_graph` | no | `not_implemented` (E1) | no |
+| `memory` | no | `not_implemented` (E1) | no |
 
-Consequence: **config-driven per-capability ablation is currently impossible for 10 of 21
-capabilities, including two with real implementations (`strategy`, `test_obsolescence`).** Every
-"is this feature worth keeping" decision depends on closing this gap first. This is why Phase 0
-precedes baseline validation.
+13 capabilities are independently configurable and ablatable. `call_graph` is governed by `semantic`
+and the seven unimplemented names are forced to `off`; configuring any of the eight to a non-`off`
+mode is a `ConfigError` rather than a silent no-op, so an evaluation arm can never record a result
+under a capability that did not run. The `call_graph` folding rationale and the rejected independent
+gate are in `handoff/DECISIONS.md` (2026-08-16).
+
+Before E1 this table read 11 gated of 21, which made config-driven ablation impossible for 10
+capabilities including two with real implementations. That is why Phase 0 precedes baseline
+validation.
 
 ## 7. Evaluation framework
 
@@ -493,7 +500,7 @@ Per-PR evidence directories (`docs/evidence/pr-*`) are historical and are not re
 
 ## 14. Immediate next action
 
-Phase 0, stage E0 is this commit. Then E1.
+Phase 0, stages E0 and E1 are complete. Next is E2.
 
 ```bash
 cd /home/souten/ExtendCodeAgent
@@ -503,7 +510,7 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/e1-capability-gating-conformance
+git switch -c agent/e2-capability-depth-contract
 ```
 
 Do not start B0 before E1–E4 are complete. A baseline measured without total capability gating,

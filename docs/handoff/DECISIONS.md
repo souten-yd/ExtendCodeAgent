@@ -345,3 +345,74 @@ Consequences:
   and a stage owner in the same commit.
 
 GitHub Actions: not added. This change is documentation only.
+
+## 2026-08-16 — E1 capability gating conformance
+
+Context: `CapabilityName` declares 21 capabilities, but `CapabilityPolicy` was consulted only in
+`service/application.py` and covered 11 of them. `strategy` and `test_obsolescence` had real
+implementations that no configuration could switch off, `call_graph` was emitted unconditionally by
+the analyzers, and seven names were pure declarations with nothing behind them. Per-capability
+ablation — the precondition for every keep/demote decision in the evaluation framework — was
+therefore impossible for 10 of 21 capabilities.
+
+### Decision 1 — `call_graph` is folded into `semantic`, not gated independently
+
+`call_graph` is recorded in `CAPABILITY_FOLDED_INTO` as governed by `semantic`. Its rollout mode is
+always `semantic`'s, and configuring `project_intelligence.capabilities.call_graph` to anything other
+than `off` is a `ConfigError` pointing at `semantic`.
+
+Reason: `may_call` is emitted by `graph/analyzers/python.py` and
+`graph/analyzers/javascript_typescript.py` inside the same AST/tree-sitter walk that emits `calls`,
+`references` and `imports`; the two differ only by whether `_resolve_call` resolved the target.
+
+Rejected alternative — an independent `call_graph` gate. It was rejected because it requires one of
+two unacceptable mechanisms:
+
+- passing `CapabilityPolicy` into the analyzers, which are pure revision-keyed functions today.
+  Analyzer output would then depend on rollout mode, so the same source revision would produce
+  different Twin revisions under different configuration. That breaks revision identity and the
+  Evidence Dependency Closure that compositional evidence reuse is built on; or
+- post-filtering `may_call` edges out of a stored snapshot, which leaves the stored graph and the
+  served graph disagreeing and silently changes `impact` confidence without any record.
+
+An independent arm would also not isolate a distinct capability: ablating `call_graph` while
+`semantic` stays on removes only the *inferred* half of one edge family, which is a confidence-
+threshold question (`min_confidence`, already a query parameter) rather than a capability question.
+The depth axis in stage E2 is the correct place for that trade-off.
+
+Consequence: `ablation(call_graph)` is not an available arm. Ablating `semantic` covers it. This is
+recorded in the master plan section 6 so no later stage schedules a `call_graph` arm.
+
+### Decision 2 — configuring an unimplemented capability is a `ConfigError`, not a diagnostic
+
+`cfg`, `data_flow`, `state_event`, `side_effects`, `api_schema_db`, `ui_graph` and `memory` are listed
+in `NOT_IMPLEMENTED_CAPABILITIES`. `CapabilityPolicy` forces them to `off` regardless of
+configuration, and the resolver rejects any non-`off` value for them at resolve time.
+
+Reason: a warning-level diagnostic was rejected because `ResolvedConfig` has no diagnostic channel —
+adding one would mean either logging from host-neutral core (which nothing else does) or growing the
+resolved-config contract for a case that should not occur. More importantly, the failure mode a
+diagnostic permits is exactly the one Phase 0 exists to remove: an evaluation arm configured with
+`ui_graph: active` would record results under a label describing a capability that never ran, and the
+resulting keep/demote decision would be unfalsifiable. Invariant 1 (evidence policy) and invariant 4
+(truthful degradation) both require the loud failure. Configuration is resolved once at startup, so
+failing closed costs one clear error at the earliest possible point.
+
+The shipped default sets every capability to `off`, so no existing configuration is affected.
+
+### Mechanism
+
+No new gating mechanism was introduced. `CapabilityUnavailable` and `require_explicit_use` moved to
+`core/policy.py` so `service/application.py` (`_require_explicit`, `_explicit_snapshot`),
+`strategy/service.py` and `testing/service.py` share one gate. `build_strategy` and
+`evaluate_test_health` take a required keyword-only `policy`. `test_obsolescence` is gated separately
+from `test_selection`: with it off, `pi_tests` still selects tests and returns `health: []`.
+
+`pi_status` now reports `name`, `implementation`, `mode` and `governed_by` for all 21 capabilities,
+typed as `PiStatus`/`CapabilityStatus` in the OpenCode adapter.
+
+`tests/architecture/test_capability_gating.py` asserts by AST scan that every `CapabilityName` member
+is policy-gated, folded into a gated capability, or declared unimplemented, and pins the 21/7/1/13
+inventory counts so a new capability cannot be added silently.
+
+GitHub Actions: not added. Validation stays local.

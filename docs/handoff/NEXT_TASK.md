@@ -19,38 +19,47 @@ Do not schedule work from the legacy identifiers (`RV-x`, `TA-x`, `AL-x`, `CV-x`
 
 ## Current stage
 
-**Phase 0 — E1: capability gating conformance.**
+**Phase 0 — E2: capability depth contract.**
 
-Entry condition satisfied: E0 (plan consolidation) is merged.
+Entry condition satisfied: E1 (capability gating conformance) is complete on
+`agent/e1-capability-gating-conformance`. Every `CapabilityName` is now policy-gated, folded into a
+gated capability, or declared `not_implemented`, so per-capability ablation is possible for the 13
+configurable capabilities.
 
 Scope:
 
-- gate `strategy` and `test_obsolescence` through `CapabilityPolicy`;
-- gate `call_graph`, or fold it into `semantic` with a recorded decision;
-- declare `cfg`, `data_flow`, `state_event`, `side_effects`, `api_schema_db`, `ui_graph` and `memory`
-  as `not_implemented` so configuration references them truthfully;
-- add an architecture test asserting that every `CapabilityName` either gates a real service or is
-  declared unimplemented;
-- report capability implementation state through `pi_status`;
-- re-verify `off` inertness per capability.
+- add the depth axis (`D0..D4`) to the central config with min/max/preferred/auto, orthogonal to
+  `RolloutMode` — never encode cost in the rollout mode (master plan invariant 6);
+- no adaptive depth selection yet; that is stage C3;
+- record the depth used in every PI response;
+- surface depth in `pi_status` alongside the capability inventory E1 added;
+- no behavior change at default depth.
 
-Exit evidence: architecture test green, `tools/local/all-fast`, `tools/local/test-integration`,
-`tools/local/build`, and a `handoff/DECISIONS.md` entry for the `call_graph` disposition.
+Exit evidence: config/architecture tests, depth visible in `pi_status`, `tools/local/all-fast`,
+`tools/local/test-integration`, `tools/local/build`.
 
 ## Why B0 (baseline validation) is not the current task
 
-Ten of twenty-one declared capabilities are not policy-gated, the depth axis is unimplemented, the
-evaluation harness is a set of per-PR scripts, and there is no attributable PI trace. A baseline
-measured in that state cannot support any keep/demote decision and would have to be repeated. E1–E4
-must complete first. See master plan sections 6 and 8.
+The depth axis is unimplemented, the evaluation harness is a set of per-PR scripts, and there is no
+attributable PI trace. A baseline measured in that state cannot support any keep/demote decision and
+would have to be repeated. E2–E4 must complete first. See master plan sections 6 and 8.
 
-## Remaining Phase 0 stages
+## Phase 0 stage state
 
-- **E2** capability depth contract (`D0..D4`, orthogonal to `RolloutMode`);
+- **E0** plan consolidation — done;
+- **E1** capability gating conformance — done (see `CURRENT_HANDOFF.md` and `DECISIONS.md`);
+- **E2** capability depth contract — current;
 - **E3** unified evaluation runner plus versioned ground-truth label set;
 - **E4** minimal PI trace as evaluation infrastructure.
 
 Then **B0** baseline release validation and gap report.
+
+## Ablation arms available after E1
+
+13 capabilities can be switched off independently: `graph`, `twin`, `semantic`, `impact`,
+`test_selection`, `test_obsolescence`, `context`, `runtime`, `blueprint`, `convergence`, `research`,
+`traceability`, `strategy`. `call_graph` has no arm of its own — it is governed by `semantic`. The
+seven unimplemented capabilities have no arm and cannot be configured on.
 
 ## Standing rules
 
@@ -72,7 +81,7 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/e1-capability-gating-conformance
+git switch -c agent/e2-capability-depth-contract
 ```
 
 Update `CURRENT_HANDOFF.md` after each stage.
