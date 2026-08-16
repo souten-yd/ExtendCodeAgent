@@ -2,9 +2,9 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/e2-capability-depth-contract`
+Current branch: `agent/v0a-verification-contract-slice`
 Milestone: A-I implementation complete; Phase 0 (evaluation enablement) active
-Current task: E0/E1 are merged; E2 is complete and locally verified on this branch; next is V0a
+Current task: E0/E1/E2 are merged; V0a is complete and locally verified; next is E3
 
 ## Plan review pass (2026-08-16)
 
@@ -87,9 +87,11 @@ OpenCode + ExtendCodeAgent active (where permitted)
 ControlDeck-launched and terminal-launched OpenCode count as the same condition unless a measured
 semantic discrepancy is found.
 
-Use local-low, local-practical, host/default and functioning frontier tiers as relevant. Repeat
-stochastic local-model runs. Record exact OpenCode/ExtendCodeAgent/model/repository/workspace
-identities and relevant hardware/runtime details.
+Use local-low, local-practical, host/default and functioning frontier tiers as relevant. The current
+environment fixes local-practical to the existing port-8090 Llama/Qwen3.6 27B service and frontier to
+Sonnet plus Codex through GitHub Copilot in OpenCode. Wait for the 8090 model to wake; never start
+Ollama or a substitute server. Repeat stochastic runs and record exact OpenCode/ExtendCodeAgent/model/
+provider/repository/workspace identities plus relevant hardware/runtime details.
 
 ## Anti-overfit and attribution
 
@@ -185,16 +187,32 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/v0a-verification-contract-slice
+git switch -c agent/e3-layer-b-task-suite
 ```
 
-V0a defines `SemanticChangeSet`, `VerificationObligation` and required-verification-set derivation as
-shadow-only projections over the existing truth model. It must not add a second truth store or pull
-evidence reuse, failure taxonomy, oracle assessment or certificates forward from later V stages.
+E3 seals the Layer B task suite and objective oracles. It also records the exact ControlDeck-launched
+OpenCode identity, port-8090 Qwen3.6 27B route, and GitHub Copilot Sonnet/Codex model identifiers used
+by later evaluation; none of these become host-neutral core constants.
 
-Rollback path: switch to synchronized `main`. This branch changes the host-neutral depth/query
-contract, OpenCode adapter status types, tests and documentation; it adds no capability and changes
-no default behavior.
+Rollback path: switch to synchronized `main`. This branch adds only host-neutral immutable
+verification projections, tests and documentation; it adds no store, adapter behavior or active mode.
+
+## Stage V0a — complete on this branch
+
+Delivered:
+
+- Added immutable `SemanticChangeSet`, `SemanticEntityChange` and `SemanticRelationChange`
+  projections over actual base/candidate Twin snapshots, with deterministic IDs and provenance.
+- Added explicit `VerificationObligation` and `RequiredVerificationSet` projections. Test providers
+  cover only graph-supported local/consumer obligations; runtime/uncertainty gaps remain explicit.
+- Added a precision/recall projection against an executed expected-provider set for E3/E4/B0 use.
+- When a file body changes but analyzer symbol shells do not, affected symbols become low-confidence
+  inferred semantic changes; unknown is not treated as unchanged.
+- Architecture evidence proves the slice has no storage, SQLite, OpenCode or filesystem dependency;
+  no evidence reuse, failure taxonomy, oracle assessment or certificate was pulled forward.
+- Exit gates PASS: `tools/local/all-fast` (178 Python, 9 adapter),
+  `tools/local/test-integration` (17 Python, 9 adapter), and `tools/local/build` (Python sdist/wheel
+  plus TypeScript build).
 
 ## Stage E2 — complete on this branch
 

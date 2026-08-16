@@ -4,7 +4,7 @@ Status date: 2026-08-16
 
 ## Program state
 
-Overall: **A-I IMPLEMENTATION COMPLETE — PHASE 0 ACTIVE — E0/E1/E2 COMPLETE — V0a NEXT**
+Overall: **A-I COMPLETE — PHASE 0 ACTIVE — E0/E1/E2/V0a COMPLETE — E3 NEXT**
 
 PRs A-I are merged and the implementation baseline is complete. Planning PRs
 [#20](https://github.com/souten-yd/ExtendCodeAgent/pull/20) and
@@ -16,8 +16,8 @@ backlog.
 This is not a production-capable designation. Baseline release validation (stage B0, formerly RV-0) is
 deliberately **not** the next step: the verification contract slice, sealed task suite, unified
 evaluation runner/labels and attributable PI trace remain incomplete. Phase 0 closes those gaps first
-so baseline results can support attribution and keep/demote decisions. E0, E1 and E2 are complete;
-V0a is next.
+so baseline results can support attribution and keep/demote decisions. E0, E1, E2 and V0a are
+complete; E3 is next.
 
 ## Canonical read order
 
@@ -98,8 +98,9 @@ for the `call_graph` folding and the `ConfigError` policy: `docs/handoff/DECISIO
 
 ## Immediate next action
 
-Phase 0, stage V0a: define the minimal shadow-only verification contract slice and make required-set
-quality measurable without adding a second truth store. See `docs/handoff/NEXT_TASK.md`.
+Phase 0, stage E3: seal the Layer B task suite, ground-truth oracles, split and model/runtime arms.
+The evaluation uses port-8090 Llama/Qwen3.6 27B for local-practical and GitHub Copilot Sonnet/Codex
+for frontier; Ollama must not be started. See `docs/handoff/NEXT_TASK.md`.
 
 No recorded evidence yet supports the product thesis. The only real-model result,
 `docs/evidence/pr-g/model-evaluation.json`, is 6 scenarios at 1 repetition with `tool_calls = 0` in

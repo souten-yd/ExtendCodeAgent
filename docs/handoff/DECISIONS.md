@@ -713,3 +713,28 @@ minimum 0.35 currently emitted by analyzers, so default query behavior is unchan
 Validation: `tools/local/all-fast` PASS (171 Python, 9 adapter),
 `tools/local/test-integration` PASS (16 Python, 9 adapter), and `tools/local/build` PASS (Python
 sdist/wheel and TypeScript build). GitHub Actions were not added.
+
+## 2026-08-16 — V0a immutable verification projections
+
+Decision: V0a is a pure, host-neutral projection over existing Twin/Graph/Impact truth. It introduces
+no verification database or adapter behavior. `SemanticChangeSet` compares base and candidate Twin
+snapshots and retains entity/relation provenance. A changed file whose symbol shell is unchanged is
+represented as an inferred symbol change at confidence 0.5; unknown body impact is not silently
+treated as unchanged.
+
+`VerificationObligation` remains `uncovered` until executed evidence exists. The initial required set
+accepts graph-linked tests only for local/test-intent/consumer obligations and leaves side-effect and
+uncertainty obligations visibly uncovered. V0a does not reuse old runtime evidence; V3 owns reuse.
+Selection quality is measurable as exact provider IDs plus TP/FP/FN, precision and recall.
+
+Architecture tests reject storage/SQLite/OpenCode/filesystem dependencies in this slice. Final gates:
+all-fast PASS (178 Python, 9 adapter), integration PASS (17 Python, 9 adapter), build PASS.
+
+## 2026-08-16 — User-mandated evaluation model routes
+
+The evaluation environment uses OpenCode launched through ControlDeck's existing path where
+available; this does not make ControlDeck a separate ECA runtime. `local-practical` uses the existing
+Llama-compatible Qwen3.6 27B service on port 8090 and waits for wake-up. Ollama or substitute model
+servers must not be started. Frontier evaluation uses two mandatory OpenCode arms, Sonnet and Codex,
+both through the registered GitHub Copilot provider. E3 seals exact installed identifiers; domain code
+must not hard-code them.
