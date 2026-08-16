@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -59,6 +60,94 @@ LOCAL_SOURCES = {
 
 class EvaluationError(RuntimeError):
     """A deterministic matrix or execution failure."""
+
+
+def _provider_failure(stderr: str) -> str | None:
+    """Return a stable provider-gap category without persisting provider detail."""
+    if "Rate limit exceeded" in stderr:
+        return "RATE_LIMIT"
+    if "AuthenticationError" in stderr:
+        return "AUTHENTICATION"
+    if "ProviderModelNotFoundError" in stderr:
+        return "MODEL_NOT_FOUND"
+    if "AI_RetryError: Failed after" in stderr:
+        return "PROVIDER_RETRY_EXHAUSTED"
+    return None
+
+
+def _partial_text(value: str | bytes | None, previous: str) -> str:
+    if isinstance(value, bytes):
+        return value.decode(errors="replace")
+    if isinstance(value, str):
+        return value
+    return previous
+
+
+def _terminate_process_group(process: subprocess.Popen[str]) -> None:
+    if process.poll() is not None:
+        return
+    try:
+        os.killpg(process.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        return
+    try:
+        process.wait(timeout=2)
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        process.wait()
+
+
+def _run_opencode(
+    command: list[str], *, cwd: Path, env: dict[str, str], timeout: int
+) -> tuple[str, str, int | None, bool, str | None]:
+    """Run OpenCode while failing fast after its provider retries are exhausted."""
+    process = subprocess.Popen(
+        command,
+        cwd=cwd,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        start_new_session=True,
+    )
+    deadline = time.monotonic() + timeout
+    stdout = ""
+    stderr = ""
+    try:
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                _terminate_process_group(process)
+                return stdout, stderr, None, True, _provider_failure(stderr)
+            try:
+                stdout, stderr = process.communicate(timeout=min(1.0, remaining))
+                return (
+                    stdout,
+                    stderr,
+                    process.returncode,
+                    False,
+                    _provider_failure(stderr),
+                )
+            except subprocess.TimeoutExpired as error:
+                stdout = _partial_text(error.stdout, stdout)
+                stderr = _partial_text(error.stderr, stderr)
+                provider_failure = _provider_failure(stderr)
+                if provider_failure and "AI_RetryError: Failed after" in stderr:
+                    _terminate_process_group(process)
+                    final_stdout, final_stderr = process.communicate()
+                    return (
+                        final_stdout or stdout,
+                        final_stderr or stderr,
+                        process.returncode,
+                        False,
+                        provider_failure,
+                    )
+    except BaseException:
+        _terminate_process_group(process)
+        raise
 
 
 def _load(path: Path) -> dict[str, Any]:
@@ -788,6 +877,9 @@ def _execute(cell: dict[str, Any], task: dict[str, Any], raw_root: Path) -> dict
         "run",
         "--format",
         "json",
+        "--print-logs",
+        "--log-level",
+        "ERROR",
         "--auto",
         "--model",
         model_id,
@@ -798,24 +890,15 @@ def _execute(cell: dict[str, Any], task: dict[str, Any], raw_root: Path) -> dict
         command.append("--pure")
     command.append(instruction)
     started = time.monotonic()
-    timed_out = False
-    process_exit: int | None = None
-    try:
-        process = subprocess.run(
-            command,
-            cwd=ROOT,
-            env=env,
-            text=True,
-            capture_output=True,
-            timeout=task["timeout_seconds"],
-            check=False,
-        )
-        process_exit = process.returncode
-        log_path.write_text(process.stdout, encoding="utf-8")
-    except subprocess.TimeoutExpired as error:
-        timed_out = True
-        output = error.stdout if isinstance(error.stdout, str) else ""
-        log_path.write_text(output, encoding="utf-8")
+    stdout, stderr, process_exit, timed_out, provider_failure = _run_opencode(
+        command,
+        cwd=ROOT,
+        env=env,
+        timeout=task["timeout_seconds"],
+    )
+    log_path.write_text(stdout, encoding="utf-8")
+    stderr_path = log_path.with_suffix(".stderr.log")
+    stderr_path.write_text(stderr, encoding="utf-8")
     oracle = _run(
         [
             str(PYTHON),
@@ -832,7 +915,9 @@ def _execute(cell: dict[str, Any], task: dict[str, Any], raw_root: Path) -> dict
         600,
     )
     measured = _metrics(log_path)
-    if timed_out:
+    if provider_failure:
+        outcome = "UNAVAILABLE"
+    elif timed_out:
         outcome = "TIMEOUT"
     elif measured["errors"]:
         outcome = "UNAVAILABLE" if "APIError" in measured["errors"] else "FAIL"
@@ -845,6 +930,7 @@ def _execute(cell: dict[str, Any], task: dict[str, Any], raw_root: Path) -> dict
         "model_id": model_id,
         "outcome": outcome,
         "process_exit": process_exit,
+        "provider_failure": provider_failure,
         "oracle_exit": oracle.returncode,
         "oracle_diagnostic": oracle.stderr.strip()[-500:],
         "wall_ms": round((time.monotonic() - started) * 1000),
@@ -857,6 +943,14 @@ def _execute(cell: dict[str, Any], task: dict[str, Any], raw_root: Path) -> dict
         oracle_exit=oracle.returncode,
         observed_pi_facts=measured["observed_pi_facts"],
     )
+    if provider_failure:
+        result["outcome_attribution"] = {
+            "classification": "PROVIDER_GAP",
+            "required_fact_recall": None,
+            "pi_required_fact_recall": None,
+            "schema_valid": None,
+            "final_exact_pass": False,
+        }
     if cell.get("pi_activation_gate"):
         result["pi_activation"] = _activation_assessment(result)
     if cell.get("pi_effect_pilot") and mode == "active":

@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +25,8 @@ from tools.local.evaluation_runner import (  # noqa: E402
     _pilot_active_assessment,
     _pilot_gate,
     _pilot_off_assessment,
+    _provider_failure,
+    _run_opencode,
     _task_instruction,
 )
 
@@ -45,6 +49,30 @@ def _digest(value: dict[str, object]) -> str:
         payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
     ).encode()
     return hashlib.sha256(canonical).hexdigest()
+
+
+def test_opencode_provider_failure_is_classified_and_stops_early(tmp_path: Path) -> None:
+    script = tmp_path / "provider-gap.py"
+    script.write_text(
+        "import sys, time\n"
+        "message = 'Rate limit exceeded. Please try again later.'\n"
+        "print(f'AI_APICallError: {message}', file=sys.stderr, flush=True)\n"
+        "print(f'AI_RetryError: Failed after 3 attempts. Last error: {message}', "
+        "file=sys.stderr, flush=True)\n"
+        "time.sleep(30)\n",
+        encoding="utf-8",
+    )
+    started = time.monotonic()
+    stdout, stderr, process_exit, timed_out, provider_failure = _run_opencode(
+        [sys.executable, str(script)], cwd=ROOT, env=dict(os.environ), timeout=20
+    )
+    assert time.monotonic() - started < 5
+    assert stdout == ""
+    assert "AI_RetryError" in stderr
+    assert process_exit is not None
+    assert timed_out is False
+    assert provider_failure == "RATE_LIMIT"
+    assert _provider_failure("AuthenticationError") == "AUTHENTICATION"
 
 
 def test_matrix_and_promoted_layer_a_labels_are_sealed() -> None:
