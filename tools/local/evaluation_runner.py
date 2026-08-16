@@ -157,6 +157,10 @@ def validate() -> None:
     pilot = activation_plan["pilot"]
     if pilot["model"] != "local-practical" or pilot["repetitions"] != 3:
         raise EvaluationError("B0a PI pilot must use three port-8090 local-practical repetitions")
+    if pilot.get("initial_tranche_repetitions") != 1:
+        raise EvaluationError("B0a PI pilot must evaluate one interleaved repetition first")
+    if pilot.get("execution_order") != ["repetition", "task", "arm"]:
+        raise EvaluationError("B0a PI pilot must interleave controls and active cells")
     if tuple(pilot["arms"]) != ("native", "off", "active"):
         raise EvaluationError("B0a PI pilot must preserve native/off/active controls")
     if not set(pilot["tasks"]) <= {item["id"] for item in tasks["tasks"]}:
@@ -291,6 +295,16 @@ def plan(
                             "pi_effect_pilot": scope == "b0a-pilot",
                         }
                     )
+    if scope == "b0a-pilot":
+        arm_order = {arm: index for index, arm in enumerate(arms)}
+        task_order = {task["id"]: index for index, task in enumerate(tasks)}
+        cells.sort(
+            key=lambda cell: (
+                cell["repetition"],
+                task_order[cell["task_id"]],
+                arm_order[cell["arm"]],
+            )
+        )
     result = {
         "schema": 1,
         "matrix_id": matrix["matrix_id"],
@@ -823,8 +837,27 @@ def _pilot_gate(results: list[dict[str, Any]]) -> dict[str, Any]:
         for task_id in contract["tasks"]
         for repetition in range(1, int(contract["repetitions"]) + 1)
     }
+    initial_expected = {
+        f"b0a-pilot--{arm}--{contract['model']}--{task_id}--r{repetition}"
+        for arm in contract["arms"]
+        for task_id in contract["tasks"]
+        for repetition in range(1, int(contract["initial_tranche_repetitions"]) + 1)
+    }
     by_id = {item["cell_id"]: item for item in results}
-    missing = sorted(expected - set(by_id))
+    observed = set(by_id)
+    if observed == expected:
+        stage = "confirmation_complete"
+        stage_expected = expected
+    elif observed == initial_expected:
+        stage = "initial_complete"
+        stage_expected = initial_expected
+    elif observed < initial_expected:
+        stage = "collecting_initial"
+        stage_expected = initial_expected
+    else:
+        stage = "collecting_confirmation"
+        stage_expected = expected
+    missing = sorted(stage_expected - observed)
     unexpected = sorted(set(by_id) - expected)
     active = [item for item in results if item["arm"] == "active"]
     off = [item for item in results if item["arm"] == "off"]
@@ -878,11 +911,20 @@ def _pilot_gate(results: list[dict[str, Any]]) -> dict[str, Any]:
         effect["maximum_active_median_wall_ratio_over_slower_control"]
     ):
         reasons.append("active_wall_time_abnormal")
-    decision = effect["no_effect_action"] if reasons else effect["pass_action"]
+    if stage in {"collecting_initial", "collecting_confirmation"}:
+        decision = "COLLECT_MORE_CELLS"
+    elif reasons:
+        decision = effect["no_effect_action"]
+    elif stage == "initial_complete":
+        decision = effect["initial_pass_action"]
+    else:
+        decision = effect["pass_action"]
     return {
         "decision": decision,
+        "stage": stage,
         "activation_plan_seal": _load(B0A_ACTIVATION_PLAN)["seal"]["canonical_payload"],
-        "expected_cells": len(expected),
+        "stage_expected_cells": len(stage_expected),
+        "full_expected_cells": len(expected),
         "observed_cells": len(expected & set(by_id)),
         "missing_cells": missing,
         "unexpected_cells": unexpected,
@@ -894,7 +936,7 @@ def _pilot_gate(results: list[dict[str, Any]]) -> dict[str, Any]:
         "off_observation_failures": off_observation_failures,
         "provider_or_timeout_cells": provider_or_timeout,
         "reasons": reasons,
-        "comprehensive_evaluation_permitted": not reasons,
+        "comprehensive_evaluation_permitted": decision == effect["pass_action"],
     }
 
 
@@ -1005,10 +1047,19 @@ def run(
         raise EvaluationError(
             f"B0a PI activation gate did not pass: {report['activation_gate']['status']}"
         )
-    if scope == "b0a-pilot" and report["pilot_gate"]["decision"] != "PROCEED_TO_COMPREHENSIVE":
-        raise EvaluationError(
-            f"B0a PI effect pilot requires repair: {report['pilot_gate']['reasons']}"
+    if scope == "b0a-pilot":
+        decision = report["pilot_gate"]["decision"]
+        initial_cells = (
+            len(_load(B0A_ACTIVATION_PLAN)["pilot"]["arms"])
+            * len(_load(B0A_ACTIVATION_PLAN)["pilot"]["tasks"])
+            * int(_load(B0A_ACTIVATION_PLAN)["pilot"]["initial_tranche_repetitions"])
         )
+        if decision == "CONTINUE_TO_CONFIRMATION" and max_cells == initial_cells:
+            return
+        if decision != "PROCEED_TO_COMPREHENSIVE":
+            raise EvaluationError(
+                f"B0a PI effect pilot requires repair: {report['pilot_gate']['reasons']}"
+            )
 
 
 def _validate_resume(

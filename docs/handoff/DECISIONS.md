@@ -868,8 +868,9 @@ The activation contract also fails closed on capability reachability. `blueprint
 running their ablations would measure non-execution and could falsely report no effect. This is a B1
 adapter/productization gap to repair before the 714-cell screen, not a reason to weaken the screen.
 
-Activation alone is not a reason to spend the full matrix. A 27-cell port-8090 pilot compares
-`native`, installed-but-off and active over three representative tasks at three repetitions. Active
+Activation alone is not a reason to spend the full matrix. The port-8090 pilot first interleaves one
+repetition of `native`, installed-but-off and active over three representative tasks (9 cells). Only
+a passing initial signal continues to the three-repetition confirmation (27 total). Active
 must show an objective PASS gain over the better control, every PI-enabled/disabled observation must
 match its contract, provider errors/timeouts are forbidden, and active median wall time must stay
 within 2x of the slower control. Any failure produces `REPAIR_AND_RETEST`; the pilot is rerun at the

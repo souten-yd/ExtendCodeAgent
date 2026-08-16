@@ -96,6 +96,13 @@ def test_b0a_schedules_enforce_bootstrap_exclusions_and_screening_contract() -> 
         "eca-tests-001",
     }
     assert all(item["pi_effect_pilot"] for item in pilot_plan["cells"])
+    assert [
+        (item["repetition"], item["task_id"], item["arm"]) for item in pilot_plan["cells"][:9]
+    ] == [
+        (1, task_id, arm)
+        for task_id in ("eca-symbol-001", "eca-impact-001", "eca-tests-001")
+        for arm in ("native", "off", "active")
+    ]
 
     baseline = _run("plan", "--scope", "b0a-baseline")
     assert baseline.returncode == 0, baseline.stderr
@@ -220,6 +227,7 @@ def test_effect_pilot_requires_objective_gain_observed_pi_and_bounded_time() -> 
                     "arm": arm,
                     "model_tier": "local-practical",
                     "task_id": task_id,
+                    "repetition": repetition,
                     "outcome": "PASS" if arm == "active" and repetition == 1 else "FAIL",
                     "wall_ms": 100,
                     "process_exit": 0,
@@ -267,6 +275,13 @@ def test_effect_pilot_requires_objective_gain_observed_pi_and_bounded_time() -> 
     assert gate["decision"] == "PROCEED_TO_COMPREHENSIVE"
     assert gate["active_pass_delta_over_best_control"] == 3
     assert gate["comprehensive_evaluation_permitted"] is True
+
+    initial = [item for item in results if item["repetition"] == 1]
+    initial_gate = _pilot_gate(initial)
+    assert initial_gate["stage"] == "initial_complete"
+    assert initial_gate["observed_cells"] == 9
+    assert initial_gate["decision"] == "CONTINUE_TO_CONFIRMATION"
+    assert initial_gate["comprehensive_evaluation_permitted"] is False
 
     for item in results:
         if item["arm"] == "active":

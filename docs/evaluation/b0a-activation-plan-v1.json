@@ -55,6 +55,12 @@
       ]
     },
     "repetitions": 3,
+    "initial_tranche_repetitions": 1,
+    "execution_order": [
+      "repetition",
+      "task",
+      "arm"
+    ],
     "effect_gate": {
       "minimum_active_pass_delta_over_best_control": 1,
       "maximum_active_median_wall_ratio_over_slower_control": 2.0,
@@ -62,6 +68,7 @@
       "every_off_cell_must_observe_disabled_pi_status": true,
       "provider_error_or_timeout_requires_repair": true,
       "no_effect_action": "REPAIR_AND_RETEST",
+      "initial_pass_action": "CONTINUE_TO_CONFIRMATION",
       "pass_action": "PROCEED_TO_COMPREHENSIVE"
     }
   },
@@ -131,6 +138,6 @@
   },
   "seal": {
     "algorithm": "sha256",
-    "canonical_payload": "17475f0e99c66d1b336d6ddd62d330cd945437ede99923c82e6a59345200be24"
+    "canonical_payload": "5e3ea477a976856689ef6238c648ec6ce01e7c46122b8444a909003365905fb4"
   }
 }

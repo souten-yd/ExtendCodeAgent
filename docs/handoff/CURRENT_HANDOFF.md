@@ -2,7 +2,7 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/b0a-activation-config-repair`; latest merged base `0a1a9f4`
+Current branch: `agent/b0a-staged-effect-pilot`; latest merged base `ebe2a19`
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
 Current task: prove real PI activation and repair missing capability routes before comprehensive B0a
 
@@ -14,9 +14,10 @@ Current task: prove real PI activation and repair missing capability routes befo
   revision, canonical evidence and positive PI time on every route, with no provider error. It
   correctly stopped before the pilot because all routes reported `blueprint`, `strategy` and
   `convergence` off despite the sealed active configuration.
-- Root cause: the runner supplied the generated project config only inside the MCP environment, not
-  to OpenCode's plugin process; the MCP entry point also hard-coded advisory instead of consuming
-  `EXTENDCODEAGENT_MODE`. The current bounded repair makes plugin and MCP resolve the same config.
+- PR #49 repaired that root cause and merged as
+  `ebe2a197fddf019bd2e40bbd372349a5f835d482`. Its fresh activation run passed all four routes. The
+  first pilot attempt was stopped after eight arm-major native cells, including one 256,319ms cell,
+  before it had measured `off` or `active`; staged interleaving is the current bounded repair.
 
 - Stopped the pre-activation baseline after 137/306 atomically checkpointed cells at exact old head
   `86e8061`. No runner/OpenCode process remains. These cells are diagnostic OpenCode model-variance
@@ -27,9 +28,10 @@ Current task: prove real PI activation and repair missing capability routes befo
 - A passing route must observe `pi_status`, `pi_symbol`, all configurable modes/depths, ready Twin,
   Twin revision, canonical evidence and positive PI time. Task-oracle quality remains a separate
   field.
-- Added a 27-cell causal pilot: port-8090 Qwen, `native/off/active`, symbol/impact/test-selection,
-  three repetitions. It proceeds only on an objective active PASS gain, complete active/off PI
-  observations, no provider/timeout failure and active median wall ratio at most 2x.
+- The pilot now starts with one interleaved port-8090 Qwen repetition: `native/off/active` over
+  symbol/impact/test-selection (9 cells). Only a passing signal continues to three repetitions/27
+  total; it proceeds only on an objective active PASS gain, complete active/off observations, no
+  provider/timeout failure and active median wall ratio at most 2x.
 - Comprehensive B0a execution now requires passing same-exact-head activation and pilot reports. Current
   deterministic reachability audit blocks it because `blueprint`, `convergence`, `traceability` and
   `strategy` have no OpenCode tool/task route. Next: finish focused/full gates, publish this guard,
