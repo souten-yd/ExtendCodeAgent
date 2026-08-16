@@ -18,6 +18,7 @@ def _trace(trace_id: str = "trace-1", *, arm_mode: str = "active") -> Evaluation
         task_class="symbol-reference-lookup",
         oracle_id="e3-oracle:eca-symbol-001",
         input_seals={"layer_a": "a", "layer_b": "b", "matrix": "m"},
+        capability_state_source="observed_pi_status",
         capability_modes={"semantic": arm_mode},
         capability_depths={"semantic": "D2"},
         used_features={
@@ -73,3 +74,8 @@ def test_trace_shape_reserves_verification_features_without_implementing_them() 
     }
     assert "prompt" not in value
     assert "transcript" not in value
+
+
+def test_trace_rejects_ambiguous_capability_state_source() -> None:
+    with pytest.raises(TraceIntegrityError, match="capability_state_source"):
+        replace(_trace(), capability_state_source="assumed")

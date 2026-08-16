@@ -147,6 +147,8 @@ def test_every_arm_emits_trace_and_semantic_ablation_is_attributable(tmp_path: P
     ]
     active = next(item for item in records if item["cell_id"].startswith("active--"))
     ablated = next(item for item in records if item["cell_id"].startswith("ablation:semantic--"))
+    assert active["capability_state_source"] == "planned_matrix"
+    assert ablated["capability_state_source"] == "planned_matrix"
     assert active["task_id"] == ablated["task_id"] == "eca-symbol-001"
     assert active["oracle_id"] == ablated["oracle_id"]
     differences = {

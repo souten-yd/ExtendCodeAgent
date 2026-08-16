@@ -36,6 +36,7 @@ class EvaluationTrace:
     task_class: str
     oracle_id: str
     input_seals: Mapping[str, str]
+    capability_state_source: str
     capability_modes: Mapping[str, str]
     capability_depths: Mapping[str, str]
     used_features: Mapping[str, str]
@@ -56,11 +57,16 @@ class EvaluationTrace:
             "task_id",
             "task_class",
             "oracle_id",
+            "capability_state_source",
             "source_revision_id",
             "model_tier",
             "verification_outcome",
         ):
             _required(str(getattr(self, label)), label)
+        if self.capability_state_source not in {"observed_pi_status", "planned_matrix"}:
+            raise TraceIntegrityError(
+                "capability_state_source must be observed_pi_status or planned_matrix"
+            )
         for name in ("input_seals", "capability_modes", "capability_depths", "used_features"):
             object.__setattr__(self, name, _mapping(getattr(self, name)))
         object.__setattr__(self, "selected_evidence_ids", tuple(self.selected_evidence_ids))
@@ -77,6 +83,7 @@ class EvaluationTrace:
             "task_class": self.task_class,
             "oracle_id": self.oracle_id,
             "input_seals": dict(self.input_seals),
+            "capability_state_source": self.capability_state_source,
             "capability_modes": dict(self.capability_modes),
             "capability_depths": dict(self.capability_depths),
             "used_features": dict(self.used_features),

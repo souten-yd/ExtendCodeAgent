@@ -613,8 +613,11 @@ def _append_trace(
         item for item in suite["repositories"] if item["id"] == result["repository_id"]
     )
     planned_modes, planned_depths = _trace_capabilities(result["arm"])
-    capability_modes = result.get("observed_capability_modes") or planned_modes
-    capability_depths = result.get("observed_capability_depths") or planned_depths
+    observed_modes = result.get("observed_capability_modes") or {}
+    observed_depths = result.get("observed_capability_depths") or {}
+    capability_state_source = "observed_pi_status" if observed_modes else "planned_matrix"
+    capability_modes = observed_modes or planned_modes
+    capability_depths = observed_depths or planned_depths
     trace_id = (
         "trace-"
         + hashlib.sha256(
@@ -635,6 +638,7 @@ def _append_trace(
             task_class=result["task_class"],
             oracle_id=f"e3-oracle:{result['task_id']}",
             input_seals=input_seals,
+            capability_state_source=capability_state_source,
             capability_modes=capability_modes,
             capability_depths=capability_depths,
             used_features={},
