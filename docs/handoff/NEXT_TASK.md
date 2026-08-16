@@ -90,7 +90,7 @@ variance and the six-part timing fields in compact evidence.
 
 That baseline reached 229/306 at `7e58751` before host-default began returning rate limits. Four
 provider-gap cells were misreported as task timeouts because OpenCode wrote the retry failure only to
-its error log and remained alive until the task deadline. Commit `602a455` repairs early provider-gap
+its error log and remained alive until the task deadline. PR #66 at merged head `91b82e3` repairs early provider-gap
 detection and classification. Do not resume the 229-cell report or count those cells in quality or
 latency aggregates. Merge the repair, wait for provider recovery, rerun exact-head activation/pilot,
 and restart the 306-cell baseline from zero; the 714-cell screen remains gated on full completion.

@@ -2,7 +2,8 @@
   "schema": 1,
   "classification": "B0A_EVALUATION_RUNNER_REPAIR",
   "status": "PASS",
-  "repair_revision": "602a455145ad6370cff1340caab71018a5f9b834",
+  "repair_revision": "91b82e3b1320e7fbd5fbf9b2778b9ebf50ab625f",
+  "repair_pull_request": 66,
   "superseded_checkpoint": {
     "implementation_revision": "7e58751b05ec310412c3406c8b9ae1142fdd1c6c",
     "executed_cells": 229,
