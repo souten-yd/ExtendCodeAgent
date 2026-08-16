@@ -1,5 +1,28 @@
 # Implementation Log
 
+## 2026-08-16 — E3 Layer B task suite and outcome ground truth
+
+- Added the sealed 13-task Layer B suite, validation/preparation/oracle harness, serial native proof
+  runner, and focused integration tests.
+- Fixed an ambiguity found by the first preliminary native run by requiring the exact answer status;
+  archived those three pre-seal logs under ignored local evidence and reran every task after the
+  final seal.
+- Final seal `23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632` validated; native
+  ControlDeck-managed OpenCode proof passed its non-triviality gate at 4/13 task successes with no
+  timeout or unavailability.
+- Rejected KasaneCore as the slow suite because its pinned tests require untracked/generated assets.
+  Rejected current PEDS origin/main because its remote pin was not green. A clean older remote-
+  reachable PEDS pin passed 1600 Python tests plus 82 Playwright tests in 756 seconds total.
+- OMO 4.19.4 plus ECA loaded model-free with nine ECA tools and connected MCP; local-low remains
+  UNAVAILABLE. Restored the installer-created home configuration path after capturing the isolation
+  limitation.
+- Added a versioned GitHub candidate registry for OpenCode, Hermes Agent, Atomic Agents and Codex,
+  keeping it explicitly outside the sealed E3 v1 split.
+- Focused E3 tests, scoped Ruff, strict mypy and diff checks passed. Full gates passed: all-fast 178
+  Python plus 9 adapter tests; integration 21 Python plus 9 adapter tests; Python and TypeScript
+  builds. An extra repository-wide Ruff scan found one pre-existing long line in the E4-retirement
+  target `tools/local/benchmark_pr_b.py`; E3 did not absorb that unrelated cleanup.
+
 ## 2026-08-16 — Stage V0a completed locally
 
 - Added immutable, deterministic semantic-change and verification-obligation projections over the

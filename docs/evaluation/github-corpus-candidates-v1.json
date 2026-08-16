@@ -1,0 +1,104 @@
+{
+  "schema": 1,
+  "registry_id": "github-corpus-candidates-v1",
+  "observed_at": "2026-08-16T14:57:33+09:00",
+  "purpose": "Reference and next-version corpus candidates. This registry does not change the sealed E3 v1 tuning or held-out split.",
+  "selection_policy": {
+    "popularity_is_context_not_ground_truth": true,
+    "required_checks_before_promotion": [
+      "pin an immutable full commit SHA",
+      "confirm the repository language is supported by the measured analyzer",
+      "reproduce setup and tests in an isolated checkout",
+      "classify network, credential, service, and generated-asset dependencies",
+      "measure clean full-suite wall time on the evaluation host",
+      "define machine-checkable tasks and reserve the held-out split before tuning"
+    ],
+    "refresh_policy": "Stars, forks, default branches, repository size, and activity are observations that may drift. Refresh them when a candidate is promoted; never move a pin inside a sealed corpus version."
+  },
+  "candidates": [
+    {
+      "id": "opencode",
+      "repository": "https://github.com/anomalyco/opencode",
+      "upstream_owner": "anomalyco",
+      "observed_default_branch": "dev",
+      "primary_language": "TypeScript",
+      "license": "MIT",
+      "observed_popularity": {
+        "stars": 197863,
+        "forks": 25484
+      },
+      "decision": "candidate-next",
+      "best_role": "TypeScript dogfooding and host-integration reference",
+      "rationale": "Language-compatible with the current JavaScript/TypeScript analyzer and directly relevant to the native host path used by this program.",
+      "promotion_risks": [
+        "large checkout and active upstream churn",
+        "Bun-specific setup",
+        "integration tests may require credentials or external services"
+      ]
+    },
+    {
+      "id": "hermes-agent",
+      "repository": "https://github.com/NousResearch/hermes-agent",
+      "upstream_owner": "NousResearch",
+      "observed_default_branch": "main",
+      "primary_language": "Python",
+      "license": "MIT",
+      "observed_popularity": {
+        "stars": 231171,
+        "forks": 45929
+      },
+      "decision": "candidate-next",
+      "best_role": "large external held-out agent/runtime and causal-flow corpus",
+      "rationale": "Its Python agent, tool, skill, and MCP surfaces are a strong external test of tracing and causal reasoning without being an ExtendCodeAgent repository.",
+      "promotion_risks": [
+        "large and integration-heavy repository",
+        "credential, model-provider, or service-dependent tests",
+        "must separate deterministic unit gates from live-provider gates"
+      ]
+    },
+    {
+      "id": "atomic-agents",
+      "repository": "https://github.com/Eigenwise/atomic-agents",
+      "upstream_owner": "Eigenwise",
+      "observed_default_branch": "main",
+      "primary_language": "Python",
+      "license": "MIT",
+      "observed_popularity": {
+        "stars": 6180,
+        "forks": 531
+      },
+      "decision": "candidate-fast-control",
+      "best_role": "small external control for schema, reference, refactor, and trace tasks",
+      "rationale": "It is language-compatible and materially smaller than the other candidates, making isolated pins and fast deterministic task oracles practical.",
+      "promotion_risks": [
+        "unlikely to satisfy the required greater-than-ten-minute slow-suite condition",
+        "smaller graph may underrepresent scale and cross-boundary failures"
+      ]
+    },
+    {
+      "id": "codex",
+      "repository": "https://github.com/openai/codex",
+      "upstream_owner": "openai",
+      "observed_default_branch": "main",
+      "primary_language": "Rust",
+      "license": "Apache-2.0",
+      "observed_popularity": {
+        "stars": 106162,
+        "forks": 16118
+      },
+      "decision": "reference-only-until-rust-analysis",
+      "best_role": "agent-host architecture, sandbox, protocol, and evaluation implementation reference",
+      "rationale": "The maintained implementation is Rust, while the currently measured ExtendCodeAgent analyzers cover Python and JavaScript/TypeScript. Using it now as a formal PI-benefit task corpus would measure unsupported-language behavior rather than the product hypothesis.",
+      "promotion_risks": [
+        "requires a measured Rust analyzer before formal corpus use",
+        "large workspace and platform-dependent integration gates"
+      ]
+    }
+  ],
+  "sources": [
+    "https://github.com/anomalyco/opencode",
+    "https://github.com/NousResearch/hermes-agent",
+    "https://github.com/Eigenwise/atomic-agents",
+    "https://github.com/openai/codex"
+  ]
+}

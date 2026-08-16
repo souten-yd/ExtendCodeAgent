@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "evidence_id": "e3-native-oracle-proof-v1",
+  "observed_at": "2026-08-16",
+  "manifest_seal": "23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632",
+  "runtime": {
+    "distribution": "ControlDeck-managed OpenCode",
+    "version": "1.18.16",
+    "mode": "native-pure",
+    "model": "opencode/big-pickle"
+  },
+  "proof_status": "PASS",
+  "outcome_counts": {
+    "PASS": 4,
+    "FAIL": 9,
+    "TIMEOUT": 0,
+    "UNAVAILABLE": 0
+  },
+  "native_success_rate": 0.3076923076923077,
+  "aggregate": {
+    "wall_ms": 563389,
+    "tool_calls": 230,
+    "tokens": {
+      "input": 339893,
+      "output": 23748,
+      "reasoning": 21045,
+      "cache_read": 5457920
+    }
+  },
+  "results": [
+    {"task_id": "eca-symbol-001", "outcome": "FAIL", "wall_ms": 10069, "tool_calls": 4},
+    {"task_id": "eca-impact-001", "outcome": "FAIL", "wall_ms": 39495, "tool_calls": 13},
+    {"task_id": "eca-tests-001", "outcome": "PASS", "wall_ms": 32078, "tool_calls": 18},
+    {"task_id": "eca-refactor-001", "outcome": "PASS", "wall_ms": 53949, "tool_calls": 23},
+    {"task_id": "eca-negative-001", "outcome": "FAIL", "wall_ms": 5496, "tool_calls": 1},
+    {"task_id": "cd-symbol-001", "outcome": "FAIL", "wall_ms": 19197, "tool_calls": 10},
+    {"task_id": "cd-bug-001", "outcome": "PASS", "wall_ms": 34058, "tool_calls": 13},
+    {"task_id": "cd-requirement-001", "outcome": "FAIL", "wall_ms": 86479, "tool_calls": 39},
+    {"task_id": "cd-cross-boundary-001", "outcome": "FAIL", "wall_ms": 58803, "tool_calls": 24},
+    {"task_id": "kasane-unsafe-001", "outcome": "FAIL", "wall_ms": 29356, "tool_calls": 9},
+    {"task_id": "kasane-cross-boundary-001", "outcome": "FAIL", "wall_ms": 134139, "tool_calls": 55},
+    {"task_id": "kasane-tests-001", "outcome": "PASS", "wall_ms": 18427, "tool_calls": 6},
+    {"task_id": "kasane-requirement-001", "outcome": "FAIL", "wall_ms": 41843, "tool_calls": 15}
+  ],
+  "interpretation": [
+    "All 13 tasks executed and reached their machine oracle without timeout or provider unavailability.",
+    "Both PASS and FAIL occurred, so the native suite is neither impossible nor trivial.",
+    "Several failures found the relevant evidence but missed the exact output type, path-only granularity, or terminal symbol. These remain legitimate objective failures and are not manually upgraded.",
+    "Raw JSONL event streams and isolated workspaces remain under the ignored .evaluation/e3-native root."
+  ]
+}

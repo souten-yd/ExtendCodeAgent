@@ -4,7 +4,7 @@ Status date: 2026-08-16
 
 ## Program state
 
-Overall: **A-I COMPLETE — PHASE 0 ACTIVE — E0/E1/E2/V0a COMPLETE — E3 NEXT**
+Overall: **A-I COMPLETE — PHASE 0 ACTIVE — E0/E1/E2/V0a/E3 COMPLETE — E4 NEXT**
 
 PRs A-I are merged and the implementation baseline is complete. Planning PRs
 [#20](https://github.com/souten-yd/ExtendCodeAgent/pull/20) and
@@ -17,7 +17,7 @@ This is not a production-capable designation. Baseline release validation (stage
 deliberately **not** the next step: the verification contract slice, sealed task suite, unified
 evaluation runner/labels and attributable PI trace remain incomplete. Phase 0 closes those gaps first
 so baseline results can support attribution and keep/demote decisions. E0, E1, E2 and V0a are
-complete; E3 is next.
+complete; E3 has now sealed the Layer B outcome ground truth, and E4 is next.
 
 ## Canonical read order
 
@@ -98,9 +98,19 @@ for the `call_graph` folding and the `ConfigError` policy: `docs/handoff/DECISIO
 
 ## Immediate next action
 
-Phase 0, stage E3: seal the Layer B task suite, ground-truth oracles, split and model/runtime arms.
-The evaluation uses port-8090 Llama/Qwen3.6 27B for local-practical and GitHub Copilot Sonnet/Codex
-for frontier; Ollama must not be started. See `docs/handoff/NEXT_TASK.md`.
+Phase 0, stage E4: build one unified runner for the sealed Layer B suite and versioned Layer A labels.
+It must execute the fixed arm/repository/task/model/repetition matrix and emit the integrated metric
+keys into reproducible evidence. The evaluation continues to use port-8090 Llama/Qwen3.6 27B for
+local-practical and GitHub Copilot Sonnet/Codex for frontier; Ollama must not be started. See
+`docs/handoff/NEXT_TASK.md`.
+
+E3 sealed 13 tasks across three task repositories and nine required classes at
+`23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632`. The ControlDeck-managed
+OpenCode 1.18.16 native proof executed every task: 4 PASS, 9 FAIL, no timeout or unavailability
+(30.77%). A clean pinned PEDS full suite measured 756 seconds. OMO 4.19.4 and ECA loaded together
+model-free with all nine `pi_*` tools visible; the required local-low model arm remains UNAVAILABLE
+because no permitted non-Ollama weak-local endpoint is registered. GitHub reference candidates are
+recorded separately and do not alter the v1 split.
 
 No recorded evidence yet supports the product thesis. The only real-model result,
 `docs/evidence/pr-g/model-evaluation.json`, is 6 scenarios at 1 repetition with `tool_calls = 0` in

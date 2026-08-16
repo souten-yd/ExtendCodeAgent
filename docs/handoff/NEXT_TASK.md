@@ -19,28 +19,26 @@ Do not schedule work from the legacy identifiers (`RV-x`, `TA-x`, `AL-x`, `CV-x`
 
 ## Current stage
 
-**Phase 0 — E3: Layer B task suite and outcome ground truth.**
+**Phase 0 — E4: unified evaluation runner and ground truth.**
 
-Entry conditions satisfied: E1/E2 are merged and V0a is complete on
-`agent/v0a-verification-contract-slice`. Evaluation arms can now be identified by capability set and
-depth, and required-verification quality has a deterministic precision/recall projection.
+Entry conditions satisfied: E3 is sealed with 13 machine-scored tasks and native outcome evidence;
+V0a can project required-verification quality deterministically.
 
 Scope:
 
-- deliver versioned and sealed `docs/evaluation/task-suite-v1.json` with stable task IDs, pinned
-  repository revisions, natural-language instructions, task classes, machine-checkable success
-  oracles, allowed mutation scopes, timeouts and tuning/held-out membership;
-- cover symbol/reference lookup, impact, test selection, cross-file refactor, failing-test bug
-  localization, requirement tracing, a negative control, an unsafe/insufficient-evidence answer, and
-  a real cross-boundary GUI/runtime causal flow;
-- pin and justify minimum suite/per-class counts plus a slow-suite repository whose full suite exceeds
-  ten minutes;
-- execute every task once natively to prove its oracle is reachable and the suite is non-trivial;
-- include `OpenCode + OMO + ECA @ local-low` on the required subset, recording `UNAVAILABLE` rather
-  than pass if the pinned combination cannot run.
+- implement one runner for `arm × repository × task × model tier × repetition` over the sealed E3
+  suite;
+- emit the keys in `docs/evaluation/pi-verification-integrated-metrics-v1.json` and bind the pinned
+  corpus manifest;
+- promote the existing PR-C false-positive/false-negative review and PR-H ground truth into a
+  versioned Layer A label set;
+- retire the per-PR benchmark/evaluation scripts into the unified runner without losing their
+  evidence dimensions;
+- write a reproducible full-matrix result under `docs/evidence/final/` that references both the
+  Layer A labels and the sealed Layer B task suite.
 
-Exit evidence: versioned/sealed manifest; native oracle evidence for every task; native suite success
-rate neither 0% nor 100%; recorded tuning/held-out split. See master plan section 8.
+Exit evidence: one command reproduces a full matrix run; the output references both versioned label
+sets and contains the integrated metrics required by the master plan. See master plan section 8.
 
 Evaluation environment mandated by the user:
 
@@ -64,10 +62,9 @@ E3–E5 must complete first. See master plan sections 6 and 8.
 - **E2** capability depth contract — done (including the inferred-relation confidence threshold,
   completing the E1 `call_graph` folding decision);
 - **V0a** verification contract slice — done, shadow-only, with no second truth store;
-- **E3** Layer B task suite and outcome ground truth — current (what B0 actually measures), including a
-  mandatory cross-boundary GUI/runtime causal task class, an `OMO + ECA @ local-low` arm, and a
-  pinned slow-suite repository;
-- **E4** unified evaluation runner plus versioned Layer A label set;
+- **E3** Layer B task suite and outcome ground truth — done: 13 sealed tasks, native 4/13 PASS, clean
+  756-second PEDS slow suite, and truthful OMO/local-low evidence;
+- **E4** unified evaluation runner plus versioned Layer A label set — current;
 - **E5** minimal PI trace as evaluation infrastructure, with a `used_features` shape reserved for the
   `VerificationFeature` policy V0 introduces.
 

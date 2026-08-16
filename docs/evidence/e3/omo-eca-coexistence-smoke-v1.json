@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "evidence_id": "e3-omo-eca-coexistence-smoke-v1",
+  "observed_at": "2026-08-16",
+  "result": "PASS",
+  "scope": "model-free plugin and MCP coexistence smoke only",
+  "environment": {
+    "opencode_distribution": "ControlDeck managed feature",
+    "opencode_version": "1.18.16",
+    "opencode_executable": "/home/souten/.local/share/control-deck/features/opencode/node_modules/opencode-ai/bin/opencode.exe",
+    "omo_package": "oh-my-openagent@4.19.4",
+    "profile": "ephemeral HOME, XDG_CONFIG_HOME, XDG_DATA_HOME, and XDG_CACHE_HOME",
+    "telemetry": "disabled"
+  },
+  "observations": {
+    "health": {
+      "healthy": true,
+      "version": "1.18.16"
+    },
+    "tool_id_count": 37,
+    "eca_tool_ids": [
+      "pi_status",
+      "pi_symbol",
+      "pi_references",
+      "pi_path",
+      "pi_impact",
+      "pi_tests",
+      "pi_context",
+      "pi_runtime_evidence",
+      "pi_research_plan"
+    ],
+    "omo_tool_examples": [
+      "background_output",
+      "background_cancel",
+      "call_omo_agent"
+    ],
+    "agent_count": 16,
+    "agent_examples": [
+      "Sisyphus",
+      "Hephaestus",
+      "Prometheus"
+    ],
+    "mcp": {
+      "extendcodeagent": "connected",
+      "websearch": "connected",
+      "context7": "connected",
+      "grep_app": "connected",
+      "lsp": "connected",
+      "codegraph": "disabled"
+    }
+  },
+  "limitations": [
+    "Generic raw tool IDs including glob, grep, skill, and task overlap and require the later B2 compatibility assessment; the ECA pi_* namespace itself was unique.",
+    "No permitted non-Ollama weak-local endpoint was registered, so the mandatory OMO plus ECA local-low task arm is UNAVAILABLE, not PASS.",
+    "No model task was executed in this smoke."
+  ],
+  "isolation_incident": {
+    "classification": "installer isolation limitation",
+    "observation": "The OMO installer wrote ~/.omo/omo.jsonc despite isolated XDG configuration.",
+    "remediation": "The newly created file was moved to the temporary evidence root and the previously absent ~/.omo directory was restored to absent.",
+    "persistent_user_configuration_changed": false
+  }
+}
