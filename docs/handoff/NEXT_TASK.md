@@ -31,7 +31,7 @@ Scope:
   runs; exclude and report bootstrap failures instead of attributing them to a capability;
 - rerun lint, typecheck, unit, integration, build and adapter/plugin/MCP lifecycle paths;
 - reproduce provider failures with PI disabled first and run the blocking OMO coexistence smoke;
-- pass the exact-head PI activation gate on port-8090 Qwen, host-default and both GitHub Copilot
+- pass the exact-head PI activation gate on port-8090 Qwen and both GitHub Copilot
   frontier routes, including observed tool use/Twin/provenance; classify every capability route and
   repair any missing route before comprehensive execution;
 - run the interleaved 9-cell port-8090 `native/off/active` pilot tranche; only a passing signal may
@@ -53,9 +53,10 @@ that historical result in old-head schedules/reports. The B1 evidence below supe
 eligibility for repaired-head screening and confirmation. See
 `docs/evidence/final/b0a-bootstrap-environment-v1.json`.
 
-The runner has two comprehensive resumable schedules: `b0a-baseline` has 306 cells across full tiers
+The runner has two comprehensive resumable schedules: `b0a-baseline` has 162 cells across the three
+quality targets (ControlDeck-managed Qwen, GitHub Copilot Sonnet, and GitHub Copilot Codex)
 and `b0a-screening` has 714 local-practical cells, including capability-specific depth arms only for
-the four recorded depth claims. Neither may run until the separately sealed four-model
+the four recorded depth claims. Neither may run until the separately sealed three-model
 `b0a-activation` gate and staged Qwen `b0a-pilot` pass at the same exact head. The pilot requires a
 positive interleaved 9-cell tranche before extending to 27 total, with an objective active PASS gain,
 observed task-specific PI and bounded latency; otherwise the next
@@ -84,9 +85,15 @@ Use the completed limit pair (context 262,144/output 8,192), not the intermediat
 configuration. After merge, prove it with real OpenCode activation before starting the fresh pilot.
 
 The final new-seal activation and 27-cell pilot now pass. Version and merge the confirmed-effect
-evidence, then start the 306-cell baseline from a fresh path with the exact activation/pilot reports;
+evidence, then start the 162-cell baseline with the exact activation/pilot reports;
 only after baseline completion start the 714-cell PI screening. Preserve task-level symbol/test
 variance and the six-part timing fields in compact evidence.
+
+The compatibility-migrated/resumed target currently has 145/162 valid cells: Qwen and Sonnet are
+complete, while GitHub Copilot Codex is 37/54. Its remaining 17 cells are paused because the Copilot
+provider reports monthly quota exhaustion. Requeue the 16 misclassified quota responses into
+provider attempts, retain the interrupted cell as pending, and resume only after a separate Codex
+availability probe succeeds. Do not substitute `host-default`; it is outside the quality target.
 
 That baseline reached 229/306 at `7e58751` before host-default began returning rate limits. Four
 provider-gap cells were misreported as task timeouts because OpenCode wrote the retry failure only to

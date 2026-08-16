@@ -1,5 +1,16 @@
 # Known Issues
 
+## GitHub Copilot Codex monthly quota blocks 17 target cells
+
+- The affected model is `github-copilot/gpt-5.3-codex`, not Qwen, Sonnet, or `host-default`.
+  OpenCode reports `You have exceeded your monthly quota`; this is classified as
+  `QUOTA_EXHAUSTED` and pauses only the Copilot Codex queue.
+- Current valid target progress is 145/162: Qwen 54/54, Sonnet 54/54, Codex 37/54. Sixteen quota
+  responses must be requeued and one interrupted Codex cell remains pending. They must not enter
+  PASS/FAIL or latency aggregates.
+- Resume requires a separate successful availability probe for Copilot Codex. Qwen and Sonnet
+  results remain valid; `host-default` recovery is irrelevant because it is outside the target.
+
 ## Checkpoint migration is proof-gated, not direct resume
 
 - The 229-cell `7e58751` report is immutable and cannot be passed directly to `--resume` on a newer
@@ -10,11 +21,9 @@
   migration command exists yet.
 - Functional outcome and legacy latency are separate. Even a migrated functional result remains
   `LEGACY_RUNNER_LATENCY` until an explicit latency bridge permits aggregation.
-- Current Bridge evidence is partial: local-practical test-selection must replay and all
-  host-default classes remain unproven while its provider is rate-limited. The other eight sampled
-  model/task classes matched and can support class-scoped migration. The expected safe migration is
-  190 cells and has been generated at `c95bdfb`. The latest activation remains partial because
-  host-default is rate-limited; only unaffected provider queues may proceed.
+- Historical Bridge evidence remains useful for provenance, but `host-default` and `local-low` are
+  no longer B0a quality targets. Local-practical test-selection was replay-required; matched Qwen,
+  Sonnet, and Codex classes supported the migrated checkpoint before the target-scope correction.
 
 ## B0a host-default provider rate limit and superseded checkpoint
 

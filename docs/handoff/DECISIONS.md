@@ -973,3 +973,15 @@ host-default, Copilot Sonnet and Copilot Codex plus symbol/impact/test classes. 
 `REPLAY_REQUIRED` to the related model/task class. Migration copies results with source hashes and
 provenance; it never edits the source checkpoint. Provider pause/resume and availability probes are
 evaluation-runner concerns, not ECA core behavior.
+
+## 2026-08-17 — B0a quality evaluation has exactly three model routes
+
+Decision: B0a quality outcomes cover only ControlDeck-managed `local-practical` Qwen and GitHub
+Copilot Sonnet/Codex. `host-default` is an opaque OpenCode convenience alias and `local-low` is
+unavailable; neither belongs in the quality denominator. The `native`/`off` baseline is therefore
+3 models x 9 tasks x 2 arms x 3 repetitions = 162 cells.
+
+Provider capacity remains orthogonal to quality. In particular, Copilot Codex monthly quota
+exhaustion moves affected executions to provider attempts, pauses only that route, and leaves the
+cells pending until an availability probe succeeds. It cannot be converted into FAIL/PASS or
+substituted with `host-default`.
