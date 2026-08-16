@@ -445,3 +445,7 @@
   required-fact recall, schema validity, final exact pass and retrieval/projection/reasoning class.
 - Attribution/timing slice gates pass: `all-fast` (183 Python, 9 adapter), integration (39 Python,
   9 adapter), strict mypy, focused trace/sidecar tests and Python/TypeScript build.
+- Post-merge exact-head smoke found that the initial residual counted only from the final PI tool and
+  exposed binary-float noise in summed serialization time. Corrected it to cover the interval from
+  the first PI result through cell completion while subtracting every later tool interval, and round
+  accumulated millisecond segments to three decimals.

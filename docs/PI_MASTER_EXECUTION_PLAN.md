@@ -559,8 +559,8 @@ spending the comprehensive matrix.
 For `REPAIR_AND_RETEST`, keep the task/oracle sealed and record `required_fact_recall`,
 `schema_valid`, and `final_exact_pass`. Classify the miss as retrieval, task-schema projection, or
 agent reasoning. Split latency into cold Twin build, snapshot load, adjacency/index construction,
-query execution, JSON serialization, and post-PI agent/model residual after subtracting later tool
-execution. Repair compact
+query execution, JSON serialization, and post-PI agent/model residual from the first PI result after
+subtracting later tool execution. Repair compact
 task projection and obligation gaps before deeper graph construction; optimize query indexes only
 from the segmented trace. A partial 27-cell confirmation is not resumable as final evidence after a
 timeout or repair-head change.

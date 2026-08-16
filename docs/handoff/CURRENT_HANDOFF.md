@@ -46,7 +46,8 @@ Current task: prove real PI activation and repair missing capability routes befo
 - Current bounded slice adds exact-oracle-preserving `required_fact_recall`, `schema_valid`,
   `final_exact_pass` and retrieval/projection/reasoning attribution. It also splits PI time into cold
   Twin build, snapshot load, adjacency/index construction, query execution, JSON serialization and
-  post-PI agent/model residual after subtracting later tool execution. Publish this slice
+  post-PI agent/model residual from the first PI result after subtracting later tool execution.
+  Publish this slice
   independently before changing PI
   projection semantics.
 - Comprehensive B0a execution now requires passing same-exact-head activation and pilot reports. Current

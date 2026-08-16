@@ -899,8 +899,8 @@ changing graph depth, classify failures as retrieval missing, projection/schema 
 reasoning error, with required-fact recall, schema validity and final exact pass retained separately.
 
 Every PI cell must split cold Twin build, snapshot load, adjacency/index build, query execution,
-JSON serialization and post-PI agent/model residual after subtracting later tool execution. Optimize
-the observed boundary rather
+JSON serialization and post-PI agent/model residual from the first PI result after subtracting later
+tool execution. Optimize the observed boundary rather
 than attributing total wall time to PI. The implementation priority is compact task-shaped projection,
 obligation-aware structural test coverage, revision-scoped query indexes/cache, missing OpenCode
 routes, then a fresh sealed 9-cell pilot. CFG/DFG expansion and comprehensive evaluation do not

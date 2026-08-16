@@ -352,19 +352,29 @@ def test_metrics_split_pi_and_post_tool_model_time(tmp_path: Path) -> None:
             "type": "text",
             "part": {"type": "text", "time": {"start": 1_120, "end": 1_420}},
         },
+        {
+            "type": "tool_use",
+            "part": {
+                "tool": "pi_references",
+                "state": {
+                    "time": {"start": 1_300, "end": 1_320},
+                    "output": "{}",
+                },
+            },
+        },
     ]
     log_path.write_text("\n".join(json.dumps(event) for event in events), encoding="utf-8")
 
     measured = _metrics(log_path)
 
-    assert measured["pi_analysis_ms"] == 120
+    assert measured["pi_analysis_ms"] == 140
     assert measured["pi_timing_ms"] == {
         "cold_twin_build_ms": 80.0,
         "snapshot_load_ms": 7.0,
         "adjacency_index_build_ms": 0.0,
         "query_execution_ms": 4.0,
         "json_serialization_ms": 1.0,
-        "model_reasoning_after_tool_ms": 250,
+        "model_reasoning_after_tool_ms": 230,
     }
     assert "src/extendcodeagent/testing/service.py" in measured["observed_pi_facts"]
 
