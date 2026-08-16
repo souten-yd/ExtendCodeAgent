@@ -112,5 +112,37 @@ export function createTools(request: Requester): Record<string, ToolDefinition> 
         return jsonResult(await request("research_plan", args))
       },
     }),
+    pi_plan: tool({
+      description:
+        "Score bounded change alternatives from Project Truth and project the selected " +
+        "strategy into a Blueprint draft. Persistence is opt-in.",
+      args: {
+        goal: z.string().min(1),
+        target_refs: refs,
+        constraints: z.array(z.string()).optional(),
+        persist_blueprint: z.boolean().default(false),
+      },
+      async execute(args) {
+        return jsonResult(await request("plan", args))
+      },
+    }),
+    pi_verify: tool({
+      description:
+        "Trace requirements to current Project Truth and report convergence, missing facts, " +
+        "and verification gaps without claiming unobserved evidence.",
+      args: {
+        requirement_revision_id: z.string().min(1).optional(),
+        requirements: z.array(z.object({
+          requirement_id: z.string().min(1),
+          description: z.string().min(1),
+          expected_actual_refs: refs,
+          mandatory: z.boolean().default(true),
+          requires_verification: z.boolean().default(true),
+        })).min(1),
+      },
+      async execute(args) {
+        return jsonResult(await request("verify", args))
+      },
+    }),
   }
 }

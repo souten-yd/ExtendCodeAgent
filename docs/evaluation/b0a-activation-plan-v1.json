@@ -119,14 +119,26 @@
       "status": "REACHABLE"
     },
     {
-      "tool": null,
+      "tool": "pi_plan",
       "capabilities": [
         "blueprint",
-        "convergence",
-        "traceability",
         "strategy"
       ],
-      "status": "MISSING_OPENCODE_RUNTIME_ROUTE"
+      "covered_tasks": [
+        "eca-refactor-001"
+      ],
+      "status": "REACHABLE"
+    },
+    {
+      "tool": "pi_verify",
+      "capabilities": [
+        "convergence",
+        "traceability"
+      ],
+      "covered_tasks": [
+        "cd-cross-boundary-001"
+      ],
+      "status": "REACHABLE"
     }
   ],
   "execution_policy": {
@@ -138,6 +150,6 @@
   },
   "seal": {
     "algorithm": "sha256",
-    "canonical_payload": "5e3ea477a976856689ef6238c648ec6ce01e7c46122b8444a909003365905fb4"
+    "canonical_payload": "b39d2060a907826ccc385c6fd2804ffb3b5b47ffbe2c68facbdc99e8471931e6"
   }
 }

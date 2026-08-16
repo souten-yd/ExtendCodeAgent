@@ -195,6 +195,10 @@
 - The pilot is intentionally small and cannot promote a capability. It only prevents spending the
   comprehensive schedules when active PI has no objective gain, was not actually used, or has
   abnormal latency; any such result requires repair and the same pilot again.
-- `blueprint`, `convergence`, `traceability` and `strategy` are configurable/ablatable but lack a
-  current OpenCode tool and covered screening task. Their runtime paths must be added before a
-  13-capability screen can make truthful `proceed` or `no screened effect` classifications.
+- The prior OpenCode route gap for `blueprint`, `convergence`, `traceability` and `strategy` is
+  repaired with `pi_plan`/`pi_verify` plus covered screening tasks. This is deterministic route
+  evidence only: real model use and effect remain NOT TESTED until the fresh activation and pilot.
+- `pi_plan` currently generates two bounded graph-derived alternatives rather than using a model to
+  invent arbitrary designs. `pi_verify` currently reports Twin materialization and gaps but accepts
+  no external verification-evidence payload. Those boundaries are intentional for the screening
+  route and must not be described as full planning or certificate support.

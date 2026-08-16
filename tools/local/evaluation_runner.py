@@ -171,6 +171,12 @@ def validate() -> None:
     }
     if route_capabilities != set(CONFIGURABLE_CAPABILITIES):
         raise EvaluationError("B0a activation plan does not classify every configurable capability")
+    known_tasks = {item["id"] for item in tasks["tasks"]}
+    if any(
+        not set(route.get("covered_tasks", ())) <= known_tasks
+        for route in activation_plan["capability_routes"]
+    ):
+        raise EvaluationError("B0a capability route references an unknown covered task")
     assigned_tiers = set(b0a_plan["screening"]["capability_model_tiers"].values())
     if assigned_tiers != {"local-practical"}:
         raise EvaluationError("B0a screening runner only supports the sealed local-practical tier")
@@ -292,6 +298,7 @@ def plan(
                             "repetition": repetition,
                             "pi_activation_gate": scope == "b0a-activation",
                             "pi_effect_pilot": scope == "b0a-pilot",
+                            "pi_screening": scope == "b0a-screening",
                         }
                     )
     if scope == "b0a-pilot":
@@ -478,6 +485,7 @@ def _metrics(log_path: Path) -> dict[str, Any]:
         "cache_write_tokens": 0,
         "errors": [],
         "pi_tools": [],
+        "pi_capabilities_used": [],
         "selected_evidence_ids": [],
         "twin_revision_ids": [],
         "observed_capability_modes": {},
@@ -495,6 +503,7 @@ def _metrics(log_path: Path) -> dict[str, Any]:
         "observed_pi_facts": [],
     }
     pi_tools: set[str] = set()
+    pi_capabilities_used: set[str] = set()
     evidence_ids: set[str] = set()
     revision_ids: set[str] = set()
     pi_facts: set[str] = set()
@@ -538,6 +547,7 @@ def _metrics(log_path: Path) -> dict[str, Any]:
                                 revision_ids,
                                 pi_facts,
                                 result,
+                                pi_capabilities_used,
                             )
         if event.get("type") == "error":
             error = event.get("error")
@@ -552,6 +562,7 @@ def _metrics(log_path: Path) -> dict[str, Any]:
             result["cache_read_tokens"] += int(cache.get("read") or 0)
             result["cache_write_tokens"] += int(cache.get("write") or 0)
     result["pi_tools"] = sorted(pi_tools)
+    result["pi_capabilities_used"] = sorted(pi_capabilities_used)
     result["selected_evidence_ids"] = sorted(evidence_ids)
     result["twin_revision_ids"] = sorted(revision_ids)
     result["observed_pi_facts"] = sorted(pi_facts)
@@ -589,6 +600,7 @@ def _observe_pi_output(
     revision_ids: set[str],
     pi_facts: set[str],
     metrics: dict[str, Any],
+    pi_capabilities_used: set[str],
 ) -> None:
     try:
         value = json.loads(output)
@@ -597,6 +609,11 @@ def _observe_pi_output(
     if not isinstance(value, dict):
         return
     _collect_string_facts(value, pi_facts)
+    capabilities_used = value.get("capabilities_used")
+    if isinstance(capabilities_used, list):
+        pi_capabilities_used.update(
+            item for item in capabilities_used if isinstance(item, str) and item
+        )
     timing_value = value.get("timing")
     if isinstance(timing_value, dict):
         for key in (
@@ -660,6 +677,24 @@ def _collect_evidence_refs(value: object, evidence_ids: set[str]) -> None:
             _collect_evidence_refs(item, evidence_ids)
 
 
+def _screening_required_tool(cell: dict[str, Any], task: dict[str, Any]) -> str | None:
+    arm = str(cell.get("arm", ""))
+    task_id = str(task.get("id", ""))
+    if task_id == "eca-refactor-001" and arm in {
+        "active",
+        "ablation:blueprint",
+        "ablation:strategy",
+    }:
+        return "pi_plan"
+    if task_id == "cd-cross-boundary-001" and arm in {
+        "active",
+        "ablation:convergence",
+        "ablation:traceability",
+    }:
+        return "pi_verify"
+    return None
+
+
 def _execute(cell: dict[str, Any], task: dict[str, Any], raw_root: Path) -> dict[str, Any]:
     if cell["model_status"] == "UNAVAILABLE":
         return {**cell, "outcome": "UNAVAILABLE", "reason": "sealed model-tier status"}
@@ -693,6 +728,14 @@ def _execute(cell: dict[str, Any], task: dict[str, Any], raw_root: Path) -> dict
             "This is the disabled-extension control. You MUST call pi_status once to confirm PI is "
             "disabled, must not call another pi_* tool, and then complete the original task using "
             "normal OpenCode capabilities. " + instruction
+        )
+    elif cell.get("pi_screening") and _screening_required_tool(cell, task) is not None:
+        required_tool = _screening_required_tool(cell, task)
+        instruction = (
+            "This capability screening cell MUST use pi_status and "
+            f"{required_tool}. Use pi_symbol or pi_path first when canonical refs are needed. "
+            "Treat an unavailable capability as unavailable; do not fabricate its result. Then "
+            "complete the original task and its exact output contract. " + instruction
         )
     elif mode in {"advisory", "active"}:
         instruction = (
@@ -1435,7 +1478,10 @@ def _append_trace(
             capability_state_source=capability_state_source,
             capability_modes=capability_modes,
             capability_depths=capability_depths,
-            used_features={},
+            used_features={
+                f"capability:{capability}": "observed_tool_output"
+                for capability in result.get("pi_capabilities_used", ())
+            },
             selected_evidence_ids=tuple(result.get("selected_evidence_ids", ())),
             source_revision_id=repository["revision"],
             twin_revision_id=next(iter(result.get("twin_revision_ids", ())), None),
@@ -1477,6 +1523,12 @@ def screening_table(report: dict[str, Any]) -> dict[str, Any]:
     missing = sorted(expected - set(results))
     unexpected = sorted(set(results) - {item["cell_id"] for item in schedule["cells"]})
     plan_value = _load(B0A_PLAN)
+    route_by_capability = {
+        capability: route
+        for route in _load(B0A_ACTIVATION_PLAN)["capability_routes"]
+        if route.get("covered_tasks")
+        for capability in route["capabilities"]
+    }
     # The primary phrase is versioned for readers; derive the exact integer from the paired rate so
     # the machine decision cannot silently drift from 2/21.
     pair_count = len([item for item in comparison_cells if item["arm"] == "active"])
@@ -1505,10 +1557,28 @@ def screening_table(report: dict[str, Any]) -> dict[str, Any]:
             and active.get("task_class") in {"negative-control", "unsafe-or-insufficient-evidence"}
             for active, ablated in pairs
         )
+        route = route_by_capability.get(capability)
+        route_observation_failures: list[str] = []
+        if route is not None:
+            covered_tasks = set(route["covered_tasks"])
+            tool = route["tool"]
+            for active, ablated in pairs:
+                if active["task_id"] not in covered_tasks:
+                    continue
+                if tool not in active.get("pi_tools", ()):
+                    route_observation_failures.append(f"{active['cell_id']}:tool_not_observed")
+                if capability not in active.get("pi_capabilities_used", ()):
+                    route_observation_failures.append(
+                        f"{active['cell_id']}:capability_not_observed"
+                    )
+                if tool not in ablated.get("pi_tools", ()):
+                    route_observation_failures.append(f"{ablated['cell_id']}:tool_not_attempted")
         if missing or len(pairs) != pair_count:
             decision = "NOT_TESTED_INCOMPLETE"
         elif unavailable:
             decision = "NOT_TESTED_PROVIDER_GAP"
+        elif route_observation_failures:
+            decision = "NOT_TESTED_ROUTE_GAP"
         elif active_pass - ablation_pass >= threshold or critical:
             decision = "proceed_to_b0b"
         else:
@@ -1522,6 +1592,7 @@ def screening_table(report: dict[str, Any]) -> dict[str, Any]:
                 "pass_delta": active_pass - ablation_pass,
                 "unavailable_pairs": unavailable,
                 "critical_override": critical,
+                "route_observation_failures": route_observation_failures,
                 "decision": decision,
             }
         )

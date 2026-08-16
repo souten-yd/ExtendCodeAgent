@@ -16,10 +16,12 @@ from pathlib import Path
 from typing import Any
 
 from extendcodeagent.core.config import ConfigLayer, ConfigResolver, RolloutMode, load_jsonc
+from extendcodeagent.core.contracts import CanonicalRef
 from extendcodeagent.core.policy import CapabilityPolicy
 from extendcodeagent.research import ResearchDepth
 from extendcodeagent.service import CapabilityUnavailable, ProjectIntelligenceApplication
 from extendcodeagent.service.application import INTERFACE_VERSION
+from extendcodeagent.traceability import Requirement
 
 MAX_REQUEST_BYTES = 1_000_000
 _ACTIVE_CAPABILITIES = (
@@ -33,6 +35,9 @@ _ACTIVE_CAPABILITIES = (
     "context",
     "research",
     "traceability",
+    "blueprint",
+    "convergence",
+    "strategy",
 )
 
 
@@ -222,6 +227,21 @@ def _dispatch(
             ResearchDepth(_optional_string(params.get("depth"), "depth") or "micro"),
             _string_tuple(params.get("facets", []), "facets"),
         )
+    if operation == "plan":
+        return application.plan_change(
+            _required_string(params, "goal"),
+            _string_tuple(params.get("target_refs", []), "target_refs"),
+            _string_tuple(params.get("constraints", []), "constraints"),
+            persist_blueprint=_boolean(params.get("persist_blueprint", False), "persist_blueprint"),
+        )
+    if operation == "verify":
+        return application.verify_requirements(
+            _requirements(params.get("requirements")),
+            requirement_revision_id=(
+                _optional_string(params.get("requirement_revision_id"), "requirement_revision_id")
+                or "pi-verify"
+            ),
+        )
     raise ValueError(f"unknown operation: {operation}")
 
 
@@ -361,6 +381,28 @@ def _boolean(value: Any, name: str) -> bool:
     if not isinstance(value, bool):
         raise ValueError(f"{name} must be a boolean")
     return value
+
+
+def _requirements(value: Any) -> tuple[Requirement, ...]:
+    if not isinstance(value, list) or not value:
+        raise ValueError("requirements must be a non-empty array")
+    result: list[Requirement] = []
+    for index, item in enumerate(value):
+        if not isinstance(item, dict):
+            raise ValueError(f"requirements[{index}] must be an object")
+        expected = _string_tuple(item.get("expected_actual_refs", []), "expected_actual_refs")
+        if not expected:
+            raise ValueError(f"requirements[{index}].expected_actual_refs must not be empty")
+        result.append(
+            Requirement(
+                _required_string(item, "requirement_id"),
+                _required_string(item, "description"),
+                tuple(CanonicalRef(ref) for ref in expected),
+                _boolean(item.get("mandatory", True), "mandatory"),
+                _boolean(item.get("requires_verification", True), "requires_verification"),
+            )
+        )
+    return tuple(result)
 
 
 if __name__ == "__main__":

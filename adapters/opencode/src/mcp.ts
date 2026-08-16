@@ -127,6 +127,36 @@ server.registerTool(
   },
   async (args) => result(await client.request("research_plan", args)),
 )
+server.registerTool(
+  "pi_plan",
+  {
+    description: "Score Project Truth change alternatives and project a Blueprint draft.",
+    inputSchema: {
+      goal: z.string().min(1),
+      target_refs: z.array(z.string()).min(1),
+      constraints: z.array(z.string()).optional(),
+      persist_blueprint: z.boolean().default(false),
+    },
+  },
+  async (args) => result(await client.request("plan", args)),
+)
+server.registerTool(
+  "pi_verify",
+  {
+    description: "Trace requirements to Project Truth and evaluate convergence gaps.",
+    inputSchema: {
+      requirement_revision_id: z.string().min(1).optional(),
+      requirements: z.array(z.object({
+        requirement_id: z.string().min(1),
+        description: z.string().min(1),
+        expected_actual_refs: z.array(z.string()).min(1),
+        mandatory: z.boolean().default(true),
+        requires_verification: z.boolean().default(true),
+      })).min(1),
+    },
+  },
+  async (args) => result(await client.request("verify", args)),
+)
 
 const stop = async () => {
   await client.stop()

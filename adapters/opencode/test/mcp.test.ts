@@ -32,12 +32,14 @@ test("MCP stdio handshake lists and calls the shared tools", async () => {
         "pi_context",
         "pi_impact",
         "pi_path",
+        "pi_plan",
         "pi_references",
         "pi_research_plan",
         "pi_runtime_evidence",
         "pi_status",
         "pi_symbol",
         "pi_tests",
+        "pi_verify",
       ],
     )
     const response = (await client.callTool({
@@ -62,8 +64,15 @@ test("MCP stdio handshake lists and calls the shared tools", async () => {
     if (statusContent?.type !== "text" || !statusContent.text) {
       throw new Error("expected status text content")
     }
-    const status = JSON.parse(statusContent.text) as { mode: string }
+    const status = JSON.parse(statusContent.text) as {
+      mode: string
+      capabilities: Array<{ name: string; mode: string }>
+    }
     assert.equal(status.mode, "active")
+    const modes = new Map(status.capabilities.map((item) => [item.name, item.mode]))
+    for (const capability of ["blueprint", "convergence", "traceability", "strategy"]) {
+      assert.equal(modes.get(capability), "active")
+    }
     const planResponse = (await client.callTool({
       name: "pi_research_plan",
       arguments: { query: "SQLite durability", depth: "micro", facets: ["official docs"] },
@@ -73,6 +82,40 @@ test("MCP stdio handshake lists and calls the shared tools", async () => {
     const plan = JSON.parse(planContent.text) as { max_queries: number; queries: string[] }
     assert.equal(plan.max_queries, 2)
     assert.deepEqual(plan.queries, ["SQLite durability official docs"])
+    const changeResponse = (await client.callTool({
+      name: "pi_plan",
+      arguments: { goal: "change leaf safely", target_refs: ["py://service#leaf"] },
+    })) as { content: Array<{ type: string; text?: string }> }
+    const changeContent = changeResponse.content[0]
+    if (changeContent?.type !== "text" || !changeContent.text) {
+      throw new Error("expected change plan text")
+    }
+    const changePlan = JSON.parse(changeContent.text) as {
+      capabilities_used: string[]
+      blueprint: { persisted: boolean }
+    }
+    assert.deepEqual(changePlan.capabilities_used, ["blueprint", "strategy"])
+    assert.equal(changePlan.blueprint.persisted, false)
+    const verifyResponse = (await client.callTool({
+      name: "pi_verify",
+      arguments: {
+        requirements: [{
+          requirement_id: "leaf-exists",
+          description: "leaf remains present",
+          expected_actual_refs: ["py://service#leaf"],
+        }],
+      },
+    })) as { content: Array<{ type: string; text?: string }> }
+    const verifyContent = verifyResponse.content[0]
+    if (verifyContent?.type !== "text" || !verifyContent.text) {
+      throw new Error("expected verification text")
+    }
+    const verification = JSON.parse(verifyContent.text) as {
+      capabilities_used: string[]
+      coverage_complete: boolean
+    }
+    assert.deepEqual(verification.capabilities_used, ["convergence", "traceability"])
+    assert.equal(verification.coverage_complete, false)
   } finally {
     await client.close()
     await rm(root, { recursive: true, force: true })

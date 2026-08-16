@@ -2,7 +2,7 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/b1-pi-attribution-timing`; latest merged base `6064e31`
+Current branch: `main`; latest merged base `275968fabbfc4b423335fb21e87faceef32c918d`
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
 Current task: prove real PI activation and repair missing capability routes before comprehensive B0a
 
@@ -76,10 +76,13 @@ Current task: prove real PI activation and repair missing capability routes befo
 - Clean ECA task-workspace measurement after one cold symbol query: cached snapshot load
   impact/tests/symbol = 0.045/0.018/0.016ms, adjacency rebuild = 0ms, query execution =
   1.697/0.739/0.244ms. Cold Twin was 506.273ms and is reported cumulatively, not rerun per query.
-- Comprehensive B0a execution now requires passing same-exact-head activation and pilot reports. Current
-  deterministic reachability audit blocks it because `blueprint`, `convergence`, `traceability` and
-  `strategy` have no OpenCode tool/task route. Next: finish focused/full gates, publish this guard,
-  then add the missing bounded runtime paths and tasks before rerunning activation and all matrices.
+- Comprehensive B0a execution requires same-exact-head activation and pilot reports. The prior
+  deterministic reachability gap is repaired with `pi_plan` for Blueprint/Strategy and `pi_verify`
+  for Traceability/Convergence. Both routes are proven through MCP against the real sidecar;
+  persistence is opt-in and materialized facts are not mislabeled verified. The runner records
+  composite `capabilities_used`, fixes one covered task per route, and refuses a no-effect decision
+  if required route observations are absent. Next: publish this slice, then rerun activation and a
+  fresh sealed 9-cell pilot before any 27/306/714 continuation.
 
 - Conditional B1 repair exact head `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7` adds the missing
   current-edge identity index. Three cold exact-pin runs changed KasaneCore/PEDS from >300-second
