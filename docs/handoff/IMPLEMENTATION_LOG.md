@@ -12,6 +12,10 @@
 - Added a sealed copy/requeue command so provider-gap attempts leave the quality result set without
   modifying the source checkpoint. Resume keeps only the affected Copilot Codex queue paused and
   retains complete provenance and a rebuilt trace chain.
+- At merged head `8c06a0a`, fresh activation passed Qwen with ready Twin, `pi_status`, `pi_symbol`,
+  revision and evidence. Both Copilot Sonnet and Codex returned the same monthly-quota error, proving
+  the exhausted capacity is shared at provider/account level rather than specific to Codex. The
+  145-cell checkpoint resumed without executing or misclassifying any paused-provider cell.
 
 ## 2026-08-17 — Partial activation and compatible pilot promotion
 
