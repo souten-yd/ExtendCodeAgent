@@ -1,0 +1,104 @@
+{
+  "schema": 1,
+  "evidence_id": "e4-unified-runner-proof-v1",
+  "classification": "E4_RUNNER_PROOF",
+  "captured_at": "2026-08-16",
+  "source_revision": "7ec5f42756bdd3035ec821fafa7256efebdb8152",
+  "inputs": {
+    "matrix": "docs/evaluation/evaluation-matrix-v1.json",
+    "matrix_seal": "13d3e854234efbc302ff7d6c0ab5f4f2dfd3eea9cc11d98c2760e03ca4b6f16e",
+    "layer_b_task_suite": "docs/evaluation/task-suite-v1.json",
+    "layer_b_seal": "23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632",
+    "layer_a_labels": "docs/evaluation/labels-v1/graph-quality-labels.json",
+    "layer_a_seal": "70710dfe82680afd8ab0c2ad3a735b7f82648c65554dbf93d878e0550a986427",
+    "quality_corpus": "docs/evaluation/test-portfolio-corpus-v1.json",
+    "metric_contract": "docs/evaluation/pi-verification-integrated-metrics-v1.json"
+  },
+  "full_schedule": {
+    "cells": 5083,
+    "available": 3588,
+    "unavailable": 1495,
+    "interpretation": "This is the fixed resumable full schedule, not 5,083 executed E4 results. Master-plan screening precedes confirmation."
+  },
+  "representative_route_proof": [
+    {
+      "arm": "native",
+      "model_tier": "host-default",
+      "model_id": "opencode/big-pickle",
+      "task_id": "eca-negative-001",
+      "outcome": "PASS",
+      "wall_ms": 5451,
+      "tool_calls": 1,
+      "tokens": {"input": 7280, "output": 120, "reasoning": 24, "cache_read": 11008, "cache_write": 0}
+    },
+    {
+      "arm": "advisory",
+      "model_tier": "host-default",
+      "model_id": "opencode/big-pickle",
+      "task_id": "eca-negative-001",
+      "outcome": "PASS",
+      "wall_ms": 9837,
+      "tool_calls": 3,
+      "tokens": {"input": 9751, "output": 227, "reasoning": 46, "cache_read": 36352, "cache_write": 0}
+    },
+    {
+      "arm": "advisory",
+      "model_tier": "host-default",
+      "model_id": "opencode/big-pickle",
+      "task_id": "eca-symbol-001",
+      "outcome": "FAIL",
+      "wall_ms": 33392,
+      "tool_calls": 12,
+      "observed_pi_tools": ["pi_context", "pi_status", "pi_symbol", "pi_tests"],
+      "oracle_diagnostic": "definition was returned as a one-element list instead of the required scalar path",
+      "tokens": {"input": 20219, "output": 1200, "reasoning": 868, "cache_read": 192768, "cache_write": 0}
+    },
+    {
+      "arm": "advisory",
+      "model_tier": "local-practical",
+      "model_id": "eca-local-practical/llama",
+      "endpoint": "http://127.0.0.1:8090/v1",
+      "task_id": "eca-negative-001",
+      "outcome": "FAIL",
+      "wall_ms": 21451,
+      "tool_calls": 2,
+      "tokens": {"input": 832, "output": 223, "reasoning": 0, "cache_read": 32564, "cache_write": 0}
+    },
+    {
+      "arm": "advisory",
+      "model_tier": "frontier-sonnet",
+      "model_id": "github-copilot/claude-sonnet-5",
+      "task_id": "eca-negative-001",
+      "outcome": "FAIL",
+      "wall_ms": 10440,
+      "tool_calls": 2,
+      "tokens": {"input": 6, "output": 293, "reasoning": 0, "cache_read": 47707, "cache_write": 462}
+    },
+    {
+      "arm": "advisory",
+      "model_tier": "frontier-codex",
+      "model_id": "github-copilot/gpt-5.3-codex",
+      "task_id": "eca-negative-001",
+      "outcome": "PASS",
+      "wall_ms": 21328,
+      "tool_calls": 4,
+      "observed_pi_tools": ["pi_status"],
+      "tokens": {"input": 3255, "output": 203, "reasoning": 650, "cache_read": 41472, "cache_write": 0}
+    }
+  ],
+  "runner_properties": {
+    "control_deck_managed_opencode": true,
+    "serial_execution": true,
+    "cell_checkpointing": true,
+    "resume_without_duplicate_results": true,
+    "incomplete_workspaces_archived_not_deleted": true,
+    "ollama_started": false,
+    "raw_transcripts_committed": false,
+    "all_versioned_metric_keys_emitted": true
+  },
+  "limits": [
+    "Representative route proof is not a B0 quality or promotion result.",
+    "Outcome distributions require the sealed minimum repetitions and are not inferred from these one-cell route checks.",
+    "Integrated metric keys not measured in E4 remain explicitly NOT_TESTED in runner output."
+  ]
+}

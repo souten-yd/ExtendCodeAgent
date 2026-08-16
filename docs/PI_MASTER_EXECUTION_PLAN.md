@@ -883,7 +883,7 @@ Per-PR evidence directories (`docs/evidence/pr-*`) are historical and are not re
 
 ## 14. Immediate next action
 
-Phase 0, stages E0, E1, E2, V0a and E3 are complete. Next is E4, then E5.
+Phase 0, stages E0, E1, E2, V0a, E3 and E4 are complete. Next is E5.
 
 ```bash
 cd /home/souten/ExtendCodeAgent

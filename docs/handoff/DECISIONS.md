@@ -762,3 +762,20 @@ OMO 4.19.4 plus ECA model-free coexistence passed in an ephemeral profile. The a
 weak-local endpoint keeps the required local-low model arm UNAVAILABLE. Installer isolation and
 generic raw tool-ID overlap are recorded for later B2 assessment rather than being hidden or called
 compatible.
+
+## 2026-08-16 — E4 unified matrix, promoted labels and resumability
+
+Decision: the canonical evaluation entry point is `tools/local/evaluation-runner`. Its matrix binds
+the exact Layer A and Layer B seals, pinned quality corpus, integrated metric contract, ControlDeck
+OpenCode executable, port-8090 local-practical route and both GitHub Copilot frontier IDs. Local-low
+UNAVAILABLE cells remain in the schedule so absence cannot improve apparent completion.
+
+The full Cartesian schedule has 5,083 cells and is deliberately not executed as an E4 proof. The
+master plan requires screening before confirmation; E4 proves the route and runner, while B0 owns
+repeated outcome distributions. Bounded `--arm`, `--model-tier`, `--task` and `--max-cells` slices are
+diagnostic only. Atomic per-cell checkpoints plus `--resume` are mandatory; incomplete workspaces are
+archived rather than reused or deleted.
+
+The Layer A label set promotes 12 existing manually reviewed PR-C/PR-H cases, adding no new unsized
+human review. Historical per-PR scripts remain reproducibility artifacts but are retired as current
+entry points. Missing integrated metrics are emitted as `NOT_TESTED`, never zero or pass.
