@@ -19,29 +19,43 @@ Do not schedule work from the legacy identifiers (`RV-x`, `TA-x`, `AL-x`, `CV-x`
 
 ## Current stage
 
-**Phase 0 — V0a: verification contract slice (shadow, evaluation-only).**
+**Phase 0 — E3: Layer B task suite and outcome ground truth.**
 
-Entry condition satisfied: E2 (capability depth contract) is complete on
-`agent/e2-capability-depth-contract`. Rollout authority and execution depth are independent, every PI
-response records its depth, and inferred relations are bounded at use time by the selected depth.
+Entry conditions satisfied: E1/E2 are merged and V0a is complete on
+`agent/v0a-verification-contract-slice`. Evaluation arms can now be identified by capability set and
+depth, and required-verification quality has a deterministic precision/recall projection.
 
 Scope:
 
-- define `SemanticChangeSet` and `VerificationObligation` once as projections over the existing
-  Twin/Graph/Impact/Test/Runtime model;
-- derive a required verification set from a semantic change;
-- keep the slice shadow-only and evaluation-only: no applied behavior change;
-- do not add evidence reuse, failure taxonomy, oracle assessment or certificates in this stage;
-- keep the result measurable for precision/recall against the executed suite on the pinned corpus.
+- deliver versioned and sealed `docs/evaluation/task-suite-v1.json` with stable task IDs, pinned
+  repository revisions, natural-language instructions, task classes, machine-checkable success
+  oracles, allowed mutation scopes, timeouts and tuning/held-out membership;
+- cover symbol/reference lookup, impact, test selection, cross-file refactor, failing-test bug
+  localization, requirement tracing, a negative control, an unsafe/insufficient-evidence answer, and
+  a real cross-boundary GUI/runtime causal flow;
+- pin and justify minimum suite/per-class counts plus a slow-suite repository whose full suite exceeds
+  ten minutes;
+- execute every task once natively to prove its oracle is reachable and the suite is non-trivial;
+- include `OpenCode + OMO + ECA @ local-low` on the required subset, recording `UNAVAILABLE` rather
+  than pass if the pinned combination cannot run.
 
-Exit evidence: contracts defined once; architecture test proving no second truth store; required-set
-quality measurable on the pinned corpus. See master plan section 8.
+Exit evidence: versioned/sealed manifest; native oracle evidence for every task; native suite success
+rate neither 0% nor 100%; recorded tuning/held-out split. See master plan section 8.
+
+Evaluation environment mandated by the user:
+
+- launch/use OpenCode through ControlDeck's existing path where available; do not add ControlDeck
+  behavior to the host-neutral ECA core;
+- use the existing Llama-compatible Qwen3.6 27B service on port 8090 for `local-practical`; wait for
+  wake-up and never start Ollama or a substitute server;
+- use Sonnet and Codex through OpenCode's registered GitHub Copilot provider as the two mandatory
+  frontier model arms; discover and seal their exact installed identifiers before the first run.
 
 ## Why B0 (baseline validation) is not the current task
 
-The verification contract slice, sealed task suite, unified evaluation runner/labels and attributable
-PI trace are not complete. A baseline measured in that state cannot support the required attribution
-and keep/demote decisions. V0a and E3–E5 must complete first. See master plan sections 6 and 8.
+The sealed task suite, unified evaluation runner/labels and attributable PI trace are not complete. A
+baseline measured in that state cannot support the required attribution and keep/demote decisions.
+E3–E5 must complete first. See master plan sections 6 and 8.
 
 ## Phase 0 stage state
 
@@ -49,9 +63,8 @@ and keep/demote decisions. V0a and E3–E5 must complete first. See master plan 
 - **E1** capability gating conformance — done (see `CURRENT_HANDOFF.md` and `DECISIONS.md`);
 - **E2** capability depth contract — done (including the inferred-relation confidence threshold,
   completing the E1 `call_graph` folding decision);
-- **V0a** verification contract slice — current, shadow-only, pulled forward from V0 so the
-  differentiation hypothesis is measured at B0 instead of Phase 3;
-- **E3** Layer B task suite and outcome ground truth (what B0 actually measures), including a
+- **V0a** verification contract slice — done, shadow-only, with no second truth store;
+- **E3** Layer B task suite and outcome ground truth — current (what B0 actually measures), including a
   mandatory cross-boundary GUI/runtime causal task class, an `OMO + ECA @ local-low` arm, and a
   pinned slow-suite repository;
 - **E4** unified evaluation runner plus versioned Layer A label set;
@@ -87,7 +100,7 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/v0a-verification-contract-slice
+git switch -c agent/e3-layer-b-task-suite
 ```
 
 Update `CURRENT_HANDOFF.md` after each stage.

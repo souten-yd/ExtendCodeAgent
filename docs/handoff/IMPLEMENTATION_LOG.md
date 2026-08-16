@@ -1,5 +1,16 @@
 # Implementation Log
 
+## 2026-08-16 — Stage V0a completed locally
+
+- Added immutable, deterministic semantic-change and verification-obligation projections over the
+  existing Twin/Graph/Impact model without a second truth store.
+- Added required-provider selection that keeps unsupported runtime/uncertainty obligations uncovered
+  and a TP/FP/FN precision/recall evaluation projection.
+- Added unit, architecture and real-Twin integration evidence; a file-body change projects affected
+  symbol uncertainty rather than treating an unchanged symbol shell as unchanged behavior.
+- Final local gates: all-fast PASS (178 Python, 9 adapter); integration PASS (17 Python, 9 adapter);
+  build PASS (Python sdist/wheel and TypeScript).
+
 ## 2026-08-16 — Stage E2 completed locally
 
 - Added the centralized D0–D4 capability depth contract, deterministic profiles and per-capability

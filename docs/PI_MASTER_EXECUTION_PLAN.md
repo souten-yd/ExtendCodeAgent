@@ -294,8 +294,15 @@ and the PR-D startup comparison of +24 ms median contained a 1,609 ms native out
 statistically conclusive. See `handoff/KNOWN_ISSUES.md`.
 
 Model tiers (`local-low`, `local-practical`, `host-default`, `frontier`) are reported separately.
-Repetition minimums: `local-low` 5 runs, `local-practical` 3, `host-default` 3, `frontier` 3 when
-available. Report distributions, never a best run.
+The current evaluation environment pins `local-practical` to Qwen3.6 27B through the already-running
+Llama-compatible service on port 8090. Do not start Ollama or another substitute server; probe and
+wait for model wake-up. The frontier tier has two mandatory model arms, Sonnet and Codex, both through
+the GitHub Copilot provider registered in OpenCode. Their exact installed model identifiers are sealed
+in E3 rather than guessed in core code. OpenCode may be launched through ControlDeck's existing launch
+path, but remains ordinary OpenCode for ECA architecture and scoring.
+
+Repetition minimums: `local-low` 5 runs, `local-practical` 3, `host-default` 3, and 3 each for the
+Copilot Sonnet and Copilot Codex frontier arms when available. Report distributions, never a best run.
 
 ### 7.3 Corpora and their roles
 
@@ -336,14 +343,14 @@ The arm set multiplied out is not a schedule anyone can run:
 
 ```text
 arms      5 base (A..E) + 13 ablation (F) + 5 depth (G)      = 23
-tiers×reps  local-low ×5, local-practical ×3,
-            host-default ×3, frontier ×3                     = 14
-runs      23 × 14 × tasks                                    = 322 × tasks
+tiers×reps  local-low ×5, local-practical ×3, host-default ×3,
+            Copilot Sonnet ×3, Copilot Codex ×3               = 17
+runs      23 × 17 × tasks                                    = 391 × tasks
 ```
 
-At 20 tasks that is **6,440 agent runs**; at 40 tasks, 12,880. The one real measurement on record
+At 20 tasks that is **7,820 agent runs**; at 40 tasks, 15,640. The one real measurement on record
 (`pr-g`) took 15.8 s for a *trivial* local-medium scenario with no tool calls; a genuine agentic task
-with reads, edits and test runs is minutes. At three minutes per run, 20 tasks is roughly **320 hours
+with reads, edits and test runs is minutes. At three minutes per run, 20 tasks is roughly **391 hours
 of continuous execution**, before B0's environment freeze, bootstrap conformance, integration
 revalidation, OMO smoke and GUI causal measurement are counted at all.
 
@@ -409,6 +416,7 @@ Exit: config/architecture tests; depth visible in `pi_status`; inferred-relation
 per depth; no behavior change at default depth.
 
 **V0a — Verification contract slice (shadow, evaluation-only)**
+**Closed on `agent/v0a-verification-contract-slice` (2026-08-16).**
 Entry: E2. Deliberately named `V0a`, not `E3` — it is a pulled-forward slice of stage V0, and the
 E-series was renumbered once already; a second renumber would cost more than the naming irregularity.
 
@@ -875,7 +883,7 @@ Per-PR evidence directories (`docs/evidence/pr-*`) are historical and are not re
 
 ## 14. Immediate next action
 
-Phase 0, stages E0, E1 and E2 are complete. Next is V0a, then E3, E4, E5.
+Phase 0, stages E0, E1, E2 and V0a are complete. Next is E3, then E4 and E5.
 
 ```bash
 cd /home/souten/ExtendCodeAgent
@@ -885,7 +893,7 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/v0a-verification-contract-slice
+git switch -c agent/e3-layer-b-task-suite
 ```
 
 Do not start B0 before E1–E5 and V0a are complete. A baseline measured without total capability gating,
