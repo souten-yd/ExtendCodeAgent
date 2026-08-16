@@ -130,6 +130,13 @@ reproduces the audit and a 10–20-cell multi-provider Bridge Proof matches the 
 Migrated latency remains separate. See
 `docs/evidence/final/b0a-provider-gap-runner-repair.json`.
 
+The first 12-cell Bridge run at merged head `7bfca0e` produced eight semantic matches: both
+local-practical symbol/impact cells and all six Copilot Sonnet/Codex cells matched. The
+local-practical test-selection cell changed from FAIL to PASS, so that model/task class must replay.
+All three host-default cells remained `RATE_LIMIT` and are bridge-unavailable, not semantic failures.
+This run also exposed that a provider shard continued after its first gap; the runner now pauses that
+queue after one triggering attempt while allowing other model queues to continue.
+
 A review found that the long schedules had no fail-closed activation precondition. A separately
 sealed four-model gate now requires observed `pi_status`, task-bearing PI tool use, active
 capability/depth state, Twin revision, canonical evidence and positive PI time before comprehensive

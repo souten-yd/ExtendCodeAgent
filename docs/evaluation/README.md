@@ -59,3 +59,16 @@ tools/local/evaluation-runner prove-bridge --bridge-plan <bridge-plan.json> \
 separate shards. A Bridge mismatch is not averaged away: the related model/task class becomes replay
 required. Bridge wall time is always excluded from functional equivalence and legacy timing remains
 non-mergeable.
+
+Provider failures pause only the affected model-tier queue. The triggering attempt is recorded under
+`provider_attempts`, excluded from quality results, and leaves the evaluation cell pending. Recovery
+requires a separate probe and sealed proof before resume:
+
+```bash
+tools/local/evaluation-runner probe-provider --model-tier host-default \
+  --output <availability-proof.json>
+tools/local/evaluation-runner run-bridge --resume --availability-proof <availability-proof.json> ...
+```
+
+The same `--availability-proof` option applies to normal `run`. A probe is never an evaluation retry
+and is never included in correctness or latency aggregates.

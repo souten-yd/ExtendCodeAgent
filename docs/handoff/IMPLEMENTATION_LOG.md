@@ -1,5 +1,16 @@
 # Implementation Log
 
+## 2026-08-17 — Provider queue pause and Bridge three-way classification
+
+- The first merged-head Bridge run matched 8/12 cells. Local-practical symbol/impact and every
+  Copilot Sonnet/Codex sample matched the legacy semantics. Local-practical test-selection changed
+  from FAIL to PASS and therefore makes that class replay-required.
+- host-default remained rate-limited for all three attempted cells. These are now represented as
+  bridge-unavailable rather than semantic mismatches or PI failures.
+- Added queue-local pause: one provider gap records a non-quality attempt, keeps that cell pending,
+  pauses only that model-tier queue and continues other queues. A separate sealed availability probe
+  is required to reopen the queue on resume.
+
 ## 2026-08-17 — Sealed Bridge Sample runner
 
 - Added deterministic Bridge planning over the formally audited reuse candidates: one source cell

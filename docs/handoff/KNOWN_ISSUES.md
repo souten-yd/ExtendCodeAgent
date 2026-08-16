@@ -10,6 +10,9 @@
   migration command exists yet.
 - Functional outcome and legacy latency are separate. Even a migrated functional result remains
   `LEGACY_RUNNER_LATENCY` until an explicit latency bridge permits aggregation.
+- Current Bridge evidence is partial: local-practical test-selection must replay and all
+  host-default classes remain unproven while its provider is rate-limited. The other eight sampled
+  model/task classes matched and can support class-scoped migration.
 
 ## B0a host-default provider rate limit and superseded checkpoint
 

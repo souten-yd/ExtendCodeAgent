@@ -288,6 +288,13 @@ def test_bridge_plan_and_proof_require_semantic_match(tmp_path: Path) -> None:
     run_body["results"][0]["outcome"] = "FAIL"
     run_path.write_text(json.dumps(_sealed(run_body)))
     proof = prove_bridge(bridge_plan_path, run_path, source)
-    assert proof["status"] == "FAIL"
+    assert proof["status"] == "PARTIAL"
     assert proof["migration_permitted"] is False
+    assert proof["partial_migration_permitted"] is False
     assert proof["replay_required_classes"] == ["local-practical:symbol-reference-lookup"]
+
+    run_body["results"][0]["outcome"] = "UNAVAILABLE"
+    run_path.write_text(json.dumps(_sealed(run_body)))
+    proof = prove_bridge(bridge_plan_path, run_path, source)
+    assert proof["replay_required_classes"] == []
+    assert proof["unavailable_classes"] == ["local-practical:symbol-reference-lookup"]
