@@ -47,7 +47,7 @@ class EvaluationTrace:
     model_id: str | None
     verification_outcome: str
     fallback: str | None
-    timings_ms: Mapping[str, int | None] = field(default_factory=dict)
+    timings_ms: Mapping[str, int | float | None] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         for label in (

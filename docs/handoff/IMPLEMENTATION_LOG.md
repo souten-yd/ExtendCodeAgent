@@ -431,3 +431,17 @@
   required PI successfully, but off selected the duplicate `extendcodeagent_pi_status` MCP route and
   OpenCode raised a tool-result shape error, leaving disabled state unobserved. Began a bounded
   single-route repair: plugin tools/one sidecar in causal cells, MCP in dedicated lifecycle tests.
+- PR #51 merged the single canonical plugin/sidecar route as
+  `6064e311c3f98fe37ab87c6c1e71603ef08db7b2`. Its exact-head activation passed 4/4. The first sealed
+  9-cell tranche produced native/off/active PASS 0/0/1; active test selection passed, active median
+  was 124,194ms and the ratio to the slower control was 1.051.
+- Continued same-head confirmation only because the initial gate permitted it, then stopped at
+  12/27 after repetition-2 active symbol timed out at 300,157ms. The checkpoint contains one PASS,
+  ten FAIL and one TIMEOUT and is diagnostic repair input, not comprehensive evidence.
+- Began bounded B1 attribution/timing instrumentation without changing task oracles. Sidecar results
+  expose cold Twin build, snapshot load, adjacency/index build, query and JSON serialization time;
+  the evaluation trace adds post-PI agent/model residual after subtracting later tool execution.
+  Exact failures additionally record
+  required-fact recall, schema validity, final exact pass and retrieval/projection/reasoning class.
+- Attribution/timing slice gates pass: `all-fast` (183 Python, 9 adapter), integration (39 Python,
+  9 adapter), strict mypy, focused trace/sidecar tests and Python/TypeScript build.

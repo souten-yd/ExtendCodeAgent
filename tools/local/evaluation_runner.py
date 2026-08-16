@@ -484,30 +484,51 @@ def _metrics(log_path: Path) -> dict[str, Any]:
         "observed_capability_depths": {},
         "observed_pi_readiness": None,
         "pi_analysis_ms": 0,
+        "pi_timing_ms": {
+            "cold_twin_build_ms": 0.0,
+            "snapshot_load_ms": 0.0,
+            "adjacency_index_build_ms": 0.0,
+            "query_execution_ms": 0.0,
+            "json_serialization_ms": 0.0,
+            "model_reasoning_after_tool_ms": 0,
+        },
+        "observed_pi_facts": [],
     }
     pi_tools: set[str] = set()
     evidence_ids: set[str] = set()
     revision_ids: set[str] = set()
+    pi_facts: set[str] = set()
+    last_pi_tool_end: int | None = None
+    last_event_end: int | None = None
+    tool_intervals: list[tuple[int, int]] = []
     for line in log_path.read_text(encoding="utf-8", errors="replace").splitlines():
         try:
             event = json.loads(line)
         except json.JSONDecodeError:
             continue
         result["events"] += 1
+        event_end = _event_end_ms(event)
+        if event_end is not None:
+            last_event_end = max(last_event_end or event_end, event_end)
         if event.get("type") == "tool_use":
             result["tool_calls"] += 1
             part = event.get("part")
             if isinstance(part, dict):
+                state = part.get("state")
+                if isinstance(state, dict) and isinstance(state.get("time"), dict):
+                    start, end = state["time"].get("start"), state["time"].get("end")
+                    if isinstance(start, int) and isinstance(end, int) and end >= start:
+                        tool_intervals.append((start, end))
                 tool_name = str(part.get("tool") or "")
                 if tool_name.startswith("pi_") or "_pi_" in tool_name:
                     pi_tools.add(tool_name.removeprefix("extendcodeagent_"))
-                    state = part.get("state")
                     if isinstance(state, dict):
                         timing = state.get("time")
                         if isinstance(timing, dict):
                             start, end = timing.get("start"), timing.get("end")
                             if isinstance(start, int) and isinstance(end, int) and end >= start:
                                 result["pi_analysis_ms"] += end - start
+                                last_pi_tool_end = max(last_pi_tool_end or end, end)
                         output = state.get("output")
                         if isinstance(output, str):
                             _observe_pi_output(
@@ -515,6 +536,7 @@ def _metrics(log_path: Path) -> dict[str, Any]:
                                 output,
                                 evidence_ids,
                                 revision_ids,
+                                pi_facts,
                                 result,
                             )
         if event.get("type") == "error":
@@ -532,7 +554,32 @@ def _metrics(log_path: Path) -> dict[str, Any]:
     result["pi_tools"] = sorted(pi_tools)
     result["selected_evidence_ids"] = sorted(evidence_ids)
     result["twin_revision_ids"] = sorted(revision_ids)
+    result["observed_pi_facts"] = sorted(pi_facts)
+    if last_pi_tool_end is not None and last_event_end is not None:
+        later_tool_ms = sum(
+            max(0, end - max(start, last_pi_tool_end))
+            for start, end in tool_intervals
+            if end > last_pi_tool_end
+        )
+        result["pi_timing_ms"]["model_reasoning_after_tool_ms"] = max(
+            0, last_event_end - last_pi_tool_end - later_tool_ms
+        )
     return result
+
+
+def _event_end_ms(event: dict[str, Any]) -> int | None:
+    part = event.get("part")
+    if isinstance(part, dict):
+        state = part.get("state")
+        if isinstance(state, dict) and isinstance(state.get("time"), dict):
+            end = state["time"].get("end")
+            if isinstance(end, int):
+                return end
+        timing = part.get("time")
+        if isinstance(timing, dict) and isinstance(timing.get("end"), int):
+            return int(timing["end"])
+    timestamp = event.get("timestamp")
+    return timestamp if isinstance(timestamp, int) else None
 
 
 def _observe_pi_output(
@@ -540,6 +587,7 @@ def _observe_pi_output(
     output: str,
     evidence_ids: set[str],
     revision_ids: set[str],
+    pi_facts: set[str],
     metrics: dict[str, Any],
 ) -> None:
     try:
@@ -548,6 +596,23 @@ def _observe_pi_output(
         return
     if not isinstance(value, dict):
         return
+    _collect_string_facts(value, pi_facts)
+    timing_value = value.get("timing")
+    if isinstance(timing_value, dict):
+        for key in (
+            "cold_twin_build_ms",
+            "snapshot_load_ms",
+            "adjacency_index_build_ms",
+            "query_execution_ms",
+            "json_serialization_ms",
+        ):
+            observed = timing_value.get(key)
+            if not isinstance(observed, int | float) or observed < 0:
+                continue
+            if key == "cold_twin_build_ms":
+                metrics["pi_timing_ms"][key] = max(metrics["pi_timing_ms"][key], float(observed))
+            else:
+                metrics["pi_timing_ms"][key] += float(observed)
     revision = value.get("revision_id")
     if isinstance(revision, str) and revision:
         revision_ids.add(revision)
@@ -568,6 +633,17 @@ def _observe_pi_output(
                     metrics["observed_capability_depths"][name] = depth
         return
     _collect_evidence_refs(value, evidence_ids)
+
+
+def _collect_string_facts(value: object, facts: set[str]) -> None:
+    if isinstance(value, str):
+        facts.add(value)
+    elif isinstance(value, dict):
+        for item in value.values():
+            _collect_string_facts(item, facts)
+    elif isinstance(value, list):
+        for item in value:
+            _collect_string_facts(item, facts)
 
 
 def _collect_evidence_refs(value: object, evidence_ids: set[str]) -> None:
@@ -687,6 +763,13 @@ def _execute(cell: dict[str, Any], task: dict[str, Any], raw_root: Path) -> dict
         "wall_ms": round((time.monotonic() - started) * 1000),
         **measured,
     }
+    result["outcome_attribution"] = _outcome_attribution(
+        task,
+        workspace,
+        arm=cell["arm"],
+        oracle_exit=oracle.returncode,
+        observed_pi_facts=measured["observed_pi_facts"],
+    )
     if cell.get("pi_activation_gate"):
         result["pi_activation"] = _activation_assessment(result)
     if cell.get("pi_effect_pilot") and mode == "active":
@@ -694,6 +777,87 @@ def _execute(cell: dict[str, Any], task: dict[str, Any], raw_root: Path) -> dict
     elif cell.get("pi_effect_pilot") and mode == "off":
         result["pi_off_observation"] = _pilot_off_assessment(result)
     return result
+
+
+def _outcome_attribution(
+    task: dict[str, Any],
+    workspace: Path,
+    *,
+    arm: str,
+    oracle_exit: int,
+    observed_pi_facts: list[str],
+) -> dict[str, Any]:
+    answer_checks = [item for item in task["oracle"]["checks"] if item["kind"] == "answer"]
+    if not answer_checks:
+        return {
+            "classification": "PASS" if oracle_exit == 0 else "AGENT_REASONING_ERROR",
+            "required_fact_recall": None,
+            "pi_required_fact_recall": None,
+            "schema_valid": None,
+            "final_exact_pass": oracle_exit == 0,
+        }
+    check = answer_checks[0]
+    expected = check["equals"]
+    answer_path = workspace / check.get("path", ".eca-eval/answer.json")
+    try:
+        answer = json.loads(answer_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        answer = None
+    schema_valid = (
+        isinstance(answer, dict)
+        and set(answer) == set(expected)
+        and all(type(answer[key]) is type(value) for key, value in expected.items())
+    )
+    expected_facts = _field_facts(expected)
+    actual_facts = _field_facts(answer if isinstance(answer, dict) else {})
+    matched = expected_facts & actual_facts
+    required_fact_recall = len(matched) / len(expected_facts) if expected_facts else 1.0
+    expected_strings = {
+        atom for key, value in expected.items() if key != "status" for atom in _string_atoms(value)
+    }
+    observed = set(observed_pi_facts)
+    pi_fact_recall = (
+        len(expected_strings & observed) / len(expected_strings) if expected_strings else None
+    )
+    exact = oracle_exit == 0
+    if exact:
+        classification = "PASS"
+    elif arm == "active" and (pi_fact_recall or 0.0) < 1.0:
+        classification = "RETRIEVAL_MISSING"
+    elif not schema_valid or required_fact_recall == 1.0:
+        classification = "PROJECTION_SCHEMA_ERROR"
+    else:
+        classification = "AGENT_REASONING_ERROR"
+    return {
+        "classification": classification,
+        "required_fact_recall": round(required_fact_recall, 6),
+        "pi_required_fact_recall": (
+            round(pi_fact_recall, 6) if pi_fact_recall is not None else None
+        ),
+        "schema_valid": schema_valid,
+        "final_exact_pass": exact,
+    }
+
+
+def _field_facts(value: dict[str, Any]) -> set[str]:
+    return {
+        f"{key}:{json.dumps(atom, ensure_ascii=False, sort_keys=True)}"
+        for key, item in value.items()
+        if key != "status"
+        for atom in _atoms(item)
+    }
+
+
+def _atoms(value: object) -> list[object]:
+    if isinstance(value, dict):
+        return [atom for item in value.values() for atom in _atoms(item)]
+    if isinstance(value, list):
+        return [atom for item in value for atom in _atoms(item)]
+    return [value]
+
+
+def _string_atoms(value: object) -> set[str]:
+    return {str(atom) for atom in _atoms(value) if isinstance(atom, str)}
 
 
 def _activation_assessment(result: dict[str, Any]) -> dict[str, Any]:
@@ -1192,6 +1356,34 @@ def _report(
         "integrated_metrics": _metric_projection(),
         "results": results,
     }
+    report["failure_attribution"] = dict(
+        Counter(
+            item.get("outcome_attribution", {}).get("classification", "NOT_CLASSIFIED")
+            for item in results
+        )
+    )
+    timing_keys = (
+        "cold_twin_build_ms",
+        "snapshot_load_ms",
+        "adjacency_index_build_ms",
+        "query_execution_ms",
+        "json_serialization_ms",
+        "model_reasoning_after_tool_ms",
+    )
+    report["pi_timing_median_ms_by_arm"] = {
+        arm: {
+            key: median(
+                [
+                    float(item.get("pi_timing_ms", {}).get(key, 0.0))
+                    for item in results
+                    if item["arm"] == arm
+                ]
+            )
+            for key in timing_keys
+        }
+        for arm in sorted({item["arm"] for item in results})
+        if any(item["arm"] == arm for item in results)
+    }
     if scope == "b0a-activation":
         report["activation_gate"] = _activation_gate(results)
     elif scope == "b0a-pilot":
@@ -1228,6 +1420,7 @@ def _append_trace(
         "layer_b": matrix["inputs"]["layer_b_seal"],
         "matrix": matrix["seal"]["canonical_payload"],
     }
+    segmented = result.get("pi_timing_ms") or {}
     trace_log.append(
         EvaluationTrace(
             trace_id=trace_id,
@@ -1251,6 +1444,12 @@ def _append_trace(
             timings_ms={
                 "agent_wall": result.get("wall_ms"),
                 "pi_analysis": result.get("pi_analysis_ms"),
+                "cold_twin_build": segmented.get("cold_twin_build_ms"),
+                "snapshot_load": segmented.get("snapshot_load_ms"),
+                "adjacency_index_build": segmented.get("adjacency_index_build_ms"),
+                "query_execution": segmented.get("query_execution_ms"),
+                "json_serialization": segmented.get("json_serialization_ms"),
+                "model_reasoning_after_tool": segmented.get("model_reasoning_after_tool_ms"),
             },
         )
     )

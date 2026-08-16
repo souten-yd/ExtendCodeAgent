@@ -2,7 +2,7 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/b0a-single-opencode-pi-route`; latest merged base `6ab0850`
+Current branch: `agent/b1-pi-attribution-timing`; latest merged base `6064e31`
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
 Current task: prove real PI activation and repair missing capability routes before comprehensive B0a
 
@@ -36,6 +36,19 @@ Current task: prove real PI activation and repair missing capability routes befo
   4/4 at that head. The first symbol triplet stopped the tranche because off selected a duplicate MCP
   tool and failed to observe disabled state, while active PI observation passed. Current repair keeps
   one plugin namespace/sidecar in evaluation and retains MCP as a separate lifecycle gate.
+- PR #51 merged that single-route repair as `6064e311c3f98fe37ab87c6c1e71603ef08db7b2`.
+  Same-head activation passed 4/4. The sealed initial 9 cells produced PASS 0/0/1 for
+  native/off/active, with active median 124,194ms versus 118,153ms for the slower control (1.051x).
+  Only active test selection passed; symbol and impact still failed exact output requirements.
+- Confirmation was stopped after 12/27 checkpointed cells because repetition-2 active symbol timed
+  out at 300,157ms. The report records one PASS, ten FAIL and one TIMEOUT. Do not resume it as final
+  evidence: implement B1 effect/timing repairs and rerun the same sealed 9-cell tranche from zero.
+- Current bounded slice adds exact-oracle-preserving `required_fact_recall`, `schema_valid`,
+  `final_exact_pass` and retrieval/projection/reasoning attribution. It also splits PI time into cold
+  Twin build, snapshot load, adjacency/index construction, query execution, JSON serialization and
+  post-PI agent/model residual after subtracting later tool execution. Publish this slice
+  independently before changing PI
+  projection semantics.
 - Comprehensive B0a execution now requires passing same-exact-head activation and pilot reports. Current
   deterministic reachability audit blocks it because `blueprint`, `convergence`, `traceability` and
   `strategy` have no OpenCode tool/task route. Next: finish focused/full gates, publish this guard,

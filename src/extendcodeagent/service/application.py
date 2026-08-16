@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -97,6 +98,8 @@ class ProjectIntelligenceApplication:
         self._store: SqliteGraphStore | None = None
         self._twin: TwinService | None = None
         self._blueprints: BlueprintService | None = None
+        self._request_timing: dict[str, float] | None = None
+        self._cold_twin_build_ms = 0.0
 
     def __enter__(self) -> ProjectIntelligenceApplication:
         return self
@@ -111,6 +114,39 @@ class ProjectIntelligenceApplication:
             self._twin = None
             self._blueprints = None
 
+    def begin_timing(self) -> None:
+        """Start one sidecar-request timing scope.
+
+        The local sidecar is deliberately single-threaded, so request-local
+        accumulation remains deterministic without leaking timing concerns into
+        domain contracts.
+        """
+
+        self._request_timing = {
+            "snapshot_load_ms": 0.0,
+            "adjacency_index_build_ms": 0.0,
+            "cold_twin_build_current_request_ms": 0.0,
+        }
+
+    def finish_timing(self, request_ms: float) -> dict[str, float]:
+        current = self._request_timing or {}
+        tracked = sum(current.values())
+        result = {
+            "cold_twin_build_ms": round(self._cold_twin_build_ms, 3),
+            "snapshot_load_ms": round(current.get("snapshot_load_ms", 0.0), 3),
+            "adjacency_index_build_ms": round(current.get("adjacency_index_build_ms", 0.0), 3),
+            "query_execution_ms": round(max(0.0, request_ms - tracked), 3),
+        }
+        self._request_timing = None
+        return result
+
+    def _record_timing(self, name: str, started_ns: int) -> None:
+        elapsed = (time.perf_counter_ns() - started_ns) / 1_000_000
+        if name == "cold_twin_build_current_request_ms":
+            self._cold_twin_build_ms += elapsed
+        if self._request_timing is not None:
+            self._request_timing[name] = self._request_timing.get(name, 0.0) + elapsed
+
     def status(self) -> dict[str, Any]:
         mode = self.policy.mode(CapabilityName.GRAPH)
         if mode is RolloutMode.OFF:
@@ -124,7 +160,7 @@ class ProjectIntelligenceApplication:
                 "edges": 0,
                 "capabilities": self._capability_status(),
             }
-        snapshot = self._ensure_twin().snapshot(self.project)
+        snapshot = self._load_snapshot(self._ensure_twin())
         return {
             "interface": INTERFACE_VERSION,
             "depth": None,
@@ -164,12 +200,15 @@ class ProjectIntelligenceApplication:
                 "depth": self.policy.depth(CapabilityName.SEMANTIC).value,
             }
         twin = self._ensure_twin()
-        current = twin.snapshot(self.project).revision
+        current = self._load_snapshot(twin).revision
+        started = time.perf_counter_ns()
         result = (
             twin.refresh(self.project, changed_paths=tuple(sorted(set(paths))))
             if current and paths
             else twin.open(self.project)
         )
+        if current is None:
+            self._record_timing("cold_twin_build_current_request_ms", started)
         return {
             "accepted": True,
             "kind": kind,
@@ -212,7 +251,7 @@ class ProjectIntelligenceApplication:
         max_paths: int = 20,
     ) -> dict[str, Any]:
         snapshot = self._explicit_snapshot(CapabilityName.IMPACT)
-        result = GraphAnalysisService(snapshot, self._reference_resolver()).trace_path(
+        result = self._analysis_service(snapshot).trace_path(
             PathQuery(
                 source_ref,
                 target_ref,
@@ -534,7 +573,7 @@ class ProjectIntelligenceApplication:
         include_historical: bool = False,
         capability: CapabilityName = CapabilityName.IMPACT,
     ) -> Any:
-        return GraphAnalysisService(snapshot, self._reference_resolver()).assess_impact(
+        return self._analysis_service(snapshot).assess_impact(
             ImpactQuery(
                 changed_refs,
                 min_confidence=min_confidence,
@@ -558,11 +597,25 @@ class ProjectIntelligenceApplication:
             twin = self._ensure_twin()
         else:
             twin = self._twin
-        snapshot = twin.snapshot(self.project)
+        snapshot = self._load_snapshot(twin)
         if open_if_missing and snapshot.revision is None:
+            started = time.perf_counter_ns()
             twin.open(self.project)
-            snapshot = twin.snapshot(self.project)
+            self._record_timing("cold_twin_build_current_request_ms", started)
+            snapshot = self._load_snapshot(twin)
         return snapshot
+
+    def _load_snapshot(self, twin: TwinService) -> GraphSnapshot:
+        started = time.perf_counter_ns()
+        snapshot = twin.snapshot(self.project)
+        self._record_timing("snapshot_load_ms", started)
+        return snapshot
+
+    def _analysis_service(self, snapshot: GraphSnapshot) -> GraphAnalysisService:
+        started = time.perf_counter_ns()
+        service = GraphAnalysisService(snapshot, self._reference_resolver())
+        self._record_timing("adjacency_index_build_ms", started)
+        return service
 
     def _ensure_twin(self) -> TwinService:
         if self._twin is None:
