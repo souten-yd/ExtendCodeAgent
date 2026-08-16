@@ -83,6 +83,11 @@ activation and pilot paths; do not resume the superseded-seal report. Only a cle
 Use the completed limit pair (context 262,144/output 8,192), not the intermediate output-only
 configuration. After merge, prove it with real OpenCode activation before starting the fresh pilot.
 
+The final new-seal activation and 27-cell pilot now pass. Version and merge the confirmed-effect
+evidence, then start the 306-cell baseline from a fresh path with the exact activation/pilot reports;
+only after baseline completion start the 714-cell PI screening. Preserve task-level symbol/test
+variance and the six-part timing fields in compact evidence.
+
 The conditional B1 storage blocker is repaired at exact implementation head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`: KasaneCore and PEDS now pass three-run cold-index
 budgets. Keep that merged result, but restart the 306-cell baseline and PI-enabled screen from zero

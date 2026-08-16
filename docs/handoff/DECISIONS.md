@@ -954,3 +954,8 @@ diagnostic only and a fresh activation/pilot is mandatory.
 OpenCode custom-model runtime validation requires both `limit.context` and `limit.output`; debug
 config rendering alone is insufficient proof. The context value is sealed to 262,144 to match the
 actual ControlDeck llama.cpp `--ctx-size`, and real `opencode run` is required before activation.
+
+The sealed 27-cell gate is now the adoption boundary evidence for entering comprehensive evaluation:
+active gained six exact PASS over controls, every active cell observed required PI, and no timeout
+occurred. This authorizes—not completes—the 306-cell baseline and 714-cell screening schedules.
+Residual symbol/test variance remains visible in task-level metrics and is not treated as resolved.

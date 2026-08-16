@@ -2,7 +2,7 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/b1-complete-local-limits`; latest merged base `9010cca1aec8f80bc4319104150a644e6688fea3`
+Current branch: `agent/b1-confirmed-effect-evidence`; latest merged base `7e58751b05ec310412c3406c8b9ae1142fdd1c6c`
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
 Current task: prove real PI activation and repair missing capability routes before comprehensive B0a
 
@@ -98,6 +98,10 @@ Current task: prove real PI activation and repair missing capability routes befo
   PR #63's first activation exposed an OpenCode runtime-schema requirement: output limit alone is
   invalid without context. The final provider config seals context 262,144 and output 8,192, matching
   the ControlDeck server. Merge and prove this pair with a fresh real activation.
+  PR #64 merged the completed pair. Fresh activation passed, and the 27-cell pilot completed
+  `PROCEED_TO_COMPREHENSIVE` with native/off/active 0/0/6, no observation failures or timeouts, and
+  active median 72,100ms. Next: merge confirmed evidence, then run fresh 306 baseline followed by
+  714 screening; do not conceal symbol 1/3 or tests 2/3 task-level variance.
 
 - Conditional B1 repair exact head `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7` adds the missing
   current-edge identity index. Three cold exact-pin runs changed KasaneCore/PEDS from >300-second

@@ -224,6 +224,13 @@ OpenCode runtime validation additionally requires the model context limit; the f
 pair is context 262,144 and output 8,192, matching the ControlDeck llama.cpp server. The intermediate
 output-only activation failed before any model or PI call and is not effect evidence.
 
+At merged exact head `7e58751b05ec`, the completed provider limits passed all four activation
+routes and the fresh 27-cell confirmation gate returned `PROCEED_TO_COMPREHENSIVE`. Exact PASS was
+native/off/active 0/0/6: impact 3/3 active, symbol 1/3, tests 2/3. Every active symbol/impact PI fact
+recall was 1.0; tests was 0.333/1.0/1.0. There were no PI/off observation failures or timeouts.
+Active median wall time was 72,100ms versus 105,688/109,601ms controls. This confirms functional
+advantage; symbol schema projection and objective-sensitive test retrieval remain measured variance.
+
 The bootstrap blocker has a bounded B1 repair at exact head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`. A matching current-edge identity index and schema-5
 migration reduce exact-pin three-run cold medians to 15,825ms for KasaneCore and 6,368ms for PEDS;

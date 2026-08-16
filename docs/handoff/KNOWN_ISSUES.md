@@ -227,3 +227,7 @@
 - PR #63's output-only model limit passed debug rendering but failed real OpenCode runtime validation
   because `limit.context` was absent. The final pair is context 262,144/output 8,192. A fresh real
   activation remains required; the 488ms configuration failure observed no model or PI activity.
+- The final 27-cell pilot confirms aggregate PI effect, but symbol is only 1/3 exact PASS despite PI
+  fact recall 1.0 in all repetitions, showing remaining scalar/list projection variance. Tests are
+  2/3; one repetition's PI fact recall fell to 0.333 because objective projection selected only one
+  required class. These are measured residual gaps, not blockers to comprehensive measurement.

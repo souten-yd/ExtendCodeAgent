@@ -563,3 +563,10 @@
   output 8,192 and regenerated dependent seals. This failed activation is not pilot evidence.
 - A direct real `opencode run --pure` against the ControlDeck port-8090 model with the completed
   limits exited 0, returned the requested `hi`, emitted 69 output tokens and no stderr.
+- PR #64 merged the completed local limits as `7e58751b05ec310412c3406c8b9ae1142fdd1c6c`.
+  Fresh four-model activation passed. The new-seal 27-cell pilot completed without timeout and
+  returned `PROCEED_TO_COMPREHENSIVE`: native/off/active exact PASS 0/0/6, active median 72,100ms
+  versus 105,688/109,601ms controls, with no observation failures.
+- Active task results were symbol 1/3, impact 3/3 and tests 2/3. PI required-fact recall was 1.0 for
+  every symbol/impact cell and 0.333/1.0/1.0 for tests. This separates remaining final projection
+  and objective retrieval variance from the confirmed aggregate effect.
