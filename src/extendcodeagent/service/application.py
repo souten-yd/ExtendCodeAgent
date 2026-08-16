@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import re
 import time
 from datetime import datetime
 from pathlib import Path
@@ -331,19 +332,30 @@ class ProjectIntelligenceApplication:
             diagnostics=[item.code for item in report.diagnostics],
         )
 
-    def tests(self, changed_refs: tuple[str, ...], *, view: str = "detail") -> dict[str, Any]:
+    def tests(
+        self,
+        changed_refs: tuple[str, ...] = (),
+        *,
+        objective: str = "",
+        view: str = "detail",
+    ) -> dict[str, Any]:
         snapshot = self._explicit_snapshot(CapabilityName.TEST_SELECTION)
-        report = self._impact_report(
-            snapshot, changed_refs, capability=CapabilityName.TEST_SELECTION
+        if not changed_refs and view == "detail":
+            raise ValueError("changed_refs must not be empty for detail view")
+        report = (
+            self._impact_report(snapshot, changed_refs, capability=CapabilityName.TEST_SELECTION)
+            if changed_refs
+            else None
         )
-        selection = select_tests(report)
+        selection = select_tests(report) if report is not None else None
+        candidates = selection.candidates if selection is not None else ()
         observations = self._ensure_store().observations(
             self.project,
             refs=tuple(
                 CanonicalRef(item)
                 for item in (
                     *changed_refs,
-                    *(candidate.canonical_ref.value for candidate in selection.candidates),
+                    *(candidate.canonical_ref.value for candidate in candidates),
                 )
             ),
             limit=self.max_items,
@@ -366,7 +378,7 @@ class ProjectIntelligenceApplication:
                         policy=self.policy,
                     )
                 )
-                for candidate in selection.candidates
+                for candidate in candidates
             ]
             if current_revision and obsolescence
             else []
@@ -376,20 +388,23 @@ class ProjectIntelligenceApplication:
             intent_architecture = _intent_architecture_test_paths(changed_refs, nodes)
             selected_candidates = [
                 item
-                for item in selection.candidates
+                for item in candidates
                 if "architecture" not in Path(item.source_ref).parts
                 or item.source_ref in intent_architecture
             ]
-            selected_paths = sorted({item.source_ref for item in selected_candidates})
-            candidate_refs = {item.canonical_ref.value for item in selected_candidates}
-            structural_paths = _structural_test_paths(snapshot, candidate_refs)
-            covered_obligations = sorted({_test_obligation(path) for path in selected_paths})
-            coverage_complete = (
-                bool(selected_paths)
-                and "unit_behavior" in covered_obligations
-                and bool(structural_paths)
-                and selection.fallback is None
+            objective_paths = _objective_test_paths(snapshot, objective)
+            selected_paths = sorted(
+                {item.source_ref for item in selected_candidates} | objective_paths
             )
+            candidate_refs = {item.canonical_ref.value for item in selected_candidates}
+            covered_obligations = sorted({_test_obligation(path) for path in selected_paths})
+            required_obligations = {
+                "architecture_boundary",
+                "integration_boundary",
+                "unit_behavior",
+            }
+            uncovered_obligations = sorted(required_obligations - set(covered_obligations))
+            coverage_complete = not uncovered_obligations
             return _result(
                 snapshot,
                 depth=self.policy.depth(CapabilityName.TEST_SELECTION),
@@ -398,17 +413,28 @@ class ProjectIntelligenceApplication:
                 candidate_refs=sorted(candidate_refs),
                 covered_obligations=covered_obligations,
                 coverage_complete=coverage_complete,
-                uncovered_obligations=(
-                    []
-                    if coverage_complete
-                    else ["structural/architecture coverage is not represented"]
-                ),
+                uncovered_obligations=uncovered_obligations,
                 fallback_search_required=not coverage_complete,
-                fallback=selection.fallback,
-                diagnostics=list(selection.diagnostics),
+                fallback=(
+                    None
+                    if coverage_complete
+                    else selection.fallback
+                    if selection is not None
+                    else "native_search"
+                ),
+                diagnostics=(
+                    [*selection.diagnostics, "objective_intent_projection"]
+                    if selection is not None and objective_paths
+                    else ["objective_intent_projection"]
+                    if objective_paths
+                    else list(selection.diagnostics)
+                    if selection is not None
+                    else ["objective did not match test intent"]
+                ),
             )
         if view != "detail":
             raise ValueError("view must be compact or detail")
+        assert report is not None and selection is not None
         return _result(
             snapshot,
             depth=self.policy.depth(CapabilityName.TEST_SELECTION),
@@ -458,8 +484,15 @@ class ProjectIntelligenceApplication:
         )
         source_production = [path for path in direct_production if path.startswith("src/")]
         production_callers = source_production or direct_production
-        tests = sorted(
+        candidate_tests = (
             {item.source_ref for item in report.recommended_tests} if report is not None else set()
+        )
+        nodes = {node.canonical_ref.value: node for node in snapshot.nodes}
+        intent_architecture = _intent_architecture_test_paths(refs, nodes)
+        tests = sorted(
+            path
+            for path in candidate_tests
+            if "architecture" not in Path(path).parts or path in intent_architecture
         )
         return _result(
             snapshot,
@@ -1161,6 +1194,54 @@ def _focused_test_paths(
         }
     ]
     return focused or candidate_tests
+
+
+def _objective_test_paths(snapshot: GraphSnapshot, objective: str) -> set[str]:
+    if not objective.strip():
+        return set()
+    ignored = {
+        "and",
+        "covers",
+        "existing",
+        "for",
+        "its",
+        "set",
+        "smallest",
+        "test",
+        "tests",
+        "the",
+    }
+    objective_tokens = {
+        token
+        for token in re.findall(r"[a-z0-9]+", objective.casefold().replace("_", " "))
+        if token not in ignored and len(token) > 2
+    }
+    by_path: dict[str, set[str]] = {}
+    for node in snapshot.nodes:
+        if node.node_type != "test":
+            continue
+        tokens = by_path.setdefault(node.source_ref, set())
+        intent_tokens = node.properties.get("intent_tokens", ())
+        if isinstance(intent_tokens, list | tuple | set):
+            tokens.update(str(item).casefold() for item in intent_tokens)
+        tokens.update(
+            token
+            for part in Path(node.source_ref).parts
+            for token in re.findall(r"[a-z0-9]+", part.casefold().replace("_", " "))
+        )
+    selected: set[str] = set()
+    for obligation in ("unit_behavior", "integration_boundary", "architecture_boundary"):
+        ranked = sorted(
+            (
+                (len(objective_tokens & tokens), path)
+                for path, tokens in by_path.items()
+                if _test_obligation(path) == obligation
+            ),
+            key=lambda item: (-item[0], item[1]),
+        )
+        if ranked and ranked[0][0] > 0:
+            selected.add(ranked[0][1])
+    return selected
 
 
 def _structural_test_paths(snapshot: GraphSnapshot, candidate_refs: set[str]) -> set[str]:

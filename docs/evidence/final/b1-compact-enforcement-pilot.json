@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "classification": "B1_REPAIR_AND_RETEST",
+  "source_revision": "b67f9514937d62a1f235baf95f2e2581183dabc3",
+  "activation": {
+    "status": "PASS",
+    "models": [
+      "local-practical",
+      "host-default",
+      "frontier-sonnet",
+      "frontier-codex"
+    ],
+    "capability_route_gaps": []
+  },
+  "pilot": {
+    "stage": "initial_complete",
+    "cells": 9,
+    "passes": {
+      "native": 0,
+      "off": 0,
+      "active": 0
+    },
+    "active_pass_delta_over_best_control": 0,
+    "median_wall_ms": {
+      "native": 114317,
+      "off": 105208,
+      "active": 113474
+    },
+    "active_median_wall_ratio_over_slower_control": 0.9926257686958195,
+    "active_observation_failures": [],
+    "off_observation_failures": [],
+    "provider_or_timeout_cells": [],
+    "decision": "REPAIR_AND_RETEST",
+    "reasons": [
+      "no_objective_pass_effect"
+    ]
+  },
+  "active_failures": [
+    {
+      "task_id": "eca-symbol-001",
+      "classification": "RETRIEVAL_MISSING",
+      "required_fact_recall": 0.8,
+      "pi_required_fact_recall": 0.2,
+      "observed_tools": [
+        "pi_status",
+        "pi_symbol"
+      ]
+    },
+    {
+      "task_id": "eca-impact-001",
+      "classification": "RETRIEVAL_MISSING",
+      "required_fact_recall": 0.571429,
+      "pi_required_fact_recall": 0.166667,
+      "observed_tools": [
+        "pi_impact",
+        "pi_references",
+        "pi_status",
+        "pi_symbol"
+      ]
+    },
+    {
+      "task_id": "eca-tests-001",
+      "classification": "RETRIEVAL_MISSING",
+      "required_fact_recall": 0.666667,
+      "pi_required_fact_recall": 0.666667,
+      "observed_tools": [
+        "pi_status",
+        "pi_symbol",
+        "pi_tests"
+      ]
+    }
+  ],
+  "diagnosis": {
+    "compact_views_used": false,
+    "detail_view_explicitly_requested_in_symbol_and_impact": true,
+    "test_selection_input": [
+      "src/extendcodeagent/verification",
+      "src/extendcodeagent/twin",
+      "src/extendcodeagent/graph",
+      "src/extendcodeagent/convergence"
+    ],
+    "test_selection_fallback": "full_suite",
+    "conclusion": "The pilot did not exercise the B1 compact projection. OpenCode must expose compact-only task views and objective-aware test obligations before retest."
+  }
+}

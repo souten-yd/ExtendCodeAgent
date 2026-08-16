@@ -26,13 +26,12 @@ export function createTools(request: Requester): Record<string, ToolDefinition> 
     pi_symbol: tool({
       description:
         "Find task-ready definition, export, caller, and test paths for a project symbol. " +
-        "Use detail only when raw graph facts are required.",
+        "Use the returned compact fields directly instead of expanding them into explanation objects.",
       args: {
         query: z.string().min(1),
-        view: z.enum(["compact", "detail"]).default("compact"),
       },
       async execute(args) {
-        return jsonResult(await request("symbol", args))
+        return jsonResult(await request("symbol", { ...args, view: "compact" }))
       },
     }),
     pi_references: tool({
@@ -58,28 +57,28 @@ export function createTools(request: Requester): Record<string, ToolDefinition> 
     }),
     pi_impact: tool({
       description:
-        "Assess task-ready definition, production use, focused test, and uncertainty facts. " +
-        "Use detail only for full explanation paths.",
+        "Return task-ready definition, production methods, direct use count, focused tests, " +
+        "and uncertainty. Copy compact scalar/path fields without enriching their schema.",
       args: {
         changed_refs: refs,
         min_confidence: z.number().min(0).max(1).optional(),
         max_depth: z.number().int().min(0).optional(),
         include_historical: z.boolean().optional(),
-        view: z.enum(["compact", "detail"]).default("compact"),
       },
       async execute(args) {
-        return jsonResult(await request("impact", args))
+        return jsonResult(await request("impact", { ...args, view: "compact" }))
       },
     }),
     pi_tests: tool({
       description:
-        "Recommend task-ready tests and explicitly report incomplete obligation coverage.",
+        "Select the smallest task-ready unit, integration, and architecture test obligations. " +
+        "Copy selected_tests directly and preserve any explicit coverage gaps.",
       args: {
-        changed_refs: refs,
-        view: z.enum(["compact", "detail"]).default("compact"),
+        objective: z.string().min(1),
+        changed_refs: z.array(z.string()).optional(),
       },
       async execute(args) {
-        return jsonResult(await request("tests", args))
+        return jsonResult(await request("tests", { ...args, view: "compact" }))
       },
     }),
     pi_context: tool({

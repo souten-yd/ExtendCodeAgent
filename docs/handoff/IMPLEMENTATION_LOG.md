@@ -504,3 +504,17 @@
   capability observation is missing.
 - Missing-route gates pass: `all-fast` (190 Python, 9 adapter), integration (39 Python, 9 adapter),
   strict mypy, real sidecar/MCP calls and Python/TypeScript build.
+- PR #58 merged the composite routes as `b67f9514937d62a1f235baf95f2e2581183dabc3`.
+  Fresh same-head activation passed all four model routes with no capability gap. The sealed 9-cell
+  pilot then produced native/off/active PASS 0/0/0 and correctly stopped with
+  `REPAIR_AND_RETEST:no_objective_pass_effect`; active median was 0.993x the slower control and all
+  PI/off observations passed without provider error or timeout.
+- Raw active traces proved the agent explicitly selected `detail` for symbol and impact, bypassing
+  the compact repair; the detailed impact payload was truncated by OpenCode. `pi_tests` received
+  directory strings, returned `full_suite`, and the agent omitted the unit verification test.
+- Began a bounded last-mile repair: plugin/MCP symbol and impact are compact-only; tests require a
+  natural-language objective and accept optional refs. Deterministic intent ranking selects one best
+  unit, integration and architecture obligation. Direct queries on the pilot workspace now return
+  the exact sealed symbol, impact and three-test fact sets.
+- Compact-enforcement gates pass: `all-fast` (191 Python, 9 adapter), integration (39 Python,
+  9 adapter), strict mypy, exact pilot-workspace projection proof and Python/TypeScript build.

@@ -921,3 +921,15 @@ The existing sealed task/oracle truth is unchanged. The activation contract inst
 `eca-refactor-001` to `pi_plan` and `cd-cross-boundary-001` to `pi_verify`. Relevant active and
 ablation cells must attempt those tools, and the screen reports `NOT_TESTED_ROUTE_GAP` rather than
 `no_screened_effect` when active capability use or required tool attempts are absent.
+
+## 2026-08-16 — OpenCode exposes task projections, not a detail-view choice
+
+Decision: retain `detail` for direct application compatibility, but remove it from the OpenCode
+plugin/MCP schemas for symbol, impact and test selection. The real Qwen pilot explicitly chose
+`detail` despite compact defaults, so defaults did not test the intended projection and one impact
+payload was truncated. Public agent tools must make the safe task-shaped path the only path.
+
+Test selection requires a natural-language objective and accepts canonical refs only as optional
+additional evidence. It deterministically ranks existing test intent per unit, integration and
+architecture obligation, returns one best path per required class, and leaves uncovered obligations
+explicit. This is a bounded projection repair, not a claim of generic semantic TestIntent coverage.

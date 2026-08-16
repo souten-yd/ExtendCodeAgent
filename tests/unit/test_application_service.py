@@ -178,6 +178,50 @@ def test_query_view_rejects_unknown_projection(tmp_path: Path) -> None:
             application.tests(("py://service#leaf",), view="unknown")
 
 
+def test_compact_tests_project_one_best_test_per_objective_obligation(tmp_path: Path) -> None:
+    root = tmp_path / "objective-tests"
+    root.mkdir()
+    _write(root, "src/pkg/verification.py", "def project():\n    return True\n")
+    _write(
+        root,
+        "tests/unit/test_verification.py",
+        "def test_required_verification_projection():\n    assert True\n",
+    )
+    _write(
+        root,
+        "tests/unit/test_unrelated.py",
+        "def test_unrelated_behavior():\n    assert True\n",
+    )
+    _write(
+        root,
+        "tests/integration/test_verification_twin_projection.py",
+        "def test_twin_integration_projection():\n    assert True\n",
+    )
+    _write(
+        root,
+        "tests/architecture/test_verification_projection.py",
+        "def test_no_second_truth_store_architecture_boundary():\n    assert True\n",
+    )
+    with ProjectIntelligenceApplication(
+        root, tmp_path / "objective.db", _policy("advisory")
+    ) as application:
+        selected = application.tests(
+            objective=(
+                "required verification projection, Twin integration, and no second truth store "
+                "architecture boundary"
+            ),
+            view="compact",
+        )
+
+    assert selected["selected_tests"] == [
+        "tests/architecture/test_verification_projection.py",
+        "tests/integration/test_verification_twin_projection.py",
+        "tests/unit/test_verification.py",
+    ]
+    assert selected["coverage_complete"] is True
+    assert selected["fallback_search_required"] is False
+
+
 def test_compact_impact_counts_source_uses_and_tests_cover_structural_scope(
     tmp_path: Path,
 ) -> None:
