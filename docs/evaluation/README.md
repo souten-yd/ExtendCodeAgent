@@ -42,3 +42,20 @@ timeouts, incomplete cells, seal mismatches and provenance failures never migrat
 is hash-bound to the source checkpoint, trace log, every source result and compatibility manifest,
 and is itself sealed. Audit alone does not permit migration: a separately sealed 10–20-cell
 multi-provider Bridge Proof must match the affected model/task classes first.
+
+Generate and execute the sealed Bridge Sample after the clean merged audit:
+
+```bash
+tools/local/evaluation-runner bridge-plan --audit <audit.json> \
+  --compatibility docs/evaluation/b0a-checkpoint-compatibility-v1.json \
+  --output <bridge-plan.json>
+tools/local/evaluation-runner run-bridge --bridge-plan <bridge-plan.json> \
+  --raw-root <bridge-raw> --output <bridge-run.json>
+tools/local/evaluation-runner prove-bridge --bridge-plan <bridge-plan.json> \
+  --bridge-run <bridge-run.json> --source <old-result.json> --output <bridge-proof.json>
+```
+
+`run-bridge` accepts repeated `--model-tier` selections and `--resume`, so providers can be run as
+separate shards. A Bridge mismatch is not averaged away: the related model/task class becomes replay
+required. Bridge wall time is always excluded from functional equivalence and legacy timing remains
+non-mergeable.

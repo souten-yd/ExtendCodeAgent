@@ -20,6 +20,9 @@ from extendcodeagent.evaluation import EvaluationTrace, EvaluationTraceLog
 from extendcodeagent.evaluation.compatibility import (
     CompatibilityError,
     audit_checkpoint,
+    create_bridge_plan,
+    digest,
+    prove_bridge,
     verify_seal,
 )
 
@@ -1410,6 +1413,90 @@ def run(
             )
 
 
+def run_bridge(
+    bridge_plan_path: Path,
+    output: Path,
+    raw_root: Path,
+    selected_models: set[str] | None,
+    resume: bool,
+) -> None:
+    _require_clean_worktree()
+    bridge_plan = _load(bridge_plan_path.resolve())
+    verify_seal(bridge_plan, "bridge plan")
+    current_revision = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+    ).strip()
+    if bridge_plan.get("bridge_runner_revision") != current_revision:
+        raise EvaluationError("bridge plan was not generated at the current exact head")
+    raw_root = raw_root.resolve()
+    raw_root.mkdir(parents=True, exist_ok=True)
+    trace_log = EvaluationTraceLog(raw_root / "traces.jsonl")
+    results: list[dict[str, Any]] = []
+    if output.exists():
+        if not resume:
+            raise EvaluationError("bridge output exists; use a fresh path or --resume")
+        previous = _load(output)
+        verify_seal(previous, "bridge run")
+        if previous.get("bridge_plan_seal") != bridge_plan["seal"]["canonical_payload"]:
+            raise EvaluationError("bridge resume plan seal mismatch")
+        if previous.get("source_revision") != current_revision:
+            raise EvaluationError("bridge resume source revision mismatch")
+        if previous.get("trace_log") != str(trace_log.path):
+            raise EvaluationError("bridge resume trace log mismatch")
+        results = list(previous.get("results", []))
+    elif resume and trace_log.path.exists():
+        raise EvaluationError("bridge trace exists without its atomic report checkpoint")
+    elif trace_log.path.exists():
+        raise EvaluationError("bridge trace already exists; use a fresh raw root")
+    trace_log.replay()
+    baseline_cells = {item["cell_id"]: item for item in plan("b0a-baseline")["cells"]}
+    planned_ids = [item["cell_id"] for item in bridge_plan["cells"]]
+    completed = {item["cell_id"] for item in results}
+    tasks = {item["id"]: item for item in _load(TASK_SUITE)["tasks"]}
+    for cell_id in planned_ids:
+        cell = baseline_cells.get(cell_id)
+        if cell is None:
+            raise EvaluationError(f"bridge cell is absent from current baseline: {cell_id}")
+        if selected_models and cell["model_tier"] not in selected_models:
+            continue
+        if cell_id in completed:
+            continue
+        result = _execute(cell, tasks[cell["task_id"]], raw_root)
+        _append_trace(trace_log, result, tasks[cell["task_id"]])
+        results.append(result)
+        body = {
+            "schema": 1,
+            "classification": "EVALUATION_CHECKPOINT_BRIDGE_RUN",
+            "source_revision": current_revision,
+            "bridge_plan": str(bridge_plan_path.resolve()),
+            "bridge_plan_seal": bridge_plan["seal"]["canonical_payload"],
+            "trace_log": str(trace_log.path),
+            "executed_cells": len(results),
+            "pending_cells": sorted(set(planned_ids) - {item["cell_id"] for item in results}),
+            "results": results,
+        }
+        _write_report(
+            output,
+            {**body, "seal": {"algorithm": "sha256", "canonical_payload": digest(body)}},
+        )
+    if not output.exists():
+        body = {
+            "schema": 1,
+            "classification": "EVALUATION_CHECKPOINT_BRIDGE_RUN",
+            "source_revision": current_revision,
+            "bridge_plan": str(bridge_plan_path.resolve()),
+            "bridge_plan_seal": bridge_plan["seal"]["canonical_payload"],
+            "trace_log": str(trace_log.path),
+            "executed_cells": 0,
+            "pending_cells": planned_ids,
+            "results": [],
+        }
+        _write_report(
+            output,
+            {**body, "seal": {"algorithm": "sha256", "canonical_payload": digest(body)}},
+        )
+
+
 def _validate_resume(
     previous: dict[str, Any],
     scope: str,
@@ -1819,6 +1906,21 @@ def main() -> int:
     audit_parser.add_argument("--source", type=Path, required=True)
     audit_parser.add_argument("--compatibility", type=Path, required=True)
     audit_parser.add_argument("--output", type=Path, required=True)
+    bridge_plan_parser = sub.add_parser("bridge-plan")
+    bridge_plan_parser.add_argument("--audit", type=Path, required=True)
+    bridge_plan_parser.add_argument("--compatibility", type=Path, required=True)
+    bridge_plan_parser.add_argument("--output", type=Path, required=True)
+    bridge_run_parser = sub.add_parser("run-bridge")
+    bridge_run_parser.add_argument("--bridge-plan", type=Path, required=True)
+    bridge_run_parser.add_argument("--output", type=Path, required=True)
+    bridge_run_parser.add_argument("--raw-root", type=Path, required=True)
+    bridge_run_parser.add_argument("--model-tier", action="append")
+    bridge_run_parser.add_argument("--resume", action="store_true")
+    bridge_proof_parser = sub.add_parser("prove-bridge")
+    bridge_proof_parser.add_argument("--bridge-plan", type=Path, required=True)
+    bridge_proof_parser.add_argument("--bridge-run", type=Path, required=True)
+    bridge_proof_parser.add_argument("--source", type=Path, required=True)
+    bridge_proof_parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     try:
         if args.command == "validate":
@@ -1864,7 +1966,7 @@ def main() -> int:
             )
         elif args.command == "screen":
             _write_report(args.output, screening_table(_load(args.input)))
-        else:
+        elif args.command == "audit-checkpoint":
             _require_clean_worktree()
             source_report = _load(args.source)
             source_scope = source_report.get("schedule", {}).get("scope")
@@ -1877,6 +1979,32 @@ def main() -> int:
                     args.source.resolve(),
                     args.compatibility.resolve(),
                     plan(source_scope)["cells"],
+                ),
+            )
+        elif args.command == "bridge-plan":
+            _require_clean_worktree()
+            _write_report(
+                args.output,
+                create_bridge_plan(
+                    ROOT, args.audit.resolve(), args.compatibility.resolve()
+                ),
+            )
+        elif args.command == "run-bridge":
+            run_bridge(
+                args.bridge_plan,
+                args.output,
+                args.raw_root,
+                _selected(args.model_tier),
+                args.resume,
+            )
+        else:
+            _require_clean_worktree()
+            _write_report(
+                args.output,
+                prove_bridge(
+                    args.bridge_plan.resolve(),
+                    args.bridge_run.resolve(),
+                    args.source.resolve(),
                 ),
             )
     except (

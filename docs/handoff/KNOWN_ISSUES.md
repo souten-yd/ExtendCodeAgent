@@ -6,7 +6,8 @@
   runner. It is also no longer discarded wholesale merely because provider supervision changed.
 - A sealed compatibility audit currently yields the diagnostic split 217 reuse candidates, four
   provider gaps and eight timeouts. Official reuse still requires the clean merged audit plus a
-  matching multi-provider Bridge Proof; no migration command exists yet.
+  matching multi-provider Bridge Proof; the Bridge commands now exist but have not yet run, and no
+  migration command exists yet.
 - Functional outcome and legacy latency are separate. Even a migrated functional result remains
   `LEGACY_RUNNER_LATENCY` until an explicit latency bridge permits aggregation.
 

@@ -17,7 +17,9 @@ from extendcodeagent.evaluation.compatibility import (  # noqa: E402
     REPLAY_REQUIRED,
     REUSABLE,
     audit_checkpoint,
+    create_bridge_plan,
     digest,
+    prove_bridge,
 )
 
 MANIFEST = ROOT / "docs/evaluation/b0a-checkpoint-compatibility-v1.json"
@@ -250,3 +252,42 @@ def test_incomplete_checkpoint_and_missing_trace_never_reuse(tmp_path: Path) -> 
     audit = audit_checkpoint(ROOT, source, MANIFEST, schedule)
     assert audit["trace_integrity"] == "FAIL:MISSING"
     assert audit["counts"][INVALID_PROVENANCE] == 1
+
+
+def test_bridge_plan_and_proof_require_semantic_match(tmp_path: Path) -> None:
+    source, schedule = _fixture(tmp_path)
+    manifest = json.loads(MANIFEST.read_text())
+    manifest["bridge_sample_policy"]["required_model_tiers"] = ["local-practical"]
+    manifest["bridge_sample_policy"]["required_tasks"] = {
+        "eca-symbol-001": "symbol-reference-lookup"
+    }
+    manifest["bridge_sample_policy"]["minimum_cells"] = 1
+    manifest["bridge_sample_policy"]["maximum_cells"] = 1
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(json.dumps(_sealed(manifest)))
+    audit = audit_checkpoint(ROOT, source, manifest_path, schedule)
+    audit_path = tmp_path / "audit.json"
+    audit_path.write_text(json.dumps(audit))
+    bridge_plan = create_bridge_plan(ROOT, audit_path, manifest_path)
+    bridge_plan_path = tmp_path / "bridge-plan.json"
+    bridge_plan_path.write_text(json.dumps(bridge_plan))
+    source_result = json.loads(source.read_text())["results"][0]
+    run_body = {
+        "schema": 1,
+        "classification": "EVALUATION_CHECKPOINT_BRIDGE_RUN",
+        "source_revision": bridge_plan["bridge_runner_revision"],
+        "bridge_plan_seal": bridge_plan["seal"]["canonical_payload"],
+        "results": [source_result],
+    }
+    run_path = tmp_path / "bridge-run.json"
+    run_path.write_text(json.dumps(_sealed(run_body)))
+    proof = prove_bridge(bridge_plan_path, run_path, source)
+    assert proof["status"] == "PASS"
+    assert proof["migration_permitted"] is True
+
+    run_body["results"][0]["outcome"] = "FAIL"
+    run_path.write_text(json.dumps(_sealed(run_body)))
+    proof = prove_bridge(bridge_plan_path, run_path, source)
+    assert proof["status"] == "FAIL"
+    assert proof["migration_permitted"] is False
+    assert proof["replay_required_classes"] == ["local-practical:symbol-reference-lookup"]

@@ -349,3 +349,162 @@ def audit_checkpoint(
         **report,
         "seal": {"algorithm": "sha256", "canonical_payload": digest(report)},
     }
+
+
+def create_bridge_plan(root: Path, audit_path: Path, manifest_path: Path) -> dict[str, Any]:
+    """Select one reusable source cell for every required model/task pair."""
+    audit = json.loads(audit_path.read_text(encoding="utf-8"))
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    verify_seal(audit, "checkpoint audit")
+    verify_seal(manifest, "compatibility manifest")
+    if audit.get("compatibility_manifest_seal") != manifest["seal"]["canonical_payload"]:
+        raise CompatibilityError("audit and compatibility manifest seals differ")
+    policy = manifest["bridge_sample_policy"]
+    required_models = list(policy["required_model_tiers"])
+    required_tasks = dict(policy["required_tasks"])
+    reusable = [item for item in audit.get("cells", []) if item.get("classification") == REUSABLE]
+    selected: list[dict[str, Any]] = []
+    missing: list[str] = []
+    for model_tier in required_models:
+        for task_id, task_class in required_tasks.items():
+            candidates = [
+                item
+                for item in reusable
+                if item.get("model_tier") == model_tier
+                and item.get("task_id") == task_id
+                and item.get("task_class") == task_class
+            ]
+            candidates.sort(
+                key=lambda item: (
+                    item.get("arm") != "native",
+                    str(item.get("cell_id", "")),
+                )
+            )
+            if not candidates:
+                missing.append(f"{model_tier}:{task_id}")
+                continue
+            selected.append(
+                {
+                    key: candidates[0][key]
+                    for key in (
+                        "cell_id",
+                        "model_tier",
+                        "model_id",
+                        "task_id",
+                        "task_class",
+                        "arm",
+                        "source_outcome",
+                        "source_result_sha256",
+                    )
+                }
+            )
+    if missing:
+        raise CompatibilityError(f"bridge coverage has no reusable source cells: {missing}")
+    if not policy["minimum_cells"] <= len(selected) <= policy["maximum_cells"]:
+        raise CompatibilityError("bridge cell count is outside sealed policy")
+    current_revision = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=root, text=True
+    ).strip()
+    report = {
+        "schema": 1,
+        "classification": "EVALUATION_CHECKPOINT_BRIDGE_PLAN",
+        "bridge_runner_revision": current_revision,
+        "audit": str(audit_path.resolve()),
+        "audit_seal": audit["seal"]["canonical_payload"],
+        "compatibility_manifest": (
+            str(manifest_path.relative_to(root))
+            if manifest_path.is_relative_to(root)
+            else str(manifest_path.resolve())
+        ),
+        "compatibility_manifest_seal": manifest["seal"]["canonical_payload"],
+        "source_checkpoint": audit["source_checkpoint"],
+        "source_checkpoint_sha256": audit["source_checkpoint_sha256"],
+        "policy": policy,
+        "cells": selected,
+    }
+    return {**report, "seal": {"algorithm": "sha256", "canonical_payload": digest(report)}}
+
+
+def prove_bridge(
+    bridge_plan_path: Path, bridge_run_path: Path, source_checkpoint_path: Path
+) -> dict[str, Any]:
+    """Compare rerun semantics with immutable source cells and seal the proof."""
+    bridge_plan = json.loads(bridge_plan_path.read_text(encoding="utf-8"))
+    bridge_run = json.loads(bridge_run_path.read_text(encoding="utf-8"))
+    source = json.loads(source_checkpoint_path.read_text(encoding="utf-8"))
+    verify_seal(bridge_plan, "bridge plan")
+    verify_seal(bridge_run, "bridge run")
+    if bridge_run.get("bridge_plan_seal") != bridge_plan["seal"]["canonical_payload"]:
+        raise CompatibilityError("bridge run does not match bridge plan")
+    if hashlib.sha256(source_checkpoint_path.read_bytes()).hexdigest() != bridge_plan.get(
+        "source_checkpoint_sha256"
+    ):
+        raise CompatibilityError("bridge source checkpoint hash mismatch")
+    old_by_id = {item["cell_id"]: item for item in source.get("results", [])}
+    new_by_id = {item["cell_id"]: item for item in bridge_run.get("results", [])}
+    comparisons: list[dict[str, Any]] = []
+    replay_classes: set[str] = set()
+    fields = (
+        "outcome",
+        "process_exit",
+        "oracle_exit",
+        "model_id",
+        "pi_tools",
+        "pi_capabilities_used",
+        "observed_capability_modes",
+        "observed_capability_depths",
+        "observed_pi_readiness",
+    )
+    attribution_fields = ("schema_valid", "final_exact_pass")
+    for planned in bridge_plan["cells"]:
+        cell_id = planned["cell_id"]
+        old = old_by_id.get(cell_id)
+        new = new_by_id.get(cell_id)
+        mismatches: list[str] = []
+        if old is None:
+            mismatches.append("source_result_missing")
+        elif digest(old) != planned["source_result_sha256"]:
+            mismatches.append("source_result_hash_mismatch")
+        if new is None:
+            mismatches.append("bridge_result_missing")
+        if old is not None and new is not None:
+            mismatches.extend(field for field in fields if old.get(field) != new.get(field))
+            old_attr = old.get("outcome_attribution", {})
+            new_attr = new.get("outcome_attribution", {})
+            mismatches.extend(
+                f"outcome_attribution.{field}"
+                for field in attribution_fields
+                if old_attr.get(field) != new_attr.get(field)
+            )
+            if new.get("outcome") not in {"PASS", "FAIL"}:
+                mismatches.append("bridge_provider_or_execution_gap")
+        class_key = f"{planned['model_tier']}:{planned['task_class']}"
+        if mismatches:
+            replay_classes.add(class_key)
+        comparisons.append(
+            {
+                "cell_id": cell_id,
+                "model_tier": planned["model_tier"],
+                "task_class": planned["task_class"],
+                "status": "MATCH" if not mismatches else "MISMATCH",
+                "mismatches": sorted(set(mismatches)),
+            }
+        )
+    status = "PASS" if not replay_classes else "FAIL"
+    report = {
+        "schema": 1,
+        "classification": "EVALUATION_CHECKPOINT_BRIDGE_PROOF",
+        "status": status,
+        "migration_permitted": status == "PASS",
+        "latency_merge_permitted": False,
+        "bridge_plan": str(bridge_plan_path.resolve()),
+        "bridge_plan_seal": bridge_plan["seal"]["canonical_payload"],
+        "bridge_run": str(bridge_run_path.resolve()),
+        "bridge_run_seal": bridge_run["seal"]["canonical_payload"],
+        "source_checkpoint_sha256": bridge_plan["source_checkpoint_sha256"],
+        "matched_cells": sum(item["status"] == "MATCH" for item in comparisons),
+        "total_cells": len(comparisons),
+        "replay_required_classes": sorted(replay_classes),
+        "comparisons": comparisons,
+    }
+    return {**report, "seal": {"algorithm": "sha256", "canonical_payload": digest(report)}}
