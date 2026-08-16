@@ -37,6 +37,7 @@ from extendcodeagent.convergence.storage import SqliteConvergenceRepository
 from extendcodeagent.core.config.schema import (
     KNOWN_ANALYZERS,
     CapabilityName,
+    Depth,
     RolloutMode,
     governing_capability,
 )
@@ -48,7 +49,7 @@ from extendcodeagent.core.contracts import (
     TwinRevisionRef,
 )
 from extendcodeagent.core.policy import CapabilityPolicy, CapabilityUnavailable
-from extendcodeagent.graph import GraphSnapshot
+from extendcodeagent.graph import FactStatus, GraphSnapshot
 from extendcodeagent.graph.analyzers import (
     CompositeGraphAnalyzer,
     GraphAnalyzer,
@@ -115,6 +116,7 @@ class ProjectIntelligenceApplication:
         if mode is RolloutMode.OFF:
             return {
                 "interface": INTERFACE_VERSION,
+                "depth": None,
                 "readiness": "disabled",
                 "mode": mode.value,
                 "revision_id": None,
@@ -125,6 +127,7 @@ class ProjectIntelligenceApplication:
         snapshot = self._ensure_twin().snapshot(self.project)
         return {
             "interface": INTERFACE_VERSION,
+            "depth": None,
             "readiness": "ready" if snapshot.revision else "absent",
             "mode": mode.value,
             "revision_id": snapshot.revision.revision_id if snapshot.revision else None,
@@ -142,6 +145,8 @@ class ProjectIntelligenceApplication:
                     "name": capability.value,
                     "implementation": self.policy.implementation(capability).value,
                     "mode": self.policy.mode(capability).value,
+                    "depth": self.policy.depth(capability).value,
+                    "min_inferred_confidence": self.policy.min_inferred_confidence(capability),
                     "governed_by": governed_by.value if governed_by is not capability else None,
                 }
             )
@@ -152,7 +157,12 @@ class ProjectIntelligenceApplication:
             self.policy.computes_automatically(capability)
             for capability in (CapabilityName.GRAPH, CapabilityName.TWIN, CapabilityName.SEMANTIC)
         ):
-            return {"accepted": False, "kind": kind, "revision_id": None}
+            return {
+                "accepted": False,
+                "kind": kind,
+                "revision_id": None,
+                "depth": self.policy.depth(CapabilityName.SEMANTIC).value,
+            }
         twin = self._ensure_twin()
         current = twin.snapshot(self.project).revision
         result = (
@@ -164,6 +174,7 @@ class ProjectIntelligenceApplication:
             "accepted": True,
             "kind": kind,
             "revision_id": result.revision.revision_id if result.revision else None,
+            "depth": self.policy.depth(CapabilityName.SEMANTIC).value,
             "affected_paths": list(result.affected_paths),
             "diagnostics": [item.code for item in result.diagnostics],
         }
@@ -177,14 +188,18 @@ class ProjectIntelligenceApplication:
             if lowered in node.canonical_ref.value.casefold()
             or lowered in str(node.properties.get("name", "")).casefold()
         ][: self.max_items]
-        return _result(snapshot, items=items)
+        return _result(snapshot, depth=self.policy.depth(CapabilityName.SEMANTIC), items=items)
 
     def references(self, canonical_ref: str) -> dict[str, Any]:
         snapshot = self._explicit_snapshot(CapabilityName.SEMANTIC)
-        items = [_edge_json(edge) for edge in snapshot.edges if edge.target.value == canonical_ref][
-            : self.max_items
-        ]
-        return _result(snapshot, items=items)
+        inferred_floor = self.policy.min_inferred_confidence(CapabilityName.SEMANTIC)
+        items = [
+            _edge_json(edge)
+            for edge in snapshot.edges
+            if edge.target.value == canonical_ref
+            and (edge.status is not FactStatus.INFERRED or edge.confidence.value >= inferred_floor)
+        ][: self.max_items]
+        return _result(snapshot, depth=self.policy.depth(CapabilityName.SEMANTIC), items=items)
 
     def path(
         self,
@@ -203,12 +218,14 @@ class ProjectIntelligenceApplication:
                 target_ref,
                 allowed_edge_types,
                 min_confidence=min_confidence,
+                min_inferred_confidence=self.policy.min_inferred_confidence(CapabilityName.IMPACT),
                 max_depth=min(max_depth or self.max_depth, self.max_depth),
                 max_paths=min(max_paths, self.max_items),
             )
         )
         return _result(
             snapshot,
+            depth=self.policy.depth(CapabilityName.IMPACT),
             paths=[_path_json(item) for item in result.paths],
             truncated=result.truncated,
             diagnostics=[item.code for item in result.diagnostics],
@@ -232,6 +249,7 @@ class ProjectIntelligenceApplication:
         )
         return _result(
             snapshot,
+            depth=self.policy.depth(CapabilityName.IMPACT),
             direct=[_impact_json(item) for item in report.direct_impacts],
             transitive=[_impact_json(item) for item in report.transitive_impacts],
             requirements=[_impact_json(item) for item in report.affected_requirements],
@@ -245,7 +263,9 @@ class ProjectIntelligenceApplication:
 
     def tests(self, changed_refs: tuple[str, ...]) -> dict[str, Any]:
         snapshot = self._explicit_snapshot(CapabilityName.TEST_SELECTION)
-        report = self._impact_report(snapshot, changed_refs)
+        report = self._impact_report(
+            snapshot, changed_refs, capability=CapabilityName.TEST_SELECTION
+        )
         selection = select_tests(report)
         observations = self._ensure_store().observations(
             self.project,
@@ -283,6 +303,7 @@ class ProjectIntelligenceApplication:
         )
         return _result(
             snapshot,
+            depth=self.policy.depth(CapabilityName.TEST_SELECTION),
             items=[_impact_json(item) for item in report.recommended_tests],
             fallback=selection.fallback,
             health=health,
@@ -319,7 +340,11 @@ class ProjectIntelligenceApplication:
             else self.policy.allows_explicit_use(CapabilityName.RUNTIME)
         )
         if not allowed:
-            return {"accepted": False, "observation_id": observation_id}
+            return {
+                "accepted": False,
+                "observation_id": observation_id,
+                "depth": self.policy.depth(CapabilityName.RUNTIME).value,
+            }
         current_revision = self._current_source_revision()
         revision = (
             current_revision
@@ -347,6 +372,7 @@ class ProjectIntelligenceApplication:
             "observation_id": observation_id,
             "inserted": inserted,
             "source_revision": revision.value,
+            "depth": self.policy.depth(CapabilityName.RUNTIME).value,
         }
 
     def runtime_evidence(self, refs: tuple[str, ...] = ()) -> dict[str, Any]:
@@ -358,7 +384,11 @@ class ProjectIntelligenceApplication:
             refs=tuple(CanonicalRef(item) for item in refs),
             limit=self.max_items,
         )
-        return _result(snapshot, items=[_observation_json(item) for item in observations])
+        return _result(
+            snapshot,
+            depth=self.policy.depth(CapabilityName.RUNTIME),
+            items=[_observation_json(item) for item in observations],
+        )
 
     def context(
         self,
@@ -381,6 +411,7 @@ class ProjectIntelligenceApplication:
         )
         return _result(
             snapshot,
+            depth=self.policy.depth(CapabilityName.CONTEXT),
             items=[_context_json(item) for item in package.items],
             used_tokens=package.used_tokens,
             token_budget=package.token_budget,
@@ -463,6 +494,7 @@ class ProjectIntelligenceApplication:
             facets,
         )
         return {
+            "depth": self.policy.depth(CapabilityName.RESEARCH).value,
             "request_id": plan.request_id,
             "queries": list(plan.queries),
             "max_queries": plan.max_queries,
@@ -500,11 +532,13 @@ class ProjectIntelligenceApplication:
         min_confidence: float = 0.0,
         max_depth: int | None = None,
         include_historical: bool = False,
+        capability: CapabilityName = CapabilityName.IMPACT,
     ) -> Any:
         return GraphAnalysisService(snapshot, self._reference_resolver()).assess_impact(
             ImpactQuery(
                 changed_refs,
                 min_confidence=min_confidence,
+                min_inferred_confidence=self.policy.min_inferred_confidence(capability),
                 max_depth=min(max_depth or self.max_depth, self.max_depth),
                 include_historical=include_historical,
             )
@@ -561,10 +595,16 @@ class ProjectIntelligenceApplication:
         return self._blueprints
 
 
-def _result(snapshot: GraphSnapshot, **values: Any) -> dict[str, Any]:
+def _result(
+    snapshot: GraphSnapshot,
+    *,
+    depth: Depth | None = None,
+    **values: Any,
+) -> dict[str, Any]:
     return {
         "interface": INTERFACE_VERSION,
         "revision_id": snapshot.revision.revision_id if snapshot.revision else None,
+        "depth": depth.value if depth is not None else None,
         **values,
     }
 

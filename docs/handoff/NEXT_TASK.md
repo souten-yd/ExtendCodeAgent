@@ -19,39 +19,38 @@ Do not schedule work from the legacy identifiers (`RV-x`, `TA-x`, `AL-x`, `CV-x`
 
 ## Current stage
 
-**Phase 0 — E2: capability depth contract.**
+**Phase 0 — V0a: verification contract slice (shadow, evaluation-only).**
 
-Entry condition satisfied: E1 (capability gating conformance) is complete on
-`agent/e1-capability-gating-conformance`. Every `CapabilityName` is now policy-gated, folded into a
-gated capability, or declared `not_implemented`, so per-capability ablation is possible for the 13
-configurable capabilities.
+Entry condition satisfied: E2 (capability depth contract) is complete on
+`agent/e2-capability-depth-contract`. Rollout authority and execution depth are independent, every PI
+response records its depth, and inferred relations are bounded at use time by the selected depth.
 
 Scope:
 
-- add the depth axis (`D0..D4`) to the central config with min/max/preferred/auto, orthogonal to
-  `RolloutMode` — never encode cost in the rollout mode (master plan invariant 6);
-- no adaptive depth selection yet; that is stage C3;
-- record the depth used in every PI response;
-- surface depth in `pi_status` alongside the capability inventory E1 added;
-- no behavior change at default depth.
+- define `SemanticChangeSet` and `VerificationObligation` once as projections over the existing
+  Twin/Graph/Impact/Test/Runtime model;
+- derive a required verification set from a semantic change;
+- keep the slice shadow-only and evaluation-only: no applied behavior change;
+- do not add evidence reuse, failure taxonomy, oracle assessment or certificates in this stage;
+- keep the result measurable for precision/recall against the executed suite on the pinned corpus.
 
-Exit evidence: config/architecture tests, depth visible in `pi_status`, `tools/local/all-fast`,
-`tools/local/test-integration`, `tools/local/build`.
+Exit evidence: contracts defined once; architecture test proving no second truth store; required-set
+quality measurable on the pinned corpus. See master plan section 8.
 
 ## Why B0 (baseline validation) is not the current task
 
-The depth axis is unimplemented, the evaluation harness is a set of per-PR scripts, and there is no
-attributable PI trace. A baseline measured in that state cannot support any keep/demote decision and
-would have to be repeated. E2–E5 and V0a must complete first. See master plan sections 6 and 8.
+The verification contract slice, sealed task suite, unified evaluation runner/labels and attributable
+PI trace are not complete. A baseline measured in that state cannot support the required attribution
+and keep/demote decisions. V0a and E3–E5 must complete first. See master plan sections 6 and 8.
 
 ## Phase 0 stage state
 
 - **E0** plan consolidation — done;
 - **E1** capability gating conformance — done (see `CURRENT_HANDOFF.md` and `DECISIONS.md`);
-- **E2** capability depth contract — current (now also binds the inferred-relation confidence
-  threshold to depth, completing the E1 `call_graph` folding decision);
-- **V0a** verification contract slice, shadow-only, pulled forward from V0 so the differentiation
-  hypothesis is measured at B0 instead of Phase 3;
+- **E2** capability depth contract — done (including the inferred-relation confidence threshold,
+  completing the E1 `call_graph` folding decision);
+- **V0a** verification contract slice — current, shadow-only, pulled forward from V0 so the
+  differentiation hypothesis is measured at B0 instead of Phase 3;
 - **E3** Layer B task suite and outcome ground truth (what B0 actually measures), including a
   mandatory cross-boundary GUI/runtime causal task class, an `OMO + ECA @ local-low` arm, and a
   pinned slow-suite repository;
@@ -88,7 +87,7 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/e2-capability-depth-contract
+git switch -c agent/v0a-verification-contract-slice
 ```
 
 Update `CURRENT_HANDOFF.md` after each stage.

@@ -1,5 +1,17 @@
 # Implementation Log
 
+## 2026-08-16 — Stage E2 completed locally
+
+- Added the centralized D0–D4 capability depth contract, deterministic profiles and per-capability
+  min/max/preferred/auto bounds without coupling depth to rollout authority.
+- Added depth to PI responses and `pi_status`, propagated `semantic` depth to folded `call_graph`, and
+  bound inferred-relation consumption to a depth-specific confidence floor.
+- Corrected the reviewed implementation so the depth floor applies only to inferred facts rather
+  than all facts, and strengthened tests to prove D1 excludes confidence-0.35 `may_call` while D3
+  admits it.
+- Final local gates: all-fast PASS (171 Python, 9 adapter); integration PASS (16 Python, 9 adapter);
+  build PASS (Python sdist/wheel and TypeScript).
+
 ## 2026-08-13 — PR-A started
 
 - Synced `main` with `origin/main`; no update was required.

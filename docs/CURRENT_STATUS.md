@@ -4,7 +4,7 @@ Status date: 2026-08-16
 
 ## Program state
 
-Overall: **A-I IMPLEMENTATION COMPLETE — PHASE 0 (EVALUATION ENABLEMENT) ACTIVE — E1 NEXT**
+Overall: **A-I IMPLEMENTATION COMPLETE — PHASE 0 ACTIVE — E0/E1/E2 COMPLETE — V0a NEXT**
 
 PRs A-I are merged and the implementation baseline is complete. Planning PRs
 [#20](https://github.com/souten-yd/ExtendCodeAgent/pull/20) and
@@ -14,10 +14,10 @@ have since been consolidated into a single canonical execution plan,
 backlog.
 
 This is not a production-capable designation. Baseline release validation (stage B0, formerly RV-0) is
-deliberately **not** the next step: the capability depth axis is unimplemented, evaluation is a set of
-per-PR scripts, and there is no attributable PI trace. Phase 0 (E1-E5) closes those gaps first so that
-baseline results can support keep/demote decisions. Stage E1 is complete — every declared capability
-is now policy-gated or declared unimplemented.
+deliberately **not** the next step: the verification contract slice, sealed task suite, unified
+evaluation runner/labels and attributable PI trace remain incomplete. Phase 0 closes those gaps first
+so baseline results can support attribution and keep/demote decisions. E0, E1 and E2 are complete;
+V0a is next.
 
 ## Canonical read order
 
@@ -91,14 +91,15 @@ capability can be set to `off` independently and the corresponding work then doe
 | `memory` | not_implemented | forced `off` | n/a |
 
 13 capabilities are independently configurable; the other 8 must stay `off` and a non-`off` value is a
-`ConfigError`. `pi_status` reports `implementation`, `mode` and `governed_by` for all 21. Rationale
+`ConfigError`. `pi_status` reports `implementation`, `mode`, `depth`, inferred-relation confidence
+floor and `governed_by` for all 21. Rollout authority and D0–D4 cost depth are independent; folded
+`call_graph` uses `semantic`'s depth. Rationale
 for the `call_graph` folding and the `ConfigError` policy: `docs/handoff/DECISIONS.md` (2026-08-16).
 
 ## Immediate next action
 
-Phase 0, stage E2: capability depth contract (`D0..D4` in the central config, orthogonal to
-`RolloutMode`, no adaptive selection yet, depth recorded in every PI response and visible in
-`pi_status`). See `docs/handoff/NEXT_TASK.md`.
+Phase 0, stage V0a: define the minimal shadow-only verification contract slice and make required-set
+quality measurable without adding a second truth store. See `docs/handoff/NEXT_TASK.md`.
 
 No recorded evidence yet supports the product thesis. The only real-model result,
 `docs/evidence/pr-g/model-evaluation.json`, is 6 scenarios at 1 repetition with `tool_calls = 0` in

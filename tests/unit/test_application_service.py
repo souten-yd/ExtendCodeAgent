@@ -33,7 +33,9 @@ def _write(root: Path, relative: str, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
-def _policy(mode: str, **overrides: str) -> CapabilityPolicy:
+def _policy(
+    mode: str, *, depth: dict[str, object] | None = None, **overrides: str
+) -> CapabilityPolicy:
     capabilities = {name.value: mode for name in CONFIGURABLE_CAPABILITIES}
     capabilities.update(overrides)
     resolved = ConfigResolver().resolve(
@@ -44,6 +46,7 @@ def _policy(mode: str, **overrides: str) -> CapabilityPolicy:
                     "enabled": mode != "off",
                     "mode": mode,
                     "capabilities": capabilities,
+                    **({"depth": depth} if depth is not None else {}),
                 }
             },
         )
@@ -203,6 +206,10 @@ def test_status_reports_implementation_state_and_mode_for_every_capability(
     assert entries["call_graph"]["governed_by"] == "semantic"
     assert entries["call_graph"]["mode"] == entries["semantic"]["mode"]
     assert entries["impact"]["governed_by"] is None
+    # Depth is reported for every capability, including ones that cannot run.
+    assert all(item["depth"] == "D2" for item in status["capabilities"])
+    assert entries["impact"]["min_inferred_confidence"] == pytest.approx(0.3)
+    assert entries["ui_graph"]["depth"] == "D2"
 
 
 def test_status_reports_capabilities_even_when_disabled(tmp_path: Path) -> None:
@@ -217,6 +224,104 @@ def test_status_reports_capabilities_even_when_disabled(tmp_path: Path) -> None:
     }
     assert all(item["mode"] == "off" for item in status["capabilities"])
     assert not database.exists()
+
+
+def test_every_query_response_reports_the_depth_it_ran_at(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    with ProjectIntelligenceApplication(
+        root, tmp_path / "graph.db", _policy("advisory")
+    ) as application:
+        responses = {
+            "status": application.status(),
+            "symbol": application.symbol("leaf"),
+            "references": application.references("py://service#leaf"),
+            "path": application.path("py://service#caller", "py://service#leaf"),
+            "impact": application.impact(("py://service#leaf",)),
+            "tests": application.tests(("py://service#leaf",)),
+            "context": application.context("change leaf", ("py://service#leaf",)),
+            "runtime_evidence": application.runtime_evidence(),
+            "research_plan": application.research_plan("depth contract", ResearchDepth.MICRO),
+        }
+
+    for name, response in responses.items():
+        expected = None if name == "status" else "D2"
+        assert response["depth"] == expected, f"{name} did not report its depth"
+
+
+def test_response_depth_follows_the_configured_profile(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    with ProjectIntelligenceApplication(
+        root,
+        tmp_path / "graph.db",
+        _policy("advisory", depth={"profile": "quality", "capabilities": {}}),
+    ) as application:
+        assert application.impact(("py://service#leaf",))["depth"] == "D3"
+
+
+def test_shallow_depth_drops_inferred_relations_that_deep_depth_keeps(tmp_path: Path) -> None:
+    """The E1 `call_graph` folding decision made real: `may_call` is bounded at use time."""
+
+    root = tmp_path / "dynamic"
+    root.mkdir()
+    _write(
+        root,
+        "service.py",
+        "def leaf():\n    return 1\n\n\ndef caller(obj):\n    return obj.leaf()\n",
+    )
+    database = tmp_path / "graph.db"
+
+    deep = _policy(
+        "advisory",
+        depth={
+            "profile": "balanced",
+            "capabilities": {
+                "semantic": {"preferred": "D3"},
+                "impact": {"preferred": "D3"},
+            },
+        },
+    )
+    with ProjectIntelligenceApplication(root, database, deep) as application:
+        deep_paths = application.path("py://service#caller", max_depth=3)
+    shallow = _policy(
+        "advisory",
+        depth={
+            "profile": "balanced",
+            "capabilities": {
+                "semantic": {"preferred": "D1"},
+                "impact": {"preferred": "D1"},
+            },
+        },
+    )
+    with ProjectIntelligenceApplication(root, database, shallow) as application:
+        shallow_paths = application.path("py://service#caller", max_depth=3)
+
+    assert deep_paths["depth"] == "D3"
+    assert shallow_paths["depth"] == "D1"
+    # D1 requires more confidence than the 0.35 an inferred `may_call` carries.
+    assert any("may_call" in item["edge_types"] for item in deep_paths["paths"])
+    assert all("may_call" not in item["edge_types"] for item in shallow_paths["paths"])
+
+    with ProjectIntelligenceApplication(root, database, deep) as application:
+        assert application.references("pyname://leaf")["items"]
+    with ProjectIntelligenceApplication(root, database, shallow) as application:
+        assert application.references("pyname://leaf")["items"] == []
+
+
+def test_a_caller_cannot_widen_below_the_depth_confidence_floor(tmp_path: Path) -> None:
+    root = tmp_path / "dynamic-impact"
+    root.mkdir()
+    _write(root, "service.py", "def caller(obj):\n    return obj.leaf()\n")
+    with ProjectIntelligenceApplication(
+        root,
+        tmp_path / "graph.db",
+        _policy(
+            "advisory",
+            depth={"profile": "balanced", "capabilities": {"impact": {"preferred": "D1"}}},
+        ),
+    ) as application:
+        report = application.impact(("pyname://leaf",), min_confidence=0.0)
+
+    assert report["direct"] == []
 
 
 def test_runtime_off_is_inert(tmp_path: Path) -> None:

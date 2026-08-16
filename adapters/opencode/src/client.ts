@@ -7,20 +7,31 @@ export type RolloutMode = "off" | "shadow" | "advisory" | "active"
 
 export type CapabilityImplementation = "implemented" | "not_implemented"
 
+/** Capability depth: the cost axis, independent of `RolloutMode`. */
+export type Depth = "D0" | "D1" | "D2" | "D3" | "D4"
+
 /** One entry of the per-capability inventory reported by `pi_status`. */
 export type CapabilityStatus = {
   readonly name: string
   readonly implementation: CapabilityImplementation
   readonly mode: RolloutMode
+  readonly depth: Depth
+  /** Confidence an inferred relation must clear at this depth. */
+  readonly min_inferred_confidence: number
   /** Set when another capability's rollout mode governs this one. */
   readonly governed_by: string | null
 }
 
-export type PiStatus = {
+export type PiResult = {
   readonly interface: string
+  readonly revision_id: string | null
+  /** Depth the answering capability ran at; null when no capability owns the result. */
+  readonly depth: Depth | null
+}
+
+export type PiStatus = PiResult & {
   readonly readiness: "ready" | "absent" | "disabled"
   readonly mode: RolloutMode
-  readonly revision_id: string | null
   readonly nodes: number
   readonly edges: number
   readonly capabilities: readonly CapabilityStatus[]
