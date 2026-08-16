@@ -814,3 +814,15 @@ Sonnet/Codex GitHub Copilot arms from the full native/off baselines or later con
 Every repository from the task suite and quality corpus must first reach an exact pinned initial Twin.
 Pin/Twin failures exclude it as a bootstrap gap. Test-runner or inventory absence is instead recorded
 as `unavailable`, and imported correctness remains `unknown`; neither is silently converted to PASS.
+
+## 2026-08-16 — B0a bootstrap timeout and repair boundary
+
+Decision: initial Twin construction is isolated per repository with a 300-second checkpoint timeout
+for this B0a environment. A timeout is `EXCLUDED_BOOTSTRAP_GAP`, not an unavailable model result and
+not a zero-quality capability score. Included repositories may enter B0a screening; KasaneCore-held-out
+confirmation cannot start while its bootstrap gap remains.
+
+The observed SQLite edge-supersession scaling path is not patched inside this evidence checkpoint.
+B0a must first preserve exact repository results and classify the gap. If it blocks B0 completion,
+the conditional B1 repair stage owns the minimal indexed-store correction and exact remeasurement.
+One cold run is diagnostic; budget calibration still requires the master-plan repetition count.

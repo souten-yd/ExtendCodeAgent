@@ -102,6 +102,14 @@ conformance per repository, rerun the integration gates, fix the screening subse
 model-tier assignments, and execute the baseline plus screening cells. See
 `docs/handoff/NEXT_TASK.md`.
 
+The first B0a bootstrap checkpoint attempted all nine pinned repositories: seven established a Twin,
+while KasaneCore and PEDS exceeded the bounded 300-second initial-Twin limit and are
+`EXCLUDED_BOOTSTRAP_GAP`. Only Express and ExtendCodeAgent met their provisional cold-index budgets;
+the other five completed Twins exceeded their size-class budget. PI-disabled route checks reached
+port-8090 Qwen, host-default, GitHub Copilot Sonnet and GitHub Copilot Codex without provider errors;
+local-low remains `UNAVAILABLE`. OMO 4.19.4 + ECA model-free namespace/tool visibility recheck passed.
+This is a partial B0a checkpoint, not screening or confirmation evidence.
+
 E3 sealed 13 tasks across three task repositories and nine required classes at
 `23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632`. The ControlDeck-managed
 OpenCode 1.18.16 native proof executed every task: 4 PASS, 9 FAIL, no timeout or unavailability

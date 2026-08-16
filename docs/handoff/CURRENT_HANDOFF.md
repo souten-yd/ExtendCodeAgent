@@ -2,7 +2,7 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/b0a-bootstrap-screening-contract`
+Current branch: `agent/b0a-bootstrap-evidence`
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
 Current task: B0a bootstrap and screening contract; no screening cell has run
 
@@ -25,6 +25,17 @@ Current task: B0a bootstrap and screening contract; no screening cell has run
   not checkpoint until all repositories finished, and KasaneCore's initial Twin spent minutes in
   SQLite edge supersession. The harness now checkpoints atomically per repository, resumes, and
   classifies a bounded Twin timeout; the store performance defect remains a B0 gap, not a silent fix.
+- Exact harness head `575be408dc05d7263cb16b3912f783d060539385` then attempted all nine pins.
+  Seven Twins completed; KasaneCore and PEDS timed out at 300 seconds and are excluded bootstrap gaps.
+  Express and ExtendCodeAgent met cold-index budgets. ControlDeck (204,116ms), Flask (5,903ms), HTTPX
+  (8,100ms), React Hook Form (28,723ms) and Vite (184,488ms) completed but missed their size budgets.
+- PI-disabled one-cell route checks found port-8090 Qwen, host-default, Copilot Sonnet and Copilot
+  Codex callable without provider errors. Codex failed the task oracle, which is retained as a task
+  failure rather than route unavailability. Local-low remains UNAVAILABLE.
+- OMO 4.19.4 plus ECA model-free recheck retained 37 tool IDs, all nine unique `pi_*` tools, 16 agents
+  and connected ECA MCP. This is the B0a smoke only; it is not the two-order B2 compatibility result.
+- Evidence: `docs/evidence/final/b0a-bootstrap-environment-v1.json`. Screening remains NOT TESTED;
+  included tuning repositories may proceed, while held-out confirmation remains blocked by KasaneCore.
 
 ## E5 closeout (2026-08-16)
 

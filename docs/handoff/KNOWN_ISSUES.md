@@ -138,3 +138,7 @@
   no equivalent current-edge ID index, so the per-edge supersession update is a suspected scaling
   defect. This is observed diagnosis, not yet a confirmed repair; B0a records bounded timeout/build
   evidence and B1 owns a product fix if the completed gap report confirms it is blocking.
+- Exact bounded measurement excluded KasaneCore and PEDS after 300 seconds. ControlDeck completed in
+  204,116ms against a 20,000ms M budget; Vite completed in 184,488ms against a 180,000ms L budget;
+  React Hook Form, Flask and HTTPX also missed their size budgets. Express and ExtendCodeAgent passed.
+  Only one cold run per repository exists, so required three-run medians remain NOT TESTED.

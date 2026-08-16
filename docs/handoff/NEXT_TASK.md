@@ -42,6 +42,11 @@ The pre-run contract is sealed in `docs/evaluation/b0a-screening-plan-v1.json`. 
 `tools/local/b0a-bootstrap` to acquire exact pins and emit the initial per-repository baseline; do
 not run an arm for a repository classified `EXCLUDED_BOOTSTRAP_GAP`.
 
+Current bootstrap evidence excludes KasaneCore and PEDS after 300-second Twin timeouts. Run B0a
+native/off baselines and screening only for included repositories, retain those exclusions in every
+schedule/report, and do not begin held-out B0b confirmation until the KasaneCore gap is repaired and
+remeasured. See `docs/evidence/final/b0a-bootstrap-environment-v1.json`.
+
 Evaluation environment mandated by the user:
 
 - launch/use OpenCode through ControlDeck's existing path where available; do not add ControlDeck

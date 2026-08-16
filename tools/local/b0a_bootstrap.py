@@ -19,6 +19,7 @@ from extendcodeagent.core.config import ConfigLayer, ConfigResolver
 from extendcodeagent.core.config.schema import CONFIGURABLE_CAPABILITIES
 from extendcodeagent.core.policy import CapabilityPolicy
 from extendcodeagent.service import ProjectIntelligenceApplication
+from extendcodeagent.storage import SqliteGraphStore
 
 ROOT = Path(__file__).resolve().parents[2]
 PLAN = ROOT / "docs/evaluation/b0a-screening-plan-v1.json"
@@ -203,9 +204,10 @@ def bootstrap(repository: dict[str, Any], root: Path, state_root: Path) -> dict[
     with ProjectIntelligenceApplication(root, database, _policy()) as application:
         opened = application.process_event((), "b0a-initial-bootstrap")
         status = application.status()
-        project_id = application.project.project_id
-        workspace_id = application.project.workspace_id
+        project = application.project
     build_ms = round((time.monotonic() - started) * 1000)
+    with SqliteGraphStore(database) as store:
+        revision = store.current_revision(project)
     exact_pin = _git(root, "rev-parse", "HEAD") == repository["revision"]
     clean = not _git(root, "status", "--porcelain")
     ready = exact_pin and opened["accepted"] and status["readiness"] == "ready"
@@ -217,13 +219,20 @@ def bootstrap(repository: dict[str, Any], root: Path, state_root: Path) -> dict[
     return {
         **repository,
         "eligibility": "INCLUDED" if ready else "EXCLUDED_BOOTSTRAP_GAP",
-        "workspace_identity": {"project_id": project_id, "workspace_id": workspace_id},
+        "workspace_identity": {
+            "project_id": project.project_id,
+            "workspace_id": project.workspace_id,
+        },
         "source_revision": {
             "expected": repository["revision"],
             "observed": _git(root, "rev-parse", "HEAD"),
             "exact": exact_pin,
         },
-        "worktree": {"clean": clean, "fingerprint_classification": "observed"},
+        "worktree": {
+            "clean": clean,
+            "fingerprint": revision.worktree_fingerprint if revision else None,
+            "fingerprint_classification": "observed",
+        },
         "twin": {
             "readiness": status["readiness"],
             "revision_id": status["revision_id"],
@@ -288,8 +297,10 @@ def _bootstrap_worker(
     _write_json(checkpoint, result)
 
 
-def _gap(repository: dict[str, Any], reason: str, diagnostic: str) -> dict[str, Any]:
-    return {
+def _gap(
+    repository: dict[str, Any], reason: str, diagnostic: str, source: Path | None = None
+) -> dict[str, Any]:
+    record: dict[str, Any] = {
         **repository,
         "eligibility": "EXCLUDED_BOOTSTRAP_GAP",
         "gap_reason": reason,
@@ -301,6 +312,44 @@ def _gap(repository: dict[str, Any], reason: str, diagnostic: str) -> dict[str, 
             "correctness": "unknown",
         },
     }
+    if source is not None:
+        files = _tracked_files(source)
+        runners, commands, test_files, languages = _discovery(files)
+        digest = hashlib.sha256(str(source.resolve()).encode()).hexdigest()[:12]
+        record.update(
+            {
+                "workspace_identity": {
+                    "project_id": f"{source.name}-{digest}",
+                    "workspace_id": "default",
+                },
+                "source_revision": {
+                    "expected": repository["revision"],
+                    "observed": _git(source, "rev-parse", "HEAD"),
+                    "exact": _git(source, "rev-parse", "HEAD") == repository["revision"],
+                },
+                "worktree": {
+                    "clean": not _git(source, "status", "--porcelain"),
+                    "fingerprint": None,
+                    "fingerprint_classification": "NOT_TESTED_TWIN_TIMEOUT",
+                },
+                "discovery": {
+                    "languages": languages,
+                    "test_runners": {
+                        "status": "inferred" if runners else "unavailable",
+                        "items": runners,
+                    },
+                    "commands": {
+                        "status": "inferred" if commands else "unavailable",
+                        "items": commands,
+                    },
+                    "test_inventory": {
+                        "status": "inferred" if test_files else "unavailable",
+                        "count": len(test_files),
+                    },
+                },
+            }
+        )
+    return record
 
 
 def run_bootstraps(
@@ -339,6 +388,7 @@ def run_bootstraps(
                 repository,
                 "twin_timeout",
                 f"initial Twin exceeded {timeout_seconds} seconds",
+                source,
             )
             _write_json(checkpoint, result)
         elif checkpoint.is_file():
