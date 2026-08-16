@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import multiprocessing
 import os
 import platform
 import subprocess
@@ -18,6 +19,7 @@ from extendcodeagent.core.config import ConfigLayer, ConfigResolver
 from extendcodeagent.core.config.schema import CONFIGURABLE_CAPABILITIES
 from extendcodeagent.core.policy import CapabilityPolicy
 from extendcodeagent.service import ProjectIntelligenceApplication
+from extendcodeagent.storage import SqliteGraphStore
 
 ROOT = Path(__file__).resolve().parents[2]
 PLAN = ROOT / "docs/evaluation/b0a-screening-plan-v1.json"
@@ -202,9 +204,10 @@ def bootstrap(repository: dict[str, Any], root: Path, state_root: Path) -> dict[
     with ProjectIntelligenceApplication(root, database, _policy()) as application:
         opened = application.process_event((), "b0a-initial-bootstrap")
         status = application.status()
-        project_id = application.project.project_id
-        workspace_id = application.project.workspace_id
+        project = application.project
     build_ms = round((time.monotonic() - started) * 1000)
+    with SqliteGraphStore(database) as store:
+        revision = store.current_revision(project)
     exact_pin = _git(root, "rev-parse", "HEAD") == repository["revision"]
     clean = not _git(root, "status", "--porcelain")
     ready = exact_pin and opened["accepted"] and status["readiness"] == "ready"
@@ -216,13 +219,20 @@ def bootstrap(repository: dict[str, Any], root: Path, state_root: Path) -> dict[
     return {
         **repository,
         "eligibility": "INCLUDED" if ready else "EXCLUDED_BOOTSTRAP_GAP",
-        "workspace_identity": {"project_id": project_id, "workspace_id": workspace_id},
+        "workspace_identity": {
+            "project_id": project.project_id,
+            "workspace_id": project.workspace_id,
+        },
         "source_revision": {
             "expected": repository["revision"],
             "observed": _git(root, "rev-parse", "HEAD"),
             "exact": exact_pin,
         },
-        "worktree": {"clean": clean, "fingerprint_classification": "observed"},
+        "worktree": {
+            "clean": clean,
+            "fingerprint": revision.worktree_fingerprint if revision else None,
+            "fingerprint_classification": "observed",
+        },
         "twin": {
             "readiness": status["readiness"],
             "revision_id": status["revision_id"],
@@ -270,6 +280,146 @@ def environment() -> dict[str, Any]:
     }
 
 
+def _write_json(path: Path, value: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    temporary.replace(path)
+
+
+def _bootstrap_worker(
+    repository: dict[str, Any], source: Path, state_root: Path, checkpoint: Path
+) -> None:
+    try:
+        result = bootstrap(repository, source, state_root)
+    except Exception as error:
+        result = _gap(repository, "bootstrap_error", f"{type(error).__name__}: {error}")
+    _write_json(checkpoint, result)
+
+
+def _gap(
+    repository: dict[str, Any], reason: str, diagnostic: str, source: Path | None = None
+) -> dict[str, Any]:
+    record: dict[str, Any] = {
+        **repository,
+        "eligibility": "EXCLUDED_BOOTSTRAP_GAP",
+        "gap_reason": reason,
+        "diagnostic": diagnostic[-1000:],
+        "baseline_evidence": {
+            "repository_identity": "unknown",
+            "graph_and_test_inventory": "unknown",
+            "runtime_execution": "unknown",
+            "correctness": "unknown",
+        },
+    }
+    if source is not None:
+        files = _tracked_files(source)
+        runners, commands, test_files, languages = _discovery(files)
+        digest = hashlib.sha256(str(source.resolve()).encode()).hexdigest()[:12]
+        record.update(
+            {
+                "workspace_identity": {
+                    "project_id": f"{source.name}-{digest}",
+                    "workspace_id": "default",
+                },
+                "source_revision": {
+                    "expected": repository["revision"],
+                    "observed": _git(source, "rev-parse", "HEAD"),
+                    "exact": _git(source, "rev-parse", "HEAD") == repository["revision"],
+                },
+                "worktree": {
+                    "clean": not _git(source, "status", "--porcelain"),
+                    "fingerprint": None,
+                    "fingerprint_classification": "NOT_TESTED_TWIN_TIMEOUT",
+                },
+                "discovery": {
+                    "languages": languages,
+                    "test_runners": {
+                        "status": "inferred" if runners else "unavailable",
+                        "items": runners,
+                    },
+                    "commands": {
+                        "status": "inferred" if commands else "unavailable",
+                        "items": commands,
+                    },
+                    "test_inventory": {
+                        "status": "inferred" if test_files else "unavailable",
+                        "count": len(test_files),
+                    },
+                },
+            }
+        )
+    return record
+
+
+def run_bootstraps(
+    repositories: list[dict[str, Any]],
+    raw_root: Path,
+    output: Path,
+    *,
+    timeout_seconds: int,
+    resume: bool,
+) -> None:
+    checkpoints = raw_root / "checkpoints"
+    results: list[dict[str, Any]] = []
+    for repository in repositories:
+        checkpoint = checkpoints / f"{repository['id']}.json"
+        if resume and checkpoint.is_file():
+            results.append(_load(checkpoint))
+            continue
+        try:
+            source = acquire(repository, raw_root / "corpus")
+        except (BootstrapError, subprocess.TimeoutExpired) as error:
+            result = _gap(repository, "acquisition_error", str(error))
+            _write_json(checkpoint, result)
+            results.append(result)
+            _write_bootstrap_report(output, results)
+            continue
+        process = multiprocessing.Process(
+            target=_bootstrap_worker,
+            args=(repository, source, raw_root / "state", checkpoint),
+        )
+        process.start()
+        process.join(timeout_seconds)
+        if process.is_alive():
+            process.terminate()
+            process.join(30)
+            result = _gap(
+                repository,
+                "twin_timeout",
+                f"initial Twin exceeded {timeout_seconds} seconds",
+                source,
+            )
+            _write_json(checkpoint, result)
+        elif checkpoint.is_file():
+            result = _load(checkpoint)
+        else:
+            result = _gap(
+                repository,
+                "bootstrap_worker_exit",
+                f"worker exited {process.exitcode} without a checkpoint",
+            )
+            _write_json(checkpoint, result)
+        results.append(result)
+        _write_bootstrap_report(output, results)
+
+
+def _write_bootstrap_report(output: Path, results: list[dict[str, Any]]) -> None:
+    report = {
+        "schema": 1,
+        "classification": "B0A_BOOTSTRAP",
+        "screening_plan_seal": _load(PLAN)["seal"]["canonical_payload"],
+        "environment": environment(),
+        "repositories": results,
+        "summary": {
+            "attempted": len(results),
+            "included": sum(item["eligibility"] == "INCLUDED" for item in results),
+            "excluded_bootstrap_gap": sum(item["eligibility"] != "INCLUDED" for item in results),
+        },
+    }
+    _write_json(output, report)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
@@ -279,6 +429,8 @@ def main() -> int:
     run_parser.add_argument("--raw-root", type=Path, required=True)
     run_parser.add_argument("--output", type=Path, required=True)
     run_parser.add_argument("--repository", action="append", default=[])
+    run_parser.add_argument("--timeout-seconds", type=int, default=600)
+    run_parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
     try:
         validate()
@@ -292,27 +444,14 @@ def main() -> int:
                 raise BootstrapError(f"unknown repositories: {sorted(unknown)}")
             if selected:
                 repositories = [item for item in repositories if item["id"] in selected]
-            raw_root = args.raw_root.resolve()
-            results = []
-            for repository in repositories:
-                source = acquire(repository, raw_root / "corpus")
-                results.append(bootstrap(repository, source, raw_root / "state"))
-            report = {
-                "schema": 1,
-                "classification": "B0A_BOOTSTRAP",
-                "screening_plan_seal": _load(PLAN)["seal"]["canonical_payload"],
-                "environment": environment(),
-                "repositories": results,
-                "summary": {
-                    "included": sum(item["eligibility"] == "INCLUDED" for item in results),
-                    "excluded_bootstrap_gap": sum(
-                        item["eligibility"] != "INCLUDED" for item in results
-                    ),
-                },
-            }
-            args.output.parent.mkdir(parents=True, exist_ok=True)
-            args.output.write_text(
-                json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+            if args.timeout_seconds < 1:
+                raise BootstrapError("--timeout-seconds must be positive")
+            run_bootstraps(
+                repositories,
+                args.raw_root.resolve(),
+                args.output,
+                timeout_seconds=args.timeout_seconds,
+                resume=args.resume,
             )
         else:
             print("B0a bootstrap validate: PASS")

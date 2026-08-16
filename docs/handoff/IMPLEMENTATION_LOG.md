@@ -13,6 +13,19 @@
 - Final gates pass: `all-fast` (182 Python, 9 adapter), integration (29 Python, 9 adapter), and
   Python/TypeScript build.
 - No repository bootstrap evidence or agent screening result is claimed in this contract checkpoint.
+- The first post-merge nine-repository run was interrupted after KasaneCore spent several minutes in
+  `SqliteGraphStore._close_current` and earlier completed repository results remained only in memory.
+  Added per-repository child isolation, timeout classification, atomic checkpoint/report writes and
+  resume. Dirty or wrong-origin corpus clones are archived rather than force-reset.
+- Exact-head bootstrap attempted nine pins: seven included, KasaneCore/PEDS excluded on 300-second
+  Twin timeout. Only Express and ExtendCodeAgent met cold-index budgets; five other completed Twins
+  exceeded budget. Worktree fingerprints, test inventories and unsupported analysis remain explicit.
+- PI-disabled route checks reached Qwen on port 8090, host-default, Copilot Sonnet and Copilot Codex;
+  local-low remained UNAVAILABLE. The Codex cell completed the route but failed its task oracle.
+- Reused the isolated exact-version OMO profile to recheck OpenCode 1.18.16 + OMO 4.19.4 + current
+  ECA: health, 37 tools, nine `pi_*` IDs, 16 agents and ECA MCP connection passed model-free.
+- Added compact evidence at `docs/evidence/final/b0a-bootstrap-environment-v1.json`; raw clones,
+  SQLite state, traces and model logs remain ignored.
 
 ## 2026-08-16 — E5 minimal attributable PI trace
 

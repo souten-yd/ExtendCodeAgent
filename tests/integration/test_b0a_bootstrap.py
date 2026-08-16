@@ -3,7 +3,10 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import time
 from pathlib import Path
+
+from pytest import MonkeyPatch
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools/local"))
@@ -12,6 +15,11 @@ import b0a_bootstrap  # type: ignore[import-not-found]  # noqa: E402
 
 HARNESS = ROOT / "tools/local/b0a-bootstrap"
 PLAN = ROOT / "docs/evaluation/b0a-screening-plan-v1.json"
+
+
+def _slow_bootstrap(*_args: object) -> dict[str, object]:
+    time.sleep(5)
+    return {}
 
 
 def test_screening_contract_is_sealed_and_assigns_every_capability_once() -> None:
@@ -25,7 +33,9 @@ def test_screening_contract_is_sealed_and_assigns_every_capability_once() -> Non
     assert set(plan["decision_policy"]["forbidden"]) == {"promote", "demote", "reject"}
 
 
-def test_pinned_existing_project_bootstrap_is_truthful(tmp_path: Path) -> None:
+def test_pinned_existing_project_bootstrap_is_truthful(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+) -> None:
     source = tmp_path / "source"
     source.mkdir()
     subprocess.run(["git", "init", "-q"], cwd=source, check=True)
@@ -82,3 +92,18 @@ def test_pinned_existing_project_bootstrap_is_truthful(tmp_path: Path) -> None:
     assert len(archived) == 1
     assert archived[0].read_text(encoding="utf-8") == "preserve me\n"
     assert not (reacquired / "uncommitted.txt").exists()
+
+    monkeypatch.setattr(b0a_bootstrap, "bootstrap", _slow_bootstrap)
+    monkeypatch.setattr(b0a_bootstrap, "environment", lambda: {})
+    output = tmp_path / "timeout-report.json"
+    b0a_bootstrap.run_bootstraps(
+        [repository],
+        tmp_path / "timeout-run",
+        output,
+        timeout_seconds=1,
+        resume=False,
+    )
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert report["summary"] == {"attempted": 1, "included": 0, "excluded_bootstrap_gap": 1}
+    assert report["repositories"][0]["gap_reason"] == "twin_timeout"
+    assert (tmp_path / "timeout-run/checkpoints/fixture.json").is_file()
