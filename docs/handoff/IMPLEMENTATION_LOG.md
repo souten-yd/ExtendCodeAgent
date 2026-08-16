@@ -418,3 +418,10 @@
 - Traced the common failure to split OpenCode integration configuration: the MCP child received the
   generated project config but the plugin process did not, and the MCP entry point hard-coded
   advisory. Began a bounded repair to propagate one config/mode to both routes before rerunning.
+- PR #49 merged that propagation repair as `ebe2a197fddf019bd2e40bbd372349a5f835d482`. Its fresh
+  four-model activation run passed every observed PI requirement; task oracles remained separately
+  FAIL and therefore made no effect claim.
+- Stopped the first pilot attempt after eight completed native cells because arm-major ordering had
+  not reached `off` or `active`, while one completed native test-selection cell took 256,319ms. The
+  eight cells remain diagnostic only. Began a staged task-interleaved repair: 9 cells first, then 27
+  total only if the initial effect and latency gate passes.

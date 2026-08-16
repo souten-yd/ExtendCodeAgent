@@ -542,10 +542,12 @@ matrix to infer `no screened effect` from a capability that could not run.
 
 Activation proves execution, not benefit. Before the comprehensive schedules, run the sealed
 **PI-effect pilot** on port-8090 local-practical: `native / off / active` over symbol, impact and test
-selection tasks, three repetitions each (27 cells). Every active cell must use its task-specific PI
-tools and every off cell must observe disabled inertness. Proceed only if active gains at least one
-objective PASS over the better control, has no provider error/timeout or missing PI observation, and
-its median wall time is at most 2x the slower control median. Otherwise classify
+selection tasks. Execute one interleaved repetition first (9 cells, task by task with all three arms)
+and continue to the three-repetition confirmation (27 total) only when that tranche already shows
+the required signal. Every active cell must use its task-specific PI tools and every off cell must
+observe disabled inertness. Proceed only if active gains at least one objective PASS over the better
+control, has no provider error/timeout or missing PI observation, and its median wall time is at most
+2x the slower control median. Otherwise classify
 `REPAIR_AND_RETEST`, fix the measured PI/oracle/performance cause, and repeat this same pilot before
 spending the comprehensive matrix.
 

@@ -119,20 +119,21 @@ cells measured OpenCode model variance and are diagnostic only, not PI effect.
 A review found that the long schedules had no fail-closed activation precondition. A separately
 sealed four-model gate now requires observed `pi_status`, task-bearing PI tool use, active
 capability/depth state, Twin revision, canonical evidence and positive PI time before comprehensive
-execution. Activation is followed by a 27-cell port-8090 `native/off/active` effect pilot over three
-representative tasks. No objective active gain, missing PI use, provider/timeout failure or active
+execution. Activation is followed by an interleaved 9-cell port-8090 `native/off/active` pilot
+tranche over three representative tasks; only a passing signal continues to 27 total cells. No
+objective active gain, missing PI use, provider/timeout failure or active
 median above 2x the slower control requires repair and the same pilot again. It also records a
 blocking OpenCode reachability gap: `blueprint`, `convergence`,
 `traceability` and `strategy` have no current tool/task route, so a 13-capability ablation sweep would
 misclassify non-execution as no effect. Comprehensive evaluation stays stopped until those B1 adapter
 paths and covered tasks are repaired; PI effect remains NOT TESTED.
 
-PR #48 merged this guard at `0a1a9f4e4b289fdef7c8a4ac225000b537e4a37b`. Its first real
-four-model activation run proved PI calls on every required route without a provider error, but
-failed closed before the pilot: `blueprint`, `strategy` and `convergence` were observed off because
-the generated project config reached the MCP process but not OpenCode's plugin process, while the
-MCP entry point independently forced advisory mode. A bounded adapter/runner repair is in progress;
-activation and then the 27-cell pilot must be rerun at the repaired merged head.
+PR #49 repaired split plugin/MCP configuration and merged as
+`ebe2a197fddf019bd2e40bbd372349a5f835d482`. The corrected exact-head activation passed on all four
+models with no provider error. The first pilot ordering then spent eight completed native cells
+before reaching any active comparison; one test-selection response took 256,319ms. That diagnostic
+run was stopped without a partial ninth cell. A staged interleaved pilot repair is in progress so the
+first nine cells measure all three arms before confirmation work is authorized.
 
 The bootstrap blocker has a bounded B1 repair at exact head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`. A matching current-edge identity index and schema-5

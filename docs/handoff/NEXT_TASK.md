@@ -34,8 +34,9 @@ Scope:
 - pass the exact-head PI activation gate on port-8090 Qwen, host-default and both GitHub Copilot
   frontier routes, including observed tool use/Twin/provenance; classify every capability route and
   repair any missing route before comprehensive execution;
-- run the 27-cell port-8090 `native/off/active` effect pilot; repair and repeat on no effect, missing
-  PI use, provider/timeout failure or abnormal active latency;
+- run the interleaved 9-cell port-8090 `native/off/active` pilot tranche; only a passing signal may
+  continue to 27-cell confirmation, while no effect, missing PI use, provider/timeout failure or
+  abnormal active latency requires repair and repeat;
 - fix and version the B0a tuning subset, effect threshold and one assigned model tier per ablation;
 - run full-tier/repetition `native` and `off` baselines, then the bounded screening pass;
 - emit the screening table with `proceed` or `no screened effect`, without promotion/demotion.
@@ -55,8 +56,9 @@ eligibility for repaired-head screening and confirmation. See
 The runner has two comprehensive resumable schedules: `b0a-baseline` has 306 cells across full tiers
 and `b0a-screening` has 714 local-practical cells, including capability-specific depth arms only for
 the four recorded depth claims. Neither may run until the separately sealed four-model
-`b0a-activation` gate and 27-cell Qwen `b0a-pilot` pass at the same exact head. The pilot requires an
-objective active PASS gain plus observed task-specific PI and bounded latency; otherwise the next
+`b0a-activation` gate and staged Qwen `b0a-pilot` pass at the same exact head. The pilot requires a
+positive interleaved 9-cell tranche before extending to 27 total, with an objective active PASS gain,
+observed task-specific PI and bounded latency; otherwise the next
 action is repair and retest, not the full matrix. The gate currently classifies missing OpenCode
 runtime routes for `blueprint`, `convergence`, `traceability` and `strategy`; repair those paths and
 add covered tasks before restarting comprehensive evaluation. The schedule proof and activation

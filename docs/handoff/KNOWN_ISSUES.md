@@ -154,6 +154,11 @@
   appeared off. This is a confirmed runner/adapter propagation defect, not model variance. The
   generated project config was scoped only to MCP while OpenCode used plugin tools, and MCP also
   forced advisory. Comprehensive evaluation and the pilot remain blocked until repair and rerun.
+- PR #49 resolved that configuration defect, and activation passed at `ebe2a197`. The first pilot
+  exposed a protocol-efficiency defect instead: arm-major ordering completed eight native cells
+  before any active comparison, including one 256,319ms response. Those cells are not effect
+  evidence. Pilot execution must be interleaved and pass its 9-cell initial tranche before spending
+  the remaining confirmation cells.
 
 - The old 306-cell baseline began without an observed-PI activation precondition. It stopped at 137
   cells; pure `native` results measure OpenCode/model behavior, not PI effect, and will not be reused
@@ -163,7 +168,8 @@
   and `PYTHONPATH` from the agent shell environment and require an isolated virtualenv for pip, while
   the ECA sidecar keeps its explicit interpreter.
 - Core PI is known to be callable in earlier single-cell route proofs, but comprehensive readiness is
-  blocked until the new four-model exact-head activation gate and 27-cell port-8090 effect pilot pass.
+  blocked until the four-model exact-head activation gate and staged port-8090 effect pilot pass: a
+  9-cell initial tranche first, then 27 total only after a positive initial signal.
 - The pilot is intentionally small and cannot promote a capability. It only prevents spending the
   comprehensive schedules when active PI has no objective gain, was not actually used, or has
   abnormal latency; any such result requires repair and the same pilot again.
