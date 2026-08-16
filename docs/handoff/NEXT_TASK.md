@@ -42,15 +42,21 @@ The pre-run contract is sealed in `docs/evaluation/b0a-screening-plan-v1.json`. 
 `tools/local/b0a-bootstrap` to acquire exact pins and emit the initial per-repository baseline; do
 not run an arm for a repository classified `EXCLUDED_BOOTSTRAP_GAP`.
 
-Current bootstrap evidence excludes KasaneCore and PEDS after 300-second Twin timeouts. Run B0a
-native/off baselines and screening only for included repositories, retain those exclusions in every
-schedule/report, and do not begin held-out B0b confirmation until the KasaneCore gap is repaired and
-remeasured. See `docs/evidence/final/b0a-bootstrap-environment-v1.json`.
+The original bootstrap evidence excludes KasaneCore and PEDS after 300-second Twin timeouts. Retain
+that historical result in old-head schedules/reports. The B1 evidence below supersedes their current
+eligibility for repaired-head screening and confirmation. See
+`docs/evidence/final/b0a-bootstrap-environment-v1.json`.
 
 The runner now enforces two resumable schedules: `b0a-baseline` has 306 cells across full tiers and
 `b0a-screening` has 714 local-practical cells, including capability-specific depth arms only for the
 four recorded depth claims. After the schedule PR merges, execute the baseline first, then the screen
 and `screen` report. The schedule proof is not PI effect evidence; current effect remains NOT TESTED.
+
+The conditional B1 storage blocker is repaired at exact implementation head
+`fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`: KasaneCore and PEDS now pass three-run cold-index
+budgets. Merge that bounded repair, resume the 306-cell baseline from its checkpoint, and start the
+PI-enabled screen only from the repaired merged head. Do not combine old-head and repaired-head
+screening cells in one report.
 
 Evaluation environment mandated by the user:
 

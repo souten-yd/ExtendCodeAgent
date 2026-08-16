@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sqlite3
 from pathlib import Path
 
 import pytest
@@ -95,6 +96,28 @@ def test_workspace_isolation_and_reverse_index() -> None:
         assert [
             edge.edge_id for edge in store.reverse_edges(_project(), CanonicalRef("file://test.py"))
         ] == ["e1"]
+
+
+def test_current_edge_identity_lookup_uses_dedicated_index(tmp_path: Path) -> None:
+    database = tmp_path / "graph.db"
+    with SqliteGraphStore(database) as store:
+        store.apply(_delta("one"))
+    with sqlite3.connect(database) as connection:
+        connection.execute("DROP INDEX edges_current_id")
+        connection.execute("UPDATE schema_meta SET version=4")
+    with SqliteGraphStore(database):
+        pass
+    with sqlite3.connect(database) as connection:
+        indexes = {row[1] for row in connection.execute("PRAGMA index_list('edges')").fetchall()}
+        version = connection.execute("SELECT version FROM schema_meta").fetchone()[0]
+        query_plan = connection.execute(
+            "EXPLAIN QUERY PLAN UPDATE edges SET valid_to=? "
+            "WHERE scope=? AND edge_id=? AND valid_to IS NULL",
+            (2, "p1\0w1", "e1"),
+        ).fetchall()
+    assert version == 5
+    assert "edges_current_id" in indexes
+    assert any("USING INDEX edges_current_id" in row[3] for row in query_plan)
 
 
 def test_restart_persistence_and_export(tmp_path: Path) -> None:

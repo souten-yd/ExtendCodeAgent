@@ -838,3 +838,15 @@ Depth screening changes one claimed capability at a time. The four depth-depende
 capability stays at D2. A global all-capability depth change is not acceptable B0a attribution.
 Depth cells do not enter the active-versus-ablation effect threshold; they are retained for the
 separate depth-dependent claim analysis.
+
+## 2026-08-16 — B1 current-edge index is a blocking repair
+
+Decision: the missing current-edge identity index is confirmed as the B0 bootstrap blocker and is
+repaired before B0a screening. The repair adds only the index used by the existing supersession
+UPDATE and a schema-4-to-5 migration; it does not alter graph facts, capability behavior or task
+oracles. This keeps the ongoing native/off baseline attributable to its sealed head while ensuring
+PI-enabled screening does not measure avoidable quadratic storage work.
+
+Three fresh exact-pin runs, rather than the first successful diagnostic, are the acceptance evidence.
+KasaneCore and PEDS now pass their size-class cold-index budgets and may enter held-out confirmation.
+The original timeout record remains immutable and is superseded, not rewritten.

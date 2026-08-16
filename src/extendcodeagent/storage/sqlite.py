@@ -52,7 +52,7 @@ from extendcodeagent.runtime import (
     RuntimeObservation,
 )
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 
 class StoreError(RuntimeError):
@@ -537,6 +537,7 @@ class SqliteGraphStore:
             CREATE INDEX IF NOT EXISTS nodes_current_ref ON nodes(scope,canonical_ref,valid_to);
             CREATE INDEX IF NOT EXISTS nodes_source ON nodes(scope,source_ref,valid_to);
             CREATE TABLE IF NOT EXISTS edges(row_id INTEGER PRIMARY KEY,scope TEXT NOT NULL,edge_id TEXT NOT NULL,source_ref TEXT NOT NULL,target_ref TEXT NOT NULL,fact_source_ref TEXT NOT NULL,status TEXT NOT NULL,payload TEXT NOT NULL,valid_from INTEGER NOT NULL,valid_to INTEGER);
+            CREATE INDEX IF NOT EXISTS edges_current_id ON edges(scope,edge_id,valid_to);
             CREATE INDEX IF NOT EXISTS edges_reverse ON edges(scope,target_ref,valid_to);
             CREATE INDEX IF NOT EXISTS edges_source ON edges(scope,fact_source_ref,valid_to);
             CREATE TABLE IF NOT EXISTS evidence(row_id INTEGER PRIMARY KEY,scope TEXT NOT NULL,evidence_id TEXT NOT NULL,payload TEXT NOT NULL,revision_sequence INTEGER NOT NULL);
@@ -554,6 +555,7 @@ class SqliteGraphStore:
             UPDATE schema_meta SET version=2 WHERE version<2;
             UPDATE schema_meta SET version=3 WHERE version<3;
             UPDATE schema_meta SET version=4 WHERE version<4;
+            UPDATE schema_meta SET version=5 WHERE version<5;
             """
         )
 

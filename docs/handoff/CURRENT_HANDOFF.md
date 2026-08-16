@@ -2,11 +2,20 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/b0a-enforced-schedules`
+Current branch: `agent/b1-edge-index` (repair worktree); B0a baseline runs from merged head `86e8061`
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
-Current task: B0a baseline and screening execution; no B0a result cell has run
+Current task: merge B1 blocker repair, complete B0a baseline, then screen on the repaired head
 
 ## B0a contract checkpoint (2026-08-16)
+
+- Conditional B1 repair exact head `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7` adds the missing
+  current-edge identity index. Three cold exact-pin runs changed KasaneCore/PEDS from >300-second
+  timeout to medians of 15,825ms/6,368ms; both are now bootstrap-eligible and within budget.
+- The resumable native/off baseline remains bound to merged schedule head `86e8061`; its first
+  53 cells are checkpointed. PI-enabled screening must start only after the repair merges, so the
+  known storage defect is not mixed into capability attribution.
+- Evidence: `docs/evidence/final/b1-edge-index-repair.json`. No PI effect claim follows from this
+  performance repair.
 
 - Runner enforcement is now implemented at exact head
   `9bfc934fc46d5db9ffcb43e48a695e8e470c1f29`: the baseline is 306 cells and the screen is
