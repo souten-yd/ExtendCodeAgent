@@ -23,6 +23,7 @@ from extendcodeagent.evaluation.compatibility import (
     audit_checkpoint,
     create_bridge_plan,
     digest,
+    migrate_checkpoint,
     prove_bridge,
     verify_seal,
 )
@@ -1367,10 +1368,28 @@ def run(
     results: list[dict[str, Any]] = []
     provider_attempts: list[dict[str, Any]] = []
     provider_queue: dict[str, dict[str, Any]] = {}
+    migration_provenance: dict[str, Any] | None = None
     if resume and output.is_file():
         results = list(previous.get("results", []))
         provider_attempts = list(previous.get("provider_attempts", []))
         provider_queue = dict(previous.get("provider_queue", {}))
+        if previous.get("result_origin") == "migrated_checkpoint":
+            migration_provenance = {
+                key: previous[key]
+                for key in (
+                    "result_origin",
+                    "original_runner_revision",
+                    "validated_by_runner_revision",
+                    "compatibility_manifest",
+                    "compatibility_audit",
+                    "compatibility_audit_seal",
+                    "compatibility_proof",
+                    "compatibility_proof_seal",
+                    "latency_status",
+                    "latency_merge_permitted",
+                    "migration_summary",
+                )
+            }
     current_revision = subprocess.check_output(
         ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
     ).strip()
@@ -1404,6 +1423,7 @@ def run(
                 pilot_evidence,
                 provider_queue,
                 provider_attempts,
+                migration_provenance,
             ),
         )
     report = _report(
@@ -1415,6 +1435,7 @@ def run(
         pilot_evidence,
         provider_queue,
         provider_attempts,
+        migration_provenance,
     )
     _write_report(output, report)
     if scope == "b0a-activation" and report["activation_gate"]["status"] != "PASS":
@@ -1636,9 +1657,12 @@ def _validate_resume(
     expected_schedule = {key: value for key, value in schedule.items() if key != "cells"}
     if previous.get("schedule") != expected_schedule:
         raise EvaluationError("resume report schedule does not match the current sealed schedule")
-    if previous.get("activation_evidence") != activation_evidence:
+    migrated_unbound = previous.get("result_origin") == "migrated_checkpoint"
+    if migrated_unbound:
+        verify_seal(previous, "migrated checkpoint")
+    if not migrated_unbound and previous.get("activation_evidence") != activation_evidence:
         raise EvaluationError("resume report activation evidence does not match")
-    if previous.get("pilot_evidence") != pilot_evidence:
+    if not migrated_unbound and previous.get("pilot_evidence") != pilot_evidence:
         raise EvaluationError("resume report pilot evidence does not match")
     if previous.get("trace_log") != str(trace_path):
         raise EvaluationError("resume report points at a different trace log")
@@ -1740,6 +1764,7 @@ def _report(
     pilot_evidence: dict[str, Any] | None = None,
     provider_queue: dict[str, dict[str, Any]] | None = None,
     provider_attempts: list[dict[str, Any]] | None = None,
+    migration_provenance: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     report = {
         "schema": 1,
@@ -1771,6 +1796,8 @@ def _report(
         report["provider_queue"] = provider_queue
     if provider_attempts:
         report["provider_attempts"] = provider_attempts
+    if migration_provenance:
+        report.update(migration_provenance)
     report["failure_attribution"] = dict(
         Counter(
             item.get("outcome_attribution", {}).get("classification", "NOT_CLASSIFIED")
@@ -1807,6 +1834,8 @@ def _report(
         report["activation_evidence"] = activation_evidence
     if pilot_evidence is not None:
         report["pilot_evidence"] = pilot_evidence
+    if migration_provenance:
+        report["seal"] = {"algorithm": "sha256", "canonical_payload": digest(report)}
     return report
 
 
@@ -2053,6 +2082,12 @@ def main() -> int:
     probe_parser = sub.add_parser("probe-provider")
     probe_parser.add_argument("--model-tier", required=True)
     probe_parser.add_argument("--output", type=Path, required=True)
+    migrate_parser = sub.add_parser("migrate-checkpoint")
+    migrate_parser.add_argument("--source", type=Path, required=True)
+    migrate_parser.add_argument("--audit", type=Path, required=True)
+    migrate_parser.add_argument("--bridge", type=Path, required=True)
+    migrate_parser.add_argument("--output", type=Path, required=True)
+    migrate_parser.add_argument("--raw-root", type=Path, required=True)
     args = parser.parse_args()
     try:
         if args.command == "validate":
@@ -2139,8 +2174,20 @@ def main() -> int:
                     args.source.resolve(),
                 ),
             )
-        else:
+        elif args.command == "probe-provider":
             probe_provider(args.model_tier, args.output)
+        else:
+            _require_clean_worktree()
+            _write_report(
+                args.output,
+                migrate_checkpoint(
+                    ROOT,
+                    args.source.resolve(),
+                    args.audit.resolve(),
+                    args.bridge.resolve(),
+                    args.raw_root.resolve() / "traces.jsonl",
+                ),
+            )
     except (
         CompatibilityError,
         EvaluationError,

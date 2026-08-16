@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
@@ -16,9 +18,11 @@ from extendcodeagent.evaluation.compatibility import (  # noqa: E402
     INVALID_TIMEOUT,
     REPLAY_REQUIRED,
     REUSABLE,
+    CompatibilityError,
     audit_checkpoint,
     create_bridge_plan,
     digest,
+    migrate_checkpoint,
     prove_bridge,
 )
 
@@ -284,6 +288,14 @@ def test_bridge_plan_and_proof_require_semantic_match(tmp_path: Path) -> None:
     proof = prove_bridge(bridge_plan_path, run_path, source)
     assert proof["status"] == "PASS"
     assert proof["migration_permitted"] is True
+    proof_path = tmp_path / "bridge-proof.json"
+    proof_path.write_text(json.dumps(proof))
+    migrated_trace = tmp_path / "migrated-raw" / "traces.jsonl"
+    migrated = migrate_checkpoint(ROOT, source, audit_path, proof_path, migrated_trace)
+    assert migrated["executed_cells"] == 1
+    assert migrated["results"][0]["result_origin"] == "migrated_checkpoint"
+    assert migrated["results"][0]["latency_status"] == "LEGACY_RUNNER"
+    assert len(EvaluationTraceLog(migrated_trace).replay()) == 1
 
     run_body["results"][0]["outcome"] = "FAIL"
     run_path.write_text(json.dumps(_sealed(run_body)))
@@ -298,3 +310,13 @@ def test_bridge_plan_and_proof_require_semantic_match(tmp_path: Path) -> None:
     proof = prove_bridge(bridge_plan_path, run_path, source)
     assert proof["replay_required_classes"] == []
     assert proof["unavailable_classes"] == ["local-practical:symbol-reference-lookup"]
+    unavailable_proof = tmp_path / "unavailable-proof.json"
+    unavailable_proof.write_text(json.dumps(proof))
+    with pytest.raises(CompatibilityError, match="permits no migration"):
+        migrate_checkpoint(
+            ROOT,
+            source,
+            audit_path,
+            unavailable_proof,
+            tmp_path / "forbidden" / "traces.jsonl",
+        )

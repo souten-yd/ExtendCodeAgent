@@ -1,5 +1,18 @@
 # Implementation Log
 
+## 2026-08-17 — Class-scoped checkpoint migration
+
+- Added `migrate-checkpoint`, which requires sealed audit and Bridge proof, verifies source report and
+  trace hashes, creates a new selected trace chain and copies rather than edits source results.
+- Bridge-mismatched classes and provider-unavailable model tiers are excluded. Sealed unavailable
+  model cells can migrate as `NOT_APPLICABLE` latency because they contain no provider execution.
+- Each copied cell records original/validating runner revisions, source result hash, compatibility
+  manifest/proof and legacy latency status. The report preserves these fields across resume and
+  rejects resume if its migration seal is invalid.
+- The current partial proof permits an expected 190 candidates: 90 sealed local-low cells, 47
+  local-practical cells excluding test-selection, and 53 Copilot Sonnet/Codex cells. All 21
+  host-default candidates and six local-practical test-selection candidates remain pending/replay.
+
 ## 2026-08-17 — Provider queue pause and Bridge three-way classification
 
 - The first merged-head Bridge run matched 8/12 cells. Local-practical symbol/impact and every
