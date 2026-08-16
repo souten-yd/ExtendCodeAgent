@@ -599,3 +599,94 @@ deterministic analysis only) — and forbids promotion from the first row into t
 consolidation deliberately preserved. Superseded *sequencing* inside them is already marked by banners.
 
 GitHub Actions: not added. This change is documentation only.
+
+## 2026-08-16 — Feasibility, OMO restoration and hypothesis ordering
+
+Context: a review of the plan against the stated product intent — OpenCode plus KasaneCore-derived
+Project Intelligence plus OMO, used together — found that the intended production configuration was
+absent from the backlog, that the baseline was not executable as specified, and that the designated
+differentiation was scheduled after everything it is supposed to differentiate from.
+
+### Restored — `OMO-C0` as stage B2
+
+The E0 consolidation recorded `OMO_COEXISTENCE_AND_COMPATIBILITY_PLAN.md` as "executed only at stage
+P4". That document's §9 defines `OMO-C0 Coexistence Baseline` as required **before any claim that
+OMO + ECA is a recommended stack**, so the consolidation dropped a scheduled gate rather than mapping
+it. Since `OpenCode + OMO + ExtendCodeAgent` is an intended production configuration, deferring all
+coexistence work to a post-release benchmark means the recommended-stack claim could never be
+supported at release.
+
+`OMO-C0` returns as stage **B2** (conditional, after B0): version tuple, Team Mode off, startup/tool/
+session/coding/verification compatibility, both plugin load orders, conflicts classified against the
+C0–C6 taxonomy, resolved under the §11 stop rules. `OMO-C1` becomes the P3 entry condition. §2's
+disposition now names the live parts of that document instead of retiring it wholesale. B2 asks "does
+the stack work"; P4 still asks "is the stack better".
+
+### Decision — B0 splits into B0a screening and B0b confirmation (new §7.5)
+
+The arm set multiplied out is 23 arms x 14 tier-repetitions x tasks = 322 runs per task; 20 tasks is
+6,440 agent runs, roughly 320 hours of continuous execution at three minutes each, before B0's
+environment freeze, bootstrap conformance, integration revalidation, OMO smoke and GUI measurement.
+The repetition minimums say how many times to repeat a cell but never which cells to skip, so the
+specification had no way to terminate.
+
+§7.5 adds a screening/confirmation design. Screening runs each ablation at one assigned tier over a
+fixed tuning subset and can neither promote nor demote; confirmation runs full tiers, repetitions and
+held-out only for what screened through, and §7.4 decisions may cite confirmation only. The subset,
+threshold and tier assignment are fixed before the first run so the sample cannot be tuned toward a
+result; a screened-out capability is recorded `no screened effect` rather than `rejected`, because
+screening is under-powered by construction; anything within noise of the threshold goes to
+confirmation anyway; and `native`/`off` always run at full power because every other number is read
+against them.
+
+This is a sampling design. Evidence standards are unchanged.
+
+### Decision — a V0 slice moves into Phase 0 as `V0a`
+
+§1 designates Verification Intelligence the primary differentiation hypothesis, but the V-series sat
+in Phase 3 — after Phase 0, B0 and Phase 2. Everything implemented so far is Project Truth, which §1
+concedes is at parity with mature code intelligence. The baseline would therefore have measured only
+the conceded part, and §10.2's verification-only pivot would have had nothing to pivot to.
+
+`V0a` (shadow, evaluation-only) defines `SemanticChangeSet`, `VerificationObligation` and
+required-verification-set derivation, and nothing else; reuse, failure taxonomy, oracle assessment and
+certificates stay in V0/V2–V5. V0 becomes the remainder and must extend those objects rather than
+redefine them.
+
+Named `V0a` rather than inserted as an E-stage on purpose: the E-series was renumbered once already
+this week, and a second renumber would cost more than one irregular identifier. The name also states
+what it is — a slice of V0, not new evaluation infrastructure.
+
+### Accepted — E3 gains an `OMO + ECA @ local-low` arm
+
+The intended production configuration is also the worst case for context budget: both extensions
+inject into one window and `local-low` has the least room. `pr-g` shows ECA alone taking `local-low`
+input from 236 to 840 tokens — an overhead ratio near 2.6 against the §7.2 weak-local budget of 0.5.
+Those were trivial scenarios and real tasks will differ, but the direction is the concern and OMO can
+only compress the window further. Conflict class C2 is measured here or nowhere before release.
+
+### Accepted — E2 binds the inferred-relation confidence threshold to depth
+
+E1 folded `call_graph` into `semantic` on the reasoning that `may_call` stays in the graph and is
+controlled at use time by confidence and depth rather than at production time by a gate. That control
+point did not exist. E2 now defines a minimum inferred-relation confidence per depth, so `D1` excludes
+`may_call` at 0.35 while `D3` admits it. Without it the folding decision was half implemented.
+
+### Accepted — slow-suite repository pinned; target project profile stated
+
+Selective verification only pays when running everything is expensive. On a thirty-second suite,
+"run it all" is faster, simpler and more certain, and correctly beats this product. The pinned corpus
+(flask, httpx, express, vite) is fast-testing, so the plan would have measured the differentiation
+hypothesis under the conditions where it cannot win. §7.3 adds a required repository whose full suite
+exceeds ten minutes and records full-suite wall time for every corpus entry; §1 states the target
+profile and says plainly that outside it, native OpenCode plus a fast test command is the better
+answer.
+
+### Recorded — execution capacity, review cost, unbuilt differentiator, KasaneCore reuse
+
+Four risk rows added to §12. The KasaneCore row matters for estimation: the audit records 80-90%
+algorithmic reuse but only 25-40% direct source reuse, and `src/` contains no KasaneCore-derived
+module — all 7,835 lines were written fresh against KasaneCore's design lessons. Remaining work must
+be estimated at scratch-implementation rates, not as inherited.
+
+GitHub Actions: not added. This change is documentation only.

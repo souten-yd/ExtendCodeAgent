@@ -42,15 +42,19 @@ Exit evidence: config/architecture tests, depth visible in `pi_status`, `tools/l
 
 The depth axis is unimplemented, the evaluation harness is a set of per-PR scripts, and there is no
 attributable PI trace. A baseline measured in that state cannot support any keep/demote decision and
-would have to be repeated. E2–E5 must complete first. See master plan sections 6 and 8.
+would have to be repeated. E2–E5 and V0a must complete first. See master plan sections 6 and 8.
 
 ## Phase 0 stage state
 
 - **E0** plan consolidation — done;
 - **E1** capability gating conformance — done (see `CURRENT_HANDOFF.md` and `DECISIONS.md`);
-- **E2** capability depth contract — current;
+- **E2** capability depth contract — current (now also binds the inferred-relation confidence
+  threshold to depth, completing the E1 `call_graph` folding decision);
+- **V0a** verification contract slice, shadow-only, pulled forward from V0 so the differentiation
+  hypothesis is measured at B0 instead of Phase 3;
 - **E3** Layer B task suite and outcome ground truth (what B0 actually measures), including a
-  mandatory cross-boundary GUI/runtime causal task class;
+  mandatory cross-boundary GUI/runtime causal task class, an `OMO + ECA @ local-low` arm, and a
+  pinned slow-suite repository;
 - **E4** unified evaluation runner plus versioned Layer A label set;
 - **E5** minimal PI trace as evaluation infrastructure, with a `used_features` shape reserved for the
   `VerificationFeature` policy V0 introduces.

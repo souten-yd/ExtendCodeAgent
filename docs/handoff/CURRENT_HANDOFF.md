@@ -2,7 +2,7 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/plan-cleanup-and-review-followups`
+Current branch: `agent/plan-feasibility-and-omo-restoration`
 Milestone: A-I implementation complete; Phase 0 (evaluation enablement) active
 Current task: E0/E1 and both plan passes are merged to `main` (`86a6a37`); next is stage E2
 
@@ -125,8 +125,10 @@ Owned by master plan section 8. Summary:
 
 ```text
 Phase 0  E0 consolidation -> E1 gating conformance -> E2 depth contract
+         -> V0a verification contract slice (shadow)
          -> E3 Layer B task suite -> E4 evaluation runner + labels -> E5 minimal PI trace
-Phase 1  B0 baseline validation and gap report -> B1 blocking repair (conditional)
+Phase 1  B0a screening -> B0b confirmation and gap report -> B1 blocking repair (conditional)
+         -> B2 OMO coexistence baseline (conditional)
 Phase 2  C0 runtime contract -> C1 shadow planner -> C2 weak-local (conditional)
          -> C3 advisory selection + adaptive depth
 Phase 3  V0 verification contracts -> V1 calibration -> V2 required verification set
@@ -138,7 +140,7 @@ Phase 7  P0 evidence memory -> P1 conformance -> P2 second harness -> P3 paralle
          -> P4 comparative benchmark
 ```
 
-B0 does not start before E1-E5 are complete.
+B0a does not start before E1-E5 and V0a are complete.
 
 ## Future ControlDeck deep integration
 
@@ -192,3 +194,24 @@ E2 adds the depth axis (`D0..D4`) to the central config with min/max/preferred/a
 
 Rollback path: switch to synchronized `main`. This branch changes host-neutral core gating, the
 OpenCode adapter status types, tests and documentation; it adds no capability and changes no default.
+
+## Feasibility and OMO pass (2026-08-16)
+
+A review against the stated product intent (OpenCode + KasaneCore-derived PI + OMO together) produced
+seven changes, all documentation:
+
+1. **`OMO-C0` restored as stage B2.** E0 had recorded the OMO plan as "P4 only" and thereby dropped a
+   gate its own §9 requires before any recommended-stack claim.
+2. **B0 split into B0a screening and B0b confirmation**, with a new §7.5 sampling design. The full
+   matrix is 322 runs per task — roughly 320 hours at 20 tasks — and had no termination rule.
+3. **`V0a` pulled into Phase 0.** The differentiation hypothesis was scheduled four phases after
+   everything it differentiates from, leaving §10.2's verification-only pivot with no target.
+4. **E3 gains an `OMO + ECA @ local-low` arm** — the intended production configuration and the worst
+   case for context budget. `pr-g` already shows an overhead ratio near 2.6 against a 0.5 budget.
+5. **E2 binds inferred-relation confidence to depth**, completing the E1 `call_graph` folding decision.
+6. **Slow-suite repository pinned and target project profile stated.** The existing corpus is
+   fast-testing, i.e. the condition where selective verification correctly loses.
+7. **Four risk rows added**: execution capacity, unbudgeted human review, unbuilt differentiator, and
+   KasaneCore reuse being conceptual rather than code.
+
+Rationale for each is in `DECISIONS.md`.
