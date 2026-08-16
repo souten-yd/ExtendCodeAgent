@@ -289,6 +289,33 @@ def test_effect_pilot_requires_objective_gain_observed_pi_and_bounded_time() -> 
     assert "active_wall_time_abnormal" in repaired["reasons"]
 
 
+def test_effect_pilot_accepts_task_ready_repository_path_evidence() -> None:
+    result: dict[str, Any] = {
+        "task_id": "eca-tests-001",
+        "outcome": "PASS",
+        "process_exit": 0,
+        "errors": [],
+        "pi_tools": ["pi_status", "pi_symbol", "pi_tests"],
+        "observed_pi_readiness": "ready",
+        "observed_capability_modes": {
+            capability: "active" for capability in CONFIGURABLE_CAPABILITIES
+        },
+        "observed_capability_depths": {
+            capability: "D2" for capability in CONFIGURABLE_CAPABILITIES
+        },
+        "twin_revision_ids": ["twin-1"],
+        "selected_evidence_ids": ["repo_path:tests/unit/test_verification.py"],
+        "pi_analysis_ms": 10,
+    }
+
+    assert _activation_assessment(result)["status"] == "FAIL"
+    assert _pilot_active_assessment(result) == {
+        "status": "PASS",
+        "reasons": [],
+        "task_oracle_outcome": "PASS",
+    }
+
+
 def test_answer_instruction_is_exact_for_all_arms_and_preserves_compact_pi_fields() -> None:
     suite = json.loads((ROOT / "docs/evaluation/task-suite-v1.json").read_text())
     task = next(item for item in suite["tasks"] if item["id"] == "eca-impact-001")
@@ -335,6 +362,7 @@ def test_metrics_split_pi_and_post_tool_model_time(tmp_path: Path) -> None:
                                 }
                             ],
                             "symbols": ["py://testing.service#select_tests"],
+                            "selected_tests": ["tests/unit/test_test_intelligence.py"],
                             "revision_id": "twin-1",
                             "capabilities_used": ["blueprint", "strategy"],
                             "timing": {
@@ -390,6 +418,7 @@ def test_metrics_split_pi_and_post_tool_model_time(tmp_path: Path) -> None:
     assert "src/extendcodeagent/testing/service.py" in measured["observed_pi_facts"]
     assert measured["pi_capabilities_used"] == ["blueprint", "strategy"]
     assert "canonical_ref:py://testing.service#select_tests" in measured["selected_evidence_ids"]
+    assert "repo_path:tests/unit/test_test_intelligence.py" in measured["selected_evidence_ids"]
 
 
 def test_outcome_attribution_separates_retrieval_projection_and_reasoning(

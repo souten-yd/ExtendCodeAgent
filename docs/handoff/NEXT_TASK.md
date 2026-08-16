@@ -69,10 +69,12 @@ fail-closed route observation in screening. PR #58 merged that slice and same-he
 but the fresh pilot produced 0/0/0 PASS because Qwen explicitly selected detailed graph views and
 never exercised compact projection. PRs #59/#60 now enforce compact views and preserve compact
 canonical evidence; exact-head activation passes. One active-only repetition reached PI fact recall
-1.0 for all tasks and PASSed test selection, but symbol/impact still changed the final schema. Merge
-the exact-schema/field-preservation orchestration repair, then rerun activation and the same 9 cells
-at the new exact head. Continue to 27 only if the initial gate shows objective gain with bounded
-time. Current controlled effect remains NOT TESTED.
+1.0 for all tasks and PASSed test selection, but symbol/impact still changed the final schema. PR #61
+merged the exact-schema repair; its exact-head controlled rerun is initial positive evidence:
+native/off/active were 0/0/2, with active PI fact recall 1.0 on all tasks. Do not start the remaining
+18 confirmation cells yet. Merge the repository-path evidence attribution repair, rerun activation
+and the same sealed 9 cells at the new exact head, and require `CONTINUE_TO_CONFIRMATION` before
+running repetitions 2-3.
 
 The conditional B1 storage blocker is repaired at exact implementation head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`: KasaneCore and PEDS now pass three-run cold-index

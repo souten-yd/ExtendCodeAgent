@@ -939,3 +939,9 @@ oracle performs exact equality while the natural-language tasks previously allow
 explanation objects. Active PI receives one additional causal rule: matching compact fields are known
 facts to preserve, not suggestions to delete or enrich. This does not change task facts or weaken the
 oracle; it removes a presentation ambiguity equally for controls and tests PI's intended projection.
+
+Activation continues to require canonical URI evidence. Effect-pilot cells may additionally satisfy
+selected-evidence observation with repository-relative paths emitted in compact path/test fields.
+These are the task-ready evidence used by `pi_tests`; treating them as absent caused a false PI-use
+failure even when the exact PI output and final answer matched. This exception is limited to the
+pilot assessment and does not weaken the four-model activation contract.

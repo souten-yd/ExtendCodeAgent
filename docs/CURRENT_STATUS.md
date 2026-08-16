@@ -206,6 +206,14 @@ pilot-gate evidence. The remaining repair clarifies that requested answer keys a
 for every arm and that matching active compact fields must be preserved verbatim before the full
 sealed 9-cell comparison is rerun.
 
+PR #61 merged the exact-schema clarification. At exact head `170649043f50`, four-model activation
+passed and the sealed 9-cell Qwen pilot produced native/off/active PASS counts of 0/0/2. Active PI
+required-fact recall was 1.0 for all three tasks; impact and test selection passed exactly, while
+symbol retained every fact but converted a one-item list to a scalar. Median wall times were
+91,611/100,609/70,107ms. The pilot still fail-closed because `pi_tests` exposes task-ready repository
+paths rather than canonical URIs and the collector did not classify those paths as selected evidence.
+That attribution defect must be repaired and the same 9 cells rerun before confirmation expands.
+
 The bootstrap blocker has a bounded B1 repair at exact head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`. A matching current-edge identity index and schema-5
 migration reduce exact-pin three-run cold medians to 15,825ms for KasaneCore and 6,368ms for PEDS;

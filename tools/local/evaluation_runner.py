@@ -674,6 +674,16 @@ def _collect_evidence_refs(value: object, evidence_ids: set[str]) -> None:
                 evidence_ids.update(
                     f"canonical_ref:{ref}" for ref in item if isinstance(ref, str) and "://" in ref
                 )
+            elif key in {"selected_tests", "tests"} or key.endswith(("_path", "_paths")):
+                paths = item if isinstance(item, list) else [item]
+                evidence_ids.update(
+                    f"repo_path:{path}"
+                    for path in paths
+                    if isinstance(path, str)
+                    and "/" in path
+                    and not path.startswith(("/", "."))
+                    and "://" not in path
+                )
             else:
                 _collect_evidence_refs(item, evidence_ids)
     elif isinstance(value, list):
@@ -964,6 +974,14 @@ def _activation_assessment(result: dict[str, Any]) -> dict[str, Any]:
 
 def _pilot_active_assessment(result: dict[str, Any]) -> dict[str, Any]:
     assessment = _activation_assessment(result)
+    evidence = result.get("selected_evidence_ids") or []
+    if any(str(item).startswith("repo_path:") for item in evidence):
+        assessment["reasons"] = [
+            reason
+            for reason in assessment["reasons"]
+            if reason != "canonical_evidence_not_observed"
+        ]
+        assessment["status"] = "PASS" if not assessment["reasons"] else "FAIL"
     required = set(_load(B0A_ACTIVATION_PLAN)["pilot"]["tasks"][result["task_id"]])
     if not required <= set(result.get("pi_tools", ())):
         reasons = [*assessment["reasons"], "task_required_pi_tools_not_observed"]
