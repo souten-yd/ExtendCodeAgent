@@ -179,6 +179,21 @@ def test_missing_path_and_strict_confidence_are_truthful() -> None:
     )
 
 
+def test_inferred_confidence_floor_does_not_filter_declared_relations() -> None:
+    service = GraphAnalysisService(_snapshot(), PythonCanonicalReferenceResolver())
+    report = service.assess_impact(
+        ImpactQuery(
+            ("py://app.service#leaf",),
+            max_depth=3,
+            min_inferred_confidence=0.9,
+        )
+    )
+
+    impacted = report.direct_impacts + report.transitive_impacts
+    assert any(item.canonical_ref == "py://app.api#handler" for item in impacted)
+    assert all(item.canonical_ref != "py://plugin#dynamic_caller" for item in impacted)
+
+
 def test_source_root_package_reexport_resolves_to_calling_test_without_name_collision() -> None:
     project = ProjectRef("p", "w", "file:///fixture")
     source = SourceRevision("source")

@@ -22,12 +22,15 @@ class PathQuery:
     min_confidence: float = 0.0
     max_depth: int = 6
     max_paths: int = 20
+    min_inferred_confidence: float = 0.0
 
     def __post_init__(self) -> None:
         if not self.source_ref:
             raise ValueError("source_ref is required")
         if not 0.0 <= self.min_confidence <= 1.0:
             raise ValueError("min_confidence must be between zero and one")
+        if not 0.0 <= self.min_inferred_confidence <= 1.0:
+            raise ValueError("min_inferred_confidence must be between zero and one")
         if self.max_depth < 0 or self.max_paths <= 0:
             raise ValueError("path bounds are invalid")
 
@@ -56,12 +59,15 @@ class ImpactQuery:
     max_depth: int = 6
     include_historical: bool = False
     forward_implementation_edges: tuple[str, ...] = ("handled_by",)
+    min_inferred_confidence: float = 0.0
 
     def __post_init__(self) -> None:
         if not self.changed_refs or any(not item for item in self.changed_refs):
             raise ValueError("changed_refs must not be empty")
         if not 0.0 <= self.min_confidence <= 1.0:
             raise ValueError("min_confidence must be between zero and one")
+        if not 0.0 <= self.min_inferred_confidence <= 1.0:
+            raise ValueError("min_inferred_confidence must be between zero and one")
         if self.max_depth < 0:
             raise ValueError("max_depth must not be negative")
 

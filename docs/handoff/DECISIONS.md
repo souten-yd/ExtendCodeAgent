@@ -690,3 +690,26 @@ module — all 7,835 lines were written fresh against KasaneCore's design lesson
 be estimated at scratch-implementation rates, not as inherited.
 
 GitHub Actions: not added. This change is documentation only.
+
+## 2026-08-16 — E2 capability depth contract
+
+Decision: execution depth is a second centralized axis (`D0..D4`) with global profiles and
+per-capability min/max/preferred/auto bounds. It is resolved independently of rollout authority;
+`auto` is deterministic balanced behavior until C3 adds task-aware selection. Folded `call_graph`
+inherits `semantic`'s depth as well as its rollout owner.
+
+The confidence floor associated with depth applies only to inferred relations. The existing caller
+`min_confidence` remains a floor for every fact; depth adds a separate
+`min_inferred_confidence`. This prevents shallow depth from discarding lower-confidence declared
+facts while still making the E1 `call_graph` decision real: D1 excludes confidence-0.35 `may_call`
+and D3 admits it. Filtering occurs at query/use time, so stored Twin revisions do not depend on
+configuration.
+
+Every public PI response records the answering capability depth. `pi_status` has no single answering
+capability and therefore reports top-level `depth: null` plus the resolved depth and inferred floor
+for every capability entry. The shipped balanced/D2 default has a 0.3 inferred floor, below the
+minimum 0.35 currently emitted by analyzers, so default query behavior is unchanged.
+
+Validation: `tools/local/all-fast` PASS (171 Python, 9 adapter),
+`tools/local/test-integration` PASS (16 Python, 9 adapter), and `tools/local/build` PASS (Python
+sdist/wheel and TypeScript build). GitHub Actions were not added.

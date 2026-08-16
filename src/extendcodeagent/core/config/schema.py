@@ -107,6 +107,110 @@ CONFIGURABLE_CAPABILITIES = tuple(
 )
 
 
+class Depth(StrEnum):
+    """How much work a capability may do. The cost axis, orthogonal to RolloutMode.
+
+    Rollout mode answers "what authority does this capability have"; depth answers
+    "how expensive may it be". Never encode one in the other.
+    """
+
+    D0 = "D0"
+    D1 = "D1"
+    D2 = "D2"
+    D3 = "D3"
+    D4 = "D4"
+
+
+ALL_DEPTHS = tuple(Depth)
+
+_DEPTH_RANK: Mapping[Depth, int] = MappingProxyType(
+    {Depth.D0: 0, Depth.D1: 1, Depth.D2: 2, Depth.D3: 3, Depth.D4: 4}
+)
+
+
+def depth_rank(depth: Depth) -> int:
+    return _DEPTH_RANK[depth]
+
+
+class DepthProfile(StrEnum):
+    """Coarse global presets. ``AUTO`` is not adaptive yet -- see stage C3."""
+
+    ECO = "eco"
+    BALANCED = "balanced"
+    QUALITY = "quality"
+    MAX = "max"
+    AUTO = "auto"
+
+
+#: Depth a profile selects when a capability asks for ``auto``. ``AUTO`` resolves to
+#: the balanced depth until stage C3 introduces task-aware selection; it is a
+#: declared intent to be adaptive later, never a silent adaptive behavior now.
+_PROFILE_DEPTH: Mapping[DepthProfile, Depth] = MappingProxyType(
+    {
+        DepthProfile.ECO: Depth.D1,
+        DepthProfile.BALANCED: Depth.D2,
+        DepthProfile.QUALITY: Depth.D3,
+        DepthProfile.MAX: Depth.D4,
+        DepthProfile.AUTO: Depth.D2,
+    }
+)
+
+#: Minimum confidence an *inferred* relation needs before a capability at this depth
+#: may use it. Emitted confidences today are 1.0, 0.95, 0.9, 0.5 and 0.35 (``may_call``
+#: and unresolved JS/TS calls). D2 admits ``may_call``; D1 does not.
+#:
+#: This is the control point the E1 decision to fold ``call_graph`` into ``semantic``
+#: relies on: inferred call edges stay in the graph unconditionally, and are bounded
+#: here at use time rather than by a production-side gate that would make a Twin
+#: revision depend on configuration.
+_DEPTH_MIN_INFERRED_CONFIDENCE: Mapping[Depth, float] = MappingProxyType(
+    {
+        Depth.D0: 1.0,
+        Depth.D1: 0.7,
+        Depth.D2: 0.3,
+        Depth.D3: 0.0,
+        Depth.D4: 0.0,
+    }
+)
+
+
+def depth_min_inferred_confidence(depth: Depth) -> float:
+    return _DEPTH_MIN_INFERRED_CONFIDENCE[depth]
+
+
+@dataclass(frozen=True, slots=True)
+class CapabilityDepth:
+    """Configured depth bounds for one capability.
+
+    ``preferred`` of ``None`` means "use the profile depth", clamped into
+    ``[minimum, maximum]``. Adaptive selection inside the bounds is stage C3.
+    """
+
+    minimum: Depth = Depth.D0
+    maximum: Depth = Depth.D4
+    preferred: Depth | None = None
+
+
+#: Applied to any capability the configuration does not mention.
+DEFAULT_CAPABILITY_DEPTH = CapabilityDepth()
+
+#: Chosen so the shipped default reproduces pre-E2 behavior: the balanced profile
+#: resolves to D2, whose inferred-confidence floor of 0.3 admits every confidence the
+#: analyzers currently emit. E2 introduces the contract; it does not retune anything.
+DEFAULT_DEPTH_PROFILE = DepthProfile.BALANCED
+
+
+def resolve_depth(profile: DepthProfile, bounds: CapabilityDepth) -> Depth:
+    """Resolve the depth a capability runs at. Pure, and independent of RolloutMode."""
+
+    chosen = bounds.preferred if bounds.preferred is not None else _PROFILE_DEPTH[profile]
+    if depth_rank(chosen) < depth_rank(bounds.minimum):
+        return bounds.minimum
+    if depth_rank(chosen) > depth_rank(bounds.maximum):
+        return bounds.maximum
+    return chosen
+
+
 class ModelRole(StrEnum):
     FAST_CLASSIFIER = "fast_classifier"
     SMALL_STRUCTURED = "small_structured"
@@ -222,9 +326,12 @@ class ProjectIntelligenceConfig:
     analyzers: tuple[str, ...]
     analysis: AnalysisBudgets
     context: ContextBudgets
+    depth_profile: DepthProfile = DEFAULT_DEPTH_PROFILE
+    depths: Mapping[CapabilityName, CapabilityDepth] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "capabilities", MappingProxyType(dict(self.capabilities)))
+        object.__setattr__(self, "depths", MappingProxyType(dict(self.depths)))
 
 
 @dataclass(frozen=True, slots=True)

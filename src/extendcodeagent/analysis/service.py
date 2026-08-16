@@ -71,7 +71,9 @@ class GraphAnalysisService:
                 for edge in self.forward.get(current, ())
                 if (not allowed or edge.edge_type in allowed)
                 and edge.status in statuses
-                and edge.confidence.value >= query.min_confidence
+                and _edge_meets_confidence(
+                    edge, query.min_confidence, query.min_inferred_confidence
+                )
                 and edge.target.value not in node_refs
             ]
             if not candidates and query.target_ref is None and path_edges:
@@ -109,7 +111,9 @@ class GraphAnalysisService:
             for edge in self.forward.get(current, ()):
                 if (
                     edge.edge_type not in query.forward_implementation_edges
-                    or edge.confidence.value < query.min_confidence
+                    or not _edge_meets_confidence(
+                        edge, query.min_confidence, query.min_inferred_confidence
+                    )
                     or len(edges) >= query.max_depth
                 ):
                     continue
@@ -134,7 +138,9 @@ class GraphAnalysisService:
             if current_depth >= query.max_depth:
                 continue
             for edge in self.reverse.get(current, ()):
-                if edge.confidence.value < query.min_confidence:
+                if not _edge_meets_confidence(
+                    edge, query.min_confidence, query.min_inferred_confidence
+                ):
                     continue
                 source = edge.source.value
                 candidate_confidence = min(path_confidence[current], edge.confidence.value)
@@ -207,7 +213,12 @@ class GraphAnalysisService:
             for ref in depth
             if ref in self.nodes and self.nodes[ref].node_type in _EXECUTABLE_TYPES
         }
-        side_effects = self._side_effects(effect_roots, query.min_confidence, query.max_depth)
+        side_effects = self._side_effects(
+            effect_roots,
+            query.min_confidence,
+            query.min_inferred_confidence,
+            query.max_depth,
+        )
         explanations = tuple(
             _reverse_path(*paths[item.canonical_ref])
             for _, item in items
@@ -232,7 +243,11 @@ class GraphAnalysisService:
         )
 
     def _side_effects(
-        self, roots: set[str], min_confidence: float, max_depth: int
+        self,
+        roots: set[str],
+        min_confidence: float,
+        min_inferred_confidence: float,
+        max_depth: int,
     ) -> tuple[ImpactItem, ...]:
         found: dict[str, ImpactItem] = {}
         queue = deque((root, 0, 1.0, False) for root in sorted(roots))
@@ -242,7 +257,7 @@ class GraphAnalysisService:
             if depth >= max_depth:
                 continue
             for edge in self.forward.get(current, ()):
-                if edge.confidence.value < min_confidence:
+                if not _edge_meets_confidence(edge, min_confidence, min_inferred_confidence):
                     continue
                 target = edge.target.value
                 path_confidence = min(confidence, edge.confidence.value)
@@ -262,6 +277,18 @@ class GraphAnalysisService:
                     visited[target] = path_confidence
                     queue.append((target, depth + 1, path_confidence, path_inferred))
         return tuple(found[key] for key in sorted(found))
+
+
+def _edge_meets_confidence(
+    edge: GraphEdge, min_confidence: float, min_inferred_confidence: float
+) -> bool:
+    """Apply the caller floor to all facts and the depth floor only to inferred facts."""
+
+    required = max(
+        min_confidence,
+        min_inferred_confidence if edge.status is FactStatus.INFERRED else 0.0,
+    )
+    return edge.confidence.value >= required
 
 
 def _path(node_refs: tuple[str, ...], edges: tuple[GraphEdge, ...]) -> GraphPath:

@@ -2,9 +2,9 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/plan-feasibility-and-omo-restoration`
+Current branch: `agent/e2-capability-depth-contract`
 Milestone: A-I implementation complete; Phase 0 (evaluation enablement) active
-Current task: E0/E1 and both plan passes are merged to `main` (`86a6a37`); next is stage E2
+Current task: E0/E1 are merged; E2 is complete and locally verified on this branch; next is V0a
 
 ## Plan review pass (2026-08-16)
 
@@ -185,15 +185,35 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/e2-capability-depth-contract
+git switch -c agent/v0a-verification-contract-slice
 ```
 
-E2 adds the depth axis (`D0..D4`) to the central config with min/max/preferred/auto, orthogonal to
-`RolloutMode`, with no adaptive selection yet, depth recorded in every PI response and visible in
-`pi_status`, and no behavior change at default depth.
+V0a defines `SemanticChangeSet`, `VerificationObligation` and required-verification-set derivation as
+shadow-only projections over the existing truth model. It must not add a second truth store or pull
+evidence reuse, failure taxonomy, oracle assessment or certificates forward from later V stages.
 
-Rollback path: switch to synchronized `main`. This branch changes host-neutral core gating, the
-OpenCode adapter status types, tests and documentation; it adds no capability and changes no default.
+Rollback path: switch to synchronized `main`. This branch changes the host-neutral depth/query
+contract, OpenCode adapter status types, tests and documentation; it adds no capability and changes
+no default behavior.
+
+## Stage E2 — complete on this branch
+
+Delivered:
+
+- Added centralized `D0..D4` depth profiles and per-capability min/max/preferred/auto bounds,
+  independent of `RolloutMode`; `auto` resolves deterministically to balanced until C3.
+- Added resolved depth and inferred-relation confidence floors to `CapabilityPolicy`; folded
+  `call_graph` inherits `semantic`'s depth.
+- Recorded depth in public PI responses and every `pi_status` capability entry. Status itself uses
+  `depth: null` because no single capability owns the inventory response.
+- Applied the depth floor only to inferred relations at use time. D1 excludes confidence-0.35
+  `may_call`; D3 admits it; caller-provided confidence can narrow results but cannot bypass the depth
+  floor. Stored Twin revisions remain configuration-independent.
+- Preserved default behavior: balanced resolves to D2 and its 0.3 inferred floor admits every
+  currently emitted analyzer confidence (minimum 0.35).
+- Exit gates PASS: `tools/local/all-fast` (171 Python, 9 adapter),
+  `tools/local/test-integration` (16 Python, 9 adapter), and `tools/local/build` (Python sdist/wheel
+  plus TypeScript build).
 
 ## Feasibility and OMO pass (2026-08-16)
 

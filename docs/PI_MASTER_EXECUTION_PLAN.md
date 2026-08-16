@@ -394,6 +394,7 @@ by a real service or declared unimplemented; `pi_status` reports capability impl
 Exit: architecture test green; `off` inertness re-verified per capability.
 
 **E2 — Capability depth contract**
+**Closed on `agent/e2-capability-depth-contract` (2026-08-16).**
 Scope: depth axis (`D0..D4`) in the central config with min/max/preferred/auto, orthogonal to
 `RolloutMode`; no adaptive selection yet; depth recorded in every PI response.
 
@@ -874,7 +875,7 @@ Per-PR evidence directories (`docs/evidence/pr-*`) are historical and are not re
 
 ## 14. Immediate next action
 
-Phase 0, stages E0 and E1 are complete. Next is E2, then V0a, E3, E4, E5.
+Phase 0, stages E0, E1 and E2 are complete. Next is V0a, then E3, E4, E5.
 
 ```bash
 cd /home/souten/ExtendCodeAgent
@@ -884,7 +885,7 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/e2-capability-depth-contract
+git switch -c agent/v0a-verification-contract-slice
 ```
 
 Do not start B0 before E1–E5 and V0a are complete. A baseline measured without total capability gating,

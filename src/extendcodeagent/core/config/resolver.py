@@ -14,8 +14,12 @@ from .schema import (
     ALL_CAPABILITIES,
     KNOWN_ANALYZERS,
     AnalysisBudgets,
+    CapabilityDepth,
+    CapabilityName,
     ConfigError,
     ContextBudgets,
+    Depth,
+    DepthProfile,
     EndpointCapabilities,
     EndpointConfig,
     EndpointLocality,
@@ -27,6 +31,7 @@ from .schema import (
     ResolvedConfig,
     RolloutMode,
     RoutingMode,
+    depth_rank,
     unconfigurable_reason,
 )
 
@@ -48,6 +53,10 @@ DEFAULT_CONFIG: dict[str, Any] = {
             "incremental_batch_ms": 100,
             "background_workers": 2,
             "memory_budget_mb": 1024,
+        },
+        "depth": {
+            "profile": "balanced",
+            "capabilities": {},
         },
         "context": {
             "max_tokens": 8_192,
@@ -241,6 +250,7 @@ def _materialize(raw: dict[str, Any], applied: tuple[str, ...]) -> ResolvedConfi
     ]
     if rejected:
         raise ConfigError("; ".join(sorted(rejected)))
+    depth_profile, depths = _depths(pi["depth"])
     analyzers_raw = pi["analyzers"]
     if not isinstance(analyzers_raw, list) or not all(
         isinstance(item, str) for item in analyzers_raw
@@ -319,6 +329,8 @@ def _materialize(raw: dict[str, Any], applied: tuple[str, ...]) -> ResolvedConfi
             analyzers=tuple(analyzers_raw),
             analysis=analysis,
             context=context,
+            depth_profile=depth_profile,
+            depths=depths,
         ),
         models=model_config,
         applied_layers=applied,
@@ -374,6 +386,54 @@ def _validate_mapping(value: object, name: str) -> None:
 def _mapping(value: object, name: str) -> Mapping[str, Any]:
     _validate_mapping(value, name)
     return value  # type: ignore[return-value]
+
+
+_DEPTH_KEYS = frozenset({"profile", "capabilities"})
+_DEPTH_BOUND_KEYS = frozenset({"min", "max", "preferred"})
+
+
+def _depths(raw: object) -> tuple[DepthProfile, dict[CapabilityName, CapabilityDepth]]:
+    """Resolve the depth block. Depth is the cost axis and never touches RolloutMode."""
+
+    block = _mapping(raw, "project_intelligence.depth")
+    _reject_unknown(block, _DEPTH_KEYS, "project_intelligence.depth")
+    profile = _enum(DepthProfile, block["profile"], "project_intelligence.depth.profile")
+    per_capability = _mapping(block["capabilities"], "project_intelligence.depth.capabilities")
+    _reject_unknown(
+        per_capability,
+        {item.value for item in ALL_CAPABILITIES},
+        "project_intelligence.depth.capabilities",
+    )
+
+    depths: dict[CapabilityName, CapabilityDepth] = {}
+    for name in ALL_CAPABILITIES:
+        configured = per_capability.get(name.value)
+        if configured is None:
+            continue
+        label = f"project_intelligence.depth.capabilities.{name.value}"
+        # A capability that may not be enabled may not be tuned either; otherwise a
+        # configuration could describe depth for something that never runs.
+        reason = unconfigurable_reason(name)
+        if reason is not None:
+            raise ConfigError(f"{label} {reason}")
+        bounds = _mapping(configured, label)
+        _reject_unknown(bounds, _DEPTH_BOUND_KEYS, label)
+        minimum = _enum(Depth, bounds.get("min", Depth.D0.value), f"{label}.min")
+        maximum = _enum(Depth, bounds.get("max", Depth.D4.value), f"{label}.max")
+        if depth_rank(minimum) > depth_rank(maximum):
+            raise ConfigError(f"{label}.min must not exceed {label}.max")
+        preferred_raw = bounds.get("preferred")
+        preferred = (
+            None
+            if preferred_raw is None or preferred_raw == "auto"
+            else _enum(Depth, preferred_raw, f"{label}.preferred")
+        )
+        if preferred is not None and not (
+            depth_rank(minimum) <= depth_rank(preferred) <= depth_rank(maximum)
+        ):
+            raise ConfigError(f"{label}.preferred must lie within min..max")
+        depths[name] = CapabilityDepth(minimum, maximum, preferred)
+    return profile, depths
 
 
 def _reject_unknown(raw: Mapping[str, Any], allowed: set[str] | frozenset[str], name: str) -> None:
