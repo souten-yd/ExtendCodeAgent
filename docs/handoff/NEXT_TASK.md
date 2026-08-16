@@ -31,6 +31,11 @@ Scope:
   runs; exclude and report bootstrap failures instead of attributing them to a capability;
 - rerun lint, typecheck, unit, integration, build and adapter/plugin/MCP lifecycle paths;
 - reproduce provider failures with PI disabled first and run the blocking OMO coexistence smoke;
+- pass the exact-head PI activation gate on port-8090 Qwen, host-default and both GitHub Copilot
+  frontier routes, including observed tool use/Twin/provenance; classify every capability route and
+  repair any missing route before comprehensive execution;
+- run the 27-cell port-8090 `native/off/active` effect pilot; repair and repeat on no effect, missing
+  PI use, provider/timeout failure or abnormal active latency;
 - fix and version the B0a tuning subset, effect threshold and one assigned model tier per ablation;
 - run full-tier/repetition `native` and `off` baselines, then the bounded screening pass;
 - emit the screening table with `proceed` or `no screened effect`, without promotion/demotion.
@@ -47,16 +52,25 @@ that historical result in old-head schedules/reports. The B1 evidence below supe
 eligibility for repaired-head screening and confirmation. See
 `docs/evidence/final/b0a-bootstrap-environment-v1.json`.
 
-The runner now enforces two resumable schedules: `b0a-baseline` has 306 cells across full tiers and
-`b0a-screening` has 714 local-practical cells, including capability-specific depth arms only for the
-four recorded depth claims. After the schedule PR merges, execute the baseline first, then the screen
-and `screen` report. The schedule proof is not PI effect evidence; current effect remains NOT TESTED.
+The runner has two comprehensive resumable schedules: `b0a-baseline` has 306 cells across full tiers
+and `b0a-screening` has 714 local-practical cells, including capability-specific depth arms only for
+the four recorded depth claims. Neither may run until the separately sealed four-model
+`b0a-activation` gate and 27-cell Qwen `b0a-pilot` pass at the same exact head. The pilot requires an
+objective active PASS gain plus observed task-specific PI and bounded latency; otherwise the next
+action is repair and retest, not the full matrix. The gate currently classifies missing OpenCode
+runtime routes for `blueprint`, `convergence`, `traceability` and `strategy`; repair those paths and
+add covered tasks before restarting comprehensive evaluation. The schedule proof and activation
+alone are not PI effect evidence; current effect remains NOT TESTED.
 
 The conditional B1 storage blocker is repaired at exact implementation head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`: KasaneCore and PEDS now pass three-run cold-index
-budgets. Merge that bounded repair, resume the 306-cell baseline from its checkpoint, and start the
-PI-enabled screen only from the repaired merged head. Do not combine old-head and repaired-head
-screening cells in one report.
+budgets. Keep that merged result, but restart the 306-cell baseline and PI-enabled screen from zero
+only after the activation gate, effect pilot and missing runtime-route repairs pass at one merged
+exact head. Do not resume or combine old-protocol cells with corrected-head evidence.
+
+The pre-activation baseline stopped after 137/306 cells at old exact head `86e8061`. Preserve it as
+diagnostic model-variance history only. After the activation/runtime-route repairs merge, rerun both
+baseline and screening from zero at one corrected exact head and protocol.
 
 Evaluation environment mandated by the user:
 

@@ -110,18 +110,30 @@ port-8090 Qwen, host-default, GitHub Copilot Sonnet and GitHub Copilot Codex wit
 local-low remains `UNAVAILABLE`. OMO 4.19.4 + ECA model-free namespace/tool visibility recheck passed.
 This is a partial B0a checkpoint, not screening or confirmation evidence.
 
-The post-bootstrap runner now enforces a 306-cell full-tier `native`/`off` baseline and a 714-cell
+The post-bootstrap runner defines a 306-cell full-tier `native`/`off` baseline and a 714-cell
 local-practical screen. The latter contains 294 paired active/ablation cells plus capability-specific
 D0-D4 arms only for semantic, impact, test selection and context. A synthetic test proves the
-two-PASS screening-table threshold. The baseline has 53 checkpointed cells but is incomplete; no
-screening cell has run and PI effect remains NOT TESTED.
+two-PASS screening-table threshold. The old protocol stopped after 137/306 baseline cells; those
+cells measured OpenCode model variance and are diagnostic only, not PI effect.
+
+A review found that the long schedules had no fail-closed activation precondition. A separately
+sealed four-model gate now requires observed `pi_status`, task-bearing PI tool use, active
+capability/depth state, Twin revision, canonical evidence and positive PI time before comprehensive
+execution. Activation is followed by a 27-cell port-8090 `native/off/active` effect pilot over three
+representative tasks. No objective active gain, missing PI use, provider/timeout failure or active
+median above 2x the slower control requires repair and the same pilot again. It also records a
+blocking OpenCode reachability gap: `blueprint`, `convergence`,
+`traceability` and `strategy` have no current tool/task route, so a 13-capability ablation sweep would
+misclassify non-execution as no effect. Comprehensive evaluation stays stopped until those B1 adapter
+paths and covered tasks are repaired; PI effect remains NOT TESTED.
 
 The bootstrap blocker has a bounded B1 repair at exact head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`. A matching current-edge identity index and schema-5
 migration reduce exact-pin three-run cold medians to 15,825ms for KasaneCore and 6,368ms for PEDS;
 both now pass their size-class budgets and are eligible for held-out work. This performance result
-does not establish PI quality. The native/off baseline has 53/306 checkpointed cells on the earlier
-sealed schedule head; screening will use the repaired merged head.
+does not establish PI quality. The pre-activation baseline stopped at 137/306 cells on old exact
+head `86e8061`; those cells are diagnostic model-variance history only and cannot be reused by the
+corrected activation/pilot protocol.
 
 E3 sealed 13 tasks across three task repositories and nine required classes at
 `23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632`. The ControlDeck-managed

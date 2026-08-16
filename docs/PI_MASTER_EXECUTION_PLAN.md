@@ -528,10 +528,32 @@ Scope: freeze and record environment (ECA commit, OpenCode version, provider/mod
 availability, repository/workspace identity and SHA, hardware); re-run local lint/typecheck/unit/
 integration/build; revalidate adapter/plugin/MCP/edit/restart/reconnect/off/shadow/advisory paths;
 reproduce provider failures with PI disabled first; run the OMO coexistence smoke of §10.1 item 17 so
-a namespace or duplicate-execution defect surfaces before R0 rather than at P4; establish `native` and
-`off` baselines at **full** tiers and repetitions, since every later number is read against them; then
-run the **screening** pass — each `ablation(X)` at its one assigned tier over the fixed tuning subset,
-depth arms only where a depth-dependent claim exists.
+a namespace or duplicate-execution defect surfaces before R0 rather than at P4.
+
+Before any long baseline or screening run, execute an exact-head **PI activation gate** through the
+same ControlDeck-managed OpenCode executable. Every permitted available route (port-8090
+local-practical, host-default, GitHub Copilot Sonnet and GitHub Copilot Codex) must call `pi_status`
+and a task-bearing non-status PI tool, observe the configured capability modes/depths, a ready Twin
+revision, provenance-bearing canonical evidence and positive PI execution time. The gate also checks
+that every capability scheduled for ablation has at least one reachable OpenCode runtime route and a
+covered screening task. Tool visibility, planned matrix state, or an unobserved prompt prefix alone
+does not pass. A missing route is a blocking B1 adapter/productization gap; do not spend the full
+matrix to infer `no screened effect` from a capability that could not run.
+
+Activation proves execution, not benefit. Before the comprehensive schedules, run the sealed
+**PI-effect pilot** on port-8090 local-practical: `native / off / active` over symbol, impact and test
+selection tasks, three repetitions each (27 cells). Every active cell must use its task-specific PI
+tools and every off cell must observe disabled inertness. Proceed only if active gains at least one
+objective PASS over the better control, has no provider error/timeout or missing PI observation, and
+its median wall time is at most 2x the slower control median. Otherwise classify
+`REPAIR_AND_RETEST`, fix the measured PI/oracle/performance cause, and repeat this same pilot before
+spending the comprehensive matrix.
+
+After that gate passes, establish `native` and `off` baselines at **full** tiers and repetitions,
+since every later number is read against them; then run the **screening** pass — each `ablation(X)` at
+its one assigned tier over the fixed tuning subset, depth arms only where a depth-dependent claim
+exists. Baseline or screening results produced before the activation contract, or at a different
+exact head, are diagnostic history and cannot be mixed into the final comparison.
 Fix before the first run and record: the screening subset, the effect threshold, and the tier assigned
 to each of the 13 ablatable capabilities (§6; `call_graph` has no arm of its own and is covered by
 `semantic`).
@@ -846,6 +868,7 @@ docs/evidence/final/
   performance.json            # Layer C
   release-gates.md            # §10 status
 docs/evaluation/
+  b0a-activation-plan-v1.json  # exact-head PI use/readiness gate before comprehensive B0a runs
   test-portfolio-corpus-v1.json
   pi-verification-integrated-metrics-v1.json
   labels-v1/                  # E4 Layer A ground truth promoted from pr-c and pr-h

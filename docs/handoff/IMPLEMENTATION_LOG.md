@@ -388,3 +388,24 @@
 - Recorded A-I implementation complete, Productization active, Transparent Task-aware PI planned,
   and RV-0 next. The known frontier `0/18` OpenCode `APIError` and local-low stochasticity remain
   open evidence items, not implementation-complete claims.
+- 2026-08-16: Stopped the old-head B0a baseline at 137/306 checkpointed cells after confirming
+  `native` is pure OpenCode rather than PI-enabled. No process remained and no partial cell entered
+  the report.
+- Added a sealed four-model `b0a-activation` schedule and fail-closed same-head prerequisite for
+  comprehensive B0a runs. Activation requires real PI tool calls, observed capability state, Twin and
+  canonical-evidence provenance, and PI timing; task-oracle outcome stays independent.
+- Added a 27-cell port-8090 effect pilot (`native/off/active` x three representative tasks x three
+  repetitions). It emits `PROCEED_TO_COMPREHENSIVE` only for an objective active gain with observed
+  PI, off inertness, no provider/timeout failure and bounded median latency; otherwise it emits
+  `REPAIR_AND_RETEST`.
+- Found and repaired evaluation-environment contamination from an old refactor cell whose editable
+  install pointed the shared `.venv` at a temporary workspace. Agent subprocesses now exclude the
+  runner venv and root `PYTHONPATH` and set pip to require an isolated virtualenv; the sidecar retains
+  its explicit ECA interpreter.
+- Hardened resume so source revision, sealed schedule, activation evidence, pilot evidence and trace
+  path must match exactly; non-resume runs refuse existing output/trace paths. This mechanically
+  prevents the old 137 cells from entering corrected evidence.
+- Audited capability reachability before spending the 714-cell screen. Four of thirteen ablatable
+  capabilities (`blueprint`, `convergence`, `traceability`, `strategy`) currently lack OpenCode
+  runtime/task routes, so the activation contract blocks comprehensive execution pending bounded B1
+  adapter repair.

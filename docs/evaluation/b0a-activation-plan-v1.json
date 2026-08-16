@@ -1,0 +1,136 @@
+{
+  "schema": 1,
+  "plan_id": "b0a-pi-activation-plan-v1",
+  "created_at": "2026-08-16",
+  "inputs": {
+    "evaluation_matrix": "docs/evaluation/evaluation-matrix-v1.json",
+    "matrix_seal": "13d3e854234efbc302ff7d6c0ab5f4f2dfd3eea9cc11d98c2760e03ca4b6f16e",
+    "task_suite": "docs/evaluation/task-suite-v1.json",
+    "task_suite_seal": "23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632",
+    "screening_plan": "docs/evaluation/b0a-screening-plan-v1.json",
+    "screening_plan_seal": "2603866634a789831822d05edc95d331d4a025a5d84a7bda242a016bd5b21882"
+  },
+  "arm": "active",
+  "task_id": "eca-symbol-001",
+  "models": [
+    "local-practical",
+    "host-default",
+    "frontier-sonnet",
+    "frontier-codex"
+  ],
+  "required_observations": {
+    "tools": [
+      "pi_status",
+      "pi_symbol"
+    ],
+    "readiness": "ready",
+    "configurable_capability_mode": "active",
+    "configurable_capability_depth": "D2",
+    "twin_revision": true,
+    "selected_canonical_evidence": true,
+    "positive_pi_analysis_time": true
+  },
+  "pilot": {
+    "scope": "b0a-pilot",
+    "model": "local-practical",
+    "arms": [
+      "native",
+      "off",
+      "active"
+    ],
+    "tasks": {
+      "eca-symbol-001": [
+        "pi_status",
+        "pi_symbol"
+      ],
+      "eca-impact-001": [
+        "pi_status",
+        "pi_symbol",
+        "pi_impact"
+      ],
+      "eca-tests-001": [
+        "pi_status",
+        "pi_symbol",
+        "pi_tests"
+      ]
+    },
+    "repetitions": 3,
+    "effect_gate": {
+      "minimum_active_pass_delta_over_best_control": 1,
+      "maximum_active_median_wall_ratio_over_slower_control": 2.0,
+      "every_active_cell_must_observe_required_pi": true,
+      "every_off_cell_must_observe_disabled_pi_status": true,
+      "provider_error_or_timeout_requires_repair": true,
+      "no_effect_action": "REPAIR_AND_RETEST",
+      "pass_action": "PROCEED_TO_COMPREHENSIVE"
+    }
+  },
+  "capability_routes": [
+    {
+      "tool": "pi_symbol",
+      "capabilities": [
+        "graph",
+        "twin",
+        "semantic"
+      ],
+      "status": "REACHABLE"
+    },
+    {
+      "tool": "pi_impact",
+      "capabilities": [
+        "impact"
+      ],
+      "status": "REACHABLE"
+    },
+    {
+      "tool": "pi_tests",
+      "capabilities": [
+        "test_selection",
+        "test_obsolescence"
+      ],
+      "status": "REACHABLE"
+    },
+    {
+      "tool": "pi_context",
+      "capabilities": [
+        "context"
+      ],
+      "status": "REACHABLE"
+    },
+    {
+      "tool": "pi_runtime_evidence",
+      "capabilities": [
+        "runtime"
+      ],
+      "status": "REACHABLE"
+    },
+    {
+      "tool": "pi_research_plan",
+      "capabilities": [
+        "research"
+      ],
+      "status": "REACHABLE"
+    },
+    {
+      "tool": null,
+      "capabilities": [
+        "blueprint",
+        "convergence",
+        "traceability",
+        "strategy"
+      ],
+      "status": "MISSING_OPENCODE_RUNTIME_ROUTE"
+    }
+  ],
+  "execution_policy": {
+    "activation_must_pass_before_pilot": true,
+    "pilot_must_pass_before_comprehensive_evaluation": true,
+    "every_capability_route_must_be_reachable_before_screening": true,
+    "old_protocol_results_are_diagnostic_only": true,
+    "ollama_forbidden": true
+  },
+  "seal": {
+    "algorithm": "sha256",
+    "canonical_payload": "17475f0e99c66d1b336d6ddd62d330cd945437ede99923c82e6a59345200be24"
+  }
+}
