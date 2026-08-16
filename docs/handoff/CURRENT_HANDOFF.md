@@ -2,9 +2,27 @@
 
 Updated: 2026-08-16 (Asia/Tokyo)
 
-Current branch: `agent/e4-unified-evaluation-runner`
-Milestone: A-I implementation complete; Phase 0 (evaluation enablement) active
-Current task: E0/E1/E2/V0a/E3 are merged; E4 is complete and locally verified; next is E5
+Current branch: `agent/e5-minimal-pi-trace`
+Milestone: A-I implementation and Phase 0 evaluation enablement complete
+Current task: E5 complete and locally verified; publish/merge E5, then start B0a
+
+## E5 closeout (2026-08-16)
+
+- Added a compact typed evaluation trace covering plan/cell/task/oracle identity, sealed inputs,
+  capability modes/depths, reserved verification features, evidence/revision IDs, model route,
+  outcome/fallback and timings without storing prompts, transcripts or secrets.
+- Added a hash-chained JSONL log with idempotent append, full replay validation, conflict rejection,
+  tamper detection and fsync before returning.
+- Capability state now records `planned_matrix` or `observed_pi_status`; unavailable scheduled cells
+  cannot be misrepresented as runtime observations.
+- Exact implementation head `9c29aa32eb57c61a394a989b1319423bb4092359` emitted 115 unique
+  traces over all 23 arms. The local-low route remained correctly UNAVAILABLE in all 115 cells.
+- Active versus semantic-ablation traces retained identical task/oracle/input/repository identity and
+  differed only in semantic mode. This proves attribution shape, not quality benefit.
+- A real ControlDeck-managed OpenCode advisory cell used `pi_status` and `pi_symbol`, recorded
+  observed capability state and 8,332 ms PI analysis time, and correctly failed the task oracle.
+- Versioned evidence: `docs/evidence/final/e5-trace-proof.json`. Raw JSONL/runtime logs remain ignored.
+- Next: B0a Existing Project Bootstrap conformance, environment/integration freeze and screening.
 
 ## E4 closeout (2026-08-16)
 
@@ -224,15 +242,15 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/e3-layer-b-task-suite
+git switch -c agent/b0a-baseline-screening
 ```
 
-E3 seals the Layer B task suite and objective oracles. It also records the exact ControlDeck-launched
-OpenCode identity, port-8090 Qwen3.6 27B route, and GitHub Copilot Sonnet/Codex model identifiers used
-by later evaluation; none of these become host-neutral core constants.
+Start B0a by recording Existing Project Bootstrap conformance per evaluation repository. Then freeze
+the exact environment, rerun integration/coexistence gates, and version the screening subset,
+threshold and model-tier assignments before executing any screening cells.
 
-Rollback path: switch to synchronized `main`. This branch adds only host-neutral immutable
-verification projections, tests and documentation; it adds no store, adapter behavior or active mode.
+Rollback path: switch to synchronized `main`. E5 adds evaluation-only trace infrastructure and does
+not change default capability modes or add durable Project Evidence Memory.
 
 ## Stage V0a — complete on this branch
 

@@ -883,7 +883,7 @@ Per-PR evidence directories (`docs/evidence/pr-*`) are historical and are not re
 
 ## 14. Immediate next action
 
-Phase 0, stages E0, E1, E2, V0a, E3 and E4 are complete. Next is E5.
+Phase 0, stages E0, E1, E2, V0a, E3, E4 and E5 are complete. Next is B0a.
 
 ```bash
 cd /home/souten/ExtendCodeAgent
@@ -893,9 +893,9 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/e3-layer-b-task-suite
+git switch -c agent/b0a-baseline-screening
 ```
 
-Do not start B0 before E1–E5 and V0a are complete. A baseline measured without total capability gating,
-a depth contract, a unified runner and attributable traces cannot support any refinement decision,
-and would have to be repeated.
+B0 entry is now open. Start with per-repository Existing Project Bootstrap conformance and the B0a
+environment/integration freeze; do not collapse screening and confirmation into one unschedulable
+pass or make promotion/demotion decisions from screening alone.

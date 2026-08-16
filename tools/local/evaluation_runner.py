@@ -14,6 +14,8 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from extendcodeagent.evaluation import EvaluationTrace, EvaluationTraceLog
+
 ROOT = Path(__file__).resolve().parents[2]
 MATRIX = ROOT / "docs/evaluation/evaluation-matrix-v1.json"
 TASK_SUITE = ROOT / "docs/evaluation/task-suite-v1.json"
@@ -246,6 +248,19 @@ def _arm_mode(arm: str) -> tuple[str, str | None]:
     raise EvaluationError(f"unknown arm: {arm}")
 
 
+def _trace_capabilities(arm: str) -> tuple[dict[str, str], dict[str, str]]:
+    mode, modifier = _arm_mode(arm)
+    if mode == "native":
+        return {}, {}
+    modes = {
+        capability: ("off" if mode == "off" or modifier == capability else mode)
+        for capability in CONFIGURABLE_CAPABILITIES
+    }
+    depth = modifier if modifier in {"D0", "D1", "D2", "D3", "D4"} else "D2"
+    depths = {capability: depth for capability, value in modes.items() if value != "off"}
+    return modes, depths
+
+
 def _environment(arm: str, model_tier: str, workspace: Path) -> tuple[dict[str, str], str]:
     matrix = _load(MATRIX)
     model = next(item for item in matrix["model_tiers"] if item["id"] == model_tier)
@@ -319,7 +334,16 @@ def _metrics(log_path: Path) -> dict[str, Any]:
         "cache_read_tokens": 0,
         "cache_write_tokens": 0,
         "errors": [],
+        "pi_tools": [],
+        "selected_evidence_ids": [],
+        "twin_revision_ids": [],
+        "observed_capability_modes": {},
+        "observed_capability_depths": {},
+        "pi_analysis_ms": 0,
     }
+    pi_tools: set[str] = set()
+    evidence_ids: set[str] = set()
+    revision_ids: set[str] = set()
     for line in log_path.read_text(encoding="utf-8", errors="replace").splitlines():
         try:
             event = json.loads(line)
@@ -328,6 +352,27 @@ def _metrics(log_path: Path) -> dict[str, Any]:
         result["events"] += 1
         if event.get("type") == "tool_use":
             result["tool_calls"] += 1
+            part = event.get("part")
+            if isinstance(part, dict):
+                tool_name = str(part.get("tool") or "")
+                if tool_name.startswith("pi_") or "_pi_" in tool_name:
+                    pi_tools.add(tool_name.removeprefix("extendcodeagent_"))
+                    state = part.get("state")
+                    if isinstance(state, dict):
+                        timing = state.get("time")
+                        if isinstance(timing, dict):
+                            start, end = timing.get("start"), timing.get("end")
+                            if isinstance(start, int) and isinstance(end, int) and end >= start:
+                                result["pi_analysis_ms"] += end - start
+                        output = state.get("output")
+                        if isinstance(output, str):
+                            _observe_pi_output(
+                                tool_name,
+                                output,
+                                evidence_ids,
+                                revision_ids,
+                                result,
+                            )
         if event.get("type") == "error":
             error = event.get("error")
             result["errors"].append(error.get("name") if isinstance(error, dict) else str(error))
@@ -340,7 +385,54 @@ def _metrics(log_path: Path) -> dict[str, Any]:
             cache = tokens.get("cache") or {}
             result["cache_read_tokens"] += int(cache.get("read") or 0)
             result["cache_write_tokens"] += int(cache.get("write") or 0)
+    result["pi_tools"] = sorted(pi_tools)
+    result["selected_evidence_ids"] = sorted(evidence_ids)
+    result["twin_revision_ids"] = sorted(revision_ids)
     return result
+
+
+def _observe_pi_output(
+    tool_name: str,
+    output: str,
+    evidence_ids: set[str],
+    revision_ids: set[str],
+    metrics: dict[str, Any],
+) -> None:
+    try:
+        value = json.loads(output)
+    except json.JSONDecodeError:
+        return
+    if not isinstance(value, dict):
+        return
+    revision = value.get("revision_id")
+    if isinstance(revision, str) and revision:
+        revision_ids.add(revision)
+    if tool_name.endswith("pi_status"):
+        capabilities = value.get("capabilities")
+        if isinstance(capabilities, list):
+            for capability in capabilities:
+                if not isinstance(capability, dict) or not isinstance(capability.get("name"), str):
+                    continue
+                name = capability["name"]
+                mode, depth = capability.get("mode"), capability.get("depth")
+                if isinstance(mode, str):
+                    metrics["observed_capability_modes"][name] = mode
+                if isinstance(depth, str) and mode != "off":
+                    metrics["observed_capability_depths"][name] = depth
+        return
+    _collect_evidence_refs(value, evidence_ids)
+
+
+def _collect_evidence_refs(value: object, evidence_ids: set[str]) -> None:
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if key in {"canonical_ref", "evidence_id", "source_ref"} and isinstance(item, str):
+                evidence_ids.add(f"{key}:{item}")
+            else:
+                _collect_evidence_refs(item, evidence_ids)
+    elif isinstance(value, list):
+        for item in value:
+            _collect_evidence_refs(item, evidence_ids)
 
 
 def _execute(cell: dict[str, Any], task: dict[str, Any], raw_root: Path) -> dict[str, Any]:
@@ -454,6 +546,7 @@ def run(
     selected_models: set[str] | None,
     selected_tasks: set[str] | None,
     resume: bool,
+    raw_root_override: Path | None,
 ) -> None:
     schedule = plan(
         scope,
@@ -464,8 +557,14 @@ def run(
     suite = _load(TASK_SUITE)
     tasks = {item["id"]: item for item in suite["tasks"]}
     cells = schedule["cells"][:max_cells] if max_cells is not None else schedule["cells"]
-    raw_root = ROOT / _load(MATRIX)["execution"]["raw_root"] / scope
+    raw_root = (
+        raw_root_override.resolve()
+        if raw_root_override is not None
+        else ROOT / _load(MATRIX)["execution"]["raw_root"] / scope
+    )
     raw_root.mkdir(parents=True, exist_ok=True)
+    trace_log = EvaluationTraceLog(raw_root / "traces.jsonl")
+    trace_log.replay()
     results: list[dict[str, Any]] = []
     if resume and output.is_file():
         previous = _load(output)
@@ -474,12 +573,19 @@ def run(
     for cell in cells:
         if cell["cell_id"] in completed:
             continue
-        results.append(_execute(cell, tasks[cell["task_id"]], raw_root))
-        _write_report(output, _report(scope, schedule, results))
-    _write_report(output, _report(scope, schedule, results))
+        result = _execute(cell, tasks[cell["task_id"]], raw_root)
+        _append_trace(trace_log, result, tasks[cell["task_id"]])
+        results.append(result)
+        _write_report(output, _report(scope, schedule, results, trace_log.path))
+    _write_report(output, _report(scope, schedule, results, trace_log.path))
 
 
-def _report(scope: str, schedule: dict[str, Any], results: list[dict[str, Any]]) -> dict[str, Any]:
+def _report(
+    scope: str,
+    schedule: dict[str, Any],
+    results: list[dict[str, Any]],
+    trace_path: Path,
+) -> dict[str, Any]:
     return {
         "schema": 1,
         "run_id": f"unified-v1-{scope}",
@@ -490,11 +596,66 @@ def _report(scope: str, schedule: dict[str, Any], results: list[dict[str, Any]])
         ).strip(),
         "schedule": {key: value for key, value in schedule.items() if key != "cells"},
         "inputs": _load(MATRIX)["inputs"],
+        "trace_log": str(trace_path),
         "executed_cells": len(results),
         "outcomes": dict(Counter(item["outcome"] for item in results)),
         "integrated_metrics": _metric_projection(),
         "results": results,
     }
+
+
+def _append_trace(
+    trace_log: EvaluationTraceLog, result: dict[str, Any], task: dict[str, Any]
+) -> None:
+    matrix = _load(MATRIX)
+    suite = _load(TASK_SUITE)
+    repository = next(
+        item for item in suite["repositories"] if item["id"] == result["repository_id"]
+    )
+    planned_modes, planned_depths = _trace_capabilities(result["arm"])
+    observed_modes = result.get("observed_capability_modes") or {}
+    observed_depths = result.get("observed_capability_depths") or {}
+    capability_state_source = "observed_pi_status" if observed_modes else "planned_matrix"
+    capability_modes = observed_modes or planned_modes
+    capability_depths = observed_depths or planned_depths
+    trace_id = (
+        "trace-"
+        + hashlib.sha256(
+            f"{matrix['seal']['canonical_payload']}:{result['cell_id']}".encode()
+        ).hexdigest()[:24]
+    )
+    input_seals = {
+        "layer_a": matrix["inputs"]["layer_a_seal"],
+        "layer_b": matrix["inputs"]["layer_b_seal"],
+        "matrix": matrix["seal"]["canonical_payload"],
+    }
+    trace_log.append(
+        EvaluationTrace(
+            trace_id=trace_id,
+            plan_id=matrix["matrix_id"],
+            cell_id=result["cell_id"],
+            task_id=result["task_id"],
+            task_class=result["task_class"],
+            oracle_id=f"e3-oracle:{result['task_id']}",
+            input_seals=input_seals,
+            capability_state_source=capability_state_source,
+            capability_modes=capability_modes,
+            capability_depths=capability_depths,
+            used_features={},
+            selected_evidence_ids=tuple(result.get("selected_evidence_ids", ())),
+            source_revision_id=repository["revision"],
+            twin_revision_id=next(iter(result.get("twin_revision_ids", ())), None),
+            model_tier=result["model_tier"],
+            model_id=result.get("model_id"),
+            verification_outcome=result["outcome"],
+            fallback="model_unavailable" if result["outcome"] == "UNAVAILABLE" else None,
+            timings_ms={
+                "agent_wall": result.get("wall_ms"),
+                "pi_analysis": result.get("pi_analysis_ms"),
+            },
+        )
+    )
+    result["trace_id"] = trace_id
 
 
 def _write_report(output: Path, report: dict[str, Any]) -> None:
@@ -523,6 +684,7 @@ def main() -> int:
     run_parser.add_argument("--output", type=Path, required=True)
     run_parser.add_argument("--max-cells", type=int)
     run_parser.add_argument("--resume", action="store_true")
+    run_parser.add_argument("--raw-root", type=Path)
     _selection_arguments(run_parser)
     args = parser.parse_args()
     try:
@@ -557,6 +719,7 @@ def main() -> int:
                 _selected(args.model_tier),
                 _selected(args.task),
                 args.resume,
+                args.raw_root,
             )
     except (EvaluationError, KeyError, TypeError, ValueError, subprocess.TimeoutExpired) as error:
         print(f"unified evaluation error: {error}", file=sys.stderr)

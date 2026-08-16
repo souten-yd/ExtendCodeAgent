@@ -779,3 +779,21 @@ archived rather than reused or deleted.
 The Layer A label set promotes 12 existing manually reviewed PR-C/PR-H cases, adding no new unsized
 human review. Historical per-PR scripts remain reproducibility artifacts but are retired as current
 entry points. Missing integrated metrics are emitted as `NOT_TESTED`, never zero or pass.
+
+## 2026-08-16 — E5 trace integrity and observation provenance
+
+Decision: E5 uses a compact evaluation-only record and append-only hash-chained JSONL rather than
+promoting the later P0 Project Evidence Memory. Append is idempotent for an identical trace ID and
+fails closed for conflicting content; replay validates sequence, prior hash, record hash and unique
+IDs. Prompts, transcripts, messages and secret-shaped fields are forbidden.
+
+The trace distinguishes `planned_matrix` capability state from `observed_pi_status`. A scheduled arm
+whose model route is unavailable still needs a trace for matrix coverage and attribution, but its
+configuration is not runtime evidence. Tool-returned evidence identifiers, Twin revisions and PI
+timings are recorded only when observed. Empty lists/nulls remain truthful rather than being filled
+from expectation.
+
+The 115-cell local-low run demonstrates trace coverage and semantic-ablation attribution only; all
+cells are `UNAVAILABLE`. The real host advisory cell demonstrates observed capability-state capture
+but failed its objective oracle. Neither result supports a Project Intelligence benefit claim; B0
+owns repeated outcome distributions.
