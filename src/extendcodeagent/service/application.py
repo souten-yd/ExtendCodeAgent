@@ -356,17 +356,38 @@ class ProjectIntelligenceApplication:
             else []
         )
         if view == "compact":
+            nodes = {node.canonical_ref.value: node for node in snapshot.nodes}
+            intent_architecture = _intent_architecture_test_paths(changed_refs, nodes)
+            selected_candidates = [
+                item
+                for item in selection.candidates
+                if "architecture" not in Path(item.source_ref).parts
+                or item.source_ref in intent_architecture
+            ]
+            selected_paths = sorted({item.source_ref for item in selected_candidates})
+            candidate_refs = {item.canonical_ref.value for item in selected_candidates}
+            structural_paths = _structural_test_paths(snapshot, candidate_refs)
+            covered_obligations = sorted({_test_obligation(path) for path in selected_paths})
+            coverage_complete = (
+                bool(selected_paths)
+                and "unit_behavior" in covered_obligations
+                and bool(structural_paths)
+                and selection.fallback is None
+            )
             return _result(
                 snapshot,
                 depth=self.policy.depth(CapabilityName.TEST_SELECTION),
                 view=view,
-                selected_tests=sorted({item.source_ref for item in selection.candidates}),
-                candidate_refs=sorted({item.canonical_ref.value for item in selection.candidates}),
-                coverage_complete=False,
-                uncovered_obligations=[
-                    "structural/architecture coverage is not represented by call relations"
-                ],
-                fallback_search_required=True,
+                selected_tests=selected_paths,
+                candidate_refs=sorted(candidate_refs),
+                covered_obligations=covered_obligations,
+                coverage_complete=coverage_complete,
+                uncovered_obligations=(
+                    []
+                    if coverage_complete
+                    else ["structural/architecture coverage is not represented"]
+                ),
+                fallback_search_required=not coverage_complete,
                 fallback=selection.fallback,
                 diagnostics=list(selection.diagnostics),
             )
@@ -446,7 +467,20 @@ class ProjectIntelligenceApplication:
             for item in report.direct_impacts
             if item.item_type in {"function", "method", "api_route", "handler"}
         )
-        candidate_tests = sorted({item.source_ref for item in report.recommended_tests})
+        intent_tests = _intent_architecture_test_paths(changed_refs, nodes)
+        candidate_tests = sorted(
+            {item.source_ref for item in report.recommended_tests} | intent_tests
+        )
+        candidate_refs = {item.canonical_ref for item in report.recommended_tests}
+        structural_tests = _structural_test_paths(snapshot, candidate_refs) & intent_tests
+        focused_tests = sorted(
+            set(_focused_test_paths(changed_refs, nodes, candidate_tests))
+            | structural_tests
+            | intent_tests
+        )
+        counted_refs = set(changed_refs)
+        for ref in changed_refs:
+            counted_refs.update(self._reference_resolver().equivalents(ref, snapshot))
         return _result(
             snapshot,
             depth=self.policy.depth(CapabilityName.IMPACT),
@@ -460,11 +494,15 @@ class ProjectIntelligenceApplication:
                     if item.canonical_ref in nodes
                 }
             ),
-            direct_use_count=len(production),
+            direct_use_count=_direct_use_count(
+                snapshot,
+                counted_refs,
+                {item.canonical_ref for item in production},
+            ),
             affected_symbols=[
                 item.canonical_ref for item in (*report.direct_impacts, *report.transitive_impacts)
             ],
-            focused_tests=_focused_test_paths(changed_refs, nodes, candidate_tests),
+            focused_tests=focused_tests,
             candidate_tests=candidate_tests,
             uncertainty=sorted({item.canonical_ref for item in report.uncertainty}),
             coverage_complete=False,
@@ -854,6 +892,71 @@ def _focused_test_paths(
         }
     ]
     return focused or candidate_tests
+
+
+def _structural_test_paths(snapshot: GraphSnapshot, candidate_refs: set[str]) -> set[str]:
+    return {
+        edge.source_ref
+        for edge in snapshot.edges
+        if edge.edge_type == "structurally_covers" and edge.source.value in candidate_refs
+    }
+
+
+def _intent_architecture_test_paths(
+    changed_refs: tuple[str, ...], nodes: dict[str, Any]
+) -> set[str]:
+    changed_tokens = {
+        token
+        for ref in changed_refs
+        for value in (
+            ref.rsplit("#", 1)[-1],
+            nodes[ref].source_ref if ref in nodes else "",
+        )
+        for part in Path(value).parts
+        for token in Path(part).stem.casefold().split("_")
+        if len(token) >= 4 and token not in {"meets", "service", "source", "extendcodeagent"}
+    }
+    return {
+        node.source_ref
+        for node in nodes.values()
+        if node.node_type == "test"
+        and "architecture" in Path(node.source_ref).parts
+        and changed_tokens
+        & (
+            set(node.properties.get("intent_tokens", ()))
+            | set(Path(node.source_ref).stem.casefold().split("_"))
+        )
+    }
+
+
+def _direct_use_count(
+    snapshot: GraphSnapshot, changed_refs: set[str], production_refs: set[str]
+) -> int:
+    short_names = {ref.rsplit("#", 1)[-1].rsplit(".", 1)[-1] for ref in changed_refs}
+    return sum(
+        _edge_occurrences(edge)
+        for edge in snapshot.edges
+        if edge.source.value in production_refs
+        and edge.edge_type in {"calls", "may_call", "references"}
+        and (
+            edge.target.value in changed_refs
+            or edge.target.value.rsplit("#", 1)[-1].rsplit("/", 1)[-1] in short_names
+        )
+    )
+
+
+def _edge_occurrences(edge: Any) -> int:
+    value = edge.properties.get("occurrences", 1)
+    return value if isinstance(value, int) else 1
+
+
+def _test_obligation(path: str) -> str:
+    parts = set(Path(path).parts)
+    if "architecture" in parts:
+        return "architecture_boundary"
+    if "integration" in parts:
+        return "integration_boundary"
+    return "unit_behavior"
 
 
 def _health_json(item: Any) -> dict[str, Any]:

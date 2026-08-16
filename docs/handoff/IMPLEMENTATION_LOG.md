@@ -468,3 +468,15 @@
   structural-obligation slice rather than hidden as complete.
 - Compact projection gates pass: `all-fast` (185 Python, 9 adapter), integration (39 Python,
   9 adapter), strict mypy, clean-workspace projection smoke and Python/TypeScript build.
+- Upgraded Python graph facts to `python_ast.v2`: repeated `calls`/`may_call` edges retain an
+  `occurrences` count; module-level source `Path` bindings are resolved and linked from test
+  functions that directly use them as `structurally_covers`; test nodes retain bounded AST intent
+  tokens. Incremental facts remain source-owned and revisioned in the existing Twin.
+- Compact impact counts occurrence facts across canonical aliases and requires intent overlap before
+  promoting broad architecture coverage into focused tests. Compact test selection reports bounded
+  unit/integration/architecture obligations, explicit gaps and fallback requirement.
+- Clean ECA task-workspace proof exactly produced impact methods 3/use count 4/focused tests 2 and
+  required-verification selected tests 3 with `coverage_complete=true`. This closes the two measured
+  projection gaps only; generic TestIntent, dynamic coverage and held-out recall remain unproven.
+- Structural-obligation gates pass: `all-fast` (187 Python, 9 adapter), integration (39 Python,
+  9 adapter), strict mypy, clean-workspace exact projection proof and Python/TypeScript build.
