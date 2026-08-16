@@ -670,6 +670,12 @@ def _collect_evidence_refs(value: object, evidence_ids: set[str]) -> None:
         for key, item in value.items():
             if key in {"canonical_ref", "evidence_id", "source_ref"} and isinstance(item, str):
                 evidence_ids.add(f"{key}:{item}")
+            elif (key == "symbols" or key.endswith("_refs")) and isinstance(item, list):
+                evidence_ids.update(
+                    f"canonical_ref:{ref}"
+                    for ref in item
+                    if isinstance(ref, str) and "://" in ref
+                )
             else:
                 _collect_evidence_refs(item, evidence_ids)
     elif isinstance(value, list):

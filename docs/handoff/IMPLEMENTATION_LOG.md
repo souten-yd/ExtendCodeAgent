@@ -518,3 +518,10 @@
   the exact sealed symbol, impact and three-test fact sets.
 - Compact-enforcement gates pass: `all-fast` (191 Python, 9 adapter), integration (39 Python,
   9 adapter), strict mypy, exact pilot-workspace projection proof and Python/TypeScript build.
+- PR #59 merged compact enforcement as `b128adedc632644fb0c58fbe915126ef9b9d83ea`.
+  The first new-head activation cell correctly used compact symbol facts, but the runner only
+  recognized object fields named `canonical_ref`; it did not recognize compact `symbols`/`*_refs`
+  arrays and failed `canonical_evidence_not_observed`. Stopped after the first cell because the same
+  deterministic collector defect would invalidate all four models.
+- Extended evidence collection to treat URI values in `symbols` and `*_refs` arrays as canonical
+  evidence, with an integration assertion. This changes attribution only, not task/oracle truth.

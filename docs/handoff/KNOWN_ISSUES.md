@@ -209,3 +209,6 @@
 - Objective-aware test projection is deterministic token/obligation ranking, not calibrated generic
   TestIntent. It is exact on the sealed ECA pilot workspace but held-out precision/recall remains
   unmeasured. Any missing obligation continues to require native fallback.
+- The first `b128ade` activation attempt stopped after one cell because evaluation evidence parsing
+  did not recognize canonical URIs in compact `symbols`/`*_refs` arrays. The collector repair is
+  deterministic and must merge before activation restarts from a fresh output path.
