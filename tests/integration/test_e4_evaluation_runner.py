@@ -51,6 +51,83 @@ def test_full_plan_is_fixed_and_keeps_unavailable_cells_visible() -> None:
     assert any(cell["model_tier"] == "local-low" for cell in plan["cells"])
 
 
+def test_b0a_schedules_enforce_bootstrap_exclusions_and_screening_contract() -> None:
+    baseline = _run("plan", "--scope", "b0a-baseline")
+    assert baseline.returncode == 0, baseline.stderr
+    baseline_plan = json.loads(baseline.stdout)
+    assert baseline_plan["counts"] == {"cells": 306, "available": 216, "unavailable": 90}
+    assert {item["arm"] for item in baseline_plan["cells"]} == {"native", "off"}
+    assert {item["repository_id"] for item in baseline_plan["cells"]} == {
+        "extendcodeagent",
+        "controldeck",
+    }
+    assert baseline_plan["b0a"]["excluded_repositories"] == ["kasanecore", "peds"]
+
+    screening = _run("plan", "--scope", "b0a-screening")
+    assert screening.returncode == 0, screening.stderr
+    screening_plan = json.loads(screening.stdout)
+    assert screening_plan["counts"] == {"cells": 714, "available": 714, "unavailable": 0}
+    assert {item["model_tier"] for item in screening_plan["cells"]} == {"local-practical"}
+    assert {item["task_id"] for item in screening_plan["cells"]} == {
+        "eca-symbol-001",
+        "eca-impact-001",
+        "eca-tests-001",
+        "eca-refactor-001",
+        "eca-negative-001",
+        "cd-bug-001",
+        "cd-cross-boundary-001",
+    }
+    assert "active" in {item["arm"] for item in screening_plan["cells"]}
+    assert "ablation:semantic" in {item["arm"] for item in screening_plan["cells"]}
+    depth_arms = {
+        item["arm"] for item in screening_plan["cells"] if item["arm"].startswith("depth:")
+    }
+    assert len(depth_arms) == 20
+    assert depth_arms == {
+        f"depth:{capability}:{depth}"
+        for capability in {"semantic", "impact", "test_selection", "context"}
+        for depth in {"D0", "D1", "D2", "D3", "D4"}
+    }
+
+
+def test_b0a_screening_table_uses_paired_threshold_without_adoption_decision(
+    tmp_path: Path,
+) -> None:
+    schedule_result = _run("plan", "--scope", "b0a-screening")
+    schedule = json.loads(schedule_result.stdout)
+    active = [item for item in schedule["cells"] if item["arm"] == "active"]
+    results = []
+    for cell in schedule["cells"]:
+        if cell["arm"] == "active":
+            outcome = (
+                "PASS" if cell["repetition"] == 1 and cell["task_id"].startswith("eca-") else "FAIL"
+            )
+        elif cell["arm"].startswith("ablation:"):
+            active_id = cell["cell_id"].replace(f"{cell['arm']}--", "active--", 1)
+            active_cell = next(item for item in active if item["cell_id"] == active_id)
+            active_outcome = (
+                "PASS"
+                if active_cell["repetition"] == 1 and active_cell["task_id"].startswith("eca-")
+                else "FAIL"
+            )
+            outcome = "FAIL" if cell["arm"] == "ablation:semantic" else active_outcome
+        else:
+            continue
+        results.append({**cell, "outcome": outcome})
+    input_path = tmp_path / "screening.json"
+    output_path = tmp_path / "table.json"
+    input_path.write_text(json.dumps({"source_revision": "head", "results": results}))
+    screened = _run("screen", "--input", str(input_path), "--output", str(output_path))
+    assert screened.returncode == 0, screened.stderr
+    table = json.loads(output_path.read_text())
+    entries = {item["capability"]: item for item in table["capabilities"]}
+    assert table["expected_comparison_cells"] == 294
+    assert table["effect_threshold_pass_delta"] == 2
+    assert table["adoption_decisions_forbidden"] is True
+    assert entries["semantic"]["decision"] == "proceed_to_b0b"
+    assert entries["graph"]["decision"] == "no_screened_effect"
+
+
 def test_plan_filters_select_a_resumable_bounded_slice() -> None:
     result = _run(
         "plan",

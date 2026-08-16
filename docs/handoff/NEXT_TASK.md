@@ -47,6 +47,11 @@ native/off baselines and screening only for included repositories, retain those 
 schedule/report, and do not begin held-out B0b confirmation until the KasaneCore gap is repaired and
 remeasured. See `docs/evidence/final/b0a-bootstrap-environment-v1.json`.
 
+The runner now enforces two resumable schedules: `b0a-baseline` has 306 cells across full tiers and
+`b0a-screening` has 714 local-practical cells, including capability-specific depth arms only for the
+four recorded depth claims. After the schedule PR merges, execute the baseline first, then the screen
+and `screen` report. The schedule proof is not PI effect evidence; current effect remains NOT TESTED.
+
 Evaluation environment mandated by the user:
 
 - launch/use OpenCode through ControlDeck's existing path where available; do not add ControlDeck

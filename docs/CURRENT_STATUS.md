@@ -4,7 +4,7 @@ Status date: 2026-08-16
 
 ## Program state
 
-Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0 NEXT**
+Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0a IN PROGRESS**
 
 PRs A-I are merged and the implementation baseline is complete. Planning PRs
 [#20](https://github.com/souten-yd/ExtendCodeAgent/pull/20) and
@@ -109,6 +109,11 @@ the other five completed Twins exceeded their size-class budget. PI-disabled rou
 port-8090 Qwen, host-default, GitHub Copilot Sonnet and GitHub Copilot Codex without provider errors;
 local-low remains `UNAVAILABLE`. OMO 4.19.4 + ECA model-free namespace/tool visibility recheck passed.
 This is a partial B0a checkpoint, not screening or confirmation evidence.
+
+The post-bootstrap runner now enforces a 306-cell full-tier `native`/`off` baseline and a 714-cell
+local-practical screen. The latter contains 294 paired active/ablation cells plus capability-specific
+D0-D4 arms only for semantic, impact, test selection and context. A synthetic test proves the
+two-PASS screening-table threshold, but no B0a result cell has run; PI effect remains NOT TESTED.
 
 E3 sealed 13 tasks across three task repositories and nine required classes at
 `23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632`. The ControlDeck-managed

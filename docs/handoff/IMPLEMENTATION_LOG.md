@@ -1,5 +1,19 @@
 # Implementation Log
 
+## 2026-08-16 — B0a enforced baseline and screening schedules
+
+- Bound B0a runner scopes to the sealed screening plan and exact bootstrap eligibility evidence.
+  KasaneCore and PEDS cannot silently enter an arm after their initial-Twin timeout.
+- Fixed the baseline at 306 cells over `native`/`off`, three repetitions and all five tiers. The 90
+  local-low cells remain scheduled as UNAVAILABLE; Sonnet and Codex retain their GitHub Copilot IDs.
+- Fixed the local-practical screen at 714 cells: active, 13 independently paired ablations, and 20
+  targeted depth arms covering only semantic, impact, test selection and context.
+- Added a machine screening table with a 294-cell paired comparison, exact two-PASS threshold,
+  critical-failure override, incomplete/provider-gap classifications and no adoption decision.
+- Exact implementation head `9bfc934fc46d5db9ffcb43e48a695e8e470c1f29`; the synthetic analyzer fixture is test evidence only.
+  Baseline outcomes, screening outcomes and PI effect remain NOT TESTED.
+- Schedule evidence: `docs/evidence/final/b0a-schedule-proof.json`.
+
 ## 2026-08-16 — B0a bootstrap and screening contract
 
 - Added sealed `b0a-screening-plan-v1.json` referencing the unchanged E3/E4 seals and fixing the
