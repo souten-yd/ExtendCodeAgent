@@ -158,7 +158,10 @@ def _dispatch(
             _required_string(params, "kind"),
         )
     if operation == "symbol":
-        return application.symbol(_required_string(params, "query"))
+        return application.symbol(
+            _required_string(params, "query"),
+            view=_optional_string(params.get("view"), "view") or "detail",
+        )
     if operation == "references":
         return application.references(_required_string(params, "canonical_ref"))
     if operation == "path":
@@ -183,9 +186,13 @@ def _dispatch(
             include_historical=_boolean(
                 params.get("include_historical", False), "include_historical"
             ),
+            view=_optional_string(params.get("view"), "view") or "detail",
         )
     if operation == "tests":
-        return application.tests(_string_tuple(params.get("changed_refs", []), "changed_refs"))
+        return application.tests(
+            _string_tuple(params.get("changed_refs", []), "changed_refs"),
+            view=_optional_string(params.get("view"), "view") or "detail",
+        )
     if operation == "context":
         return application.context(
             _required_string(params, "objective"),

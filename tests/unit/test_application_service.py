@@ -127,6 +127,55 @@ def test_advisory_queries_share_one_revisioned_graph(tmp_path: Path) -> None:
     assert status["revision_id"] == symbols["revision_id"] == impact["revision_id"]
 
 
+def test_compact_views_project_task_ready_facts_and_explicit_gaps(tmp_path: Path) -> None:
+    root = tmp_path / "compact"
+    root.mkdir()
+    _write(root, "pkg/service.py", "def leaf():\n    return 1\n")
+    _write(root, "pkg/__init__.py", "from .service import leaf\n")
+    _write(root, "app.py", "from pkg import leaf\n\ndef caller():\n    return leaf()\n")
+    _write(
+        root,
+        "tests/test_leaf.py",
+        "from app import caller\nfrom pkg import leaf\n\n"
+        "def test_leaf():\n    assert leaf() == 1\n\n"
+        "def test_caller():\n    assert caller() == 1\n",
+    )
+    with ProjectIntelligenceApplication(
+        root, tmp_path / "compact.db", _policy("advisory")
+    ) as application:
+        symbol = application.symbol("leaf", view="compact")
+        impact = application.impact(("py://pkg.service#leaf",), view="compact")
+        tests = application.tests(("py://pkg.service#leaf",), view="compact")
+
+    assert symbol["definition"] == ["pkg/service.py"]
+    assert symbol["exports"] == ["pkg/__init__.py"]
+    assert "app.py" in symbol["production_callers"]
+    assert symbol["tests"] == ["tests/test_leaf.py"]
+    assert symbol["coverage_complete"] is False
+    assert symbol["unresolved"]
+    assert impact["definition"] == ["pkg/service.py"]
+    assert impact["production_methods"] == ["caller"]
+    assert impact["direct_use_count"] == 1
+    assert impact["focused_tests"] == ["tests/test_leaf.py"]
+    assert impact["coverage_complete"] is False
+    assert tests["selected_tests"] == ["tests/test_leaf.py"]
+    assert tests["fallback_search_required"] is True
+    assert tests["uncovered_obligations"]
+
+
+def test_query_view_rejects_unknown_projection(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    with ProjectIntelligenceApplication(
+        root, tmp_path / "graph.db", _policy("advisory")
+    ) as application:
+        with pytest.raises(ValueError, match="view must be compact or detail"):
+            application.symbol("leaf", view="unknown")
+        with pytest.raises(ValueError, match="view must be compact or detail"):
+            application.impact(("py://service#leaf",), view="unknown")
+        with pytest.raises(ValueError, match="view must be compact or detail"):
+            application.tests(("py://service#leaf",), view="unknown")
+
+
 def test_runtime_ingest_persists_and_marks_old_green_test_stale(tmp_path: Path) -> None:
     root = _repo(tmp_path)
     database = tmp_path / "graph.db"

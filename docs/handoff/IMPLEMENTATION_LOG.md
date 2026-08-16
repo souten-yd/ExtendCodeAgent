@@ -456,3 +456,15 @@
   post-PI residual 23,066ms. Report and hash-chain trace agree. Outcome was one
   `RETRIEVAL_MISSING` FAIL, so this is measurement-path evidence only. Versioned summary:
   `docs/evidence/final/b1-pi-timing-smoke.json`.
+- Added `compact`/`detail` views to existing `pi_symbol`, `pi_impact` and `pi_tests`; no new tool was
+  introduced. OpenCode plugin/MCP default to compact, direct application compatibility stays detail.
+  Compact symbol projects definition/export/direct production source/tests and explicitly reports
+  unresolved structural coverage. Compact impact separates focused lexical/source-aligned tests from
+  the complete candidate list and reports unresolved dynamic/structural/repeated-use boundaries.
+- Clean ECA task-workspace proof returned exact `select_tests` definition, export, application caller
+  and both expected tests. `_edge_meets_confidence` returned the exact three production methods and
+  focused unit graph test; direct use count remains 3 graph callers versus four source occurrences,
+  and the architecture test remains absent. Both are deliberately unresolved inputs to the next
+  structural-obligation slice rather than hidden as complete.
+- Compact projection gates pass: `all-fast` (185 Python, 9 adapter), integration (39 Python,
+  9 adapter), strict mypy, clean-workspace projection smoke and Python/TypeScript build.

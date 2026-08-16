@@ -51,8 +51,9 @@ test("MCP stdio handshake lists and calls the shared tools", async () => {
     const content = response.content[0]
     assert.equal(content?.type, "text")
     if (content?.type !== "text" || !content.text) throw new Error("expected text content")
-    const result = JSON.parse(content.text) as { items: Array<{ canonical_ref: string }> }
-    assert.equal(result.items[0]?.canonical_ref, "py://service#leaf")
+    const result = JSON.parse(content.text) as { definition: string[]; view: string }
+    assert.deepEqual(result.definition, ["service.py"])
+    assert.equal(result.view, "compact")
     const statusResponse = (await client.callTool({
       name: "pi_status",
       arguments: {},
