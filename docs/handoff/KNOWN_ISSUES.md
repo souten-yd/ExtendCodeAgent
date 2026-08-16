@@ -1,15 +1,17 @@
 # Known Issues
 
-## GitHub Copilot Codex monthly quota blocks 17 target cells
+## Shared GitHub Copilot monthly quota blocks 17 Codex target cells
 
-- The affected model is `github-copilot/gpt-5.3-codex`, not Qwen, Sonnet, or `host-default`.
-  OpenCode reports `You have exceeded your monthly quota`; this is classified as
-  `QUOTA_EXHAUSTED` and pauses only the Copilot Codex queue.
+- Exact-head activation proved this is the GitHub Copilot provider's shared monthly quota: both
+  `github-copilot/claude-sonnet-5` and `github-copilot/gpt-5.3-codex` now return
+  `You have exceeded your monthly quota`. Qwen still passes. Each affected Copilot route is paused
+  independently as `QUOTA_EXHAUSTED`.
 - Current valid target progress is 145/162: Qwen 54/54, Sonnet 54/54, Codex 37/54. Sixteen quota
   responses must be requeued and one interrupted Codex cell remains pending. They must not enter
   PASS/FAIL or latency aggregates.
-- Resume requires a separate successful availability probe for Copilot Codex. Qwen and Sonnet
-  results remain valid; `host-default` recovery is irrelevant because it is outside the target.
+- Resume requires a separate successful availability probe for Copilot Codex. Previously completed
+  Sonnet results remain valid even though new Sonnet calls are currently unavailable;
+  `host-default` recovery is irrelevant because it is outside the target.
 
 ## Checkpoint migration is proof-gated, not direct resume
 

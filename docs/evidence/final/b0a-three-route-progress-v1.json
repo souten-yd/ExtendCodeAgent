@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "classification": "B0A_THREE_ROUTE_PROGRESS",
+  "captured_at": "2026-08-17",
+  "evaluation_revision": "8c06a0af15694cda72d8277ab8719940ed79fbed",
+  "quality_target": "docs/evaluation/b0a-quality-target-v1.json",
+  "quality_target_seal": "64f9ec41f05f245e5e13d89a99dfccae8adce3a8902ed739c7203cd63fa98667",
+  "baseline_checkpoint": {
+    "path": ".evaluation/unified-v1/b0a-baseline-requeued-8c06a0a.json",
+    "file_sha256": "0851e4f9481786333d5a11edbae6c3678b253e76e57bc3a217e6b1acdc661675",
+    "report_seal": "4614c39a76909d809e9aef338ab61754e73a2746a978aaa8980e4b742038aca1",
+    "expected_cells": 162,
+    "valid_cells": 145,
+    "pending_cells": 17,
+    "outcomes": {
+      "PASS": 33,
+      "FAIL": 108,
+      "TIMEOUT": 4
+    },
+    "valid_by_model": {
+      "local-practical": 54,
+      "frontier-sonnet": 54,
+      "frontier-codex": 37
+    },
+    "requeued_quota_attempts": 16,
+    "trace_integrity": "PASS"
+  },
+  "activation": {
+    "path": ".evaluation/unified-v1/b0a-activation-8c06a0a.json",
+    "file_sha256": "a44bc977a76923a9981d8ba5cb939eec5dbecdbd3bdd5df1056554531bd13a1c",
+    "local-practical": "PASS",
+    "frontier-sonnet": "QUOTA_EXHAUSTED",
+    "frontier-codex": "QUOTA_EXHAUSTED",
+    "qwen_observed_pi": {
+      "readiness": "ready",
+      "tools": [
+        "pi_status",
+        "pi_symbol"
+      ],
+      "twin_revision": true,
+      "selected_evidence": true
+    }
+  },
+  "provider_interpretation": "The monthly quota is shared by the GitHub Copilot provider account; it is not a PI failure and not host-default rate limiting.",
+  "next_action": "Probe GitHub Copilot Codex availability separately, then execute only its 17 pending baseline cells.",
+  "seal": {
+    "algorithm": "sha256",
+    "canonical_payload": "bea8ab76334171df11de72811c3e06ab2f0816b76b4a96bb3c12ac6c81731937"
+  }
+}
