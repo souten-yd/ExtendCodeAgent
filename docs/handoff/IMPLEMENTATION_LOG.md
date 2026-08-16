@@ -547,3 +547,13 @@
 - Post-repair validation passed `tools/local/all-fast` (191 Python plus 9 adapter),
   `tools/local/test-integration` (41 Python plus 9 adapter), `git diff --check`, and unified
   evaluation validation.
+- PR #62 merged path evidence attribution as `d36d9104c8228acbaadab69d650749aed96b3b55`.
+  Fresh activation and the initial 9-cell pilot passed with native/off/active 0/0/2, active fact
+  recall 1.0, and no PI observation failures.
+- Stopped confirmation at 14/27 after off impact repetition 2 timed out at 420,088ms. ControlDeck
+  llama.cpp logs showed 27,998 continuously decoded tokens at about 67 tokens/second before cancel;
+  the cell had not completed its first response and PI was disabled.
+- Added an arm-neutral local-practical output limit of 8,192 tokens to the matrix and generated
+  OpenCode provider config. Resealed matrix, screening and activation plans. Validation passed
+  `tools/local/all-fast` (191 Python plus 9 adapter), `tools/local/test-integration` (42 Python plus
+  9 adapter), unified evaluation validation and B0a bootstrap validation.

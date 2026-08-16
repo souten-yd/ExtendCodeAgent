@@ -220,3 +220,7 @@
   PASS) but fail-closed attribution rejected the passing tests cell because repository-relative
   `selected_tests` were not recognized as selected evidence. The collector repair is tested but must
   merge and the same 9 cells must rerun before the initial gate can pass.
+- At `d36d910`, the repaired initial 9-cell gate passed, but confirmation was stopped at 14/27 after
+  an off-control Qwen first response generated 27,998 tokens and hit its 420-second timeout. This is
+  not PI latency. The new 8,192-token arm-neutral output bound changes the matrix/plan seals, so all
+  prior pilot cells are diagnostic and cannot be resumed into the repaired protocol.

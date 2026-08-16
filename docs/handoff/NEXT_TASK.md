@@ -76,6 +76,11 @@ native/off/active were 0/0/2, with active PI fact recall 1.0 on all tasks. Do no
 and the same sealed 9 cells at the new exact head, and require `CONTINUE_TO_CONFIRMATION` before
 running repetitions 2-3.
 
+That initial gate passed after PR #62, but confirmation encountered a 420-second Qwen runaway in an
+off-control at 14/27. Merge the sealed 8,192-token local-practical output bound, then use fresh
+activation and pilot paths; do not resume the superseded-seal report. Only a clean 27-cell
+`PROCEED_TO_COMPREHENSIVE` result permits the 306/714 schedules.
+
 The conditional B1 storage blocker is repaired at exact implementation head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`: KasaneCore and PEDS now pass three-run cold-index
 budgets. Keep that merged result, but restart the 306-cell baseline and PI-enabled screen from zero
