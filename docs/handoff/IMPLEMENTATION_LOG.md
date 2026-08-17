@@ -1026,6 +1026,9 @@ correction below because its active-trace relevance would have mixed efficacy wi
   lifecycle, file events, tool executions and successful `pi_*` delivery inside the TypeScript
   adapter. Automatic context delivery and ECA-owned model requests are explicitly unavailable;
   mutation and verification remain degraded for their measured hook limitations.
+- Existing session/LSP/tool refresh events remain queued for Twin behavior compatibility, but only
+  actual file events become mutation signals. Unnegotiated signals fail closed and repeated degraded
+  diagnostics are stored once, keeping the transient collector bounded.
 - Real TypeScript-client/Python-sidecar conformance transports every retained signal class and proves
   MCP/reconnect compatibility. The B0 semantic compatibility guard continues to fail closed for the
   C0 product change rather than treating it as lifecycle-only migration.

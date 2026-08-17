@@ -2,7 +2,7 @@
   "schema": 1,
   "classification": "C0_MINIMAL_RUNTIME_CONTRACT_FINAL",
   "captured_at": "2026-08-17T23:05:41+0900",
-  "source_revision": "d2fb7fa4cc73380dd680e3c07cc67390460f1dcb",
+  "source_revision": "0a8a846f7ebc9557be3fff986044f7fc3e9239ff",
   "execution_scope": "local-only",
   "model": "Qwen3.6 27B",
   "endpoint": "127.0.0.1:8090",
@@ -68,7 +68,14 @@
     "version": "1.18.18",
     "task_and_model": "chat.message",
     "session": ["session.created", "session.idle", "session.deleted"],
-    "mutation": ["file.edited", "file.watcher.updated", "lsp.updated"],
+    "mutation": ["file.edited", "file.watcher.updated"],
+    "non_mutation_refresh_events": [
+      "lsp.updated",
+      "session.created",
+      "session.idle",
+      "tool.execute.before",
+      "tool.execute.after"
+    ],
     "tool_and_verification": ["tool.execute.before", "tool.execute.after"],
     "advisory_delivery": "successful pi_* tool.execute.after",
     "core_opencode_imports": 0,
@@ -123,6 +130,6 @@
   },
   "seal": {
     "algorithm": "sha256",
-    "canonical_payload": "059a416625db6bf29072d2f20e659579795b8888034eb355bf9f95007b4b46a4"
+    "canonical_payload": "e1d3a814408472db4bb06d243b0fdc9bdf655718ee7c642f7502012fb7cbeaa7"
   }
 }

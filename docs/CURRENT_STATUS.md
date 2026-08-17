@@ -6,7 +6,7 @@ Status date: 2026-08-17
 
 Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0 COMPLETE — B1 SKIPPED — B2 COMPLETE — C0 COMPLETE — C1 NEXT**
 
-C0 completed at implementation revision `d2fb7fa` without an LLM call. The new host-neutral runtime
+C0 completed at implementation revision `0a8a846` without an LLM call. The new host-neutral runtime
 contract has an exhaustive 12-capability descriptor, explicit supported/degraded/unavailable states,
 and a bounded `TaskSignalCollector` consuming task, session, exact ProjectRef workspace/root,
 mutation, model and advisory-delivery signals. Existing immutable `RuntimeObservation` remains the
