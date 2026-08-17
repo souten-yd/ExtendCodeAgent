@@ -21,6 +21,13 @@ test-selection and test-obsolescence. Blueprint and Strategy had no screened eff
 Runtime, Convergence, Research and Traceability remain `NOT_TESTED_NO_ACTIVE_USE`. No capability was
 promoted or demoted. See `docs/evidence/final/b0a-adaptive-screening-result-v1.json`.
 
+B0b confirmation scheduling is implemented but no held-out model cell has run yet. The unchanged
+contract has a 108-call hard maximum: 36 full-repetition native/off/active held-out baseline calls,
+then at most 72 ablation calls. Each capability-task ablation runs all three repetitions only when
+all three active repetitions PASS and exercise that capability; every other cell receives an
+explicit non-outcome reason. The pre-execution expected count remains the conservative 108 until the
+active trace closes the conditional frontier.
+
 The prior three-route checkpoint remains immutable history: Qwen 54/54, Sonnet 54/54, Codex 37/54,
 145/162 overall, with 17 Codex cells blocked by quota. It is not the current local-first denominator
 and its mixed legacy/current latency is not imported blindly. Its Qwen 54/54 subset must pass the

@@ -49,6 +49,13 @@ calls. `blueprint` and `strategy` are `no screened effect`; `context`, `runtime`
 Exit evidence and rules are exactly those in Master Plan sections 7.5, 8 B0b and 10.2. Do not widen
 the held-out split or redesign the matrix, tasks, oracle, corpus, capabilities or threshold.
 
+Use `tools/local/b0b-confirmation-runner`. Generate its sealed model-free plan at exact merged main
+before inference. The unchanged local-only hard maximum and conservative pre-active expected count
+are 108: 36 mandatory native/off/active calls plus 72 conditional ablations. Full confirmation
+repetitions are never sequentially stopped. The active trace may remove only a complete
+capability-task ablation triplet, classified as `NOT_TESTED_ACTIVE_NOT_PASS`,
+`NOT_TESTED_NO_ACTIVE_USE`, or `NOT_TESTED_INCONSISTENT_ACTIVE_USE`.
+
 The B0a execution notes below are retained as immutable history and are not current scheduling
 instructions.
 

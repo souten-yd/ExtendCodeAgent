@@ -720,7 +720,7 @@ def _run_opencode_limited(
     cwd: Path,
     env: dict[str, str],
     timeout: int,
-    step_limit: int,
+    step_limit: int | None,
 ) -> tuple[str, str, int | None, bool, bool, str | None]:
     """Run one model process and stop only after an evidence-derived step boundary."""
 
@@ -767,7 +767,7 @@ def _run_opencode_limited(
                         False,
                         provider_failure,
                     )
-                if _steps_in_text(stdout) >= step_limit:
+                if step_limit is not None and _steps_in_text(stdout) >= step_limit:
                     legacy._terminate_process_group(process)
                     final_stdout, final_stderr = process.communicate()
                     return (
@@ -789,7 +789,7 @@ def _agent_only(
     workspace: Path,
     *,
     output_limit: int,
-    step_limit: int,
+    step_limit: int | None,
     attach_url: str | None = None,
 ) -> dict[str, Any]:
     env, model_id = legacy._environment(
@@ -961,7 +961,7 @@ def _execute_batch(
     templates: WorkspaceTemplates,
     raw_root: Path,
     output_limit: int,
-    step_limit: int,
+    step_limit: int | None,
 ) -> list[dict[str, Any]]:
     if not cells:
         return []

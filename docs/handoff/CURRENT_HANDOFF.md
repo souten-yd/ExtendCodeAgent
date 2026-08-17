@@ -5,7 +5,7 @@ Updated: 2026-08-17 (Asia/Tokyo)
 Canonical branch: `agent/b0a-adaptive-screening-evidence`; synchronized merged base is
 `e793103f459dde0947fc43f25720f93db61d2ba8` (PR #82)
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
-Current task: close B0a evidence, then run B0b local-practical held-out confirmation
+Current task: merge the B0b runner, then run local-practical held-out confirmation
 
 ## Current authoritative checkpoint (2026-08-17)
 
@@ -42,6 +42,15 @@ Current task: close B0a evidence, then run B0b local-practical held-out confirma
   B0b, with local-practical Qwen as the sole model route and claim scope bounded to
   `active-scoped(local-practical)`. Evidence:
   `docs/evidence/final/b0a-adaptive-screening-result-v1.json`.
+- The B0b runner now exposes the existing confirmation contract as 108 hard-maximum cells: 36
+  mandatory native/off/active calls and 72 conditional six-capability ablations over four held-out
+  tasks and three repetitions. Before active traces exist, expected calls conservatively remain 108.
+  A relevant capability-task ablation always runs all three repetitions; non-PASS active baselines,
+  no active use and inconsistent active use remain distinct machine-readable non-outcomes.
+- Confirmation uses the sealed 8,192 output limit and task timeout without the screening-only step
+  cutoff. It reuses the sealed B0a git-worktree benchmark rather than repeating it, keeps model
+  inference serial, pipelines workspace/finalization work on CPU, and has no compatible prior
+  held-out confirmation result to migrate. No B0b model call has run on the implementation branch.
 
 The chronology below is retained as history. Its four-model/306-cell and three-model/162-cell
 statements describe superseded protocols and are not current execution instructions.

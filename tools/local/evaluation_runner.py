@@ -36,6 +36,7 @@ LABELS = ROOT / "docs/evaluation/labels-v1/graph-quality-labels.json"
 METRICS = ROOT / "docs/evaluation/pi-verification-integrated-metrics-v1.json"
 CORPUS = ROOT / "docs/evaluation/test-portfolio-corpus-v1.json"
 B0A_PLAN = ROOT / "docs/evaluation/b0a-screening-plan-v1.json"
+B0A_ADAPTIVE_RESULT = ROOT / "docs/evidence/final/b0a-adaptive-screening-result-v1.json"
 B0A_ACTIVATION_PLAN = ROOT / "docs/evaluation/b0a-activation-plan-v1.json"
 B0A_QUALITY_TARGET = ROOT / "docs/evaluation/b0a-quality-target-v2.json"
 B0A_BOOTSTRAP = ROOT / "docs/evidence/final/b0a-bootstrap-environment-v1.json"
@@ -351,6 +352,14 @@ def _arms(matrix: dict[str, Any], scope: str) -> list[str]:
             for depth in matrix["depths"]
         ]
         return ["active", *ablations, *depths]
+    if scope == "b0b-confirmation":
+        result = _load(B0A_ADAPTIVE_RESULT)
+        _verify_seal(result, "B0a adaptive screening result")
+        candidates = list(result["screening_decisions"]["proceed_to_b0b"])
+        unknown = set(candidates) - set(matrix["ablation_capabilities"])
+        if unknown:
+            raise EvaluationError(f"B0b result names unknown capabilities: {sorted(unknown)}")
+        return ["native", "off", "active", *(f"ablation:{item}" for item in candidates)]
     if scope in {"smoke", "base"}:
         return ["native"] if scope == "smoke" else base
     ablations = [f"ablation:{item}" for item in matrix["ablation_capabilities"]]
@@ -405,6 +414,17 @@ def plan(
             "included_repositories": sorted(included),
             "excluded_repositories": sorted(set(eligibility) - included),
         }
+    elif scope == "b0b-confirmation":
+        tasks = [item for item in tasks if item["split"] == "held-out"]
+        screening_result = _load(B0A_ADAPTIVE_RESULT)
+        _verify_seal(screening_result, "B0a adaptive screening result")
+        b0a = {
+            "adaptive_screening_result_seal": screening_result["seal"]["canonical_payload"],
+            "quality_target_seal": _load(B0A_QUALITY_TARGET)["seal"]["canonical_payload"],
+            "confirmation_candidates": list(
+                screening_result["screening_decisions"]["proceed_to_b0b"]
+            ),
+        }
     arms = _arms(matrix, scope)
     if selected_arms is not None:
         unknown = selected_arms - set(arms)
@@ -423,6 +443,8 @@ def plan(
         models = [item for item in models if item["id"] == "local-practical"]
     elif scope == "b0a-baseline":
         models = [item for item in models if item["id"] in B0A_QUALITY_MODELS]
+    elif scope == "b0b-confirmation":
+        models = [item for item in models if item["id"] == "local-practical"]
     elif scope == "screening":
         models = [item for item in models if item["id"] in {"local-low", "local-practical"}]
     if selected_models is not None:
@@ -459,6 +481,7 @@ def plan(
                             "pi_activation_gate": scope == "b0a-activation",
                             "pi_effect_pilot": scope == "b0a-pilot",
                             "pi_screening": scope == "b0a-screening",
+                            "pi_confirmation": scope == "b0b-confirmation",
                         }
                     )
     if scope == "b0a-pilot":
@@ -1093,7 +1116,7 @@ def _outcome_attribution(
         classification = "PROJECTION_SCHEMA_ERROR"
     else:
         classification = "AGENT_REASONING_ERROR"
-    return {
+    result = {
         "classification": classification,
         "required_fact_recall": round(required_fact_recall, 6),
         "pi_required_fact_recall": (
@@ -1102,6 +1125,30 @@ def _outcome_attribution(
         "schema_valid": schema_valid,
         "final_exact_pass": exact,
     }
+    if "selected_tests" in expected:
+        expected_providers = {
+            str(item) for item in expected["selected_tests"] if isinstance(item, str)
+        }
+        selected = answer.get("selected_tests", []) if isinstance(answer, dict) else []
+        actual_providers = {str(item) for item in selected if isinstance(item, str)}
+        true_positive = len(expected_providers & actual_providers)
+        false_positive = len(actual_providers - expected_providers)
+        false_negative = len(expected_providers - actual_providers)
+        precision = (
+            true_positive / len(actual_providers)
+            if actual_providers
+            else (1.0 if not expected_providers else 0.0)
+        )
+        recall = true_positive / len(expected_providers) if expected_providers else 1.0
+        result["required_verification_set_quality"] = {
+            "status": "MEASURED_BY_SEALED_TASK_ORACLE",
+            "true_positive": true_positive,
+            "false_positive": false_positive,
+            "false_negative": false_negative,
+            "precision": round(precision, 6),
+            "recall": round(recall, 6),
+        }
+    return result
 
 
 def _field_facts(value: dict[str, Any]) -> set[str]:
@@ -1405,7 +1452,7 @@ def run(
         pilot_evidence = _require_pilot_report(pilot_report)
     if scope == "b0a-screening":
         baseline_evidence = _require_baseline_report(baseline_report)
-    if scope.startswith("b0a-"):
+    if scope.startswith("b0a-") or scope == "b0b-confirmation":
         _require_clean_worktree()
     schedule = plan(
         scope,
@@ -2475,6 +2522,7 @@ def main() -> int:
             "b0a-pilot",
             "b0a-baseline",
             "b0a-screening",
+            "b0b-confirmation",
         ],
         default="full",
     )
@@ -2491,6 +2539,7 @@ def main() -> int:
             "b0a-pilot",
             "b0a-baseline",
             "b0a-screening",
+            "b0b-confirmation",
         ],
         required=True,
     )

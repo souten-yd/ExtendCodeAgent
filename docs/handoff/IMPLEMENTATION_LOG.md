@@ -761,3 +761,26 @@
 - B0a closeout gates passed: `tools/local/all-fast` (199 Python plus 9 adapter),
   `tools/local/test-integration` (61 Python plus 9 adapter), `tools/local/build`, evidence seal
   verification and `git diff --check`.
+
+## 2026-08-17 — B0b local-only held-out confirmation runner
+
+- Added `b0b-confirmation` to the unified schedule without changing the sealed matrix/task suite.
+  The B0a result supplies exactly six candidates; the quality-target v2 exception supplies only
+  local-practical Qwen; the sealed held-out split supplies four KasaneCore tasks and three runs.
+- The resulting hard maximum is 108 calls: 36 mandatory native/off/active baselines and 72
+  conditional ablations. Expected calls are conservatively 108 before active traces exist. After
+  those baselines, only a capability-task pair exercised in all three PASSing active repetitions
+  generates its complete three-repetition ablation; all skips keep machine-readable non-outcomes.
+- Confirmation does not use screening's sequential positive stop or derived step cutoff. It keeps
+  task timeouts and the sealed 8,192 model output limit so call economy cannot weaken correctness.
+- The existing answer oracle now emits compact required-verification-set true/false positive and
+  false negative counts plus precision/recall for held-out test-selection results; it stores no
+  answer text and does not change oracle acceptance. B0b also aggregates cross-boundary exact
+  follow-through and unsafe-claim completion correctness over active repetitions.
+- Reused the sealed workspace Bridge result selecting git worktree; no compatible prior held-out
+  confirmation evidence exists. Model execution remains serial while preparation and finalization
+  use the existing CPU pipeline. Provider gaps remain attempts, leave the cell pending and stop the
+  run without creating a quality result.
+- Validation passes `tools/local/all-fast` (199 Python plus 9 adapter),
+  `tools/local/test-integration` (66 Python plus 9 adapter), `tools/local/build`, five focused B0b
+  scheduling/execution tests and `git diff --check`. No B0b model call ran before merge.
