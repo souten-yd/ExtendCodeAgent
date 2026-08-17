@@ -206,6 +206,7 @@ def create_plan(causal_evidence_path: Path, output: Path) -> None:
             ),
             "cell_count": len(cells),
             "model_parallelism": 1,
+            "cpu_pipeline_batch_size": 4,
             "workspace_strategy": "git_worktree",
             "persistent_opencode_adopted": False,
             "reuse_policy": "same-head result fragments and captures only",
@@ -564,30 +565,31 @@ def run(plan_path: Path, raw_root: Path, output: Path, *, resume: bool) -> None:
     def checkpoint() -> None:
         legacy._write_report(output, _report(plan, results, provider_attempts, trace_log, started))
 
-    for cell in plan["cells"]:
-        if cell["cell_id"] in results:
-            continue
+    pending = [item for item in plan["cells"] if item["cell_id"] not in results]
+    batch_size = int(plan["cpu_pipeline_batch_size"])
+    for start in range(0, len(pending), batch_size):
+        cells = pending[start : start + batch_size]
         batch = adaptive._execute_batch(
-            [cell],
+            cells,
             tasks=tasks,
             templates=templates,
             raw_root=raw_root,
             output_limit=8192,
             step_limit=None,
         )
-        result = batch[0]
-        if result.get("provider_failure"):
-            provider_attempts.append(
-                {
-                    "cell_id": result["cell_id"],
-                    "provider_failure": result["provider_failure"],
-                    "captured_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-                }
-            )
-            checkpoint()
-            return
-        results[result["cell_id"]] = result
-        legacy._append_trace(trace_log, result, tasks[result["task_id"]])
+        for result in batch:
+            if result.get("provider_failure"):
+                provider_attempts.append(
+                    {
+                        "cell_id": result["cell_id"],
+                        "provider_failure": result["provider_failure"],
+                        "captured_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+                    }
+                )
+                checkpoint()
+                return
+            results[result["cell_id"]] = result
+            legacy._append_trace(trace_log, result, tasks[result["task_id"]])
         checkpoint()
     checkpoint()
 

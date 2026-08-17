@@ -6,6 +6,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+from pytest import MonkeyPatch
+
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
@@ -31,6 +33,8 @@ def test_b0b_plan_is_exact_local_only_held_out_contract(tmp_path: Path) -> None:
     assert plan["context"] == 262144
     assert plan["output_limit"] == 8192
     assert plan["cell_count"] == len(plan["cells"]) == 57
+    assert plan["model_parallelism"] == 1
+    assert plan["cpu_pipeline_batch_size"] == 4
     assert plan["repetitions"] == 3
     assert plan["effect_threshold_pass_delta"] == 2
     assert plan["eligible_tasks"] == [
@@ -153,6 +157,54 @@ def test_b0b_complete_report_keeps_selection_and_efficacy_separate(tmp_path: Pat
         "strategy",
         "test_obsolescence",
     }
+
+
+def test_b0b_run_pipelines_cpu_work_in_bounded_batches(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+) -> None:
+    plan_path = tmp_path / "plan.json"
+    output = tmp_path / "result.json"
+    runner.create_plan(CAUSAL_EVIDENCE, plan_path)
+    expected = json.loads(legacy.EVALUATION_PI_PLAN.read_text())
+    entries = {item["task_id"]: item for item in expected["tasks"]}
+    batch_sizes: list[int] = []
+    monkeypatch.setattr(legacy, "_require_clean_worktree", lambda: None)
+    monkeypatch.setattr(legacy, "_append_trace", lambda *args: None)
+
+    def execute(cells: list[dict[str, Any]], **kwargs: Any) -> list[dict[str, Any]]:
+        batch_sizes.append(len(cells))
+        results: list[dict[str, Any]] = []
+        for cell in cells:
+            entry = entries[cell["task_id"]]
+            result = {
+                **cell,
+                "outcome": "PASS",
+                "provider_failure": None,
+                "input_tokens": 10,
+                "output_tokens": 2,
+                "reasoning_tokens": 0,
+                "model_wall_ms": 5,
+                "pi_timing_ms": {},
+                "pi_capabilities_used": [],
+                "errors": [],
+                "pi_tool_failures": [],
+                "pi_tools": [],
+                "pi_tool_requests": [],
+            }
+            if cell["pi_use_policy"] != "auto_pi":
+                result["pi_tools"] = list(entry["required_pi_tools"])
+                result["pi_tool_requests"] = list(entry["tool_requests"])
+                result["forced_use_compliance"] = forced_use_compliance(entry, result)
+            results.append(result)
+        return results
+
+    monkeypatch.setattr(adaptive, "_execute_batch", execute)
+
+    runner.run(plan_path, tmp_path / "raw", output, resume=False)
+
+    report = json.loads(output.read_text())
+    assert report["classification"] == "B0B_HELD_OUT_CONFIRMATION_COMPLETE"
+    assert batch_sizes == [4] * 14 + [1]
 
 
 def test_evaluation_sidecar_match_is_exact_to_workspace(tmp_path: Path) -> None:
