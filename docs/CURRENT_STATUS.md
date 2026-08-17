@@ -4,7 +4,17 @@ Status date: 2026-08-17
 
 ## Program state
 
-Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0 COMPLETE — B1 SKIPPED — B2 IN PROGRESS**
+Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0 COMPLETE — B1 SKIPPED — B2 COMPLETE — C0 NEXT**
+
+B2 completed at exact main `87ced9f`. Its zero-model preflight passed all five stack/restart checks and
+both degraded-sidecar orders. The Qwen Bridge then accounted for five stacks with 16 newly executed
+step requests and four compatible reused native requests; all five task/oracle results passed, both
+combined orders recorded four runtime observations, and no duplicate call ID or exact-workspace
+lingering sidecar occurred. Full prompt context had p95 17,958 and maximum 17,990 tokens. The exact
+tuple is classified `degraded`, not `compatible`, because OMO's standalone tool inventory already
+duplicates `glob/grep/skill/task` and both combined orders preserve that same limitation. C6 remains
+`NOT_TESTED_TEAM_MODE_OFF`; no recommended-stack, general-model or P4 comparative claim is made. See
+`docs/evidence/final/b2-omo-coexistence-result-v1.json`. C0 Minimal runtime contract is next.
 
 B2's first exact-main Qwen Bridge completed the native and ECA controls before stopping on the ECA
 control. Native passed with four model requests; the ECA coding oracle also passed, but the required
