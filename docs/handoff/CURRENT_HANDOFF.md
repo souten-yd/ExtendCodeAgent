@@ -2,10 +2,10 @@
 
 Updated: 2026-08-17 (Asia/Tokyo)
 
-Canonical branch: `agent/b0b-local-confirmation`; synchronized merged base is
-`f5c8ea954c8e43a9d296cafad784bdd0ca32a442` (PR #83)
+Canonical branch: `agent/b0a-causal-correction-evidence`; synchronized merged base is
+`88d2e17a658d9e72bf320d1832c01e7d7ff86cf4` (PR #88)
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
-Current task: merge and run the causal-correction entry gate before B0b
+Current task: merge causal-correction evidence, then start B0b held-out confirmation
 
 ## Current authoritative checkpoint (2026-08-17)
 
@@ -68,6 +68,11 @@ Current task: merge and run the causal-correction entry gate before B0b
 - Exact-main execution reached 8 compatible reused plus 6 new cells before the first graph ablation
   exposed `%3A` workspace-root encoding. The diagnostic cell is `PI_TOOL_API_GAP`, not efficacy
   evidence; resume only after the path-safe workspace and noncompliant-capture rejection repair.
+- The repaired exact-main run completed at `88d2e17`: 58/58 accounted, 22 new calls, 13 compatible
+  reused results, 23 adaptive skips, and 34/34 forced cells exact-trace compliant. The candidate union
+  is `blueprint, graph, impact, semantic, strategy, test_obsolescence, test_selection, twin`.
+  Merge `docs/evidence/final/b0a-causal-correction-result-v1.json` and the canonical status updates;
+  then generate the exact-main B0b held-out plan without changing task/oracle/split/threshold.
 
 The chronology below is retained as history. Its four-model/306-cell and three-model/162-cell
 statements describe superseded protocols and are not current execution instructions.

@@ -216,6 +216,13 @@ These apply to every stage and are not restated per stage.
 - Known blockers and measurement limits are recorded in `handoff/KNOWN_ISSUES.md`; the material ones
   for sequencing are: frontier path `0/18 APIError`, `local-low` result instability, py-tree-sitter
   pinned to 0.25.2 after a 0.26.0 segfault, and OpenCode version drift risk beyond 1.18.18.
+- The B0b causal-correction entry gate completed on local-practical Qwen at `88d2e17`: 58/58 cells
+  are accounted by 22 executed calls, 13 compatible reused results and 23 adaptive skips; all 34
+  forced cells passed exact trace compliance. Twin, Semantic, Blueprint and Strategy produced
+  positive corrective signals. The six observational B0a candidates remain intact, yielding the
+  eight-capability B0b union `blueprint, graph, impact, semantic, strategy, test_obsolescence,
+  test_selection, twin`. This is screening evidence only and makes no promotion/demotion decision.
+  See `docs/evidence/final/b0a-causal-correction-result-v1.json`.
 
 ## 6. Capability inventory and gating status
 
@@ -649,6 +656,9 @@ decision may be taken here.**
 
 **B0b — Confirmation and gap report**
 Entry: B0a screening table plus a merged causal-correction gate based on the sealed EvaluationPIPlan.
+The merged gate artifact is `docs/evidence/final/b0a-causal-correction-result-v1.json`; its candidate
+union is the input to confirmation, while its gap/no-signal labels remain screening diagnostics and
+do not demote the six preserved observational candidates.
 Scope: full tier set, full repetitions and the held-out split, for the capabilities that screened
 through or show a positive corrective causal signal. Preserve the six current observational candidates;
 selection bias alone cannot permanently exclude another capability. A capability without a suitable

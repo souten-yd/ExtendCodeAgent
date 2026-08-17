@@ -39,6 +39,20 @@
 - `forced_ablation:graph` on `b947a24` exposed `%3A` workspace-root encoding and is diagnostic only,
   not capability evidence. Preserve its capture/checkpoint; after the path-safe workspace repair,
   compatibility migration must reject that noncompliant capture and execute a fresh isolated cell.
+  **Closed for execution at `88d2e17`:** the path-safe rerun was `PASS / FORCED_USE_COMPLIANT`; the
+  original diagnostic remains preserved and is not causal evidence.
+
+## B0a corrective gaps carried into B0b
+
+- Graph, Impact, Context, Runtime, Convergence and Traceability did not produce a corrected causal
+  signal under their representative sealed tasks; Test Selection produced three ON/OFF PASS pairs.
+  These are screening diagnostics, not demotions, and do not remove the six observational candidates.
+- Research and Test Obsolescence lacked a suitable corrective task/oracle. They are
+  `NO_TASK_COVERAGE`, not no effect. B0b must use only coverage already present in its sealed held-out
+  contract and must not invent or weaken an oracle.
+- Auto selection under-selected expected capabilities: mean recall 0.534821 and 20
+  `EXPECTED_BUT_NOT_USED` states across eight measured tasks. C1/C3 retain this as a planner gap;
+  forced efficacy evidence must not be reinterpreted as automatic-selection success.
 
 ## Shared GitHub Copilot monthly quota defers 17 historical Codex cells
 

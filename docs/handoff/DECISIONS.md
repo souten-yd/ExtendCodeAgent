@@ -1047,3 +1047,10 @@ cannot exclude other capabilities. Before B0b, a tens-of-calls corrective screen
 representative relevant task/capability pairs, marks absent task coverage explicitly, and escalates
 only causal boundaries. C1/C3 compare their planner against the EvaluationPIPlan as expected-plan
 ground truth; the plan itself is not a production planner.
+
+Evidence outcome: the local-practical corrective gate completed at `88d2e17` with all 34 forced
+cells exact-trace compliant. Requirement tracing and symbol/reference showed intrinsic positive
+signals; auto requirement use failed while forced use passed, producing the intended
+`PI_SELECTION_GAP`. Twin, Semantic, Blueprint and Strategy proceed as corrective B0b candidates;
+the original six observational candidates are preserved, producing an eight-capability union. See
+`docs/evidence/final/b0a-causal-correction-result-v1.json`.

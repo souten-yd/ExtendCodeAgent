@@ -1,0 +1,182 @@
+{
+  "schema": 1,
+  "classification": "B0A_CAUSAL_CAPABILITY_CORRECTION_COMPLETE",
+  "captured_at": "2026-08-17T17:08:24+09:00",
+  "source_revision": "88d2e17a658d9e72bf320d1832c01e7d7ff86cf4",
+  "execution_scope": "local-only",
+  "model": "Qwen3.6 27B",
+  "endpoint": "127.0.0.1:8090",
+  "context": 262144,
+  "output_limit": 8192,
+  "claim_scope": "active-scoped(local-practical)",
+  "promotion_or_demotion_decision": false,
+  "contract": {
+    "evaluation_pi_plan": "docs/evaluation/evaluation-pi-plan-v1.json",
+    "evaluation_pi_plan_seal": "8d324040522c54ab4b2304ba51d411473ea680cb1621bbcea7be78586fd45aa7",
+    "task_suite_seal": "23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632",
+    "quality_target_seal": "ab6b2141b5c8bd99dac5aa18c6e7b2c060c8624fa79f56ef7001edc993d518d9",
+    "evaluation_matrix_seal": "7bfa9f1dd8be5bf44fcf3f018c4ccbe2b6a3266846cd7a994f08eb5d4886a0c5",
+    "tasks_changed": false,
+    "oracle_changed": false,
+    "corpus_changed": false,
+    "effect_threshold_changed": false,
+    "capability_design_changed": false
+  },
+  "plan": {
+    "path": ".evaluation/unified-v1/causal-correction-plan-88d2e17.json",
+    "sha256": "47565fc3d57c330acd47540209b9b96abdbfd9dc82e1f1cb7c7e51d953998296",
+    "seal": "a997c043c607c928c13d45070ab7bbc4a3f0d4fc8ac7f0f609481f198b2d02a2",
+    "initial_calls": 24,
+    "hard_maximum_calls": 58
+  },
+  "result": {
+    "path": ".evaluation/unified-v1/causal-correction-88d2e17.json",
+    "sha256": "98f301e1901931bcd479fc1d809c45e74214d80d268ca21225d37610a80c1365",
+    "seal": "b96b8932492a6ae5d5ee9267416734b2e8f1a4de6cba53797e1cbf7cbfbe781b",
+    "trace_sha256": "6575a8d8966d9f476bad59e90adee58a28ebf66a8285450dce4e6a2e3c52c410",
+    "cells_accounted": 58,
+    "results": 35,
+    "skips": 23,
+    "outcomes": {
+      "PASS": 16,
+      "FAIL": 19,
+      "TIMEOUT": 0,
+      "UNAVAILABLE": 0
+    },
+    "forced_cells": 34,
+    "forced_use_compliant": 34,
+    "forced_use_noncompliant": 0,
+    "provider_gap_pending": false
+  },
+  "sequential_execution": {
+    "repetition_1_results": 24,
+    "repetition_2_results": 7,
+    "repetition_3_results": 4,
+    "skip_counts": {
+      "SKIPPED_CORRECTIVE_EARLY_POSITIVE": 8,
+      "SKIPPED_CORRECTIVE_DIAGNOSTIC": 8,
+      "SKIPPED_NO_REMAINING_CAUSAL_BOUNDARY": 7
+    }
+  },
+  "intrinsic_pi_results": {
+    "positive_causal_signal": [
+      "cd-requirement-001",
+      "eca-symbol-001"
+    ],
+    "pi_capability_gap": [
+      "cd-cross-boundary-001",
+      "eca-impact-001"
+    ],
+    "no_observed_causal_effect_boundary": [
+      "eca-refactor-001",
+      "eca-tests-001"
+    ]
+  },
+  "capability_results": {
+    "proceed_to_b0b_causal": [
+      "blueprint",
+      "semantic",
+      "strategy",
+      "twin"
+    ],
+    "pi_capability_gap": [
+      "context",
+      "convergence",
+      "graph",
+      "impact",
+      "runtime",
+      "traceability"
+    ],
+    "no_corrected_causal_signal": [
+      "test_selection"
+    ],
+    "no_task_coverage": {
+      "research": "No sealed task requires external/provider-neutral research retrieval.",
+      "test_obsolescence": "No sealed oracle distinguishes obsolescence/health from test selection."
+    }
+  },
+  "selection": {
+    "measured_tasks": 8,
+    "mean_capability_selection_precision": 0.666667,
+    "mean_capability_selection_recall": 0.534821,
+    "mean_under_selection_rate": 0.465179,
+    "mean_over_selection_rate": 0.041667,
+    "selection_gap_tasks": 5,
+    "selection_complete_tasks": 3,
+    "unresolved_tasks": 5,
+    "expected_but_not_used_states": 20,
+    "cd_requirement_diagnosis": "PI_SELECTION_GAP"
+  },
+  "candidate_policy": {
+    "existing_observational_candidates_preserved": [
+      "graph",
+      "impact",
+      "semantic",
+      "test_obsolescence",
+      "test_selection",
+      "twin"
+    ],
+    "new_corrective_candidates": [
+      "blueprint",
+      "semantic",
+      "strategy",
+      "twin"
+    ],
+    "b0b_candidate_union": [
+      "blueprint",
+      "graph",
+      "impact",
+      "semantic",
+      "strategy",
+      "test_obsolescence",
+      "test_selection",
+      "twin"
+    ],
+    "interpretation": "Corrective positives add candidates; selection-weighted candidates are preserved. Screening does not promote or demote."
+  },
+  "efficiency": {
+    "llm_calls_requested": 58,
+    "llm_calls_executed": 22,
+    "llm_calls_reused": 13,
+    "llm_calls_avoided": 23,
+    "avoided_call_ratio": 0.396552,
+    "input_tokens": 928412,
+    "output_tokens": 58428,
+    "reasoning_tokens": 0,
+    "model_wall_time_ms": 2329676,
+    "reused_model_wall_time_ms": 1734911,
+    "total_wall_time_ms": 2331311.144,
+    "new_cell_per_second": 0.009437
+  },
+  "diagnostic_preservation": {
+    "pre_repair_checkpoint": ".evaluation/unified-v1/causal-correction-b947a24.json",
+    "pre_repair_checkpoint_sha256": "f208ffa5fbed92ce5a5272f773197e2aaa95c46c2ec9407f9a0e320ffb357bdd",
+    "path_encoding_diagnostic_capture_sha256": "95f86868c43ca002e74721f338de1f109b8bd270a3896d07d26e749822838bd7",
+    "deleted_or_reclassified_as_efficacy": false,
+    "repaired_graph_ablation": "PASS / FORCED_USE_COMPLIANT"
+  },
+  "runtime_hygiene": {
+    "model_parallelism": 1,
+    "persistent_opencode_adopted": false,
+    "evaluation_sidecars_stopped_after_capture": 22,
+    "workspace_or_session_shared_between_cells": false
+  },
+  "gates": {
+    "all_fast": "PASS_208_PYTHON_9_ADAPTER",
+    "integration": "PASS_70_PYTHON_9_ADAPTER",
+    "build": "PASS_PYTHON_SDIST_WHEEL_TYPESCRIPT",
+    "seal_verification": "PASS_PLAN_AND_RESULT_AND_FINAL_EVIDENCE",
+    "diff_check": "PASS"
+  },
+  "next": {
+    "stage": "B0b",
+    "split": "held-out-repository",
+    "model_scope": "local-practical-only",
+    "candidate_count": 8,
+    "corrective_evidence_must_merge_before_start": true
+  },
+  "seal": {
+    "algorithm": "sha256",
+    "canonical_payload": "9ae056017599cced71dcffa683b77b2d0e13b1b662a895c885095423b940b1ed"
+  }
+}
