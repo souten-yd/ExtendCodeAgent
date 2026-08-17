@@ -1745,6 +1745,7 @@ def _weak_local_evidence_json(package: WeakLocalEvidencePackage) -> dict[str, An
             "estimated_evidence_tokens": package.used_tokens,
             "token_budget": package.token_budget,
             "truncated": package.truncated,
+            "candidate_search_truncated": package.candidate_search_truncated,
             "deterministic_resolution": package.deterministic_resolution,
             "cache_observation": "model_response_metrics",
         },

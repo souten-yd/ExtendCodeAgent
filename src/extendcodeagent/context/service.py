@@ -27,6 +27,9 @@ _WEAK_MAX_TOKENS = 512
 _WEAK_MAX_ITEMS = 8
 _PROTOCOL_MAX_TOKENS = 8_192
 _PROTOCOL_MAX_ITEMS = 32
+_MAX_ANCHOR_MATCHES = 64
+_PROTOCOL_MAX_SEEDS = 64
+_PROTOCOL_MAX_CANDIDATES = 256
 _SCOPE_ORDER = tuple(EvidenceScope)
 _TERM_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9_.:/#-]{2,}")
 _STOP_TERMS = {
@@ -41,6 +44,8 @@ _STOP_TERMS = {
     "only",
     "repository",
     "status",
+    "test",
+    "tests",
     "that",
     "the",
     "this",
@@ -89,7 +94,7 @@ def build_weak_local_evidence(
     scope = request.scope or _infer_scope(request.objective)
     token_budget = min(request.token_budget, _PROTOCOL_MAX_TOKENS)
     max_items = min(request.max_items, _PROTOCOL_MAX_ITEMS)
-    candidates = _reduced_candidates(snapshot, request, scope)
+    candidates, search_truncated = _reduced_candidates(snapshot, request, scope)
     provenance_values = [
         value
         for _, value in sorted(
@@ -141,10 +146,16 @@ def build_weak_local_evidence(
     selected_ids = tuple(item.evidence_id for item in items)
     excluded_count = len(candidates) - len(items)
     gaps = list(dict.fromkeys(request.unresolved_gaps))
+    selected_refs = {item.canonical_ref.value for item in items}
+    selected_nodes = [node for node in snapshot.nodes if node.canonical_ref.value in selected_refs]
+    for term in _missing_objective_anchors(snapshot, selected_nodes, request.objective)[:8]:
+        gaps.append(f"objective_anchor_missing:{term}")
     if not candidates:
         gaps.append("no_task_relevant_evidence")
     if excluded_count:
         gaps.append("candidate_or_token_bound_reached")
+    if search_truncated:
+        gaps.append("candidate_search_bound_reached")
     next_scope = _next_scope(scope) if gaps and scope is not EvidenceScope.SUBSYSTEM else None
     return WeakLocalEvidencePackage(
         scope=scope,
@@ -162,6 +173,7 @@ def build_weak_local_evidence(
         candidate_count=len(candidates),
         excluded_count=excluded_count,
         truncated=excluded_count > 0,
+        candidate_search_truncated=search_truncated,
         deterministic_resolution=not gaps,
     )
 
@@ -170,7 +182,10 @@ def _infer_scope(objective: str) -> EvidenceScope:
     text = " ".join(objective.casefold().split())
     if any(value in text for value in ("test", "verification", "requirement", "evidence")):
         return EvidenceScope.VERIFICATION
-    if any(value in text for value in ("impact", "causal flow", "runtime", "caller")):
+    if any(
+        value in text
+        for value in ("impact", "causal flow", "runtime", "caller", "http", "tmux", "xterm")
+    ):
         return EvidenceScope.IMPACT
     if any(value in text for value in ("refactor", "neighborhood", "related")):
         return EvidenceScope.NEIGHBORHOOD
@@ -204,7 +219,7 @@ def _reduced_candidates(
     snapshot: GraphSnapshot,
     request: WeakLocalEvidenceRequest,
     scope: EvidenceScope,
-) -> list[tuple[GraphNode, str, int]]:
+) -> tuple[list[tuple[GraphNode, str, int]], bool]:
     nodes = {
         node.canonical_ref.value: node
         for node in snapshot.nodes
@@ -212,6 +227,25 @@ def _reduced_candidates(
     }
     targets = {value.value.casefold() for value in request.target_refs}
     terms = _objective_terms(request.objective)
+    gap_terms = {
+        value.partition(":")[2].casefold()
+        for value in request.unresolved_gaps
+        if value.startswith("objective_anchor_missing:") and value.partition(":")[2]
+    }
+    gap_seed_refs = {
+        ref
+        for term in gap_terms
+        for ref in [
+            item[0]
+            for item in sorted(
+                ((ref, node) for ref, node in nodes.items() if term in _node_search_text(node)),
+                key=lambda item: (
+                    item[1].node_type in {"test", "verification"},
+                    item[0],
+                ),
+            )[:8]
+        ]
+    }
     seed_scores: dict[str, tuple[int, str]] = {}
     for ref, node in nodes.items():
         canonical = ref.casefold()
@@ -220,13 +254,19 @@ def _reduced_candidates(
         reason = "objective_term"
         if canonical in targets or source in targets or f"file://{source}" in targets:
             score, reason = 10_000, "target_ref"
-        else:
+        elif ref in gap_seed_refs:
+            score, reason = 9_000, "unresolved_objective_anchor"
+        elif not targets:
             matching = tuple(term for term in terms if term in _node_search_text(node))
             if matching:
                 exact_name = str(node.properties.get("name", "")).casefold() in matching
                 score = (2_000 if exact_name else 500) + sum(len(value) for value in matching)
         if score:
             seed_scores[ref] = (score, reason)
+    search_truncated = len(seed_scores) > _PROTOCOL_MAX_SEEDS
+    seed_scores = dict(
+        sorted(seed_scores.items(), key=lambda item: (-item[1][0], item[0]))[:_PROTOCOL_MAX_SEEDS]
+    )
 
     adjacency: dict[str, set[str]] = defaultdict(set)
     for edge in snapshot.edges:
@@ -240,7 +280,7 @@ def _reduced_candidates(
         EvidenceScope.SYMBOL: 0,
         EvidenceScope.NEIGHBORHOOD: 1,
         EvidenceScope.IMPACT: 2,
-        EvidenceScope.VERIFICATION: 3,
+        EvidenceScope.VERIFICATION: 2,
         EvidenceScope.SUBSYSTEM: 3,
     }[scope]
     distances: dict[str, int] = {ref: 0 for ref in seed_scores}
@@ -252,6 +292,9 @@ def _reduced_candidates(
             continue
         for related in sorted(adjacency[current]):
             if related not in distances:
+                if len(distances) >= _PROTOCOL_MAX_CANDIDATES:
+                    search_truncated = True
+                    break
                 distances[related] = distance + 1
                 queue.append(related)
 
@@ -266,6 +309,9 @@ def _reduced_candidates(
                 node.source_ref in relevant_sources
                 or any(term in _node_search_text(node) for term in terms)
             ):
+                if len(distances) >= _PROTOCOL_MAX_CANDIDATES:
+                    search_truncated = True
+                    break
                 distances.setdefault(ref, max_hops)
 
     if scope is EvidenceScope.SUBSYSTEM:
@@ -275,6 +321,9 @@ def _reduced_candidates(
         for ref, node in nodes.items():
             parent = str(PurePosixPath(node.source_ref).parent)
             if any(parent == value or parent.startswith(f"{value}/") for value in seed_directories):
+                if len(distances) >= _PROTOCOL_MAX_CANDIDATES:
+                    search_truncated = True
+                    break
                 distances.setdefault(ref, max_hops)
 
     ranked: list[tuple[GraphNode, str, int]] = []
@@ -295,12 +344,27 @@ def _reduced_candidates(
             item[0].canonical_ref.value,
         )
     )
-    return ranked
+    return ranked, search_truncated
 
 
 def _next_scope(scope: EvidenceScope) -> EvidenceScope | None:
     index = _SCOPE_ORDER.index(scope)
     return _SCOPE_ORDER[index + 1] if index + 1 < len(_SCOPE_ORDER) else None
+
+
+def _missing_objective_anchors(
+    snapshot: GraphSnapshot, selected: list[GraphNode], objective: str
+) -> tuple[str, ...]:
+    selected_text = " ".join(_node_search_text(node) for node in selected)
+    all_text = " ".join(_node_search_text(node) for node in snapshot.nodes)
+    missing: list[str] = []
+    for term in _objective_terms(objective):
+        if len(term) < 4 or term not in all_text or term in selected_text:
+            continue
+        matches = sum(term in _node_search_text(node) for node in snapshot.nodes)
+        if matches <= _MAX_ANCHOR_MATCHES:
+            missing.append(term)
+    return tuple(missing)
 
 
 def _evidence_id(node: GraphNode) -> str:

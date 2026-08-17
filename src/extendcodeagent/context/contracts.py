@@ -124,4 +124,5 @@ class WeakLocalEvidencePackage:
     candidate_count: int
     excluded_count: int
     truncated: bool
+    candidate_search_truncated: bool
     deterministic_resolution: bool
