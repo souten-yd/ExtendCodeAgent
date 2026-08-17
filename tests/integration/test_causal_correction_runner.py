@@ -153,9 +153,7 @@ def test_report_separates_compatible_reuse_from_new_model_calls(tmp_path: Path) 
 
 def test_noncompliant_forced_capture_is_not_compatibility_evidence() -> None:
     assert runner._capture_is_compliance_compatible({})
-    assert runner._capture_is_compliance_compatible(
-        {"forced_use_compliance": {"compliant": True}}
-    )
+    assert runner._capture_is_compliance_compatible({"forced_use_compliance": {"compliant": True}})
     assert not runner._capture_is_compliance_compatible(
         {"forced_use_compliance": {"compliant": False, "classification": "PI_TOOL_API_GAP"}}
     )
