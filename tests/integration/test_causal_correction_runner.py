@@ -55,6 +55,20 @@ def test_workspace_templates_resolve_relative_root_before_git_worktree_creation(
     assert templates.workspace_root == (tmp_path / "relative/workspace-state/workspaces")
 
 
+def test_workspace_templates_make_treatment_ids_path_safe(tmp_path: Path) -> None:
+    templates = adaptive.WorkspaceTemplates(tmp_path, {})
+    templates.strategy = "git_worktree"
+    captured: list[Path] = []
+    templates.ensure_template = lambda task_id: tmp_path / task_id  # type: ignore[method-assign]
+    templates._create = lambda template, target, strategy: captured.append(target)  # type: ignore[method-assign]
+
+    workspace = templates.prepare_retry_safe("task", "causal--forced_ablation:graph--r1")
+
+    assert workspace == captured[0]
+    assert ":" not in workspace.name
+    assert workspace.name.endswith("--363e2c68")
+
+
 def test_corrective_run_stops_positive_capabilities_after_one_pair(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ) -> None:
@@ -135,6 +149,14 @@ def test_report_separates_compatible_reuse_from_new_model_calls(tmp_path: Path) 
     assert report["efficiency"]["llm_calls_executed"] == 0
     assert report["efficiency"]["llm_calls_reused"] == 1
     assert report["efficiency"]["reused_model_wall_time_ms"] == 12
+
+
+def test_noncompliant_forced_capture_is_not_compatibility_evidence() -> None:
+    assert runner._capture_is_compliance_compatible({})
+    assert runner._capture_is_compliance_compatible({"forced_use_compliance": {"compliant": True}})
+    assert not runner._capture_is_compliance_compatible(
+        {"forced_use_compliance": {"compliant": False, "classification": "PI_TOOL_API_GAP"}}
+    )
 
 
 def test_compatible_reclassification_keeps_existing_immutable_trace(tmp_path: Path) -> None:

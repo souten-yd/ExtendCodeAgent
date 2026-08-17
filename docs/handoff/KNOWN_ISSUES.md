@@ -36,6 +36,9 @@
 - The first reclassification attempt correctly stopped on a trace-ID conflict because rerunning the
   deterministic oracle changed only timing. Keep the immutable source trace and do not append a
   second envelope for an already traced migrated cell; no new model call occurred in this attempt.
+- `forced_ablation:graph` on `b947a24` exposed `%3A` workspace-root encoding and is diagnostic only,
+  not capability evidence. Preserve its capture/checkpoint; after the path-safe workspace repair,
+  compatibility migration must reject that noncompliant capture and execute a fresh isolated cell.
 
 ## Shared GitHub Copilot monthly quota defers 17 historical Codex cells
 
