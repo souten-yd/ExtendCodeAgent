@@ -93,6 +93,7 @@ non-goals remain binding).
 | `evaluation/b0a-quality-target-v2.json` | **Active model-execution policy exception.** Narrows execution to the existing port-8090 `local-practical` Qwen route without changing the matrix, task suite, oracle, thresholds, corpus, capabilities, stages or their order. V1 and prior Copilot evidence remain immutable history. |
 | `evaluation/b0a-checkpoint-compatibility-v2.json` | Sealed Bridge/migration contract for promoting only compatible `local-practical` results from the existing 54/54 Qwen checkpoint into the active v2 denominator. |
 | `evaluation/b0a-checkpoint-compatibility-v3.json` | Active sealed Bridge/migration contract for carrying the completed local-only baseline across the runner-only resolved-route provenance-gate repair. |
+| `evaluation/evaluation-pi-plan-v1.json` | Sealed expected PI-use ground truth for the B0b causal-correction gate and later C1/C3 selection scoring. It is manual-reviewed from task/oracle/capability responsibility, not a production planner or an observed-agent-use plan. |
 
 ## 3. Resolved inconsistencies
 
@@ -397,8 +398,10 @@ to skip. So the matrix is run in two passes.
 **Screening.** Wide and shallow, with the sealed exhaustive matrix retained as a **hard maximum**, not
 a mandatory call schedule. Each `ablation(X)` uses one assigned model tier over the unchanged tuning
 subset and effect threshold. Before any model call, deterministic PI preflight and the active run's
-actual non-status `pi_*` tool/capability trace select only capability/task pairs that were exercised;
-the rest are `NOT_TESTED_NO_ACTIVE_USE`, never no effect. Task-relevant PI outputs, evidence IDs,
+actual non-status `pi_*` tool/capability trace may characterize **observational auto-selection** and
+avoid work in that observational schedule. The resulting `NOT_TESTED_NO_ACTIVE_USE` means only that
+the agent did not exercise the capability; it is neither efficacy-negative evidence nor `no effect`.
+Task-relevant PI outputs, evidence IDs,
 canonical refs, selected tests, uncertainty and obligations are compared across D0–D4 and identical
 depths form one equivalence class. Agent depth exploration starts D0, then D1, D2, D3 and D4 only when
 the prior distinct output is insufficient; it stops at the minimum sufficient depth and never emits a
@@ -418,6 +421,19 @@ speedup.
 **Confirmation.** Narrow and deep. Only capabilities whose screening result crosses the effect
 threshold proceed to the full tier set, full repetitions and the held-out split. Promotion and demotion
 decisions under §7.4 may cite **confirmation results only**.
+
+Capability efficacy and capability selection are independent axes. Causal efficacy uses the sealed
+`EvaluationPIPlan`, constructed from task instruction/class, oracle and capability responsibility—not
+observed model tool choice. Evaluation-only policies preserve core `RolloutMode.ACTIVE` as authority:
+`auto_pi` leaves selection to the agent/controller; `forced_pi` requires the plan; `forced_off` uses
+the same task/model/prompt/request plan with PI disabled; and `forced_ablation:X` uses the same plan
+with only X disabled. Required tool order and exact inputs are checked fail-closed from the trace;
+`FORCED_USE_COMPLIANCE_FAILURE`, `FORCED_PLAN_INPUT_MISMATCH`, and `PI_TOOL_API_GAP` cells cannot enter
+causal scoring. `forced_pi vs forced_off` measures intrinsic PI effect,
+`forced_pi vs forced_ablation:X` measures X, and `auto_pi vs forced_pi` measures selection/routing.
+Auto-use reports precision/recall, under/over-selection and the states `EXPECTED_AND_USED`,
+`EXPECTED_BUT_NOT_USED`, `OPTIONAL_USED`, `IRRELEVANT_NOT_USED`, and `UNRESOLVED`; an expected miss is
+`PI_SELECTION_GAP`, not a capability failure.
 
 Rules that keep this honest:
 
@@ -632,9 +648,12 @@ capabilities proceed to B0b and which are recorded `no screened effect`. **No pr
 decision may be taken here.**
 
 **B0b — Confirmation and gap report**
-Entry: B0a screening table.
+Entry: B0a screening table plus a merged causal-correction gate based on the sealed EvaluationPIPlan.
 Scope: full tier set, full repetitions and the held-out split, for the capabilities that screened
-through; measure the competition-derived concerns (weak-local prefix/tool-output efficiency, lifecycle
+through or show a positive corrective causal signal. Preserve the six current observational candidates;
+selection bias alone cannot permanently exclude another capability. A capability without a suitable
+sealed task is `NO_TASK_COVERAGE`, not no effect. Measure the competition-derived concerns
+(weak-local prefix/tool-output efficiency, lifecycle
 observability, worktree/subagent capability availability, completion correctness, cross-session
 evidence loss, host-native overlap); record how far PI follows the E3 cross-boundary GUI/runtime task,
 since that measurement is the entry condition for stages X0 and V5; record the required-verification-set
@@ -677,7 +696,8 @@ degrade explicitly.
 Scope: `TaskSignals` → deterministic `TaskIntent` → `IntelligencePlan` → `PlanOutcome`, shadow only, no
 behavior change; levels L0–L5 per `TRANSPARENT_PI_ORCHESTRATION_PLAN.md`; no LLM classifier.
 Exit: intent accuracy, capability precision/recall, under/over-selection rate measured against
-human-reviewed expected plans on tuning and held-out tasks.
+human-reviewed expected plans on tuning and held-out tasks. The EvaluationPIPlan is evaluation ground
+truth; the C1 planner is the system under test, not a productionized copy of that expected plan.
 
 **C2 — Weak-local evidence protocol** (conditional; was `WL-0`)
 Entry: B0/C1 show weak-local failures that bounded evidence can address. Scope: stable PI envelope
@@ -689,7 +709,9 @@ Exit: repeated `local-low` and `local-practical` distributions showing task-succ
 **C3 — Advisory automatic selection and adaptive depth** (was `TA-1` + `AL-3`)
 Scope: the planner selects capabilities *and* depth inside configured bounds; advisory only; progressive
 expansion rules; reasons recorded in the trace. Exit: `native / manual-best / static-depth / auto` compared;
-auto must not be worse than manual-best on Layer B while reducing Layer C.
+auto must not be worse than manual-best on Layer B while reducing Layer C. This is the first
+production-like automatic capability/depth selection; the corrective EvaluationPIPlan remains only
+the expected-plan oracle.
 
 ### Phase 3 — Verification intelligence
 
@@ -948,6 +970,15 @@ compatible; only proven residual cells rerun. The 714-cell exhaustive schedule i
 Invariant 11 adaptive local-practical screening and local-practical held-out B0b confirmation follow
 without changing tasks, oracles, corpus or effect threshold. While this exception is active, promotion is bounded
 to `active-scoped(local-practical)` unless a stricter existing rule applies.
+
+The completed 714-accounted adaptive result is retained as **observational / agent-selection-weighted
+screening** and **evaluation-scheduler call-avoidance** evidence. Its 95.7983% avoided-call ratio is
+not a measured production ECA call reduction, and its `NOT_TESTED_NO_ACTIVE_USE` states are not
+negative capability-efficacy evidence. Before B0b, a bounded corrective gate uses the sealed
+EvaluationPIPlan on representative relevant tasks only. It begins with one forced ON/OFF/ablation
+comparison per covered capability, escalates only causal boundaries to repetitions 2/3, preserves the
+current six candidates, and targets tens—not a return to 714—of new calls. Corrective evidence must be
+merged before B0b starts.
 
 R0 may close only as a **production-capable local-only baseline**. Unexecuted tiers are never passes;
 all cross-tier/frontier/general-model claims are withdrawn. Existing §10.3 exception semantics apply

@@ -4,7 +4,7 @@ Status date: 2026-08-17
 
 ## Program state
 
-Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0a COMPLETE — B0b NEXT**
+Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0a OBSERVATIONAL COMPLETE — CAUSAL CORRECTION NEXT**
 
 The active `b0a-quality-target-v2` progression target is the ControlDeck-managed `local-practical`
 Qwen route only.
@@ -16,17 +16,19 @@ claim is permitted for those tiers while the local-only exception is active.
 
 B0a adaptive screening completed at exact merged head `e793103`: 30 new Qwen calls plus 22 reused
 results accounted for the full 714-cell contract together with 684 machine-classified avoided calls
-(95.7983%). Six capabilities proceed only as B0b candidates: graph, twin, semantic, impact,
-test-selection and test-obsolescence. Blueprint and Strategy had no screened effect; Context,
-Runtime, Convergence, Research and Traceability remain `NOT_TESTED_NO_ACTIVE_USE`. No capability was
+(95.7983%). This is observational / agent-selection-weighted screening and evaluation-scheduler call
+avoidance—not causal proof for all capabilities and not a production ECA call-reduction metric.
+`NOT_TESTED_NO_ACTIVE_USE` is not negative efficacy evidence. The six current candidates (graph,
+twin, semantic, impact, test-selection and test-obsolescence) remain intact; no capability was
 promoted or demoted. See `docs/evidence/final/b0a-adaptive-screening-result-v1.json`.
 
-B0b confirmation scheduling is implemented but no held-out model cell has run yet. The unchanged
-contract has a 108-call hard maximum: 36 full-repetition native/off/active held-out baseline calls,
-then at most 72 ablation calls. Each capability-task ablation runs all three repetitions only when
-all three active repetitions PASS and exercise that capability; every other cell receives an
-explicit non-outcome reason. The pre-execution expected count remains the conservative 108 until the
-active trace closes the conditional frontier.
+B0b is behind a causal-correction entry gate. A sealed EvaluationPIPlan independently defines expected
+capabilities and exact PI requests for all 13 tasks without using prior Qwen selection. The corrective
+screen compares forced PI ON/OFF/one-capability ablation under the same task/model/prompt/request plan,
+with trace-based fail-closed compliance, while auto selection remains a separate metric. The model-free
+plan has 24 initial and 58 maximum new calls; only causal boundaries receive repetitions 2/3.
+`research` and `test_obsolescence` are `NO_TASK_COVERAGE` for this correction, not no effect. The
+previous active-trace-dependent B0b runner was not executed and is not adopted.
 
 The prior three-route checkpoint remains immutable history: Qwen 54/54, Sonnet 54/54, Codex 37/54,
 145/162 overall, with 17 Codex cells blocked by quota. It is not the current local-first denominator
@@ -125,10 +127,10 @@ for the `call_graph` folding and the `ConfigError` policy: `docs/handoff/DECISIO
 
 ## Immediate next action
 
-Phase 1, stage B0b: confirm only the six B0a candidates on the unchanged held-out KasaneCore split
-with local-practical Qwen, the existing repetition count, oracle and promotion/demotion rules. Keep
-the claim bounded to `active-scoped(local-practical)` and produce the B0 gap report. See
-`docs/handoff/NEXT_TASK.md`.
+Phase 1, B0b entry gate: merge the EvaluationPIPlan/use-policy/trace-compliance implementation, run
+and merge the bounded local-practical causal correction, then derive B0b candidates from the preserved
+six plus any corrective positives. Only afterward confirm on the unchanged held-out KasaneCore split
+with the existing repetitions, oracle and promotion/demotion rules. See `docs/handoff/NEXT_TASK.md`.
 
 The first B0a bootstrap checkpoint attempted all nine pinned repositories: seven established a Twin,
 while KasaneCore and PEDS exceeded the bounded 300-second initial-Twin limit and are

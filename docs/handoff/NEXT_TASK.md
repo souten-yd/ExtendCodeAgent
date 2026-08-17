@@ -19,42 +19,44 @@ Do not schedule work from the legacy identifiers (`RV-x`, `TA-x`, `AL-x`, `CV-x`
 
 ## Current stage
 
-**Phase 1 — B0b: confirmation and gap report.**
+**Phase 1 — B0b entry gate: causal capability correction.**
 
 Entry conditions satisfied: B0a completed against exact merged head `e793103` and produced its
-screening table without a promotion or demotion decision. The only candidates that proceed are
-`graph`, `twin`, `semantic`, `impact`, `test_selection`, and `test_obsolescence`.
+screening table without a promotion or demotion decision. Its six candidates (`graph`, `twin`,
+`semantic`, `impact`, `test_selection`, `test_obsolescence`) remain candidates, but the result is now
+classified as observational / agent-selection-weighted screening rather than causal efficacy proof.
+Corrective evidence must merge before held-out B0b starts.
 
 Scope:
 
 - use only ControlDeck-managed Qwen3.6 27B at `127.0.0.1:8090`, context 262,144, with the existing
   local-practical limits; make no Copilot or host-default call or availability probe;
-- confirm only the six screened-through capabilities on the sealed held-out KasaneCore split, using
-  the existing repetition count, task/oracle contract, effect threshold and promotion/demotion rule;
-- apply Minimum Sufficient Reasoning before calls while preserving the confirmation contract:
-  deterministic active-use/relevance evidence may avoid irrelevant calls, but every unexercised or
-  stopped cell must retain a machine-readable non-outcome classification;
-- measure the competition concerns, cross-boundary GUI/runtime follow-through and V0a
-  required-verification-set quality required by Master Plan B0b;
-- produce `docs/evidence/final/baseline-gap-report.md`, including classified failures, ranked gaps,
-  later-stage skip/keep decisions and the section 10.2 program-level criteria;
+- seal the manual-reviewed EvaluationPIPlan from task instruction/class, oracle and capability
+  responsibility, excluding prior Qwen tool choice and outcome;
+- keep core `RolloutMode.ACTIVE` unchanged and add evaluation-only `auto_pi`, `forced_pi`,
+  `forced_off`, and `forced_ablation:X` policies;
+- compare forced ON/OFF/ablation with the same task, model, prompt and exact PI request plan; verify
+  required order/input from trace and exclude noncompliant/API-gap cells from causal scoring;
+- retain auto-use separately with selection precision/recall, under/over-selection and
+  `EXPECTED_BUT_NOT_USED -> PI_SELECTION_GAP`;
+- run only representative expected capability/task pairs: 24 initial new calls and 58 maximum,
+  stopping positives after repetition 1 and extending only boundaries to repetitions 2/3;
+- preserve the current six candidates and add any positive corrective candidates. `research` and
+  `test_obsolescence` currently have `NO_TASK_COVERAGE` for this correction and receive no negative
+  efficacy classification;
 - bound every claim to `active-scoped(local-practical)`; no frontier, host-default, local-low or
   general-model claim is permitted.
 
 Entry evidence is sealed in `docs/evidence/final/b0a-adaptive-screening-result-v1.json`. It accounts
 for all 714 cells with 30 new calls, 22 compatible reused results, and 684 machine-classified avoided
-calls. `blueprint` and `strategy` are `no screened effect`; `context`, `runtime`, `convergence`,
-`research`, and `traceability` are `NOT_TESTED_NO_ACTIVE_USE`, not no effect.
+calls. This 95.7983% is evaluation-scheduler call avoidance, not a production ECA call-reduction
+claim. `NOT_TESTED_NO_ACTIVE_USE` says the auto/active agent did not exercise a capability; it is not
+negative capability-efficacy evidence.
 
-Exit evidence and rules are exactly those in Master Plan sections 7.5, 8 B0b and 10.2. Do not widen
-the held-out split or redesign the matrix, tasks, oracle, corpus, capabilities or threshold.
-
-Use `tools/local/b0b-confirmation-runner`. Generate its sealed model-free plan at exact merged main
-before inference. The unchanged local-only hard maximum and conservative pre-active expected count
-are 108: 36 mandatory native/off/active calls plus 72 conditional ablations. Full confirmation
-repetitions are never sequentially stopped. The active trace may remove only a complete
-capability-task ablation triplet, classified as `NOT_TESTED_ACTIVE_NOT_PASS`,
-`NOT_TESTED_NO_ACTIVE_USE`, or `NOT_TESTED_INCONSISTENT_ACTIVE_USE`.
+Exit: implementation/test/evidence/handoff PR merged, then the exact-main corrective plan and Qwen
+result sealed and merged. Only then regenerate a B0b confirmation plan from the candidate union and
+the unchanged held-out contract. Do not redesign the matrix, task suite, oracle, corpus, capabilities,
+held-out split or threshold.
 
 The B0a execution notes below are retained as immutable history and are not current scheduling
 instructions.
@@ -180,8 +182,8 @@ prompt or transcript. See `docs/evidence/final/e5-trace-proof.json`.
 - **E5** minimal PI trace as evaluation infrastructure — done, including explicit
   planned-versus-observed state provenance and reserved `used_features` shape.
 
-**B0a** environment/integration freeze and adaptive screening is complete. **B0b** confirmation is
-current and includes only the six screened-through capabilities above.
+**B0a** environment/integration freeze and observational adaptive screening is complete. The
+**B0b entry gate** is current; held-out confirmation starts only after causal correction merges.
 
 ## Ablation arms available after E1
 

@@ -925,6 +925,7 @@ def test_metrics_split_pi_and_post_tool_model_time(tmp_path: Path) -> None:
             "part": {
                 "tool": "extendcodeagent_pi_symbol",
                 "state": {
+                    "input": {"query": "select_tests"},
                     "time": {"start": 1_000, "end": 1_120},
                     "output": json.dumps(
                         {
@@ -990,8 +991,50 @@ def test_metrics_split_pi_and_post_tool_model_time(tmp_path: Path) -> None:
     }
     assert "src/extendcodeagent/testing/service.py" in measured["observed_pi_facts"]
     assert measured["pi_capabilities_used"] == ["blueprint", "strategy"]
+    assert measured["pi_tool_requests"][0] == {
+        "tool": "pi_symbol",
+        "input": {"query": "select_tests"},
+    }
     assert "canonical_ref:py://testing.service#select_tests" in measured["selected_evidence_ids"]
     assert "repo_path:tests/unit/test_test_intelligence.py" in measured["selected_evidence_ids"]
+
+
+def test_outcome_attribution_measures_required_verification_set_without_weakening_oracle(
+    tmp_path: Path,
+) -> None:
+    answer = tmp_path / ".eca-eval/answer.json"
+    answer.parent.mkdir()
+    answer.write_text(
+        json.dumps({"status": "completed", "selected_tests": ["tests/a.py", "tests/extra.py"]})
+    )
+    task = {
+        "oracle": {
+            "checks": [
+                {
+                    "kind": "answer",
+                    "path": ".eca-eval/answer.json",
+                    "equals": {
+                        "status": "completed",
+                        "selected_tests": ["tests/a.py", "tests/b.py"],
+                    },
+                }
+            ]
+        }
+    }
+
+    attribution = _outcome_attribution(
+        task, tmp_path, arm="active", oracle_exit=1, observed_pi_facts=[]
+    )
+
+    assert attribution["final_exact_pass"] is False
+    assert attribution["required_verification_set_quality"] == {
+        "status": "MEASURED_BY_SEALED_TASK_ORACLE",
+        "true_positive": 1,
+        "false_positive": 1,
+        "false_negative": 1,
+        "precision": 0.5,
+        "recall": 0.5,
+    }
 
 
 def test_outcome_attribution_separates_retrieval_projection_and_reasoning(

@@ -1027,3 +1027,23 @@ Consequence: exhaustive evaluation is the hard-maximum fallback. Deterministic p
 active-use relevance filtering, depth-output equivalence, sequential stopping and compatible result
 reuse run first. Skips retain machine-readable states and never become PASS or `no_screened_effect`;
 independent repetitions required by an evaluation contract remain valid evidence work.
+
+## 2026-08-17 — Capability efficacy and Capability selection are independent evaluation axes
+
+Decision: Capability efficacy and Capability selection are independent evaluation axes. Core
+`RolloutMode.ACTIVE` continues to mean authority, not mandatory tool use. Evaluation uses a sealed
+expected EvaluationPIPlan and separate `auto_pi`, `forced_pi`, `forced_off`, and
+`forced_ablation:X` policies. Causal ON/OFF/ablation comparisons hold task, model, prompt and exact PI
+request plan constant; required tool order/input is verified fail-closed from the trace.
+
+Reason: the current B0a screen used the active agent's self-selected `pi_*` trace for relevance, which
+mixes whether a capability helps with whether the agent selected it. In particular,
+`NOT_TESTED_NO_ACTIVE_USE` describes an unexercised route and is not negative capability-efficacy
+evidence. An expected capability omitted by auto-use is a `PI_SELECTION_GAP`, not a capability failure.
+
+Consequence: the completed B0a result remains immutable observational / agent-selection-weighted
+screening and scheduler call-avoidance evidence. Its six candidates remain; selection bias alone
+cannot exclude other capabilities. Before B0b, a tens-of-calls corrective screen evaluates only
+representative relevant task/capability pairs, marks absent task coverage explicitly, and escalates
+only causal boundaries. C1/C3 compare their planner against the EvaluationPIPlan as expected-plan
+ground truth; the plan itself is not a production planner.

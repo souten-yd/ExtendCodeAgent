@@ -19,6 +19,7 @@ from statistics import median
 from typing import Any
 
 from extendcodeagent.evaluation import EvaluationTrace, EvaluationTraceLog
+from extendcodeagent.evaluation.causal import validate_evaluation_pi_plan
 from extendcodeagent.evaluation.compatibility import (
     CompatibilityError,
     audit_checkpoint,
@@ -36,7 +37,7 @@ LABELS = ROOT / "docs/evaluation/labels-v1/graph-quality-labels.json"
 METRICS = ROOT / "docs/evaluation/pi-verification-integrated-metrics-v1.json"
 CORPUS = ROOT / "docs/evaluation/test-portfolio-corpus-v1.json"
 B0A_PLAN = ROOT / "docs/evaluation/b0a-screening-plan-v1.json"
-B0A_ADAPTIVE_RESULT = ROOT / "docs/evidence/final/b0a-adaptive-screening-result-v1.json"
+EVALUATION_PI_PLAN = ROOT / "docs/evaluation/evaluation-pi-plan-v1.json"
 B0A_ACTIVATION_PLAN = ROOT / "docs/evaluation/b0a-activation-plan-v1.json"
 B0A_QUALITY_TARGET = ROOT / "docs/evaluation/b0a-quality-target-v2.json"
 B0A_BOOTSTRAP = ROOT / "docs/evidence/final/b0a-bootstrap-environment-v1.json"
@@ -217,6 +218,7 @@ def seal(path: Path) -> None:
 def validate() -> None:
     matrix = _load(MATRIX)
     tasks = _load(TASK_SUITE)
+    evaluation_pi_plan = _load(EVALUATION_PI_PLAN)
     labels = _load(LABELS)
     metrics = _load(METRICS)
     corpus = _load(CORPUS)
@@ -226,6 +228,8 @@ def validate() -> None:
     bootstrap = _load(B0A_BOOTSTRAP)
     compatibility = _load(B0A_CHECKPOINT_COMPATIBILITY)
     _verify_seal(matrix, "matrix")
+    _verify_seal(evaluation_pi_plan, "EvaluationPIPlan")
+    validate_evaluation_pi_plan(evaluation_pi_plan, tasks, CONFIGURABLE_CAPABILITIES)
     _verify_seal(labels, "Layer A labels")
     expected_inputs = {
         "layer_b_task_suite": TASK_SUITE.relative_to(ROOT).as_posix(),
@@ -352,14 +356,6 @@ def _arms(matrix: dict[str, Any], scope: str) -> list[str]:
             for depth in matrix["depths"]
         ]
         return ["active", *ablations, *depths]
-    if scope == "b0b-confirmation":
-        result = _load(B0A_ADAPTIVE_RESULT)
-        _verify_seal(result, "B0a adaptive screening result")
-        candidates = list(result["screening_decisions"]["proceed_to_b0b"])
-        unknown = set(candidates) - set(matrix["ablation_capabilities"])
-        if unknown:
-            raise EvaluationError(f"B0b result names unknown capabilities: {sorted(unknown)}")
-        return ["native", "off", "active", *(f"ablation:{item}" for item in candidates)]
     if scope in {"smoke", "base"}:
         return ["native"] if scope == "smoke" else base
     ablations = [f"ablation:{item}" for item in matrix["ablation_capabilities"]]
@@ -414,17 +410,6 @@ def plan(
             "included_repositories": sorted(included),
             "excluded_repositories": sorted(set(eligibility) - included),
         }
-    elif scope == "b0b-confirmation":
-        tasks = [item for item in tasks if item["split"] == "held-out"]
-        screening_result = _load(B0A_ADAPTIVE_RESULT)
-        _verify_seal(screening_result, "B0a adaptive screening result")
-        b0a = {
-            "adaptive_screening_result_seal": screening_result["seal"]["canonical_payload"],
-            "quality_target_seal": _load(B0A_QUALITY_TARGET)["seal"]["canonical_payload"],
-            "confirmation_candidates": list(
-                screening_result["screening_decisions"]["proceed_to_b0b"]
-            ),
-        }
     arms = _arms(matrix, scope)
     if selected_arms is not None:
         unknown = selected_arms - set(arms)
@@ -443,8 +428,6 @@ def plan(
         models = [item for item in models if item["id"] == "local-practical"]
     elif scope == "b0a-baseline":
         models = [item for item in models if item["id"] in B0A_QUALITY_MODELS]
-    elif scope == "b0b-confirmation":
-        models = [item for item in models if item["id"] == "local-practical"]
     elif scope == "screening":
         models = [item for item in models if item["id"] in {"local-low", "local-practical"}]
     if selected_models is not None:
@@ -481,7 +464,6 @@ def plan(
                             "pi_activation_gate": scope == "b0a-activation",
                             "pi_effect_pilot": scope == "b0a-pilot",
                             "pi_screening": scope == "b0a-screening",
-                            "pi_confirmation": scope == "b0b-confirmation",
                         }
                     )
     if scope == "b0a-pilot":
@@ -544,7 +526,11 @@ def _prepare(task: dict[str, Any], workspace: Path) -> None:
 def _arm_mode(arm: str) -> tuple[str, str | None]:
     if arm in {"native", "off", "shadow", "advisory", "active"}:
         return arm, None
+    if arm in {"auto_pi", "forced_pi"}:
+        return "active", None
     kind, _, value = arm.partition(":")
+    if kind == "forced_ablation" and value in CONFIGURABLE_CAPABILITIES:
+        return "active", value
     if kind == "ablation" and value in CONFIGURABLE_CAPABILITIES:
         return "active", value
     if kind == "depth":
@@ -691,6 +677,8 @@ def _metrics(log_path: Path) -> dict[str, Any]:
         "cache_write_tokens": 0,
         "errors": [],
         "pi_tools": [],
+        "pi_tool_requests": [],
+        "pi_tool_failures": [],
         "pi_capabilities_used": [],
         "selected_evidence_ids": [],
         "twin_revision_ids": [],
@@ -709,6 +697,8 @@ def _metrics(log_path: Path) -> dict[str, Any]:
         "observed_pi_facts": [],
     }
     pi_tools: set[str] = set()
+    pi_tool_requests: list[dict[str, Any]] = []
+    pi_tool_failures: list[dict[str, str]] = []
     pi_capabilities_used: set[str] = set()
     evidence_ids: set[str] = set()
     revision_ids: set[str] = set()
@@ -736,8 +726,20 @@ def _metrics(log_path: Path) -> dict[str, Any]:
                         tool_intervals.append((start, end))
                 tool_name = str(part.get("tool") or "")
                 if tool_name.startswith("pi_") or "_pi_" in tool_name:
-                    pi_tools.add(tool_name.removeprefix("extendcodeagent_"))
+                    normalized_tool = tool_name.removeprefix("extendcodeagent_")
+                    pi_tools.add(normalized_tool)
                     if isinstance(state, dict):
+                        request_input = state.get("input")
+                        pi_tool_requests.append(
+                            {
+                                "tool": normalized_tool,
+                                "input": request_input if isinstance(request_input, dict) else {},
+                            }
+                        )
+                        if state.get("status") == "error":
+                            pi_tool_failures.append(
+                                {"tool": normalized_tool, "reason": "tool_state_error"}
+                            )
                         timing = state.get("time")
                         if isinstance(timing, dict):
                             start, end = timing.get("start"), timing.get("end")
@@ -769,6 +771,8 @@ def _metrics(log_path: Path) -> dict[str, Any]:
             result["cache_read_tokens"] += int(cache.get("read") or 0)
             result["cache_write_tokens"] += int(cache.get("write") or 0)
     result["pi_tools"] = sorted(pi_tools)
+    result["pi_tool_requests"] = pi_tool_requests
+    result["pi_tool_failures"] = pi_tool_failures
     result["pi_capabilities_used"] = sorted(pi_capabilities_used)
     result["selected_evidence_ids"] = sorted(evidence_ids)
     result["twin_revision_ids"] = sorted(revision_ids)
@@ -923,6 +927,20 @@ def _task_instruction(cell: dict[str, Any], task: dict[str, Any], mode: str) -> 
             "Treat the requested .eca-eval/answer.json keys as an exact schema: include every "
             "requested key, preserve the requested scalar/list types, and add no explanation, "
             "evidence, or other unrequested keys. " + instruction
+        )
+    use_policy = str(cell.get("pi_use_policy") or "")
+    if use_policy in {"forced_pi", "forced_off", "forced_ablation"}:
+        evaluation_plan = _load(EVALUATION_PI_PLAN)
+        entry = next(item for item in evaluation_plan["tasks"] if item["task_id"] == task["id"])
+        requests = json.dumps(
+            entry["tool_requests"], ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        )
+        return (
+            "This is a forced EvaluationPIPlan cell. Before task reasoning, make exactly these "
+            f"pi_* calls in this order with exactly these JSON inputs: {requests}. Do not skip, "
+            "substitute, reorder, or add another pi_* call. A tool failure must be reported as "
+            "unavailable evidence, never fabricated. Then complete the unchanged original task. "
+            + instruction
         )
     if cell.get("pi_activation_gate"):
         return (
@@ -1452,7 +1470,7 @@ def run(
         pilot_evidence = _require_pilot_report(pilot_report)
     if scope == "b0a-screening":
         baseline_evidence = _require_baseline_report(baseline_report)
-    if scope.startswith("b0a-") or scope == "b0b-confirmation":
+    if scope.startswith("b0a-"):
         _require_clean_worktree()
     schedule = plan(
         scope,
@@ -2522,7 +2540,6 @@ def main() -> int:
             "b0a-pilot",
             "b0a-baseline",
             "b0a-screening",
-            "b0b-confirmation",
         ],
         default="full",
     )
@@ -2539,7 +2556,6 @@ def main() -> int:
             "b0a-pilot",
             "b0a-baseline",
             "b0a-screening",
-            "b0b-confirmation",
         ],
         required=True,
     )

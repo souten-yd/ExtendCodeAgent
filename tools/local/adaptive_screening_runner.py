@@ -39,6 +39,7 @@ from extendcodeagent.evaluation.adaptive import (
     representative_depths,
     sequential_ablation_decision,
 )
+from extendcodeagent.evaluation.causal import forced_use_compliance, selection_assessment
 from extendcodeagent.service import ProjectIntelligenceApplication
 from tools.local import evaluation_runner as legacy
 
@@ -930,6 +931,18 @@ def _finalize_agent(
             },
         }
     )
+    evaluation_use_policy = str(cell.get("pi_use_policy") or "")
+    if evaluation_use_policy in {"forced_pi", "forced_off", "forced_ablation", "auto_pi"}:
+        evaluation_plan = _load(legacy.EVALUATION_PI_PLAN)
+        entry = next(
+            item for item in evaluation_plan["tasks"] if item["task_id"] == task["id"]
+        )
+        if evaluation_use_policy in {"forced_pi", "forced_off", "forced_ablation"}:
+            result["forced_use_compliance"] = forced_use_compliance(entry, result)
+        else:
+            result["selection_assessment"] = selection_assessment(
+                entry, result["pi_tools"], result["pi_capabilities_used"]
+            )
     if persist_fragment:
         fragment = raw_root / "result-fragments" / f"{cell['cell_id']}.json"
         _atomic_json(fragment, result)
