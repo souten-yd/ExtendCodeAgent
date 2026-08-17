@@ -276,6 +276,15 @@ def _verify_plan(plan: Mapping[str, Any]) -> None:
         raise CoexistenceError("B2 plan does not use port 8090")
     if plan.get("team_mode") != "off":
         raise CoexistenceError("B2 requires Team Mode off")
+    expected = {
+        "model": "Qwen3.6 27B",
+        "context": MODEL_CONTEXT,
+        "output_limit": MODEL_OUTPUT,
+        "eca_rollout_mode": ECA_ROLLOUT_MODE,
+    }
+    for key, value in expected.items():
+        if plan.get(key) != value:
+            raise CoexistenceError(f"B2 plan has incompatible {key}")
     opencode = Path(str(plan["opencode"]["path"]))
     if _version(opencode) != plan["opencode"]["version"]:
         raise CoexistenceError("OpenCode version changed after plan seal")
@@ -422,7 +431,9 @@ def _isolated_env(
             "EXTENDCODEAGENT_PYTHON": (
                 str(profile / "missing-python") if degraded_sidecar else str(ECA_PYTHON)
             ),
-            "EXTENDCODEAGENT_MODE": (ECA_ROLLOUT_MODE if "eca" in STACKS[stack] else "off"),
+            "EXTENDCODEAGENT_MODE": (
+                str(plan["eca_rollout_mode"]) if "eca" in STACKS[stack] else "off"
+            ),
             "EXTENDCODEAGENT_ROOT": str(workspace),
         }
     )

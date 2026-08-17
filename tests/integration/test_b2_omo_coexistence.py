@@ -44,6 +44,15 @@ def test_b2_plan_seals_exact_five_stack_local_only_contract(
         "eca_omo": ["eca", "omo"],
     }
 
+    incompatible = runner._seal(
+        {
+            **{key: value for key, value in plan.items() if key != "seal"},
+            "eca_rollout_mode": "advisory",
+        }
+    )
+    with pytest.raises(runner.CoexistenceError, match="incompatible eca_rollout_mode"):
+        runner._verify_plan(incompatible)
+
 
 def test_stack_expectations_keep_namespaces_and_team_mode_fail_closed() -> None:
     tools = sorted(runner.EXPECTED_PI_TOOLS | runner.EXPECTED_OMO_TOOLS)
@@ -90,6 +99,7 @@ def test_isolated_environment_forbids_remote_credentials_and_disables_team(
     plan = {
         "eca": {"plugin": str(tmp_path / "eca.js")},
         "omo": {"root": str(tmp_path / "omo")},
+        "eca_rollout_mode": "active",
     }
     monkeypatch.setenv("OPENAI_API_KEY", "secret")
     monkeypatch.setenv("GH_TOKEN", "secret")

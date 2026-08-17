@@ -982,3 +982,6 @@ correction below because its active-trace relevance would have mixed efficacy wi
   `2875c04440879efba69e1692afaf07867e91f982a7d909491b411fa05136da97`). Full local gates remain
   all-fast 208 Python plus 10 adapter, integration 94 Python plus 10 adapter, both package builds and
   diff check PASS.
+- PR review bound process configuration back to the sealed plan: execution reads
+  `eca_rollout_mode` from the verified plan, and verification rejects any changed model, context,
+  output limit or ECA rollout mode before startup.
