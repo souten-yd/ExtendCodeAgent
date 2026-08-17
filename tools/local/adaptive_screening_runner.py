@@ -1157,7 +1157,7 @@ def bridge_benchmark(
             "meaningful_reduction_threshold": 0.10,
             "persistent_mode_adopted": False,
             "decision": (
-                "REJECT_SEMANTIC_DRIFT"
+                "REJECT_ORACLE_OUTCOME_MISMATCH"
                 if not same_oracle_result
                 else "KEEP_PER_CELL_RUN_INSUFFICIENT_REPEATED_SPEEDUP_EVIDENCE"
             ),

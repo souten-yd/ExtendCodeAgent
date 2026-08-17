@@ -64,6 +64,12 @@ exact-head 54/54 report opens the adaptive B0a screen. The sealed 714 cells rema
 deterministic active-use relevance, depth-output equivalence, compatible reuse and sequential
 stopping determine expected/max calls before execution under Master Plan Invariant 11.
 
+The implementation-commit preflight is sealed in
+`docs/evidence/final/b0a-adaptive-screening-execution-v1.json`: 102 candidate maximum, 23 compatible
+reused cells, 27 expected new calls before the first decision and 79 maximum new calls. Persistent
+OpenCode failed oracle-equivalence/speedup adoption and must not be used. After merge, regenerate the
+model-free plan at exact main, then run the per-cell adaptive frontier with `--resume`.
+
 The chronology below is retained as immutable history. Its 306-, 162-, and 145-cell instructions are
 superseded by quality-target v2 and are not current execution instructions.
 

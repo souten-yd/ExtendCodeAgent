@@ -25,8 +25,11 @@ Current task: merge adaptive B0a execution, then run the gated local-practical a
   strategy and skip reasons before any new Qwen inference. Do not probe or substitute another model.
 - Development-tree preflight reduced the 714 hard maximum to 102 adaptive candidates, with 534
   `NOT_TESTED_NO_ACTIVE_USE` and 78 depth-equivalent skips. One of 24 old results accessed the shared
-  runner `.venv` and must be invalidated under the corrected isolation contract. Regenerate these
-  counts at the clean implementation commit before treating them as execution evidence.
+  runner `.venv` and is invalid under the corrected isolation contract. Clean commit `6cbacaf`
+  reproduced 23 reusable cells, 27 expected new calls before the first decision and 79 maximum new
+  calls. The one-call persistent OpenCode Bridge was oracle-inconsistent and 23.7% slower, so retain
+  per-cell `opencode run`. Evidence: `docs/evidence/final/b0a-adaptive-screening-execution-v1.json`.
+  Regenerate the model-free plan at merged main before starting the model frontier.
 
 The chronology below is retained as history. Its four-model/306-cell and three-model/162-cell
 statements describe superseded protocols and are not current execution instructions.

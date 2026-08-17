@@ -133,6 +133,16 @@ neutral reason. Screening fails closed unless the
 exact-head 54/54 report binds the current local-first target seal. The old 306- and 162-cell protocols
 remain diagnostic history only.
 
+At clean implementation commit `6cbacaf`, model-free adaptive analysis selected 102 candidate cells
+from the 714 hard maximum. Before the first sequential decision it expects 50 results: 23 compatible
+reused cells and 27 new calls; the maximum new-call fallback is 79. It classified 534 cells
+`NOT_TESTED_NO_ACTIVE_USE` and 78 `SKIPPED_DEPTH_OUTPUT_EQUIVALENT`. One old active-refactor cell was
+invalidated because its trace accessed the shared runner `.venv`. The persistent OpenCode Bridge
+used one additional Qwen call and failed its adoption conditions: attach changed PASS to FAIL and
+took 68,016ms versus the 55,003ms per-cell control. Per-cell OpenCode therefore remains selected.
+See `docs/evidence/final/b0a-adaptive-screening-execution-v1.json`. These are scheduler/Bridge
+results, not a completed screening table or capability promotion.
+
 A corrected-head comprehensive baseline reached 229/306 before the host-default provider began
 returning `Rate limit exceeded`. OpenCode exhausted its retries immediately but the runner waited for
 each task timeout and recorded four cells as `TIMEOUT` with projection attribution. This is a runner

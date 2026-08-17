@@ -1,0 +1,129 @@
+{
+  "schema": 1,
+  "classification": "B0A_ADAPTIVE_SCREENING_IMPLEMENTATION_AND_BRIDGE_EVIDENCE",
+  "captured_at": "2026-08-17T13:32:45+09:00",
+  "implementation_revision": "6cbacafeb7833e4dbb56b7d2d6bb86c49e32a374",
+  "execution_scope": "local-only",
+  "model": "Qwen3.6 27B",
+  "endpoint": "127.0.0.1:8090",
+  "context": 262144,
+  "quality_claim_scope": "active-scoped(local-practical)",
+  "contract": {
+    "policy": "docs/evaluation/b0a-adaptive-screening-policy-v1.json",
+    "policy_seal": "d10358015eed5ae3023511b0a4f77d2a7eccb862e7e613837d7b85fdb0d27b9c",
+    "tasks_changed": false,
+    "oracle_changed": false,
+    "corpus_changed": false,
+    "capabilities_changed": false,
+    "effect_threshold_changed": false,
+    "promotion_or_demotion_permitted": false
+  },
+  "preserved_exhaustive_checkpoint": {
+    "path": ".evaluation/unified-v1/b0a-local-screening-80ac08d.json",
+    "sha256": "348671672b8664cafedcaa19c47fd132d790bea262f0317efe0cf5428450acb9",
+    "completed_cells": 24,
+    "deleted_or_rewritten": false
+  },
+  "exact_head_model_free_plan": {
+    "path": ".evaluation/unified-v1/b0a-adaptive-plan-6cbacaf.json",
+    "sha256": "3394f1bc1616923a114f3db186400eda3bf987dd44b18dc33c787f8bd0b4fe21",
+    "seal": "ae4dbfecd9366a60fe5c325695d79c3acd70cabe86fe08cbeca635a8170a270c",
+    "analysis_wall_ms": 74286.451,
+    "deterministic_pi_worker_wall_ms": 293692.683,
+    "llm_calls": 0
+  },
+  "cell_budget": {
+    "before_hard_maximum_cells": 714,
+    "after_adaptive_candidate_max_cells": 102,
+    "expected_total_cells_before_first_decision": 50,
+    "expected_reused_cells_before_first_decision": 23,
+    "expected_new_llm_calls_before_first_decision": 27,
+    "maximum_new_llm_calls": 79,
+    "deterministic_skips_before_execution": 612,
+    "skip_counts": {
+      "NOT_TESTED_NO_ACTIVE_USE": 534,
+      "SKIPPED_DEPTH_OUTPUT_EQUIVALENT": 78
+    },
+    "unexecuted_is_no_effect": false
+  },
+  "migration": {
+    "reused_compatible_cells": 23,
+    "invalidated_cells": 1,
+    "invalidated": [
+      {
+        "cell_id": "active--local-practical--eca-refactor-001--r1",
+        "reason": "shared_evaluation_venv_access"
+      }
+    ]
+  },
+  "limits": {
+    "successful_run_population": 16,
+    "steps": {"p95": 21, "p99": 21, "margin": 3, "screening_limit": 24},
+    "tool_calls": {"p95": 28, "p99": 28},
+    "output_tokens": {"p95": 4243, "p99": 4243, "margin": 425, "screening_limit": 4668},
+    "provider_output_ceiling": 8192,
+    "fixed_arbitrary_limit_used": false
+  },
+  "depth_equivalence": {
+    "D2_D3_D4_equal_pairs": [
+      "semantic:eca-impact-001",
+      "semantic:eca-symbol-001"
+    ],
+    "all_D0_D4_equal_pairs": [
+      "semantic:cd-bug-001",
+      "semantic:cd-cross-boundary-001",
+      "impact:eca-impact-001",
+      "impact:eca-tests-001",
+      "test_selection:eca-tests-001"
+    ],
+    "D3_D4_agent_cells_generated_for_equal_D2_output": false
+  },
+  "workspace_benchmark": {
+    "repetitions": 5,
+    "git_worktree_median_ms": 10.118,
+    "reflink": "UNAVAILABLE_OPERATION_NOT_SUPPORTED",
+    "selected": "git_worktree"
+  },
+  "timing_estimate": {
+    "observed_source_cell_per_second": 0.004035,
+    "fixed_714_at_observed_rate_hours": 49.1532,
+    "expected_new_frontier_at_observed_median_minutes": 43.7625,
+    "adaptive_max_new_at_observed_median_hours": 2.1341,
+    "adaptive_max_new_at_observed_p95_hours": 19.7521,
+    "note": "The p95 bound includes preserved 600/900-second legacy timeouts; the new step limit is expected to reduce but not pre-claim that tail."
+  },
+  "opencode_persistence_bridge": {
+    "path": ".evaluation/unified-v1/b0a-opencode-bridge-6cbacaf.json",
+    "sha256": "0e4294ceb4b439f798308e565aa2bdbabdc89c9c5f4b2fde160eade371d74b49",
+    "seal": "24d0c38d7534104df45772ad9fa07d2c2bb4407c5d167e3f76817aef8efff370",
+    "cell_id": "active--local-practical--eca-symbol-001--r1",
+    "additional_llm_calls": 1,
+    "control": {"lifecycle": "per_cell_run", "outcome": "PASS", "oracle_exit": 0, "model_wall_ms": 55003},
+    "attach": {"lifecycle": "serve_attach", "outcome": "FAIL", "oracle_exit": 1, "model_wall_ms": 68016, "server_startup_wall_ms": 2710},
+    "oracle_contract_sha256": "ca663df64a65e42d466d44923cc11d2fe4313836019a2b41702ea8dd32501fd3",
+    "oracle_outcome_equivalent": false,
+    "model_wall_reduction_ratio": -0.236587,
+    "persistent_mode_adopted": false,
+    "decision": "KEEP_PER_CELL_RUN_ORACLE_MISMATCH_AND_NO_SPEEDUP",
+    "session_workspace_evidence_shared": false,
+    "model_quality_claim": "NOT_APPLICABLE_LIFECYCLE_BRIDGE"
+  },
+  "pipeline": {
+    "model_parallelism": 1,
+    "cpu_workers": ["workspace_preparation", "oracle", "log_parsing", "hashing", "result_fragment_sealing"],
+    "completed_agent_capture_precedes_oracle": true,
+    "identical_completed_agent_reasoning_repeated_on_resume": false,
+    "external_directory_permission": "deny"
+  },
+  "gates": {
+    "all_fast": "PASS_199_PYTHON_9_ADAPTER",
+    "integration": "PASS_60_PYTHON_9_ADAPTER",
+    "build": "PASS_PYTHON_SDIST_WHEEL_TYPESCRIPT",
+    "diff_check": "PASS"
+  },
+  "next": "Regenerate the sealed model-free plan at merged main, then resume adaptive screening with per-cell OpenCode and sequential stopping.",
+  "seal": {
+    "algorithm": "sha256",
+    "canonical_payload": "071a44449234bb2e7f8781cc86f6bea70e7bfb5f8bd200757cfd4a029034eabb"
+  }
+}

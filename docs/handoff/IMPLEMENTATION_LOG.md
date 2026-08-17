@@ -732,5 +732,12 @@
   external-directory deny, and made adaptive compatibility reject that cell rather than reuse it.
 - Pre-commit gates passed: `tools/local/all-fast` (199 Python, 9 adapter),
   `tools/local/test-integration` (60 Python, 9 adapter), `tools/local/build`, and
-  `git diff --check`. Exact-head adaptive analysis and the one-call persistence Bridge remain the
-  evidence steps after the implementation commit.
+  `git diff --check`.
+- Clean commit `6cbacaf` exact-head analysis produced 102 candidate cells, 23 reusable cells, 27
+  expected new calls before the first decision, 79 maximum new calls, 534 no-active-use skips and
+  78 depth-equivalent skips. Successful-run p99 plus 10% margin set step/output limits to 24/4,668;
+  git worktree won at 10.118ms median and reflink was unavailable.
+- The one-call persistent OpenCode Bridge retained the same oracle contract but changed the observed
+  outcome from PASS to FAIL and was slower (68,016ms attach versus 55,003ms per-cell, plus 2,710ms
+  server startup). Persistent mode is not adopted. Evidence is sealed in
+  `docs/evidence/final/b0a-adaptive-screening-execution-v1.json`.
