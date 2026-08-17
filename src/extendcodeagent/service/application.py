@@ -223,17 +223,18 @@ class ProjectIntelligenceApplication:
         return entries
 
     def process_event(self, paths: tuple[str, ...], kind: str) -> dict[str, Any]:
-        self._task_signals.collect(
-            RuntimeSignal(
-                f"event:{kind}:{time.time_ns()}",
-                RuntimeSignalKind.MUTATION,
-                self.project,
-                datetime.now(UTC),
-                Provenance("runtime", kind, "1"),
-                paths=tuple(sorted(set(paths))),
-                source_category=kind,
+        if kind in {"file.edited", "file.watcher.updated"}:
+            self._task_signals.collect(
+                RuntimeSignal(
+                    f"event:{kind}:{time.time_ns()}",
+                    RuntimeSignalKind.MUTATION,
+                    self.project,
+                    datetime.now(UTC),
+                    Provenance("runtime", kind, "1"),
+                    paths=tuple(sorted(set(paths))),
+                    source_category=kind,
+                )
             )
-        )
         if not all(
             self.policy.computes_automatically(capability)
             for capability in (CapabilityName.GRAPH, CapabilityName.TWIN, CapabilityName.SEMANTIC)

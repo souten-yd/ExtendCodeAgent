@@ -277,6 +277,15 @@ def test_sidecar_runtime_contract_negotiates_and_collects_host_neutral_signals(
             "secret",
             {
                 "interface": INTERFACE_VERSION,
+                "operation": "event",
+                "params": {"kind": "session.idle", "paths": []},
+            },
+        )
+        _request(
+            server,
+            "secret",
+            {
+                "interface": INTERFACE_VERSION,
                 "operation": "runtime_ingest",
                 "params": {
                     "observation_id": "verification",

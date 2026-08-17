@@ -47,8 +47,10 @@ const ExtendCodeAgentPlugin: Plugin = async ({ directory, worktree }) => {
       ) {
         queue.enqueue(event.type)
       } else if (event.type === "session.created") {
+        queue.enqueue(event.type)
         await sendSignal(client, sessionSignal(event.properties.info.id, "created"))
       } else if (event.type === "session.idle") {
+        queue.enqueue(event.type)
         await sendSignal(client, sessionSignal(event.properties.sessionID, "idle"))
       } else if (event.type === "session.deleted") {
         await sendSignal(client, sessionSignal(event.properties.info.id, "deleted"))
