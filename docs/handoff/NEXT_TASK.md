@@ -39,7 +39,8 @@ Scope:
   abnormal active latency requires repair and repeat;
 - fix and version the B0a tuning subset, effect threshold and one assigned model tier per ablation;
 - promote the 54-cell local-practical `native`/`off` baseline through compatibility evidence, then
-  run only proven residual baseline cells and the bounded screening pass;
+  run only proven residual baseline cells and the adaptive screening pass bounded by the sealed
+  714-cell hard maximum;
 - emit the screening table with `proceed` or `no screened effect`, without promotion/demotion.
 
 Exit evidence: frozen environment and bootstrap records, classified integration results, and a
@@ -59,15 +60,18 @@ only model selection and claim scope: port-8090 `local-practical` Qwen is the so
 Sonnet/Codex and host-default receive no calls or probes; local-low remains unavailable. Promote the
 existing Qwen 54/54 through the existing compatibility audit, Bridge Proof and checkpoint migration
 when task/oracle/model limits/ECA semantics match, and rerun only proven residual cells. A sealed
-exact-head 54/54 report opens the unchanged 714-cell screening schedule.
+exact-head 54/54 report opens the adaptive B0a screen. The sealed 714 cells remain the hard maximum;
+deterministic active-use relevance, depth-output equivalence, compatible reuse and sequential
+stopping determine expected/max calls before execution under Master Plan Invariant 11.
 
 The chronology below is retained as immutable history. Its 306-, 162-, and 145-cell instructions are
 superseded by quality-target v2 and are not current execution instructions.
 
 The runner has two comprehensive resumable schedules: `b0a-baseline` has 162 cells across the three
 quality targets (ControlDeck-managed Qwen, GitHub Copilot Sonnet, and GitHub Copilot Codex)
-and `b0a-screening` has 714 local-practical cells, including capability-specific depth arms only for
-the four recorded depth claims. Neither may run until the separately sealed three-model
+and `b0a-screening` retains 714 local-practical cells as its exhaustive fallback, including
+capability-specific depth arms only for the four recorded depth claims. The local-only adaptive
+runner schedules only unresolved exercised cells. Neither may run until the separately sealed three-model
 `b0a-activation` gate and staged Qwen `b0a-pilot` pass at the same exact head. The pilot requires a
 positive interleaved 9-cell tranche before extending to 27 total, with an objective active PASS gain,
 observed task-specific PI and bounded latency; otherwise the next

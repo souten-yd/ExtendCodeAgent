@@ -713,3 +713,24 @@
 - Active task results were symbol 1/3, impact 3/3 and tests 2/3. PI required-fact recall was 1.0 for
   every symbol/impact cell and 0.333/1.0/1.0 for tests. This separates remaining final projection
   and objective retrieval variance from the confirmed aggregate effect.
+
+## 2026-08-17 — B0a adaptive screening and Minimum Sufficient Reasoning
+
+- Added Master Plan Invariant 11 and the corresponding mandatory AGENTS rule: deterministic PI,
+  bounded context and compatible evidence precede model reasoning; expansion requires an unresolved
+  evidence gap and skipped work never becomes PASS or no effect.
+- Kept the sealed 714-cell task/oracle/corpus/effect contract as the hard maximum and added a sealed
+  adaptive policy plus deterministic scheduler. Active non-status PI traces select relevance,
+  D0-D4 preflight folds task-output-equivalent depths, repetitions advance 1 -> 2 -> 3 only while a
+  threshold boundary remains, and positive screening signals stop for B0b confirmation.
+- Added a serial-model/CPU-worker pipeline with task templates, measured worktree/reflink selection,
+  durable agent captures before oracle work, reasoning fingerprints, compatibility migration and
+  formal call/context/token/time/reuse metrics. Persistent OpenCode has a separate isolated Bridge
+  command and remains disabled unless repeated oracle-equivalent speedup is measured.
+- The preserved old 24-cell checkpoint exposed one refactor cell that explicitly activated and
+  retargeted the shared repository `.venv`. Restored the root editable install, added an all-arm
+  external-directory deny, and made adaptive compatibility reject that cell rather than reuse it.
+- Pre-commit gates passed: `tools/local/all-fast` (199 Python, 9 adapter),
+  `tools/local/test-integration` (60 Python, 9 adapter), `tools/local/build`, and
+  `git diff --check`. Exact-head adaptive analysis and the one-call persistence Bridge remain the
+  evidence steps after the implementation commit.

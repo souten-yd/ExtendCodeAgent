@@ -1000,7 +1000,7 @@ thresholds, corpus, capability design and historical evidence. Change only model
 through sealed `b0a-quality-target-v2.json`: ControlDeck-managed Qwen3.6 27B at port 8090 is mandatory;
 Sonnet/Codex and host-default receive no new calls; local-low remains unavailable.
 
-The B0a denominator is 54 cells and the unchanged screen is 714 cells. Existing Qwen 54/54 is not
+The B0a denominator is 54 cells and the exhaustive screen has a 714-cell hard maximum. Existing Qwen 54/54 is not
 discarded or rerun by default: the existing compatibility audit, Bridge Proof and checkpoint migration
 must prove task/oracle/model-limit/ECA-semantic compatibility, and only residual invalid cells replay.
 Local evidence can promote at most `active-scoped(local-practical)` and cannot support a frontier,
@@ -1010,3 +1010,20 @@ R0 closes first as a production-capable local-only baseline under the single Mas
 exception. P0-P4 then follow their existing entry conditions and use the same Qwen route for any
 model-bearing evaluation. Unavailable or policy-excluded tiers are never passes, and prior Copilot
 results remain historical/supplementary evidence without deletion or reclassification.
+
+## 2026-08-17 — ECA development and evaluation use Minimum Sufficient Reasoning
+
+Decision: ECA product runtime, development and evaluation all follow Minimum Sufficient Reasoning.
+The LLM is used only for the unresolved reasoning that remains after deterministic analysis and
+compatible evidence reuse; correctness obligations still expand/escalate when evidence is missing,
+stale, contradictory or unknown.
+
+Reason: ECA's value hypothesis is that Project Intelligence reduces the problem scope, context,
+verification scope and call count presented to an LLM. Keeping ECA's own evaluation as a fixed
+exhaustive, over-broad model workload would contradict that product hypothesis and obscure an
+important efficiency effect.
+
+Consequence: exhaustive evaluation is the hard-maximum fallback. Deterministic preflight,
+active-use relevance filtering, depth-output equivalence, sequential stopping and compatible result
+reuse run first. Skips retain machine-readable states and never become PASS or `no_screened_effect`;
+independent repetitions required by an evaluation contract remain valid evidence work.

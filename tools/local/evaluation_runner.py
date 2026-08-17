@@ -58,9 +58,7 @@ CONFIGURABLE_CAPABILITIES = (
     "traceability",
     "strategy",
 )
-B0A_ACTIVATION_MODELS = (
-    "local-practical",
-)
+B0A_ACTIVATION_MODELS = ("local-practical",)
 B0A_QUALITY_MODELS = frozenset(B0A_ACTIVATION_MODELS)
 LOCAL_SOURCES = {
     "extendcodeagent": ROOT,
@@ -290,10 +288,7 @@ def validate() -> None:
     if quality_target["activation_plan_seal"] != activation_plan["seal"]["canonical_payload"]:
         raise EvaluationError("B0a quality target references a stale activation plan")
     expected_baseline_cells = (
-        len(B0A_QUALITY_MODELS)
-        * len(quality_target["baseline"]["arms"])
-        * 9
-        * 3
+        len(B0A_QUALITY_MODELS) * len(quality_target["baseline"]["arms"]) * 9 * 3
     )
     if quality_target["baseline"]["expected_cells"] != expected_baseline_cells:
         raise EvaluationError("B0a quality target baseline size is inconsistent")
@@ -559,11 +554,22 @@ def _trace_capabilities(arm: str) -> tuple[dict[str, str], dict[str, str]]:
     return modes, depths
 
 
-def _environment(arm: str, model_tier: str, workspace: Path) -> tuple[dict[str, str], str]:
+def _environment(
+    arm: str,
+    model_tier: str,
+    workspace: Path,
+    *,
+    output_limit: int | None = None,
+) -> tuple[dict[str, str], str]:
     matrix = _load(MATRIX)
     model = next(item for item in matrix["model_tiers"] if item["id"] == model_tier)
     mode, modifier = _arm_mode(arm)
-    config: dict[str, Any] = {}
+    config: dict[str, Any] = {
+        # Evaluation cells may mutate only their isolated task workspace. In
+        # particular, a model must not activate or reinstall into this runner's
+        # shared repository virtual environment.
+        "permission": {"external_directory": "deny"}
+    }
     configured_model_id = str(model.get("model_id") or "")
     if model_tier == "local-practical":
         provider = "eca-local-practical"
@@ -577,7 +583,11 @@ def _environment(arm: str, model_tier: str, workspace: Path) -> tuple[dict[str, 
                         "name": "Qwen3.6 27B on port 8090",
                         "limit": {
                             "context": model["context_window_tokens"],
-                            "output": model["max_output_tokens"],
+                            "output": (
+                                output_limit
+                                if output_limit is not None
+                                else model["max_output_tokens"]
+                            ),
                         },
                     }
                 },
@@ -649,6 +659,7 @@ def _isolated_agent_environment() -> dict[str, str]:
 def _metrics(log_path: Path) -> dict[str, Any]:
     result: dict[str, Any] = {
         "events": 0,
+        "steps": 0,
         "tool_calls": 0,
         "input_tokens": 0,
         "output_tokens": 0,
@@ -726,6 +737,7 @@ def _metrics(log_path: Path) -> dict[str, Any]:
             result["errors"].append(error.get("name") if isinstance(error, dict) else str(error))
         part = event.get("part")
         if isinstance(part, dict) and part.get("type") == "step-finish":
+            result["steps"] += 1
             tokens = part.get("tokens") or {}
             result["input_tokens"] += int(tokens.get("input") or 0)
             result["output_tokens"] += int(tokens.get("output") or 0)
