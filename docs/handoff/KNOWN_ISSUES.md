@@ -1,5 +1,25 @@
 # Known Issues
 
+## B0b did not confirm a covered held-out PI causal effect
+
+- The exact-main local-practical confirmation completed 57/57 cells with 48/48 forced-use compliance
+  and no provider/runtime gap, but every intrinsic and covered capability comparison had zero PASS
+  delta. Graph, Semantic, Twin and Test Selection are `NO_CONFIRMED_CAUSAL_EFFECT` on the sealed
+  held-out tasks. This blocks a positive PI effectiveness claim; it is not hidden by the earlier
+  screening signals.
+- Blueprint, Impact, Strategy and Test Obsolescence are `NO_HELD_OUT_TASK_COVERAGE`, not no effect.
+  Do not invent tasks, weaken oracles or permanently exclude them because of selection/coverage.
+- Cross-boundary and requirement tasks failed in forced PI as well as controls. Failure attribution is
+  16 `AGENT_REASONING_ERROR` and 20 `PROJECTION_SCHEMA_ERROR`, with no provider/process failure. The
+  smallest projection/relation repair belongs to later existing stages; repeated cross-boundary
+  failure satisfies X0 entry.
+- Auto selection remains weak: precision 0.650794, recall 0.530952, under-selection 0.469048 and 22
+  `EXPECTED_BUT_NOT_USED` states. C1/C3 must measure and address it independently of efficacy.
+- Required-test-set precision/recall is 1.0 across 21 test-selection cells, but all off/ablation arms
+  also pass. Do not claim an attributable Verification Intelligence effect from equal accuracy.
+- Full prompt context reached 93,189 tokens; 64k/96k are not safe current defaults. Keep 262,144 until
+  a bounded 128k-or-higher context Bridge proves oracle/truncation equivalence on broader tasks.
+
 ## B0a screening classifications are not promotion or general-model evidence
 
 - B0a completed with six local-practical B0b candidates, two `no screened effect` capabilities and

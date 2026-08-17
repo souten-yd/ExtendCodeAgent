@@ -7,6 +7,7 @@ import argparse
 import contextlib
 import hashlib
 import json
+import math
 import os
 import signal
 import subprocess
@@ -15,7 +16,7 @@ import tempfile
 import time
 from collections import Counter
 from pathlib import Path
-from statistics import median
+from statistics import mean, median
 from typing import Any
 
 from extendcodeagent.evaluation import EvaluationTrace, EvaluationTraceLog
@@ -696,6 +697,7 @@ def _metrics(log_path: Path) -> dict[str, Any]:
         },
         "observed_pi_facts": [],
     }
+    request_context_tokens: list[int] = []
     pi_tools: set[str] = set()
     pi_tool_requests: list[dict[str, Any]] = []
     pi_tool_failures: list[dict[str, str]] = []
@@ -767,12 +769,16 @@ def _metrics(log_path: Path) -> dict[str, Any]:
         if isinstance(part, dict) and part.get("type") == "step-finish":
             result["steps"] += 1
             tokens = part.get("tokens") or {}
-            result["input_tokens"] += int(tokens.get("input") or 0)
+            input_tokens = int(tokens.get("input") or 0)
+            result["input_tokens"] += input_tokens
             result["output_tokens"] += int(tokens.get("output") or 0)
             result["reasoning_tokens"] += int(tokens.get("reasoning") or 0)
             cache = tokens.get("cache") or {}
-            result["cache_read_tokens"] += int(cache.get("read") or 0)
-            result["cache_write_tokens"] += int(cache.get("write") or 0)
+            cache_read_tokens = int(cache.get("read") or 0)
+            cache_write_tokens = int(cache.get("write") or 0)
+            result["cache_read_tokens"] += cache_read_tokens
+            result["cache_write_tokens"] += cache_write_tokens
+            request_context_tokens.append(input_tokens + cache_read_tokens + cache_write_tokens)
     result["pi_tools"] = sorted(pi_tools)
     result["pi_tool_requests"] = pi_tool_requests
     result["pi_tool_failures"] = pi_tool_failures
@@ -789,7 +795,63 @@ def _metrics(log_path: Path) -> dict[str, Any]:
         result["pi_timing_ms"]["model_reasoning_after_tool_ms"] = max(
             0, last_event_end - first_pi_tool_end - later_tool_ms
         )
+    result.update(_context_token_summary(request_context_tokens))
     return result
+
+
+def _request_context_tokens(log_path: Path) -> list[int]:
+    """Return full per-request prompt sizes, including cached prompt tokens."""
+
+    values: list[int] = []
+    for line in log_path.read_text(encoding="utf-8", errors="replace").splitlines():
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        part = event.get("part")
+        if not isinstance(part, dict) or part.get("type") != "step-finish":
+            continue
+        tokens = part.get("tokens")
+        if isinstance(tokens, dict):
+            cache = tokens.get("cache") or {}
+            values.append(
+                int(tokens.get("input") or 0)
+                + int(cache.get("read") or 0)
+                + int(cache.get("write") or 0)
+            )
+    return values
+
+
+def _context_token_summary(values: list[int]) -> dict[str, int | float]:
+    """Summarize actual request contexts with nearest-rank tail percentiles."""
+
+    if not values:
+        return {
+            "context_request_count": 0,
+            "context_token_sum": 0,
+            "average_context_tokens": 0,
+            "p50_context_tokens": 0,
+            "p90_context_tokens": 0,
+            "p95_context_tokens": 0,
+            "p99_context_tokens": 0,
+            "max_context_tokens": 0,
+        }
+    ordered = sorted(values)
+
+    def percentile(value: float) -> int:
+        index = max(0, min(len(ordered) - 1, math.ceil(value * len(ordered)) - 1))
+        return ordered[index]
+
+    return {
+        "context_request_count": len(ordered),
+        "context_token_sum": sum(ordered),
+        "average_context_tokens": round(mean(ordered), 3),
+        "p50_context_tokens": percentile(0.50),
+        "p90_context_tokens": percentile(0.90),
+        "p95_context_tokens": percentile(0.95),
+        "p99_context_tokens": percentile(0.99),
+        "max_context_tokens": ordered[-1],
+    }
 
 
 def _event_end_ms(event: dict[str, Any]) -> int | None:

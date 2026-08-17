@@ -347,6 +347,17 @@ class WorkspaceTemplates:
             candidate = f"{safe_id}--retry{attempt}"
         return self.prepare(task_id, candidate)
 
+    def discard(self, task_id: str, target: Path) -> None:
+        """Remove one generated cell workspace after its evidence is durable."""
+
+        if self.strategy is None:
+            raise AdaptiveError("workspace strategy has not been benchmarked")
+        resolved = target.resolve(strict=False)
+        if resolved.parent != self.workspace_root.resolve():
+            raise AdaptiveError(f"refusing to discard a non-cell workspace: {resolved}")
+        template = self.ensure_template(task_id)
+        self._discard(template, resolved, self.strategy)
+
 
 def _policy_for_depth(capability: str, depth: str) -> tuple[CapabilityPolicy, Any]:
     values = {
@@ -1056,31 +1067,47 @@ def _execute_batch(
     for task_id in sorted({str(cell["task_id"]) for cell in cells}):
         templates.ensure_template(task_id)
     results: list[Future[dict[str, Any]]] = []
-    with ThreadPoolExecutor(max_workers=min(4, os.cpu_count() or 1)) as cpu:
-        prepared = {
-            cell["cell_id"]: cpu.submit(
-                templates.prepare_retry_safe, cell["task_id"], cell["cell_id"]
-            )
-            for cell in cells
-        }
-        for cell in cells:
-            workspace = prepared[cell["cell_id"]].result()
-            raw = _agent_only(
-                cell,
-                tasks[cell["task_id"]],
-                workspace,
-                output_limit=output_limit,
-                step_limit=step_limit,
-            )
-            # Persist completed model work before CPU oracle/parsing begins. A
-            # resume can finish this capture without repeating identical reasoning.
-            if raw["provider_failure"]:
-                _persist_provider_attempt(raw, raw_root)
-                results.append(cpu.submit(_finalize_agent, raw, raw_root, persist_fragment=False))
-                break
-            _persist_agent_capture(raw, raw_root)
-            results.append(cpu.submit(_finalize_agent, raw, raw_root))
-        return [future.result() for future in results]
+    prepared: dict[str, Future[Path]] = {}
+    try:
+        with ThreadPoolExecutor(max_workers=min(4, os.cpu_count() or 1)) as cpu:
+            prepared = {
+                cell["cell_id"]: cpu.submit(
+                    templates.prepare_retry_safe, cell["task_id"], cell["cell_id"]
+                )
+                for cell in cells
+            }
+            for cell in cells:
+                workspace = prepared[cell["cell_id"]].result()
+                raw = _agent_only(
+                    cell,
+                    tasks[cell["task_id"]],
+                    workspace,
+                    output_limit=output_limit,
+                    step_limit=step_limit,
+                )
+                # Persist completed model work before CPU oracle/parsing begins. A
+                # resume can finish this capture without repeating identical reasoning.
+                if raw["provider_failure"]:
+                    _persist_provider_attempt(raw, raw_root)
+                    results.append(
+                        cpu.submit(_finalize_agent, raw, raw_root, persist_fragment=False)
+                    )
+                    break
+                _persist_agent_capture(raw, raw_root)
+                results.append(cpu.submit(_finalize_agent, raw, raw_root))
+            return [future.result() for future in results]
+    finally:
+        discard = getattr(templates, "discard", None)
+        if discard is not None:
+            cells_by_id = {str(cell["cell_id"]): cell for cell in cells}
+            for cell_id, future in prepared.items():
+                if not future.done() or future.cancelled():
+                    continue
+                try:
+                    workspace = future.result()
+                except Exception:
+                    continue
+                discard(str(cells_by_id[cell_id]["task_id"]), workspace)
 
 
 def _free_loopback_port() -> int:

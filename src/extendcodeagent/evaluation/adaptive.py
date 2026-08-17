@@ -260,7 +260,13 @@ def efficiency_summary(
     model_wall_ms = sum(
         float(item.get("model_wall_ms", item.get("wall_ms", 0.0))) for item in current_results
     )
-    contexts = [int(item.get("input_tokens") or 0) for item in current_results]
+    context_results = [
+        item for item in current_results if int(item.get("context_request_count") or 0) > 0
+    ]
+    context_request_count = sum(
+        int(item.get("context_request_count") or 0) for item in context_results
+    )
+    context_token_sum = sum(int(item.get("context_token_sum") or 0) for item in context_results)
     deterministic_resolutions = sum(
         item.get("reason")
         in {
@@ -284,8 +290,14 @@ def efficiency_summary(
             round(deterministic_resolutions / requested_calls, 6) if requested_calls else 0.0
         ),
         "escalation_rate": round(executed / requested_calls, 6) if requested_calls else 0.0,
-        "average_context_tokens": round(sum(contexts) / len(contexts), 3) if contexts else 0.0,
-        "max_context_tokens": max(contexts, default=0),
+        "context_request_count": context_request_count,
+        "context_results_unavailable": len(current_results) - len(context_results),
+        "average_context_tokens": (
+            round(context_token_sum / context_request_count, 3) if context_request_count else 0.0
+        ),
+        "max_context_tokens": max(
+            (int(item.get("max_context_tokens") or 0) for item in context_results), default=0
+        ),
         "minimum_sufficient_depth": dict(sorted(minimum_sufficient_depths.items())),
         "model_wall_time_ms": round(model_wall_ms, 3),
         "deterministic_pi_wall_time_ms": round(deterministic_pi_wall_ms, 3),

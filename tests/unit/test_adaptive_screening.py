@@ -134,7 +134,14 @@ def test_efficiency_summary_does_not_count_reused_model_evidence_as_a_new_call()
         requested_calls=2,
         results=[
             {"llm_call_execution": "reused", "input_tokens": 20, "wall_ms": 9},
-            {"llm_call_execution": "executed", "input_tokens": 5, "wall_ms": 2},
+            {
+                "llm_call_execution": "executed",
+                "input_tokens": 5,
+                "context_request_count": 1,
+                "context_token_sum": 17,
+                "max_context_tokens": 17,
+                "wall_ms": 2,
+            },
         ],
         skips=[{"reason": "REUSED_COMPATIBLE_EVIDENCE", "avoids_llm_call": True}],
         deterministic_pi_wall_ms=0,
@@ -146,4 +153,6 @@ def test_efficiency_summary_does_not_count_reused_model_evidence_as_a_new_call()
 
     assert summary["llm_calls_executed"] == 1
     assert summary["llm_calls_avoided"] == 1
-    assert summary["average_context_tokens"] == 5
+    assert summary["average_context_tokens"] == 17
+    assert summary["max_context_tokens"] == 17
+    assert summary["context_results_unavailable"] == 0

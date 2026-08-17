@@ -447,7 +447,56 @@ def _report(
             for state in item["states"].values()
         ),
     }
-    context_tokens = [int(item.get("input_tokens") or 0) for item in results.values()]
+    required_set_quality: dict[str, dict[str, int | float | str]] = {}
+    quality_groups = {
+        "overall": list(results.values()),
+        **{
+            policy: [item for item in results.values() if item.get("pi_use_policy") == policy]
+            for policy in ("auto_pi", "forced_pi", "forced_off", "forced_ablation")
+        },
+    }
+    for group, group_results in quality_groups.items():
+        measured = [
+            quality
+            for item in group_results
+            if isinstance(item.get("outcome_attribution"), dict)
+            and isinstance(
+                quality := item["outcome_attribution"].get("required_verification_set_quality"),
+                dict,
+            )
+            and quality.get("status") == "MEASURED_BY_SEALED_TASK_ORACLE"
+        ]
+        if not measured:
+            continue
+        true_positive = sum(int(item.get("true_positive") or 0) for item in measured)
+        false_positive = sum(int(item.get("false_positive") or 0) for item in measured)
+        false_negative = sum(int(item.get("false_negative") or 0) for item in measured)
+        required_set_quality[group] = {
+            "status": "MEASURED_BY_SEALED_TASK_ORACLE",
+            "measured_cells": len(measured),
+            "true_positive": true_positive,
+            "false_positive": false_positive,
+            "false_negative": false_negative,
+            "micro_precision": round(
+                true_positive / (true_positive + false_positive)
+                if true_positive + false_positive
+                else 1.0,
+                6,
+            ),
+            "micro_recall": round(
+                true_positive / (true_positive + false_negative)
+                if true_positive + false_negative
+                else 1.0,
+                6,
+            ),
+        }
+    context_tokens: list[int] = []
+    log_root = trace_log.path.parent / "logs"
+    for result in results.values():
+        log_path = log_root / f"{result['cell_id']}.jsonl"
+        if log_path.is_file():
+            context_tokens.extend(legacy._request_context_tokens(log_path))
+    context_summary = legacy._context_token_summary(context_tokens)
     body = {
         "schema": 1,
         "classification": "B0B_HELD_OUT_CONFIRMATION_COMPLETE"
@@ -475,6 +524,7 @@ def _report(
         "capability_confirmation_results": capability_results,
         "selection_evidence": selections,
         "selection_metrics": selection_metrics,
+        "required_verification_set_quality": required_set_quality,
         "auto_forced_diagnoses": diagnoses,
         "no_held_out_task_coverage": plan["no_held_out_task_coverage"],
         "promotion_or_demotion_decision": False,
@@ -494,9 +544,9 @@ def _report(
                 float(item.get("model_wall_ms") or 0) for item in results.values()
             ),
             "deterministic_pi_wall_time_ms": sum(
-                sum(float(value) for value in (item.get("pi_timing_ms") or {}).values())
-                for item in results.values()
+                float(item.get("pi_analysis_ms") or 0) for item in results.values()
             ),
+            "deterministic_pi_wall_time_basis": "sum of observed pi_* tool intervals",
             "sidecar_cleanup_wall_time_ms": sum(
                 float(item.get("sidecar_cleanup_wall_ms") or 0) for item in results.values()
             ),
@@ -505,8 +555,11 @@ def _report(
             ),
             "checkpoint_session_wall_time_ms": round((time.monotonic() - started) * 1000, 3),
             "total_wall_time_ms": round((time.monotonic() - started) * 1000, 3),
-            "average_context_tokens": round(mean(context_tokens), 3) if context_tokens else 0,
-            "max_context_tokens": max(context_tokens, default=0),
+            **context_summary,
+            "context_metric_basis": (
+                "per-model-request input + cache-read + cache-write prompt tokens "
+                "from step-finish events"
+            ),
             "deterministic_resolution_ratio": 0.0,
             "escalation_rate": 1.0 if results else 0.0,
             "minimum_sufficient_depth": plan["minimum_depth_by_task"],
