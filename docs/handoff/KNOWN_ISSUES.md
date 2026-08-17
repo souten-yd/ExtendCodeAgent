@@ -261,6 +261,17 @@
   React Hook Form, Flask and HTTPX also missed their size budgets. Express and ExtendCodeAgent passed.
   Only one cold run per repository exists, so required three-run medians remain NOT TESTED.
 
+## B2 OMO tuple limitation
+
+- OpenCode 1.18.18 with oh-my-openagent 4.19.4 reports duplicate tool inventory IDs
+  `glob`, `grep`, `skill` and `task` in the OMO-only control. Both ECA+OMO plugin orders retain the
+  exact same set, while all executed call IDs are unique and all bounded task/oracle results pass.
+  The exact tuple is therefore `degraded`, not `compatible`; this is not attributed to ECA and does
+  not authorize patching OpenCode or OMO. Recheck at R0 and whenever the OpenCode/OMO tuple changes.
+- Team Mode was explicitly off, so C6 Team/worktree compatibility remains
+  `NOT_TESTED_TEAM_MODE_OFF`. No recommended-stack, general-model or comparative-benefit claim follows
+  from B2; P3/P4 retain those gates.
+
 ## B0a PI activation and capability reachability
 
 - The exact-head `0a1a9f4` activation run proved real PI tool execution on all four required model

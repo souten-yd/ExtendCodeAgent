@@ -8,6 +8,8 @@ import pytest
 
 from tools.local import omo_coexistence as runner
 
+FINAL_EVIDENCE = runner.ROOT / "docs/evidence/final/b2-omo-coexistence-result-v1.json"
+
 
 def test_b2_plan_seals_exact_five_stack_local_only_contract(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -435,3 +437,17 @@ def test_native_result_reuse_requires_equal_sealed_inputs_and_success(
     assert reused["migration_basis"]["non_applicable_current_input_differences"] == [
         "eca_rollout_mode"
     ]
+
+
+def test_final_b2_evidence_is_sealed_and_keeps_degraded_claim_bounds() -> None:
+    evidence = json.loads(FINAL_EVIDENCE.read_text(encoding="utf-8"))
+
+    runner._verify_seal(evidence, "final B2 evidence")
+    assert evidence["execution_scope"] == "local-only"
+    assert evidence["model_bridge"]["complete"] is True
+    assert evidence["model_bridge"]["compatibility"] == "degraded"
+    assert [item["result"] for item in evidence["model_bridge"]["results"]] == ["PASS"] * 5
+    assert evidence["conflicts"]["C0"]["attribution"] == "INHERITED_OMO_CONTROL_LIMITATION"
+    assert evidence["conflicts"]["C6"] == "NOT_TESTED_TEAM_MODE_OFF"
+    assert evidence["decision"]["recommended_stack_claim"] is False
+    assert evidence["decision"]["general_model_claim"] is False

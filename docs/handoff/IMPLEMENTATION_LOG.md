@@ -985,3 +985,27 @@ correction below because its active-trace relevance would have mixed efficacy wi
 - PR review bound process configuration back to the sealed plan: execution reads
   `eca_rollout_mode` from the verified plan, and verification rejects any changed model, context,
   output limit or ECA rollout mode before startup.
+
+## 2026-08-17 — B2 OMO coexistence baseline complete
+
+- PR #94 merged the evaluation use-policy correction as `87ced9f`; exact-main plan and zero-model
+  preflight seals are `b9be198a3f3e1b5fda3fc1d7af992c1efc08b20d7b6ef164439058aa5e90968f` and
+  `bb27e47e5dda1f2caf50a884931c1d75fee1977a33e9bdeb4fee364634b60aae`.
+- The final serial Qwen Bridge reused only the sealed native/no-plugin result and executed ECA, OMO,
+  OMO→ECA and ECA→OMO fresh: 16 executed and four reused step requests. All five tasks/oracles passed;
+  both ECA-containing combined orders stored four runtime observations; every stack changed only
+  `calc.py`, used the exact local route, had unique call IDs and left no exact-workspace sidecar.
+- Full request context across the 20 final-evidence requests was mean 13,945.25, p95 17,958, p99/max
+  17,990 tokens. The final Bridge seal is
+  `6f61ea1d1603ffdd63849463a294c7c623b5f69641c08bac63244a015b556cf0`.
+- Classification is `degraded`: OMO-only already exposes duplicate inventory IDs
+  `glob/grep/skill/task`, and both combined orders preserve the same set. This is documented as an
+  inherited C0 limitation; no duplicate execution or ECA registration delta was observed, and no
+  upstream product was patched. Team Mode C6 remains not tested and P4 still owns comparative value.
+- Historical stopped attempts remain diagnostic: 8 checkpointed initial calls, one interrupted OMO
+  attempt with unknown precise count, and four post-hook-repair ECA calls. They are not folded into
+  final-stack PASS evidence. Compact sealed evidence is
+  `docs/evidence/final/b2-omo-coexistence-result-v1.json`.
+- Closeout validation passes `tools/local/all-fast` (208 Python plus 10 adapter),
+  `tools/local/test-integration` (95 Python plus 10 adapter), `tools/local/build`, final-evidence seal
+  verification and `git diff --check`.

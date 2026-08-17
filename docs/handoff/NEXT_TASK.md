@@ -19,50 +19,36 @@ Do not schedule work from the legacy identifiers (`RV-x`, `TA-x`, `AL-x`, `CV-x`
 
 ## Current stage
 
-**Phase 1 — B2 OMO coexistence baseline.**
+**Phase 2 — C0 Minimal runtime contract.**
 
-B0 is complete. The exact-main B0b confirmation accounted for 57/57 local-practical cells with 48/48
-forced-use compliance, 21 PASS, 36 FAIL and no provider/process/timeout/unavailable outcome. No
-covered capability showed a held-out causal PASS delta; four candidates remain
-`NO_HELD_OUT_TASK_COVERAGE`. Conditional B1 is `SKIP_NO_ENTRY_CONDITION`: B0 found no remaining ECA
-product lifecycle/config/version/provider blocker, and the evaluation-runner worktree-retention defect
-is repaired and gated in the B0b closeout. Evidence:
-`docs/evidence/final/b0b-confirmation-result-v1.json` and
-`docs/evidence/final/baseline-gap-report.md`.
+B2 is complete with a truthful `degraded` compatibility classification for the exact tuple OpenCode
+1.18.18 + oh-my-openagent 4.19.4 + ECA `87ced9f`, Team Mode off. All five bounded coding/verification
+stacks passed, both combined orders recorded four runtime observations, no duplicate tool execution or
+lingering exact-workspace sidecar occurred, and the local Qwen route was exact. OMO's own inventory
+contains duplicate IDs `glob/grep/skill/task`; the combined stacks have the same set, so it remains an
+inherited C0 limitation rather than an ECA regression or PASS. C6 is
+`NOT_TESTED_TEAM_MODE_OFF`; no recommended-stack or P4 benefit claim exists. Evidence:
+`docs/evidence/final/b2-omo-coexistence-result-v1.json`.
 
-B2 entry is satisfied because B0 is stable and the prior model-free smoke recorded OMO 4.19.4 as
-installable with OpenCode 1.18.16. B2 revalidates the exact current OpenCode 1.18.18 tuple. Follow
-`docs/OMO_COEXISTENCE_AND_COMPATIBILITY_PLAN.md` §9 only for the active design detail.
+Follow `docs/RUNTIME_ADAPTER_ARCHITECTURE_PLAN.md` only as the active C0 design detail. Implement the
+Master Plan §8 C0 scope:
 
-Scope:
+- inventory the host-neutral observations that current PI consumers actually read: task/session,
+  workspace/worktree, mutation, tool execution, model, verification and advisory delivery;
+- add no field without a named consumer and conformance test;
+- keep OpenCode event/API shapes inside the adapter and preserve one numerical/revision truth in the
+  host-neutral core;
+- classify absent OpenCode capabilities explicitly as unavailable/degraded rather than synthesizing
+  success or unsupported identity;
+- dogfood deterministic inspection and existing evidence before any model call. C0 should require no
+  LLM inference unless a concrete unresolved evidence gap proves otherwise;
+- retain the local-only model policy if a model-bearing check becomes necessary; do not call or probe
+  Copilot, host-default or unavailable local-low.
 
-- record the exact OpenCode / OMO / ExtendCodeAgent version tuple and keep OMO Team Mode off;
-- test startup, tool visibility and invocation, session behavior, one basic coding flow and one
-  verification flow with both meaningful plugin load orders;
-- classify every observation under the existing C0-C6 conflict taxonomy and apply the existing §11
-  stop rules; prefer ECA namespace/idempotence fixes and do not patch OpenCode or OMO;
-- prove cell/session/workspace isolation and clean shutdown; do not infer coexistence from DOM/tool
-  registration alone;
-- use only ControlDeck-managed Qwen3.6 27B at `127.0.0.1:8090` for any model-bearing check. Do not
-  call or probe Copilot, host-default or unavailable local-low;
-- keep claims bounded to compatibility and `active-scoped(local-practical)`. P4 still owns the
-  OpenCode / +OMO / +ECA / +OMO+ECA comparative benchmark.
-
-Exit: a reproducible version tuple classified `compatible`, `degraded` or `incompatible`, with every
-conflict and load-order result recorded; test/build/evidence/handoff updated; PR reviewed and merged.
-Do not widen B2 into C-series planner work or P4 scoring.
-
-Current interruption point: the first exact-main model Bridge passed native, then passed the ECA task
-oracle but failed its mandatory runtime-observation control. Repair and merge the awaited post-tool
-runtime ingest plus missing-title normalization before resuming model work. Reuse only the sealed
-native/no-plugin result after exact input/task/oracle/route verification; rerun ECA and all later
-stacks. Do not add the semantic runtime-hook change to the lifecycle-only B0 compatibility manifest.
-
-After PR #93, the exact-main ECA control still reported zero observations because the B2 evaluation
-environment selected `advisory`, which correctly rejects automatic runtime ingestion. Change only the
-B2 ECA-containing stack configuration to explicit `active`, seal/merge that runner correction, then
-regenerate exact-main plan/preflight and rerun ECA before any OMO/combined stack. Preserve both failed
-ECA controls as diagnostic evidence and reuse only native.
+Exit: a runtime-contract conformance test proves every retained field has a consumer, adapter mapping
+and truthful missing-capability behavior; test/build/evidence/handoff updated; PR reviewed and merged.
+Do not pull C1 planner behavior, C3 automatic selection, V-series truth stores or P4 comparison into
+C0.
 
 The B0a execution notes below are retained as immutable history and are not current scheduling
 instructions.

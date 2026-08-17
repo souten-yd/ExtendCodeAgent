@@ -1095,3 +1095,19 @@ as `advisory`, and the existing policy correctly permits automatic runtime compu
 `shadow` or `active`. B2 therefore uses explicit `active` for ECA-containing evaluation stacks and
 `off` otherwise. This is an evaluation use-policy correction consistent with the existing
 active-scoped claim, not a change to `RolloutMode.ACTIVE` or forced PI tool selection.
+
+## 2026-08-17 — B2 tuple is degraded but bounded coexistence passes
+
+Decision: close B2 for OpenCode 1.18.18 + oh-my-openagent 4.19.4 + ECA `87ced9f`, Team Mode off, as
+`degraded`. Proceed to C0 without a recommended-stack or comparative-benefit claim.
+
+Reason: native, ECA, OMO and both combined orders pass the same coding/verification oracle with exact
+local routing, isolated workspaces/sessions, unique executed call IDs and clean exact-workspace
+shutdown. OMO's standalone inventory nevertheless contains duplicate IDs `glob/grep/skill/task`, and
+both combined orders retain them. That inherited C0 limitation prevents `compatible`, while the lack
+of an ECA delta or duplicate execution does not justify patching OpenCode/OMO or marking B2
+incompatible.
+
+Consequence: publish the exact tuple as degraded compatibility only. Keep C6
+`NOT_TESTED_TEAM_MODE_OFF`, retain P3's Team/Worktree entry condition, and leave the four-way value
+comparison to P4. Recheck the inventory limitation at R0's OMO gate and on any tuple change.

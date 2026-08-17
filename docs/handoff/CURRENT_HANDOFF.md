@@ -496,6 +496,19 @@ Defaults unchanged — every capability still ships `off`.
 
 ## Immediate next work
 
+B2 is complete at exact evaluation head `87ced9f` with sealed evidence in
+`docs/evidence/final/b2-omo-coexistence-result-v1.json`. The final Bridge is five-for-five PASS using
+16 fresh and four migrated Qwen step requests. Its tuple is `degraded`: OMO-only and combined tool
+inventories share duplicate IDs `glob/grep/skill/task`; no duplicate execution was observed, ECA did
+not add the inventory delta, and neither OpenCode nor OMO was patched. Team Mode/C6 and a recommended-
+stack or comparative benefit claim remain NOT TESTED.
+
+After the B2 closeout PR merges, synchronize main and start C0. Read
+`docs/RUNTIME_ADAPTER_ARCHITECTURE_PLAN.md` as the only active design detail. Inventory only runtime
+fields with actual PI consumers, bind each to adapter mapping plus conformance coverage, and preserve
+truthful unavailable/degraded behavior. C0 is model-free by default and must not widen into C1/C3,
+V-series stores or P4.
+
 B2 is currently on `agent/b2-omo-hook-repair`. The first exact-main Qwen Bridge at `c219970` completed
 native PASS (four step-level model requests) and the ECA coding oracle PASS, but the ECA control failed
 because no runtime observation reached the agent flow. An OMO attempt was then manually interrupted
