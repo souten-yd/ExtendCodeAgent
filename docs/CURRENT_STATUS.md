@@ -4,7 +4,7 @@ Status date: 2026-08-17
 
 ## Program state
 
-Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0a OBSERVATIONAL COMPLETE — CAUSAL CORRECTION NEXT**
+Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0a + CAUSAL CORRECTION COMPLETE — B0b NEXT**
 
 The active `b0a-quality-target-v2` progression target is the ControlDeck-managed `local-practical`
 Qwen route only.
@@ -22,13 +22,20 @@ avoidance—not causal proof for all capabilities and not a production ECA call-
 twin, semantic, impact, test-selection and test-obsolescence) remain intact; no capability was
 promoted or demoted. See `docs/evidence/final/b0a-adaptive-screening-result-v1.json`.
 
-B0b is behind a causal-correction entry gate. A sealed EvaluationPIPlan independently defines expected
-capabilities and exact PI requests for all 13 tasks without using prior Qwen selection. The corrective
-screen compares forced PI ON/OFF/one-capability ablation under the same task/model/prompt/request plan,
-with trace-based fail-closed compliance, while auto selection remains a separate metric. The model-free
-plan has 24 initial and 58 maximum new calls; only causal boundaries receive repetitions 2/3.
-`research` and `test_obsolescence` are `NO_TASK_COVERAGE` for this correction, not no effect. The
-previous active-trace-dependent B0b runner was not executed and is not adopted.
+The B0b causal-correction entry gate completed at `88d2e17`: 58/58 cells are accounted by 22 new Qwen
+calls, 13 compatible reused results and 23 adaptive skips (39.6552% avoided); all 34 forced cells are
+exact-trace compliant with no provider/API gap. Requirement tracing and symbol/reference tasks show
+intrinsic positive signals. Twin, Semantic, Blueprint and Strategy add positive corrective signals.
+The six observational candidates remain preserved, so B0b receives the eight-capability union
+`blueprint, graph, impact, semantic, strategy, test_obsolescence, test_selection, twin`. Graph/
+Impact/Context/Runtime/Convergence/Traceability gap labels and Test Selection no-signal are corrective
+screening diagnostics, not demotions. `research` and corrective test-obsolescence coverage remain
+`NO_TASK_COVERAGE`. See `docs/evidence/final/b0a-causal-correction-result-v1.json`.
+
+Auto selection remains a separate axis: eight tasks were measurable, mean precision was 0.666667,
+mean recall 0.534821, and 20 `EXPECTED_BUT_NOT_USED` states were recorded. In particular,
+`cd-requirement-001` is `PI_SELECTION_GAP` because auto failed while forced passed. B0b confirmation
+is now next on the unchanged held-out split and contracts.
 
 The prior three-route checkpoint remains immutable history: Qwen 54/54, Sonnet 54/54, Codex 37/54,
 145/162 overall, with 17 Codex cells blocked by quota. It is not the current local-first denominator

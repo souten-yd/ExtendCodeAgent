@@ -863,3 +863,22 @@ correction below because its active-trace relevance would have mixed efficacy wi
 - Validation passes `tools/local/all-fast` (208 Python plus 9 adapter),
   `tools/local/test-integration` (69 Python plus 9 adapter), `tools/local/build`, focused path-safety
   coverage and `git diff --check`.
+
+## 2026-08-17 — B0a causal capability correction complete
+
+- Completed the sealed local-practical corrective contract at `88d2e17`: 58/58 accounted by 22 new
+  Qwen calls, 13 compatible reused results and 23 adaptive skips. Repetitions were sequential
+  (24 r1, 7 r2, 4 r3); positive and diagnostic decisions stopped early.
+- All 34 forced PI/off/ablation cells matched the exact EvaluationPIPlan request order and inputs;
+  no provider gap, API gap, timeout or unavailable result entered causal scoring. The repaired graph
+  ablation passed; the earlier `%3A` capture/checkpoint remains preserved as diagnostic history.
+- Intrinsic positive signals: requirement tracing and symbol/reference. Corrective positive
+  capabilities: Twin, Semantic, Blueprint and Strategy. The original six observational candidates
+  remain intact, producing the eight-capability B0b union. No promotion/demotion decision was made.
+- Auto selection measured mean precision 0.666667 and recall 0.534821 across eight measurable tasks,
+  with 20 `EXPECTED_BUT_NOT_USED` states; auto-fail/forced-pass requirement tracing is
+  `PI_SELECTION_GAP`. Twenty-two evaluation sidecars were terminated after evidence capture without
+  deleting workspaces or logs.
+- Validation passes `tools/local/all-fast` (208 Python plus 9 adapter),
+  `tools/local/test-integration` (70 Python plus 9 adapter), `tools/local/build`, plan/result/final
+  evidence seal verification and `git diff --check`.
