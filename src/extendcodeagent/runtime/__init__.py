@@ -6,9 +6,21 @@ from .contracts import (
     ObservationStatus,
     ReconciliationDecision,
     ReconciliationOutcome,
+    RuntimeAdapterCapability,
+    RuntimeCapabilities,
+    RuntimeCapabilityDeclaration,
+    RuntimeCapabilityStatus,
     RuntimeObservation,
+    RuntimeSignal,
+    RuntimeSignalKind,
+    RuntimeSignalSnapshot,
 )
-from .service import reconcile_observations, summarize_observations, unavailable_observation
+from .service import (
+    TaskSignalCollector,
+    reconcile_observations,
+    summarize_observations,
+    unavailable_observation,
+)
 
 __all__ = [
     "ObservationKind",
@@ -17,6 +29,14 @@ __all__ = [
     "ReconciliationDecision",
     "ReconciliationOutcome",
     "RuntimeObservation",
+    "RuntimeAdapterCapability",
+    "RuntimeCapabilities",
+    "RuntimeCapabilityDeclaration",
+    "RuntimeCapabilityStatus",
+    "RuntimeSignal",
+    "RuntimeSignalKind",
+    "RuntimeSignalSnapshot",
+    "TaskSignalCollector",
     "reconcile_observations",
     "summarize_observations",
     "unavailable_observation",

@@ -710,6 +710,8 @@ def _load_observation(payload: str) -> RuntimeObservation:
         raw["tool"],
         tuple(_evidence_ref(item) for item in raw["artifacts"]),
         str(raw["summary"]),
+        raw.get("runtime_session_id"),
+        raw.get("runtime_call_id"),
     )
 
 

@@ -1009,3 +1009,30 @@ correction below because its active-trace relevance would have mixed efficacy wi
 - Closeout validation passes `tools/local/all-fast` (208 Python plus 10 adapter),
   `tools/local/test-integration` (95 Python plus 10 adapter), `tools/local/build`, final-evidence seal
   verification and `git diff --check`.
+
+## 2026-08-17 — C0 minimal host-neutral runtime contract complete
+
+- Added an immutable exhaustive `RuntimeCapabilities` descriptor with 12 positive declarations and
+  mandatory reasons for every degraded/unavailable feature. Missing declarations and non-supported
+  states without reasons fail closed.
+- Added the bounded in-memory `TaskSignalCollector` over existing `ProjectRef`/`Provenance`. It
+  consumes normalized task, session, mutation, model and advisory-delivery signals while existing
+  immutable `RuntimeObservation` remains the single tool/verification evidence path. No new truth
+  store, classifier, planner or automatic delivery behavior was introduced.
+- Added optional runtime session/call identity to `RuntimeObservation`, including backward-compatible
+  SQLite loading and public evidence projection. Verification observation is negotiated independently
+  from general tool observation.
+- OpenCode 1.18.18 now declares its exact capability support and normalizes `chat.message`, session
+  lifecycle, file events, tool executions and successful `pi_*` delivery inside the TypeScript
+  adapter. Automatic context delivery and ECA-owned model requests are explicitly unavailable;
+  mutation and verification remain degraded for their measured hook limitations.
+- Existing session/LSP/tool refresh events remain queued for Twin behavior compatibility, but only
+  actual file events become mutation signals. Unnegotiated signals fail closed and repeated degraded
+  diagnostics are stored once, keeping the transient collector bounded.
+- Real TypeScript-client/Python-sidecar conformance transports every retained signal class and proves
+  MCP/reconnect compatibility. The B0 semantic compatibility guard continues to fail closed for the
+  C0 product change rather than treating it as lifecycle-only migration.
+- No model call was requested or executed. Validation passes `tools/local/all-fast` (213 Python plus
+  14 adapter), `tools/local/test-integration` (96 Python plus 14 adapter), `tools/local/build`, seal
+  verification and `git diff --check`. Evidence:
+  `docs/evidence/final/c0-runtime-contract-result-v1.json`.

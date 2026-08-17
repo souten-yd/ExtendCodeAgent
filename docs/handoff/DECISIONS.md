@@ -1111,3 +1111,20 @@ incompatible.
 Consequence: publish the exact tuple as degraded compatibility only. Keep C6
 `NOT_TESTED_TEAM_MODE_OFF`, retain P3's Team/Worktree entry condition, and leave the four-way value
 comparison to P4. Recheck the inventory limitation at R0's OMO gate and on any tuple change.
+
+## 2026-08-17 — C0 reuses runtime evidence and keeps task signals transient
+
+Decision: use one exhaustive host-neutral runtime capability descriptor and a bounded in-memory
+`TaskSignalCollector` for task/session/mutation/model/advisory inputs. Reuse `ProjectRef`,
+`Provenance` and the existing immutable SQLite-backed `RuntimeObservation` path for tool and
+verification evidence; do not create another runtime truth store.
+
+Reason: C1 needs normalized inputs and truthful host constraints, while C0 must not pull planner
+behavior or speculative persistence forward. Existing runtime observations already provide
+revision-aware verification truth. OpenCode's event shapes belong only in its adapter, and absent
+automatic context/model authority must remain unavailable rather than inferred from runtime name.
+
+Consequence: OpenCode declares all 12 capabilities explicitly; degraded/unavailable entries require
+reasons and constrain signal acceptance. Task-oriented signals are latest-value telemetry only,
+whereas tool/verification observations retain their existing immutable lineage. C1 may consume the
+collector in shadow mode, but C3 owns automatic selection/delivery.

@@ -1,5 +1,17 @@
 # Known Issues
 
+## C0 runtime capabilities remain intentionally degraded or unavailable
+
+- OpenCode 1.18.18 file mutation observation remains `degraded`: ordinary native watcher events were
+  incomplete in prior real-host evidence, so the bounded adapter-local Chokidar fallback remains.
+- Verification observation remains `degraded`: `passed`/`failed` is authoritative only when stable
+  tool metadata exposes status or a numeric exit code; otherwise the evidence is merely `observed`.
+- Automatic bounded context delivery and ECA-owned model requests are `UNAVAILABLE` in C0, not PASS.
+  Explicit PI tools still work. C1 is shadow-only and must not silently implement C3 delivery.
+- The exact OpenCode worktree is identified by `ProjectRef.root_uri`; `worktree_fingerprint` remains
+  optional until the Twin/source snapshot supplies it. Do not synthesize a fingerprint from session
+  identity or treat an absent fingerprint as verified revision equality.
+
 ## B0b did not confirm a covered held-out PI causal effect
 
 - The exact-main local-practical confirmation completed 57/57 cells with 48/48 forced-use compliance

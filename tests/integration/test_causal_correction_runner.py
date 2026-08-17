@@ -27,16 +27,20 @@ def _entry(task_id: str) -> dict[str, Any]:
     return next(item for item in plan["tasks"] if item["task_id"] == task_id)
 
 
-def test_runtime_hook_change_is_not_promoted_as_lifecycle_only_compatibility() -> None:
+def test_runtime_semantics_changes_are_not_promoted_as_lifecycle_only_compatibility() -> None:
     source = json.loads(OBSERVATIONAL.read_text())["source_revision"]
 
     compatible, unresolved = adaptive._product_semantics_compatible(source)
 
     assert compatible is False
-    assert unresolved == [
+    assert {
         "adapters/opencode/src/observations.ts",
         "adapters/opencode/src/plugin.ts",
-    ]
+        "src/extendcodeagent/runtime/contracts.py",
+        "src/extendcodeagent/runtime/service.py",
+        "src/extendcodeagent/service/application.py",
+    } <= set(unresolved)
+    assert unresolved == sorted(set(unresolved))
 
 
 def test_correction_plan_is_bounded_and_reclassifies_pilot_reuse(

@@ -180,6 +180,162 @@ def test_sidecar_context_runtime_ingest_and_evidence_round_trip(tmp_path: Path) 
     assert evidence["result"]["items"][0]["status"] == "observed"
 
 
+def test_sidecar_runtime_contract_negotiates_and_collects_host_neutral_signals(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / "service.py").write_text("def leaf():\n    return 1\n", encoding="utf-8")
+    server = LocalApiServer(_application(root, tmp_path / "graph.db", mode="active"), "secret")
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    capabilities = [
+        {"name": name, "status": "supported", "reason": ""}
+        for name in (
+            "observe_task",
+            "observe_session",
+            "observe_file_mutation",
+            "observe_tool_execution",
+            "observe_model_route",
+            "observe_verification",
+            "deliver_context",
+            "expose_tools",
+            "request_model",
+            "session_lifecycle",
+            "reconnect",
+            "mcp",
+        )
+    ]
+    try:
+        connected = _request(
+            server,
+            "secret",
+            {
+                "interface": INTERFACE_VERSION,
+                "operation": "runtime_connect",
+                "params": {
+                    "runtime_name": "test-runtime",
+                    "runtime_version": "1",
+                    "capabilities": capabilities,
+                },
+            },
+        )
+        for payload in (
+            {
+                "signal_id": "task",
+                "kind": "task",
+                "runtime_session_id": "session",
+                "task_text": "fix leaf",
+            },
+            {
+                "signal_id": "session",
+                "kind": "session",
+                "runtime_session_id": "session",
+                "lifecycle_state": "created",
+            },
+            {
+                "signal_id": "model",
+                "kind": "model",
+                "runtime_session_id": "session",
+                "model_provider": "local",
+                "model_id": "qwen",
+            },
+            {
+                "signal_id": "delivery",
+                "kind": "advisory_delivery",
+                "runtime_session_id": "session",
+                "delivery_channel": "tool",
+                "tool": "pi_symbol",
+            },
+        ):
+            _request(
+                server,
+                "secret",
+                {
+                    "interface": INTERFACE_VERSION,
+                    "operation": "runtime_signal",
+                    "params": {
+                        **payload,
+                        "observed_at": "2026-08-17T00:00:00+00:00",
+                        "paths": [],
+                        "producer": "test_adapter",
+                        "producer_version": "1",
+                    },
+                },
+            )
+        _request(
+            server,
+            "secret",
+            {
+                "interface": INTERFACE_VERSION,
+                "operation": "event",
+                "params": {"kind": "file.edited", "paths": ["service.py"]},
+            },
+        )
+        _request(
+            server,
+            "secret",
+            {
+                "interface": INTERFACE_VERSION,
+                "operation": "event",
+                "params": {"kind": "session.idle", "paths": []},
+            },
+        )
+        _request(
+            server,
+            "secret",
+            {
+                "interface": INTERFACE_VERSION,
+                "operation": "runtime_ingest",
+                "params": {
+                    "observation_id": "verification",
+                    "kind": "test",
+                    "status": "passed",
+                    "started_at": "2026-08-17T00:00:00+00:00",
+                    "finished_at": "2026-08-17T00:00:01+00:00",
+                    "observed_refs": ["py://service#leaf"],
+                    "command": "pytest",
+                    "runtime_session_id": "session",
+                    "runtime_call_id": "call",
+                },
+            },
+        )
+        contract = _request(
+            server,
+            "secret",
+            {
+                "interface": INTERFACE_VERSION,
+                "operation": "runtime_contract",
+                "params": {},
+            },
+        )["result"]
+        evidence = _request(
+            server,
+            "secret",
+            {
+                "interface": INTERFACE_VERSION,
+                "operation": "runtime_evidence",
+                "params": {"refs": ["py://service#leaf"]},
+            },
+        )["result"]
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+    assert connected["result"]["runtime"]["name"] == "test-runtime"
+    assert contract["signals"]["task"]["task_text"] == "fix leaf"
+    assert contract["signals"]["session"]["lifecycle_state"] == "created"
+    assert contract["signals"]["mutation"]["paths"] == ["service.py"]
+    assert contract["signals"]["model"]["model_id"] == "qwen"
+    assert contract["signals"]["advisory_delivery"]["tool"] == "pi_symbol"
+    assert contract["tool_execution_count"] == 1
+    assert contract["verification_count"] == 1
+    assert contract["diagnostics"] == []
+    assert evidence["items"][0]["runtime_session_id"] == "session"
+    assert evidence["items"][0]["runtime_call_id"] == "call"
+
+
 def test_sidecar_stops_when_parent_pipe_closes(tmp_path: Path) -> None:
     root = tmp_path / "repo"
     root.mkdir()

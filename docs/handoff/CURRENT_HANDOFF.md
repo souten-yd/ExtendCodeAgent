@@ -2,13 +2,32 @@
 
 Updated: 2026-08-17 (Asia/Tokyo)
 
-Canonical branch: `agent/b2-omo-coexistence`; synchronized merged base is
-`58b17970266ebccb1a0cc9c2a0169bfab523ba84` (PR #91)
+Canonical branch: `agent/c0-runtime-contract`; synchronized merged base is
+`f8986b3973ccb17f8186a9ae8dc66d8a2a67c9d8` (PR #95)
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
-Current task: merge the B2 runner, then execute its exact-main model-free preflight and five-stack
-local-practical bridge
+Current task: publish C0 closeout, then start C1 Shadow task-aware planner from synchronized main
 
 ## Current authoritative checkpoint (2026-08-17)
+
+- C0 is complete at implementation revision `0a8a846`. It reuses `ProjectRef`, `Provenance` and
+  immutable `RuntimeObservation`; no competing runtime truth store was added.
+- A small exhaustive runtime capability descriptor records all 12 host features as supported,
+  degraded or unavailable. OpenCode 1.18.18 declares mutation and verification degraded,
+  `deliver_context` and `request_model` unavailable, and never converts those gaps into PASS.
+- `TaskSignalCollector` consumes normalized task/session/mutation/model/advisory inputs and existing
+  tool/verification observations. It keeps only the latest transient signals and counters; tool and
+  verification evidence continues through the existing SQLite observation path.
+- OpenCode-specific events remain in the TypeScript adapter. A real adapter-client to Python-sidecar
+  test proves task, session, ProjectRef root/worktree, mutation, model, advisory delivery, tool and
+  verification transport. Core architecture imports remain host-neutral.
+- C0 used no model call: deterministic inspection and conformance evidence were sufficient. Full
+  gates pass all-fast 213 Python + 14 adapter, integration 96 Python + 14 adapter, Python sdist/wheel,
+  TypeScript build and diff check. Sealed evidence is
+  `docs/evidence/final/c0-runtime-contract-result-v1.json`.
+- C1 is next. Read `docs/TRANSPARENT_PI_ORCHESTRATION_PLAN.md`, remain shadow-only, compare the
+  deterministic planner to the sealed EvaluationPIPlan, and do not pull C3 behavior forward.
+
+The B0/B2 chronology below is retained as immutable history and is not current scheduling guidance.
 
 - B0a progression now uses only ControlDeck-managed port-8090 Qwen. The exact-head baseline contract
   is 54 cells; the following screen retains 714 local-practical cells as its hard maximum.
@@ -496,38 +515,17 @@ Defaults unchanged — every capability still ships `off`.
 
 ## Immediate next work
 
-B2 is complete at exact evaluation head `87ced9f` with sealed evidence in
-`docs/evidence/final/b2-omo-coexistence-result-v1.json`. The final Bridge is five-for-five PASS using
-16 fresh and four migrated Qwen step requests. Its tuple is `degraded`: OMO-only and combined tool
-inventories share duplicate IDs `glob/grep/skill/task`; no duplicate execution was observed, ECA did
-not add the inventory delta, and neither OpenCode nor OMO was patched. Team Mode/C6 and a recommended-
-stack or comparative benefit claim remain NOT TESTED.
+C0 is complete at implementation revision `0a8a846` with sealed evidence in
+`docs/evidence/final/c0-runtime-contract-result-v1.json`. After this closeout PR merges, synchronize
+main and start C1 on `agent/task-aware-shadow`. Read
+`docs/TRANSPARENT_PI_ORCHESTRATION_PLAN.md` as the only active design detail.
 
-After the B2 closeout PR merges, synchronize main and start C0. Read
-`docs/RUNTIME_ADAPTER_ARCHITECTURE_PLAN.md` as the only active design detail. Inventory only runtime
-fields with actual PI consumers, bind each to adapter mapping plus conformance coverage, and preserve
-truthful unavailable/degraded behavior. C0 is model-free by default and must not widen into C1/C3,
-V-series stores or P4.
-
-B2 is currently on `agent/b2-omo-hook-repair`. The first exact-main Qwen Bridge at `c219970` completed
-native PASS (four step-level model requests) and the ECA coding oracle PASS, but the ECA control failed
-because no runtime observation reached the agent flow. An OMO attempt was then manually interrupted
-before the runner wrote a cell checkpoint; preserve it as `INTERRUPTED_UNCHECKPOINTED_REQUEST_ATTEMPT`
-with unknown precise request count. Do not report it as zero calls.
-
-The repair awaits `runtime_ingest` in `tool.execute.after`, tolerates a missing OpenCode output title,
-records operator interruption, and stops the Bridge after any failed native/ECA/OMO control. The
-passing native result may be compatibility-migrated because it has no plugin, but only after sealed
-plan/report, exact task instruction, fixture, model route/limits and OpenCode/OMO versions match. The
-ECA result and later stacks must execute fresh. This semantic adapter change fails old B0 product
-compatibility closed and must not be added to the sealed lifecycle-only transition exception.
-
-PR #93 merged that repair as `ace1e94`. Its exact-main Bridge migrated native and spent four fresh
-Qwen requests on ECA; task/oracle passed but runtime count remained zero, so the runner stopped before
-OMO/combined stacks. Deterministic diagnosis showed B2 configured `EXTENDCODEAGENT_MODE=advisory`,
-whose product policy intentionally rejects automatic runtime ingest. The next repair changes only
-ECA-containing B2 evaluation stacks to `active`; this matches the existing active-scoped claim and
-does not redefine core `RolloutMode.ACTIVE` as forced tool use.
+C1 must deterministically produce shadow `TaskSignals`, `TaskIntent`, `IntelligencePlan` and
+`PlanOutcome`; it must not change context, model routing, capability execution, verification or
+normal OpenCode behavior. Compare it against the sealed EvaluationPIPlan on tuning and held-out tasks,
+record intent accuracy and capability precision/recall/under/over-selection, and treat expected-but-
+unused capabilities as selection gaps. Do not copy expected-plan labels into production rules or pull
+C3 advisory/active delivery forward.
 
 ```bash
 cd /home/souten/ExtendCodeAgent
@@ -537,18 +535,11 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/b2-omo-coexistence
+git switch -c agent/task-aware-shadow
 ```
 
-After this closeout PR merges, start B2 from synchronized main. Read only
-`docs/OMO_COEXISTENCE_AND_COMPATIBILITY_PLAN.md` §9 as the active design detail. Record the exact
-OpenCode/OMO/ECA tuple, Team Mode off, both meaningful plugin load orders, startup/tool/session/basic
-coding/verification behavior, clean shutdown and C0-C6 classifications. Use port-8090 Qwen only for
-model-bearing checks. This is compatibility evidence; do not pull P4 comparative scoring forward.
-
-Rollback path: switch to synchronized `main`. B0b closeout changes evaluation cleanup/metrics and
-evidence only; it does not change capability defaults, task/oracle truth, thresholds or product
-rollout authority.
+Rollback path: switch to synchronized `main`. C0 adds observation/negotiation only; it changes no
+capability defaults, task/oracle truth, thresholds, rollout authority or model route.
 
 ## Stage V0a — complete on this branch
 

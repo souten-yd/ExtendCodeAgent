@@ -52,6 +52,8 @@ test("explicit exit metadata classifies test success and lint failure", () => {
   assert.equal(passed?.kind, "test")
   assert.equal(passed?.status, "passed")
   assert.deepEqual(passed?.observed_refs, ["py://service#leaf"])
+  assert.equal(passed?.runtime_session_id, "session")
+  assert.equal(passed?.runtime_call_id, "test")
   assert.equal(failed?.kind, "lint")
   assert.equal(failed?.status, "failed")
 })

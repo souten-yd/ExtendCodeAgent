@@ -209,6 +209,33 @@ def _dispatch(
         )
     if operation == "runtime_evidence":
         return application.runtime_evidence(_string_tuple(params.get("refs", []), "refs"))
+    if operation == "runtime_connect":
+        return application.connect_runtime(
+            runtime_name=_required_string(params, "runtime_name"),
+            runtime_version=_required_string(params, "runtime_version"),
+            declarations=_runtime_capability_declarations(params.get("capabilities")),
+        )
+    if operation == "runtime_contract":
+        return application.runtime_contract()
+    if operation == "runtime_signal":
+        return application.ingest_runtime_signal(
+            signal_id=_required_string(params, "signal_id"),
+            kind=_required_string(params, "kind"),
+            observed_at=_datetime(params.get("observed_at"), "observed_at"),
+            runtime_session_id=_optional_string(
+                params.get("runtime_session_id"), "runtime_session_id"
+            ),
+            task_text=_optional_string(params.get("task_text"), "task_text"),
+            paths=_string_tuple(params.get("paths", []), "paths"),
+            source_category=_optional_string(params.get("source_category"), "source_category"),
+            lifecycle_state=_optional_string(params.get("lifecycle_state"), "lifecycle_state"),
+            model_provider=_optional_string(params.get("model_provider"), "model_provider"),
+            model_id=_optional_string(params.get("model_id"), "model_id"),
+            delivery_channel=_optional_string(params.get("delivery_channel"), "delivery_channel"),
+            tool=_optional_string(params.get("tool"), "tool"),
+            producer=_required_string(params, "producer"),
+            producer_version=_required_string(params, "producer_version"),
+        )
     if operation == "runtime_ingest":
         return application.ingest_runtime(
             observation_id=_required_string(params, "observation_id"),
@@ -222,6 +249,10 @@ def _dispatch(
             summary=_optional_string(params.get("summary"), "summary") or "",
             source_revision=_optional_string(params.get("source_revision"), "source_revision"),
             automatic=_boolean(params.get("automatic", True), "automatic"),
+            runtime_session_id=_optional_string(
+                params.get("runtime_session_id"), "runtime_session_id"
+            ),
+            runtime_call_id=_optional_string(params.get("runtime_call_id"), "runtime_call_id"),
         )
     if operation == "research_plan":
         return application.research_plan(
@@ -414,6 +445,23 @@ def _requirements(value: Any) -> tuple[Requirement, ...]:
                 tuple(CanonicalRef(ref) for ref in expected),
                 _boolean(item.get("mandatory", True), "mandatory"),
                 _boolean(item.get("requires_verification", True), "requires_verification"),
+            )
+        )
+    return tuple(result)
+
+
+def _runtime_capability_declarations(value: Any) -> tuple[tuple[str, str, str], ...]:
+    if not isinstance(value, list):
+        raise ValueError("capabilities must be an array")
+    result: list[tuple[str, str, str]] = []
+    for index, item in enumerate(value):
+        if not isinstance(item, dict):
+            raise ValueError(f"capabilities[{index}] must be an object")
+        result.append(
+            (
+                _required_string(item, "name"),
+                _required_string(item, "status"),
+                _optional_string(item.get("reason"), "reason") or "",
             )
         )
     return tuple(result)

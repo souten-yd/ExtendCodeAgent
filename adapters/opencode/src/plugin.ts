@@ -5,6 +5,12 @@ import { SidecarClient, type PiStatus, type RolloutMode } from "./client.js"
 import { ToolObservationNormalizer } from "./observations.js"
 import { workspacePath } from "./paths.js"
 import { CoalescingEventQueue } from "./queue.js"
+import {
+  OPEN_CODE_RUNTIME,
+  advisoryDeliverySignal,
+  sessionSignal,
+  taskAndModelSignals,
+} from "./runtime.js"
 import { createTools } from "./tools.js"
 import { startWorkspaceWatcher, type WorkspaceWatcher } from "./watcher.js"
 
@@ -26,6 +32,9 @@ const ExtendCodeAgentPlugin: Plugin = async ({ directory, worktree }) => {
     }
   })
   const observations = new ToolObservationNormalizer()
+  await client.request("runtime_connect", OPEN_CODE_RUNTIME).catch(() => {
+    // Capability negotiation is observable but must not break native OpenCode startup.
+  })
   const watcher = startWatcher(client, root, queue)
 
   return {
@@ -34,11 +43,22 @@ const ExtendCodeAgentPlugin: Plugin = async ({ directory, worktree }) => {
         const path = workspacePath(root, event.properties.file)
         if (path) queue.enqueue(event.type, [path])
       } else if (
-        event.type === "lsp.updated" ||
-        event.type === "session.created" ||
-        event.type === "session.idle"
+        event.type === "lsp.updated"
       ) {
         queue.enqueue(event.type)
+      } else if (event.type === "session.created") {
+        queue.enqueue(event.type)
+        await sendSignal(client, sessionSignal(event.properties.info.id, "created"))
+      } else if (event.type === "session.idle") {
+        queue.enqueue(event.type)
+        await sendSignal(client, sessionSignal(event.properties.sessionID, "idle"))
+      } else if (event.type === "session.deleted") {
+        await sendSignal(client, sessionSignal(event.properties.info.id, "deleted"))
+      }
+    },
+    "chat.message": async (input, output) => {
+      for (const signal of taskAndModelSignals(input, output.message, output.parts)) {
+        await sendSignal(client, signal)
       }
     },
     "tool.execute.before": async (input) => {
@@ -47,6 +67,8 @@ const ExtendCodeAgentPlugin: Plugin = async ({ directory, worktree }) => {
     },
     "tool.execute.after": async (input, output) => {
       queue.enqueue("tool.execute.after")
+      const delivery = advisoryDeliverySignal(input.sessionID, input.callID, input.tool)
+      if (delivery) await sendSignal(client, delivery)
       const observation = observations.after(input, output)
       if (observation) {
         await client.request("runtime_ingest", observation).catch(() => {
@@ -61,6 +83,15 @@ const ExtendCodeAgentPlugin: Plugin = async ({ directory, worktree }) => {
       await client.stop()
     },
   }
+}
+
+async function sendSignal(
+  client: SidecarClient,
+  signal: ReturnType<typeof sessionSignal>,
+): Promise<void> {
+  await client.request("runtime_signal", signal).catch(() => {
+    // Runtime signal capture must not break native OpenCode behavior.
+  })
 }
 
 async function startWatcher(

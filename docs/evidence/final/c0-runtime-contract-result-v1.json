@@ -1,0 +1,135 @@
+{
+  "schema": 1,
+  "classification": "C0_MINIMAL_RUNTIME_CONTRACT_FINAL",
+  "captured_at": "2026-08-17T23:05:41+0900",
+  "source_revision": "0a8a846f7ebc9557be3fff986044f7fc3e9239ff",
+  "execution_scope": "local-only",
+  "model": "Qwen3.6 27B",
+  "endpoint": "127.0.0.1:8090",
+  "context": 262144,
+  "output_limit": 8192,
+  "model_execution": "NOT_RUN_DETERMINISTIC_SUFFICIENT",
+  "result": "PASS",
+  "claim_scope": "host-neutral runtime contract and OpenCode 1.18.18 reference-adapter conformance",
+  "contract": {
+    "runtime_capabilities": [
+      {"name": "observe_task", "status": "supported"},
+      {"name": "observe_session", "status": "supported"},
+      {
+        "name": "observe_file_mutation",
+        "status": "degraded",
+        "reason": "native file events use a bounded filesystem watcher fallback when absent"
+      },
+      {"name": "observe_tool_execution", "status": "supported"},
+      {"name": "observe_model_route", "status": "supported"},
+      {
+        "name": "observe_verification",
+        "status": "degraded",
+        "reason": "verification is authoritative only when tool metadata exposes an exit status"
+      },
+      {
+        "name": "deliver_context",
+        "status": "unavailable",
+        "reason": "automatic bounded context injection is not implemented in C0"
+      },
+      {"name": "expose_tools", "status": "supported"},
+      {
+        "name": "request_model",
+        "status": "unavailable",
+        "reason": "model execution remains owned by OpenCode"
+      },
+      {"name": "session_lifecycle", "status": "supported"},
+      {"name": "reconnect", "status": "supported"},
+      {"name": "mcp", "status": "supported"}
+    ],
+    "host_neutral_inputs": [
+      "task identity and text",
+      "session identity and lifecycle",
+      "ProjectRef workspace/root worktree identity",
+      "mutation paths and source category",
+      "tool execution with session/call identity",
+      "model provider and model identity",
+      "verification observation",
+      "advisory tool delivery"
+    ],
+    "consumer": "TaskSignalCollector",
+    "storage": {
+      "task_session_mutation_model_delivery": "bounded in-memory latest-signal projection",
+      "tool_and_verification": "existing immutable RuntimeObservation SQLite path",
+      "new_truth_store": false
+    },
+    "workspace_identity": {
+      "fields": ["project_id", "workspace_id", "root_uri", "worktree_fingerprint"],
+      "current_reference_adapter": "exact root_uri identifies the OpenCode worktree; fingerprint remains optional until a Twin/source snapshot supplies it"
+    }
+  },
+  "adapter_mapping": {
+    "runtime": "OpenCode",
+    "version": "1.18.18",
+    "task_and_model": "chat.message",
+    "session": ["session.created", "session.idle", "session.deleted"],
+    "mutation": ["file.edited", "file.watcher.updated"],
+    "non_mutation_refresh_events": [
+      "lsp.updated",
+      "session.created",
+      "session.idle",
+      "tool.execute.before",
+      "tool.execute.after"
+    ],
+    "tool_and_verification": ["tool.execute.before", "tool.execute.after"],
+    "advisory_delivery": "successful pi_* tool.execute.after",
+    "core_opencode_imports": 0,
+    "native_behavior_authority": "OpenCode; runtime capture failure is suppressed at the adapter boundary"
+  },
+  "conformance": {
+    "capability_declarations_exhaustive": true,
+    "unnegotiated_signal_rejected": true,
+    "non_supported_reason_required": true,
+    "unavailable_signal_rejected": true,
+    "degraded_signal_accepted_with_diagnostic": true,
+    "verification_independent_of_general_tool_observation": true,
+    "runtime_session_and_call_round_trip": true,
+    "real_typescript_to_python_sidecar_round_trip": true,
+    "mcp_regression": "PASS",
+    "existing_runtime_evidence_compatibility": "PASS_OPTIONAL_FIELDS_WITH_BACKWARD_LOAD_DEFAULTS",
+    "b0_compatibility": "FAIL_CLOSED_RUNTIME_SEMANTICS_CHANGE_REPLAY_REQUIRED"
+  },
+  "efficiency": {
+    "llm_calls_requested": 0,
+    "llm_calls_executed": 0,
+    "llm_calls_avoided": 0,
+    "reason": "C0 was resolved by deterministic inspection, conformance tests and real local sidecar transport; no evidence gap required model reasoning"
+  },
+  "gates": {
+    "focused": "PASS_12_PYTHON_14_ADAPTER",
+    "all_fast": "PASS_213_PYTHON_14_ADAPTER",
+    "integration": "PASS_96_PYTHON_14_ADAPTER",
+    "build": "PASS_PYTHON_SDIST_WHEEL_TYPESCRIPT",
+    "diff_check": "PASS"
+  },
+  "scope_guards": {
+    "c1_classifier_or_planner": "NOT_IMPLEMENTED_IN_C0",
+    "c3_automatic_selection": "NOT_IMPLEMENTED_IN_C0",
+    "second_runtime_adapter": "NOT_IMPLEMENTED",
+    "automatic_context_delivery": "UNAVAILABLE_NOT_PASS",
+    "model_request_ownership": "UNAVAILABLE_TO_ECA_ADAPTER_NOT_PASS",
+    "user_visible_behavior_change": false
+  },
+  "unavailable_or_policy_excluded": {
+    "local_low": "UNAVAILABLE / NOT_CONFIGURED",
+    "host_default": "NOT_RUN_USER_POLICY",
+    "frontier_sonnet": "NOT_RUN_USER_POLICY / SHARED_QUOTA_EXHAUSTED",
+    "frontier_codex": "NOT_RUN_USER_POLICY / SHARED_QUOTA_EXHAUSTED"
+  },
+  "decision": {
+    "c0_exit": "PASS",
+    "next_stage": "C1",
+    "promotion_or_demotion": "NONE",
+    "general_model_claim": false,
+    "frontier_claim": false
+  },
+  "seal": {
+    "algorithm": "sha256",
+    "canonical_payload": "e1d3a814408472db4bb06d243b0fdc9bdf655718ee7c642f7502012fb7cbeaa7"
+  }
+}
