@@ -100,3 +100,18 @@ tools/local/evaluation-runner promote-pilot --source <old-pilot.json> \
 ```
 
 Promoted pilot latency remains legacy and separate. Any non-reusable pilot cell rejects promotion.
+
+B0a screening additionally requires the complete, sealed, exact-head 162-cell baseline. The runner
+verifies the result set, target completion summary and append-only trace before creating a screening
+workspace; a 145/162 checkpoint or any provider-gap quality result fails closed:
+
+```bash
+tools/local/evaluation-runner run --scope b0a-screening \
+  --activation-report <activation.json> --pilot-report <pilot.json> \
+  --baseline-report <complete-baseline.json> \
+  --raw-root <screening-raw> --output <screening-result.json>
+```
+
+Migrated and current-runner cells may coexist in a resumed baseline, but their counts and latency
+populations remain separate. Legacy timing is excluded unless an explicit latency bridge permits
+aggregation.

@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+import pytest
 from pytest import MonkeyPatch
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -29,6 +30,7 @@ from tools.local.evaluation_runner import (  # noqa: E402
     _pilot_off_assessment,
     _provider_failure,
     _require_activation_report,
+    _require_baseline_report,
     _run_opencode,
     _task_instruction,
     promote_pilot,
@@ -87,6 +89,7 @@ def test_provider_gap_pauses_only_its_queue_and_other_models_continue(
         None,
         False,
         tmp_path / "raw",
+        None,
         None,
         None,
         [],
@@ -333,10 +336,93 @@ def test_activation_requires_only_the_three_quality_models(tmp_path: Path) -> No
     assert evidence["provider_queue"]["host-default"]["status"] == ("PAUSED_PROVIDER_GAP")
 
 
+def test_screening_requires_a_complete_sealed_exact_head_baseline(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+) -> None:
+    cell = evaluation_runner.plan("b0a-baseline")["cells"][0]
+    schedule = {
+        "scope": "b0a-baseline",
+        "matrix_id": "matrix",
+        "counts": {"cells": 1},
+        "cells": [cell],
+    }
+    monkeypatch.setattr(evaluation_runner, "plan", lambda *args, **kwargs: schedule)
+    trace_path = tmp_path / "traces.jsonl"
+    trace_id = "baseline-trace"
+    EvaluationTraceLog(trace_path).append(
+        EvaluationTrace(
+            trace_id=trace_id,
+            plan_id="plan",
+            cell_id=cell["cell_id"],
+            task_id=cell["task_id"],
+            task_class=cell["task_class"],
+            oracle_id=f"e3-oracle:{cell['task_id']}",
+            input_seals={"matrix": "seal"},
+            capability_state_source="planned_matrix",
+            capability_modes={},
+            capability_depths={},
+            used_features={},
+            selected_evidence_ids=(),
+            source_revision_id="repo",
+            twin_revision_id=None,
+            model_tier=cell["model_tier"],
+            model_id=cell["model_id"],
+            verification_outcome="PASS",
+            fallback=None,
+        )
+    )
+    revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+    completion: dict[str, Any] = {
+        "model_tiers": sorted(evaluation_runner.B0A_QUALITY_MODELS),
+        "expected_cells": 1,
+        "completed_cells": 1,
+        "pending_cells": 0,
+    }
+    body: dict[str, Any] = {
+        "schedule": {key: value for key, value in schedule.items() if key != "cells"},
+        "source_revision": revision,
+        "trace_log": str(trace_path),
+        "results": [{**cell, "outcome": "PASS", "trace_id": trace_id}],
+        "target_completion": completion,
+    }
+    path = tmp_path / "baseline.json"
+    path.write_text(
+        json.dumps(
+            {
+                **body,
+                "seal": {"algorithm": "sha256", "canonical_payload": _digest(body)},
+            }
+        )
+    )
+    evidence = _require_baseline_report(path)
+    assert evidence["completed_cells"] == 1
+    assert evidence["trace_integrity"] == "PASS"
+
+    incomplete = {
+        **body,
+        "results": [],
+        "target_completion": {
+            **completion,
+            "completed_cells": 0,
+            "pending_cells": 1,
+        },
+    }
+    path.write_text(
+        json.dumps(
+            {
+                **incomplete,
+                "seal": {"algorithm": "sha256", "canonical_payload": _digest(incomplete)},
+            }
+        )
+    )
+    with pytest.raises(evaluation_runner.EvaluationError, match="incomplete"):
+        _require_baseline_report(path)
+
+
 def test_requeue_moves_quota_failures_out_of_quality_results(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ) -> None:
-    planned = evaluation_runner.plan("b0a-baseline")["cells"][:2]
+    planned = evaluation_runner.plan("b0a-baseline")["cells"][:3]
     raw = tmp_path / "source-raw"
     trace_path = raw / "traces.jsonl"
     results = []
@@ -345,6 +431,7 @@ def test_requeue_moves_quota_failures_out_of_quality_results(
             **cell,
             "outcome": "UNAVAILABLE" if index == 0 else "FAIL",
             "trace_id": f"trace-{index}",
+            **({"result_origin": "migrated_checkpoint"} if index == 1 else {}),
         }
         results.append(result)
         EvaluationTraceLog(trace_path).append(
@@ -380,19 +467,27 @@ def test_requeue_moves_quota_failures_out_of_quality_results(
             {
                 "schedule": {"scope": "b0a-baseline"},
                 "trace_log": str(trace_path),
+                "result_origin": "migrated_checkpoint",
+                "latency_status": "LEGACY_RUNNER_SEPARATE",
+                "latency_merge_permitted": False,
+                "migration_summary": {"migrated_cells": 3},
                 "results": results,
             }
         )
     )
-    schedule = {"scope": "b0a-baseline", "counts": {"cells": 2}, "cells": planned}
+    schedule = {"scope": "b0a-baseline", "counts": {"cells": 3}, "cells": planned}
     monkeypatch.setattr(evaluation_runner, "plan", lambda *args, **kwargs: schedule)
     monkeypatch.setattr(evaluation_runner, "_require_clean_worktree", lambda: None)
     repaired = requeue_provider_gaps(source, tmp_path / "repaired.json", tmp_path / "repaired-raw")
-    assert repaired["executed_cells"] == 1
+    assert repaired["executed_cells"] == 2
     assert repaired["target_completion"]["pending_cells"] == 1
     assert repaired["provider_queue"][planned[0]["model_tier"]]["failure"] == ("QUOTA_EXHAUSTED")
     assert repaired["provider_requeue"]["requeued_count"] == 1
-    assert len(EvaluationTraceLog(Path(repaired["trace_log"])).replay()) == 1
+    assert repaired["result_origin"] == "mixed_checkpoint"
+    assert repaired["latency_status"] == "MIXED_LEGACY_AND_CURRENT_SEPARATE"
+    assert repaired["migration_summary"]["migrated_cells"] == 1
+    assert repaired["migration_summary"]["current_runner_cells"] == 1
+    assert len(EvaluationTraceLog(Path(repaired["trace_log"])).replay()) == 2
 
 
 def test_promoted_pilot_requires_a_fully_reusable_sealed_audit(
