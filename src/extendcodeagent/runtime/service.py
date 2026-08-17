@@ -13,8 +13,103 @@ from .contracts import (
     ObservationStatus,
     ReconciliationDecision,
     ReconciliationOutcome,
+    RuntimeAdapterCapability,
+    RuntimeCapabilities,
+    RuntimeCapabilityStatus,
     RuntimeObservation,
+    RuntimeSignal,
+    RuntimeSignalKind,
+    RuntimeSignalSnapshot,
 )
+
+_SIGNAL_CAPABILITY = {
+    RuntimeSignalKind.TASK: (RuntimeAdapterCapability.OBSERVE_TASK,),
+    RuntimeSignalKind.SESSION: (
+        RuntimeAdapterCapability.OBSERVE_SESSION,
+        RuntimeAdapterCapability.SESSION_LIFECYCLE,
+    ),
+    RuntimeSignalKind.MUTATION: (RuntimeAdapterCapability.OBSERVE_FILE_MUTATION,),
+    RuntimeSignalKind.MODEL: (RuntimeAdapterCapability.OBSERVE_MODEL_ROUTE,),
+    RuntimeSignalKind.ADVISORY_DELIVERY: (RuntimeAdapterCapability.EXPOSE_TOOLS,),
+}
+
+
+class TaskSignalCollector:
+    """Consume normalized runtime inputs without retaining a competing truth store."""
+
+    def __init__(self, project: ProjectRef) -> None:
+        self._project = project
+        self._capabilities: RuntimeCapabilities | None = None
+        self._signals: dict[RuntimeSignalKind, RuntimeSignal] = {}
+        self._tool_execution_count = 0
+        self._verification_count = 0
+        self._latest_tool_observation_id: str | None = None
+        self._latest_verification_observation_id: str | None = None
+        self._diagnostics: list[str] = []
+
+    def connect(self, capabilities: RuntimeCapabilities) -> None:
+        self._capabilities = capabilities
+
+    def collect(self, signal: RuntimeSignal) -> bool:
+        self._validate_project(signal.project)
+        if not all(self._accepts(capability) for capability in _SIGNAL_CAPABILITY[signal.kind]):
+            return False
+        self._signals[signal.kind] = signal
+        return True
+
+    def collect_observation(self, observation: RuntimeObservation) -> bool:
+        self._validate_project(observation.project)
+        tool_accepted = self._accepts(RuntimeAdapterCapability.OBSERVE_TOOL_EXECUTION)
+        verification_accepted = observation.kind is not ObservationKind.RUNTIME and self._accepts(
+            RuntimeAdapterCapability.OBSERVE_VERIFICATION
+        )
+        if tool_accepted:
+            self._tool_execution_count += 1
+            self._latest_tool_observation_id = observation.observation_id
+        if verification_accepted:
+            self._verification_count += 1
+            self._latest_verification_observation_id = observation.observation_id
+        return tool_accepted or verification_accepted
+
+    def snapshot(self) -> RuntimeSignalSnapshot:
+        return RuntimeSignalSnapshot(
+            self._project,
+            self._capabilities,
+            self._signals.get(RuntimeSignalKind.TASK),
+            self._signals.get(RuntimeSignalKind.SESSION),
+            self._signals.get(RuntimeSignalKind.MUTATION),
+            self._signals.get(RuntimeSignalKind.MODEL),
+            self._signals.get(RuntimeSignalKind.ADVISORY_DELIVERY),
+            self._tool_execution_count,
+            self._verification_count,
+            self._latest_tool_observation_id,
+            self._latest_verification_observation_id,
+            tuple(dict.fromkeys(self._diagnostics)),
+        )
+
+    def _accepts(self, capability: RuntimeAdapterCapability) -> bool:
+        if self._capabilities is None:
+            self._diagnostics.append("runtime_capabilities_not_negotiated")
+            return True
+        declaration = self._capabilities.declaration(capability)
+        if declaration.status is RuntimeCapabilityStatus.UNAVAILABLE:
+            self._diagnostics.append(f"{capability.value}:unavailable:{declaration.reason}")
+            return False
+        if declaration.status is RuntimeCapabilityStatus.DEGRADED:
+            self._diagnostics.append(f"{capability.value}:degraded:{declaration.reason}")
+        return True
+
+    def _validate_project(self, project: ProjectRef) -> None:
+        if (
+            project.project_id,
+            project.workspace_id,
+            project.root_uri,
+        ) != (
+            self._project.project_id,
+            self._project.workspace_id,
+            self._project.root_uri,
+        ):
+            raise ValueError("runtime signal project does not match collector project")
 
 
 def reconcile_observations(

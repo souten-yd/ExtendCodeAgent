@@ -22,6 +22,8 @@ export type RuntimeIngest = {
   tool: string
   summary: string
   automatic: true
+  runtime_session_id: string
+  runtime_call_id: string
 }
 
 export class ToolObservationNormalizer {
@@ -59,6 +61,8 @@ export class ToolObservationNormalizer {
           ? output.title.slice(0, 500)
           : `OpenCode ${input.tool} execution`,
       automatic: true,
+      runtime_session_id: input.sessionID,
+      runtime_call_id: input.callID,
     }
   }
 }

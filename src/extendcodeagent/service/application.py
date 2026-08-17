@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import re
 import time
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -59,7 +59,18 @@ from extendcodeagent.graph.analyzers import (
     PythonGraphAnalyzer,
 )
 from extendcodeagent.research import ResearchDepth, ResearchRequest, build_research_plan
-from extendcodeagent.runtime import ObservationKind, ObservationStatus, RuntimeObservation
+from extendcodeagent.runtime import (
+    ObservationKind,
+    ObservationStatus,
+    RuntimeAdapterCapability,
+    RuntimeCapabilities,
+    RuntimeCapabilityDeclaration,
+    RuntimeCapabilityStatus,
+    RuntimeObservation,
+    RuntimeSignal,
+    RuntimeSignalKind,
+    TaskSignalCollector,
+)
 from extendcodeagent.storage import SqliteGraphStore
 from extendcodeagent.strategy import (
     ProposedAlternative,
@@ -113,6 +124,7 @@ class ProjectIntelligenceApplication:
         self.analyzers = analyzers
         digest = hashlib.sha256(str(self.root).encode()).hexdigest()[:12]
         self.project = ProjectRef(f"{self.root.name}-{digest}", "default", self.root.as_uri())
+        self._task_signals = TaskSignalCollector(self.project)
         self._store: SqliteGraphStore | None = None
         self._twin: TwinService | None = None
         self._blueprints: BlueprintService | None = None
@@ -211,6 +223,17 @@ class ProjectIntelligenceApplication:
         return entries
 
     def process_event(self, paths: tuple[str, ...], kind: str) -> dict[str, Any]:
+        self._task_signals.collect(
+            RuntimeSignal(
+                f"event:{kind}:{time.time_ns()}",
+                RuntimeSignalKind.MUTATION,
+                self.project,
+                datetime.now(UTC),
+                Provenance("runtime", kind, "1"),
+                paths=tuple(sorted(set(paths))),
+                source_category=kind,
+            )
+        )
         if not all(
             self.policy.computes_automatically(capability)
             for capability in (CapabilityName.GRAPH, CapabilityName.TWIN, CapabilityName.SEMANTIC)
@@ -583,6 +606,8 @@ class ProjectIntelligenceApplication:
         summary: str = "",
         source_revision: str | None = None,
         automatic: bool = True,
+        runtime_session_id: str | None = None,
+        runtime_call_id: str | None = None,
     ) -> dict[str, Any]:
         allowed = (
             self.policy.computes_automatically(CapabilityName.RUNTIME)
@@ -615,15 +640,86 @@ class ProjectIntelligenceApplication:
             command,
             tool,
             summary=summary,
+            runtime_session_id=runtime_session_id,
+            runtime_call_id=runtime_call_id,
         )
         inserted = self._ensure_store().put_observation(observation)
+        collected = self._task_signals.collect_observation(observation)
         return {
             "accepted": True,
             "observation_id": observation_id,
             "inserted": inserted,
             "source_revision": revision.value,
             "depth": self.policy.depth(CapabilityName.RUNTIME).value,
+            "runtime_contract_collected": collected,
         }
+
+    def connect_runtime(
+        self,
+        *,
+        runtime_name: str,
+        runtime_version: str,
+        declarations: tuple[tuple[str, str, str], ...],
+    ) -> dict[str, Any]:
+        capabilities = RuntimeCapabilities(
+            runtime_name,
+            runtime_version,
+            tuple(
+                RuntimeCapabilityDeclaration(
+                    RuntimeAdapterCapability(name),
+                    RuntimeCapabilityStatus(status),
+                    reason,
+                )
+                for name, status, reason in declarations
+            ),
+        )
+        self._task_signals.connect(capabilities)
+        return self.runtime_contract()
+
+    def ingest_runtime_signal(
+        self,
+        *,
+        signal_id: str,
+        kind: str,
+        observed_at: datetime,
+        runtime_session_id: str | None = None,
+        task_text: str | None = None,
+        paths: tuple[str, ...] = (),
+        source_category: str | None = None,
+        lifecycle_state: str | None = None,
+        model_provider: str | None = None,
+        model_id: str | None = None,
+        delivery_channel: str | None = None,
+        tool: str | None = None,
+        producer: str = "runtime_adapter",
+        producer_version: str = "1",
+    ) -> dict[str, Any]:
+        signal = RuntimeSignal(
+            signal_id,
+            RuntimeSignalKind(kind),
+            self.project,
+            observed_at,
+            Provenance("runtime", producer, producer_version),
+            runtime_session_id,
+            task_text,
+            paths,
+            source_category,
+            lifecycle_state,
+            model_provider,
+            model_id,
+            delivery_channel,
+            tool,
+        )
+        accepted = self._task_signals.collect(signal)
+        return {
+            "accepted": accepted,
+            "signal_id": signal.signal_id,
+            "kind": signal.kind.value,
+            "diagnostics": list(self._task_signals.snapshot().diagnostics),
+        }
+
+    def runtime_contract(self) -> dict[str, Any]:
+        return _runtime_snapshot_json(self._task_signals.snapshot())
 
     def runtime_evidence(self, refs: tuple[str, ...] = ()) -> dict[str, Any]:
         if not self.policy.allows_explicit_use(CapabilityName.RUNTIME):
@@ -1331,6 +1427,78 @@ def _observation_json(item: Any) -> dict[str, Any]:
         "command": item.command,
         "tool": item.tool,
         "summary": item.summary,
+        "runtime_session_id": item.runtime_session_id,
+        "runtime_call_id": item.runtime_call_id,
+    }
+
+
+def _runtime_signal_json(item: Any) -> dict[str, Any] | None:
+    if item is None:
+        return None
+    return {
+        "signal_id": item.signal_id,
+        "kind": item.kind.value,
+        "project": {
+            "project_id": item.project.project_id,
+            "workspace_id": item.project.workspace_id,
+            "root_uri": item.project.root_uri,
+            "worktree_fingerprint": item.project.worktree_fingerprint,
+        },
+        "observed_at": item.observed_at.isoformat(),
+        "runtime_session_id": item.runtime_session_id,
+        "task_text": item.task_text,
+        "paths": list(item.paths),
+        "source_category": item.source_category,
+        "lifecycle_state": item.lifecycle_state,
+        "model_provider": item.model_provider,
+        "model_id": item.model_id,
+        "delivery_channel": item.delivery_channel,
+        "tool": item.tool,
+        "provenance": {
+            "source": item.provenance.source,
+            "producer": item.provenance.producer,
+            "producer_version": item.provenance.producer_version,
+        },
+    }
+
+
+def _runtime_snapshot_json(item: Any) -> dict[str, Any]:
+    capabilities = item.capabilities
+    return {
+        "project": {
+            "project_id": item.project.project_id,
+            "workspace_id": item.project.workspace_id,
+            "root_uri": item.project.root_uri,
+            "worktree_fingerprint": item.project.worktree_fingerprint,
+        },
+        "runtime": (
+            None
+            if capabilities is None
+            else {
+                "name": capabilities.runtime_name,
+                "version": capabilities.runtime_version,
+                "capabilities": [
+                    {
+                        "name": declaration.capability.value,
+                        "status": declaration.status.value,
+                        "reason": declaration.reason,
+                    }
+                    for declaration in capabilities.declarations
+                ],
+            }
+        ),
+        "signals": {
+            "task": _runtime_signal_json(item.latest_task),
+            "session": _runtime_signal_json(item.latest_session),
+            "mutation": _runtime_signal_json(item.latest_mutation),
+            "model": _runtime_signal_json(item.latest_model),
+            "advisory_delivery": _runtime_signal_json(item.latest_advisory_delivery),
+        },
+        "tool_execution_count": item.tool_execution_count,
+        "verification_count": item.verification_count,
+        "latest_tool_observation_id": item.latest_tool_observation_id,
+        "latest_verification_observation_id": item.latest_verification_observation_id,
+        "diagnostics": list(item.diagnostics),
     }
 
 
