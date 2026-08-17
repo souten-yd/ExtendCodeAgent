@@ -29,6 +29,8 @@
   resolved route `eca-local-practical/llama`. Planning now records the resolved route. Migration
   also excludes historical non-target provider queues/attempts from the active local-only report
   while preserving them unchanged in the immutable source checkpoint and recording exclusion counts.
+- Sealed `b0a-checkpoint-compatibility-v3.json` from completed-baseline head `650b293` to the
+  runner-only repair `1057169`; diagnostic audit reports trace integrity PASS and 54/54 `REUSABLE`.
 
 ## 2026-08-17 — Canonical three-route contract reconciliation
 
