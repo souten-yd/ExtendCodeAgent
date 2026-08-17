@@ -2,25 +2,34 @@
 
 Updated: 2026-08-17 (Asia/Tokyo)
 
-Canonical branch: `main`; latest audited merged base before this documentation closeout is
-`1cd6d536435493d1082593b2db7146edd4a248ee` (PR #76)
+Canonical branch: `agent/b0a-adaptive-screening`; synchronized merged base is
+`80ac08d8e55dda1945997787ef874e0921506991` (PR #81)
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
-Current task: complete the local-first B0a baseline, then run the gated local-practical screening
+Current task: merge adaptive B0a execution, then run the gated local-practical adaptive screen
 
 ## Current authoritative checkpoint (2026-08-17)
 
 - B0a progression now uses only ControlDeck-managed port-8090 Qwen. The exact-head baseline contract
-  is 54 cells; the following screen is 714 local-practical cells.
+  is 54 cells; the following screen retains 714 local-practical cells as its hard maximum.
 - Sonnet/Codex are `NOT_RUN_USER_POLICY / SHARED_QUOTA_EXHAUSTED`, host-default is
   `NOT_RUN_USER_POLICY`, and local-low is `UNAVAILABLE / NOT_CONFIGURED`. No new call/probe or
   cross-tier claim is permitted while the local-only exception is active.
 - The confirmed 27-cell Qwen pilot remains `PROCEED_TO_COMPREHENSIVE`: native/off/active PASS is
   0/0/6, every required PI observation is present and active median wall ratio is 0.658.
-- The 714-cell screening requires a sealed, exact-head, trace-complete 54/54 local baseline through
-  `--baseline-report`; the previous 145/162 three-route checkpoint is immutable history.
+- The exact-head, trace-complete 54/54 local baseline is sealed. The preserved old screening
+  checkpoint remains immutable at 24/714; adaptive migration reuses only compatible cells and does
+  not delete or rewrite the old checkpoint/raw evidence.
 - Promote the existing Qwen 54/54 through compatibility audit, Bridge Proof and checkpoint migration,
-  run only proven residual cells, complete exact-head Qwen activation/pilot bindings, then start
-  screening. Do not probe or substitute another model during this sequence.
+  run only proven residual cells, then create an exact-head model-free adaptive plan. It must record
+  active-use relevance, D0-D4 output equivalence, expected/max calls, empirical limits, workspace
+  strategy and skip reasons before any new Qwen inference. Do not probe or substitute another model.
+- Development-tree preflight reduced the 714 hard maximum to 102 adaptive candidates, with 534
+  `NOT_TESTED_NO_ACTIVE_USE` and 78 depth-equivalent skips. One of 24 old results accessed the shared
+  runner `.venv` and is invalid under the corrected isolation contract. Clean commit `6cbacaf`
+  reproduced 23 reusable cells, 27 expected new calls before the first decision and 79 maximum new
+  calls. The one-call persistent OpenCode Bridge was oracle-inconsistent and 23.7% slower, so retain
+  per-cell `opencode run`. Evidence: `docs/evidence/final/b0a-adaptive-screening-execution-v1.json`.
+  Regenerate the model-free plan at merged main before starting the model frontier.
 
 The chronology below is retained as history. Its four-model/306-cell and three-model/162-cell
 statements describe superseded protocols and are not current execution instructions.

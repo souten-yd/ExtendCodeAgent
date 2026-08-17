@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "policy_id": "b0a-adaptive-screening-policy-v1",
+  "base_screening_plan": "docs/evaluation/b0a-screening-plan-v1.json",
+  "base_screening_plan_seal": "adaee11e4d4a6a65eac977f4c471200dbec378d0336ca5ff6c8968ad30415e4c",
+  "quality_target": "docs/evaluation/b0a-quality-target-v2.json",
+  "quality_target_seal": "ab6b2141b5c8bd99dac5aa18c6e7b2c060c8624fa79f56ef7001edc993d518d9",
+  "unchanged_contracts": {
+    "task_suite_seal": "23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632",
+    "matrix_seal": "7bfa9f1dd8be5bf44fcf3f018c4ccbe2b6a3266846cd7a994f08eb5d4886a0c5",
+    "task_subset": "inherited",
+    "oracle": "inherited",
+    "corpus": "inherited",
+    "effect_threshold": "inherited",
+    "capabilities": "inherited"
+  },
+  "hard_maximum_cells": 714,
+  "relevance": {
+    "source": "observed active non-status pi_* tool trace and capabilities_used",
+    "unobserved_state": "NOT_TESTED_NO_ACTIVE_USE",
+    "unobserved_is_no_effect": false
+  },
+  "depth": {
+    "preflight": "deterministic PI-only before agent/model",
+    "order": ["D0", "D1", "D2", "D3", "D4"],
+    "comparison_fields": [
+      "task_relevant_output",
+      "evidence_ids",
+      "canonical_refs",
+      "selected_tests",
+      "uncertainty",
+      "obligations"
+    ],
+    "volatile_fields_excluded": ["depth", "interface", "revision_id", "timing", "view"],
+    "equivalent_state": "SKIPPED_DEPTH_OUTPUT_EQUIVALENT",
+    "stop_state": "SKIPPED_MINIMUM_SUFFICIENT_DEPTH"
+  },
+  "repetitions": {
+    "order": [1, 2, 3],
+    "positive_state": "PROCEED_TO_B0B_EARLY",
+    "positive_stop_state": "SKIPPED_EARLY_POSITIVE",
+    "second_repetition": "only unresolved candidates that can still cross the inherited threshold",
+    "third_repetition": "only unresolved threshold boundaries"
+  },
+  "reasoning_reuse": {
+    "fingerprint_fields": [
+      "project_workspace",
+      "revision",
+      "task_intent",
+      "capability_depth",
+      "selected_evidence_ids",
+      "relevant_environment"
+    ],
+    "classification": "MODEL_DERIVED_ADVISORY",
+    "project_truth": false,
+    "independent_contract_repetition_bypasses_reuse": true,
+    "store": "existing E5 trace and P0 evidence memory"
+  },
+  "execution": {
+    "llm_parallelism": 1,
+    "cpu_pipeline": [
+      "workspace_preparation",
+      "deterministic_pi_preflight",
+      "oracle",
+      "log_parsing",
+      "hashing_sealing",
+      "checkpoint_write_preparation"
+    ],
+    "workspace_strategy": "benchmark_then_select_git_worktree_or_reflink",
+    "persistent_opencode": "adopt_only_after_oracle_identical_measured_speedup_bridge",
+    "session_workspace_evidence_sharing": false,
+    "step_output_limits": "successful-run p95/p99 plus recorded margin"
+  },
+  "required_efficiency_metrics": [
+    "llm_calls_requested",
+    "llm_calls_executed",
+    "llm_calls_avoided",
+    "avoided_call_ratio",
+    "input_tokens",
+    "output_tokens",
+    "reasoning_tokens",
+    "deterministic_resolution_ratio",
+    "escalation_rate",
+    "average_context_tokens",
+    "max_context_tokens",
+    "minimum_sufficient_depth",
+    "model_wall_time",
+    "deterministic_pi_wall_time",
+    "total_wall_time",
+    "reused_evidence_count",
+    "invalidated_evidence_count"
+  ],
+  "adoption_decisions_forbidden": true,
+  "seal": {
+    "algorithm": "sha256",
+    "canonical_payload": "d10358015eed5ae3023511b0a4f77d2a7eccb862e7e613837d7b85fdb0d27b9c"
+  }
+}

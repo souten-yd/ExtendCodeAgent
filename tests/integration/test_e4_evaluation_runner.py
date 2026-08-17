@@ -5,6 +5,7 @@ import json
 import os
 import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 from typing import Any
@@ -17,6 +18,7 @@ sys.path.insert(0, str(ROOT))
 
 import tools.local.evaluation_runner as evaluation_runner  # noqa: E402
 from extendcodeagent.evaluation import EvaluationTrace, EvaluationTraceLog  # noqa: E402
+from tools.local import adaptive_screening_runner  # noqa: E402
 from tools.local.evaluation_runner import (  # noqa: E402
     CONFIGURABLE_CAPABILITIES,
     _activation_assessment,
@@ -60,6 +62,171 @@ def _digest(value: dict[str, object]) -> str:
         payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
     ).encode()
     return hashlib.sha256(canonical).hexdigest()
+
+
+def test_adaptive_policy_is_sealed_to_unchanged_evaluation_contracts() -> None:
+    policy = adaptive_screening_runner._verify_policy()
+
+    assert policy["hard_maximum_cells"] == 714
+    assert policy["unchanged_contracts"]["effect_threshold"] == "inherited"
+    assert policy["unchanged_contracts"]["oracle"] == "inherited"
+
+
+def test_adaptive_step_limit_counts_only_completed_json_steps() -> None:
+    log = "\n".join(
+        [
+            '{"type":"step_start"}',
+            '{"type":"step_finish"}',
+            '{"part":{"type":"step-finish"}}',
+            "not-json",
+        ]
+    )
+
+    assert adaptive_screening_runner._steps_in_text(log) == 2
+
+
+def test_adaptive_batch_keeps_model_serial_while_cpu_finalization_pipelines(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+) -> None:
+    cells = [
+        {"cell_id": "one", "task_id": "task"},
+        {"cell_id": "two", "task_id": "task"},
+    ]
+    tasks = {"task": {"id": "task"}}
+    first_finalizer_started = threading.Event()
+    second_model_started = threading.Event()
+    model_active = 0
+    max_model_active = 0
+
+    class Templates:
+        def ensure_template(self, task_id: str) -> None:
+            assert task_id == "task"
+
+        def prepare_retry_safe(self, task_id: str, cell_id: str) -> Path:
+            workspace = tmp_path / cell_id
+            workspace.mkdir()
+            return workspace
+
+    def agent(cell: dict[str, Any], *args: Any, **kwargs: Any) -> dict[str, Any]:
+        nonlocal model_active, max_model_active
+        model_active += 1
+        max_model_active = max(max_model_active, model_active)
+        if cell["cell_id"] == "two":
+            assert first_finalizer_started.wait(1)
+            second_model_started.set()
+        model_active -= 1
+        return {"cell": cell, "provider_failure": False}
+
+    def finalize(raw: dict[str, Any], *args: Any) -> dict[str, Any]:
+        if raw["cell"]["cell_id"] == "one":
+            first_finalizer_started.set()
+            assert second_model_started.wait(1)
+        return {"cell_id": raw["cell"]["cell_id"]}
+
+    monkeypatch.setattr(adaptive_screening_runner, "_agent_only", agent)
+    monkeypatch.setattr(adaptive_screening_runner, "_finalize_agent", finalize)
+    monkeypatch.setattr(adaptive_screening_runner, "_persist_agent_capture", lambda *args: None)
+
+    results = adaptive_screening_runner._execute_batch(
+        cells,
+        tasks=tasks,
+        templates=Templates(),  # type: ignore[arg-type]
+        raw_root=tmp_path,
+        output_limit=10,
+        step_limit=2,
+    )
+
+    assert [item["cell_id"] for item in results] == ["one", "two"]
+    assert max_model_active == 1
+
+
+def test_adaptive_migration_rejects_shared_runner_venv_access(tmp_path: Path) -> None:
+    log = tmp_path / "cell.jsonl"
+    log.write_text(
+        json.dumps(
+            {
+                "type": "tool_use",
+                "part": {
+                    "state": {
+                        "input": {
+                            "command": f"source {ROOT}/.venv/bin/activate && pip install -e ."
+                        }
+                    }
+                },
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    compatible, reasons = adaptive_screening_runner._compatible_result(
+        {"model_tier": "local-practical", "output_tokens": 1},
+        log,
+        {"step_limit": 2, "output_limit": 10},
+    )
+
+    assert compatible is False
+    assert reasons == ["shared_evaluation_venv_access"]
+
+
+def test_adaptive_provider_gap_stops_batch_and_is_not_a_reusable_capture(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+) -> None:
+    cells = [
+        {"cell_id": "gap", "task_id": "task"},
+        {"cell_id": "must-remain-pending", "task_id": "task"},
+    ]
+    invoked: list[str] = []
+    provider_captures: list[str] = []
+
+    class Templates:
+        def ensure_template(self, task_id: str) -> None:
+            pass
+
+        def prepare_retry_safe(self, task_id: str, cell_id: str) -> Path:
+            workspace = tmp_path / cell_id
+            workspace.mkdir()
+            return workspace
+
+    def agent(cell: dict[str, Any], *args: Any, **kwargs: Any) -> dict[str, Any]:
+        invoked.append(cell["cell_id"])
+        return {"cell": cell, "provider_failure": "LOCAL_ENDPOINT_UNAVAILABLE"}
+
+    def finalize(raw: dict[str, Any], *args: Any, **kwargs: Any) -> dict[str, Any]:
+        return {
+            "cell_id": raw["cell"]["cell_id"],
+            "provider_failure": raw["provider_failure"],
+        }
+
+    def persist_provider(raw: dict[str, Any], root: Path) -> Path:
+        provider_captures.append(raw["cell"]["cell_id"])
+        return root / "provider-attempt.json"
+
+    monkeypatch.setattr(adaptive_screening_runner, "_agent_only", agent)
+    monkeypatch.setattr(adaptive_screening_runner, "_finalize_agent", finalize)
+    monkeypatch.setattr(
+        adaptive_screening_runner,
+        "_persist_provider_attempt",
+        persist_provider,
+    )
+    monkeypatch.setattr(
+        adaptive_screening_runner,
+        "_persist_agent_capture",
+        lambda *args: pytest.fail("provider gap must not become a reusable agent capture"),
+    )
+
+    results = adaptive_screening_runner._execute_batch(
+        cells,
+        tasks={"task": {"id": "task"}},
+        templates=Templates(),  # type: ignore[arg-type]
+        raw_root=tmp_path,
+        output_limit=10,
+        step_limit=2,
+    )
+
+    assert invoked == ["gap"]
+    assert provider_captures == ["gap"]
+    assert results == [{"cell_id": "gap", "provider_failure": "LOCAL_ENDPOINT_UNAVAILABLE"}]
 
 
 def test_provider_gap_pauses_only_its_queue_and_other_models_continue(
@@ -732,6 +899,7 @@ def test_local_practical_output_is_bounded_for_every_arm(tmp_path: Path) -> None
             "context": 262144,
             "output": 8192,
         }
+        assert config["permission"]["external_directory"] == "deny"
 
 
 def test_agent_environment_cannot_retarget_the_shared_runner_venv(

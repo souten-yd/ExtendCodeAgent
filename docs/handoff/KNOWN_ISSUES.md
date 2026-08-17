@@ -226,9 +226,12 @@
   cells; pure `native` results measure OpenCode/model behavior, not PI effect, and will not be reused
   as corrected-protocol evidence.
 - One old refactor cell ran an editable install and retargeted the shared runner `.venv` to its
-  temporary workspace. The root editable install was restored. Corrected runs remove the runner venv
-  and `PYTHONPATH` from the agent shell environment and require an isolated virtualenv for pip, while
-  the ECA sidecar keeps its explicit interpreter.
+  temporary workspace; the preserved 24-cell screening checkpoint reproduced that contamination.
+  The root editable install was restored. Corrected runs remove the runner venv and `PYTHONPATH`
+  from the agent shell environment, require an isolated virtualenv for pip, and now deny OpenCode
+  `external_directory` access for every arm while the ECA sidecar keeps its explicit interpreter.
+  Adaptive migration invalidates any old cell whose trace accessed the shared venv; it does not
+  silently reuse that result.
 - Core PI is known to be callable in earlier single-cell route proofs, but comprehensive readiness is
   blocked until the four-model exact-head activation gate and staged port-8090 effect pilot pass: a
   9-cell initial tranche first, then 27 total only after a positive initial signal.

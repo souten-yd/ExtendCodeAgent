@@ -119,3 +119,31 @@ tools/local/evaluation-runner run --scope b0a-screening \
 Migrated and current-runner cells may coexist in a resumed baseline, but their counts and latency
 populations remain separate. Legacy timing is excluded unless an explicit latency bridge permits
 aggregation.
+
+The sealed 714-cell B0a matrix is now the hard maximum for adaptive screening, not a mandatory call
+schedule. Generate the exact-head model-free plan first; it records active-use relevance,
+`NOT_TESTED_NO_ACTIVE_USE`, deterministic depth equivalence, p95/p99-derived limits, compatible
+checkpoint reuse, workspace-strategy measurements and expected/max calls before inference:
+
+```bash
+tools/local/adaptive-screening-runner analyze \
+  --source-checkpoint <preserved-714-checkpoint.json> \
+  --source-raw-root <preserved-714-raw> --analysis-root <analysis-root> \
+  --success-report <compatible-success-report.json> --output <adaptive-plan.json>
+
+tools/local/adaptive-screening-runner run --plan <adaptive-plan.json> \
+  --source-checkpoint <preserved-714-checkpoint.json> \
+  --raw-root <adaptive-raw> --output <adaptive-result.json> --resume
+```
+
+The run keeps model inference serial and pipelines workspace preparation plus oracle/parsing/sealing
+on CPU workers. It evaluates repetitions sequentially and closes a capability at a positive B0b
+signal or a proven non-boundary. Model output is never reused as Project Truth; compatible results
+and completed agent captures retain provenance/fingerprints and avoid identical model work only when
+the evaluation contract does not require an independent repetition. Every cell is executed, reused,
+invalidated, pending, or skipped with a machine-readable reason. All arms deny external-directory
+access so a cell cannot mutate the runner's shared virtual environment.
+
+`bridge` compares one preserved per-cell control with one fresh isolated `serve` + `run --attach`
+observation. A single pair can reject semantic drift but cannot adopt persistence; adoption requires
+repeated oracle-equivalent meaningful speedup without session/workspace/evidence sharing.

@@ -8,7 +8,8 @@ Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0a 
 
 The active `b0a-quality-target-v2` progression target is the ControlDeck-managed `local-practical`
 Qwen route only.
-Its `native`/`off` baseline denominator is 54 cells, followed by the existing 714-cell local screen.
+Its `native`/`off` baseline denominator is 54 cells, followed by an adaptive local screen bounded by
+the existing sealed 714-cell exhaustive maximum.
 Sonnet/Codex are `NOT_RUN_USER_POLICY / SHARED_QUOTA_EXHAUSTED`, `host-default` is
 `NOT_RUN_USER_POLICY`, and `local-low` is `UNAVAILABLE / NOT_CONFIGURED`. No new call or probe and no
 claim is permitted for those tiers while the local-only exception is active.
@@ -123,11 +124,24 @@ port-8090 Qwen, host-default, GitHub Copilot Sonnet and GitHub Copilot Codex wit
 local-low remains `UNAVAILABLE`. OMO 4.19.4 + ECA model-free namespace/tool visibility recheck passed.
 This is a partial B0a checkpoint, not screening or confirmation evidence.
 
-The current runner defines a 54-cell local-practical `native`/`off` baseline and a 714-cell
-local-practical screen. The latter contains 294 paired active/ablation cells plus capability-specific
-D0-D4 arms only for semantic, impact, test selection and context. Screening fails closed unless the
+The current runner defines a 54-cell local-practical `native`/`off` baseline and retains a 714-cell
+local-practical screen as the hard maximum. The latter contains 294 paired active/ablation cells plus
+capability-specific D0-D4 arms only for semantic, impact, test selection and context. Adaptive
+execution first uses active tool traces, deterministic depth equivalence, compatible evidence reuse
+and sequential repetition/depth stopping; every omitted cell retains a machine-readable non-effect-
+neutral reason. Screening fails closed unless the
 exact-head 54/54 report binds the current local-first target seal. The old 306- and 162-cell protocols
 remain diagnostic history only.
+
+At clean implementation commit `6cbacaf`, model-free adaptive analysis selected 102 candidate cells
+from the 714 hard maximum. Before the first sequential decision it expects 50 results: 23 compatible
+reused cells and 27 new calls; the maximum new-call fallback is 79. It classified 534 cells
+`NOT_TESTED_NO_ACTIVE_USE` and 78 `SKIPPED_DEPTH_OUTPUT_EQUIVALENT`. One old active-refactor cell was
+invalidated because its trace accessed the shared runner `.venv`. The persistent OpenCode Bridge
+used one additional Qwen call and failed its adoption conditions: attach changed PASS to FAIL and
+took 68,016ms versus the 55,003ms per-cell control. Per-cell OpenCode therefore remains selected.
+See `docs/evidence/final/b0a-adaptive-screening-execution-v1.json`. These are scheduler/Bridge
+results, not a completed screening table or capability promotion.
 
 A corrected-head comprehensive baseline reached 229/306 before the host-default provider began
 returning `Rate limit exceeded`. OpenCode exhausted its retries immediately but the runner waited for

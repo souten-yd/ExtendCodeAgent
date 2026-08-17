@@ -713,3 +713,35 @@
 - Active task results were symbol 1/3, impact 3/3 and tests 2/3. PI required-fact recall was 1.0 for
   every symbol/impact cell and 0.333/1.0/1.0 for tests. This separates remaining final projection
   and objective retrieval variance from the confirmed aggregate effect.
+
+## 2026-08-17 — B0a adaptive screening and Minimum Sufficient Reasoning
+
+- Added Master Plan Invariant 11 and the corresponding mandatory AGENTS rule: deterministic PI,
+  bounded context and compatible evidence precede model reasoning; expansion requires an unresolved
+  evidence gap and skipped work never becomes PASS or no effect.
+- Kept the sealed 714-cell task/oracle/corpus/effect contract as the hard maximum and added a sealed
+  adaptive policy plus deterministic scheduler. Active non-status PI traces select relevance,
+  D0-D4 preflight folds task-output-equivalent depths, repetitions advance 1 -> 2 -> 3 only while a
+  threshold boundary remains, and positive screening signals stop for B0b confirmation.
+- Added a serial-model/CPU-worker pipeline with task templates, measured worktree/reflink selection,
+  durable agent captures before oracle work, reasoning fingerprints, compatibility migration and
+  formal call/context/token/time/reuse metrics. Persistent OpenCode has a separate isolated Bridge
+  command and remains disabled unless repeated oracle-equivalent speedup is measured.
+- The preserved old 24-cell checkpoint exposed one refactor cell that explicitly activated and
+  retargeted the shared repository `.venv`. Restored the root editable install, added an all-arm
+  external-directory deny, and made adaptive compatibility reject that cell rather than reuse it.
+- Pre-commit gates passed: `tools/local/all-fast` (199 Python, 9 adapter),
+  `tools/local/test-integration` (60 Python, 9 adapter), `tools/local/build`, and
+  `git diff --check`.
+- Clean commit `6cbacaf` exact-head analysis produced 102 candidate cells, 23 reusable cells, 27
+  expected new calls before the first decision, 79 maximum new calls, 534 no-active-use skips and
+  78 depth-equivalent skips. Successful-run p99 plus 10% margin set step/output limits to 24/4,668;
+  git worktree won at 10.118ms median and reflink was unavailable.
+- The one-call persistent OpenCode Bridge retained the same oracle contract but changed the observed
+  outcome from PASS to FAIL and was slower (68,016ms attach versus 55,003ms per-cell, plus 2,710ms
+  server startup). Persistent mode is not adopted. Evidence is sealed in
+  `docs/evidence/final/b0a-adaptive-screening-execution-v1.json`.
+- PR review found that a local provider gap could stop one batch but still permit later depth work
+  and could classify the unavailable attempt as a completed cell. Provider attempts are now stored
+  separately, the cell remains pending, and the entire adaptive frontier stops without another
+  model call. Final integration count is 61 Python plus 9 adapter tests.

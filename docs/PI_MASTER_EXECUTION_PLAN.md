@@ -168,6 +168,35 @@ These apply to every stage and are not restated per stage.
    existing evidence, disproportionately raises default latency/size, is too imprecise for active use,
    benefits only one model tier while others regress, requires OpenCode core patches, or creates a
    second implementation of an existing core capability.
+11. **LLM Call Economy / Minimum Sufficient Reasoning.** The LLM is the last reasoner, not the first
+   search, classification or narrowing mechanism. When deterministic analysis, Project Graph/Twin/
+   Impact, cached or previously compatible evidence, or bounded search can resolve the same purpose,
+   do not call a model. When a model is necessary, begin with the minimum capability, then minimum
+   depth, target scope, context and model reasoning, and expand only for an explicit unresolved
+   Evidence Gap. PI narrows candidates, dependencies and Verification Obligations before the LLM sees
+   only the unresolved projection; it does not send the repository, full Graph, broad runtime history
+   or a large diff merely to narrow them afterward. Context expansion follows `symbol -> neighborhood
+   -> impact -> verification evidence -> broader subsystem` only as needed.
+
+   Do not repeat model reasoning for an identical project/workspace, revision, task intent,
+   capability/depth, selected evidence IDs and relevant environment unless the evaluation contract
+   explicitly requires an independent repetition. Any reused model result remains advisory and keeps
+   provenance, revision, input fingerprint and freshness; new facts invalidate it, it never becomes
+   Project Truth, and it reuses the E5/P0 trace/evidence design rather than creating a competing store.
+   Deeper depth, broader context and additional tool/model calls require a current evidence reason,
+   not “just in case”. Correctness remains dominant: unknown impact, stale or contradictory evidence,
+   missing evidence or unresolved obligations trigger the minimum necessary expansion/escalation.
+
+   Avoided work must remain truthful. `NOT_TESTED_NO_ACTIVE_USE`, unreachable, output-equivalent,
+   early-positive stopping, stale/invalidated reuse and other skip states are recorded separately and
+   never converted into `no effect` or PASS. This policy applies equally to the product runtime and to
+   ECA development, benchmarks and evaluation: **minimum sufficient reasoning, not minimum
+   reasoning**. Every B0/C/V/A/R evaluation records accuracy together with `llm_calls_requested`,
+   `llm_calls_executed`, `llm_calls_avoided`, `avoided_call_ratio`, input/output/reasoning tokens,
+   `deterministic_resolution_ratio`, `escalation_rate`, average/max context tokens,
+   `minimum_sufficient_depth`, model/deterministic-PI/total wall time, and reused/invalidated evidence
+   counts. Native OpenCode calls versus ECA-enabled calls are a formal product-effect comparison;
+   equal-or-better accuracy with less model/context/token/verification/wall work is a positive effect.
 
 ## 5. Current program state
 
@@ -365,11 +394,26 @@ A plan that cannot be executed produces no evidence, which is the same outcome a
 Repetition minimums alone do not fix this: they say how many times to repeat a cell, never which cells
 to skip. So the matrix is run in two passes.
 
-**Screening.** Wide and shallow. Each `ablation(X)` runs at **one** model tier — the tier whose claim
-the capability is supposed to serve — over a fixed subset of the tuning split, at default depth, with
-the minimum repetitions for that tier. Depth arms run only for capabilities that make a depth-dependent
-claim. Screening cannot promote anything and cannot demote anything; it only decides what is worth
-confirming.
+**Screening.** Wide and shallow, with the sealed exhaustive matrix retained as a **hard maximum**, not
+a mandatory call schedule. Each `ablation(X)` uses one assigned model tier over the unchanged tuning
+subset and effect threshold. Before any model call, deterministic PI preflight and the active run's
+actual non-status `pi_*` tool/capability trace select only capability/task pairs that were exercised;
+the rest are `NOT_TESTED_NO_ACTIVE_USE`, never no effect. Task-relevant PI outputs, evidence IDs,
+canonical refs, selected tests, uncertainty and obligations are compared across D0–D4 and identical
+depths form one equivalence class. Agent depth exploration starts D0, then D1, D2, D3 and D4 only when
+the prior distinct output is insufficient; it stops at the minimum sufficient depth and never emits a
+D3/D4 call when deterministic output is equivalent to D2.
+
+Repetitions are sequential: run repetition 1, send a sufficient positive signal directly to B0b,
+run repetition 2 only for unresolved candidates, and repetition 3 only at the effect-threshold
+boundary. A positive capability receives no more screening calls because screening cannot promote or
+demote; B0b owns confirmation. Every planned, executed, reused, invalidated and avoided cell keeps a
+machine-readable reason, and expected/max calls are computed before execution. The model remains
+serial for VRAM safety while CPU workers pipeline next-workspace preparation, deterministic PI
+preflight, oracle, log parsing, hashing/sealing and checkpoint preparation. Persistent OpenCode is a
+secondary optimization adopted only after a per-cell versus `serve`/`run --attach` Bridge benchmark
+proves identical task/oracle semantics, isolated sessions/workspaces/evidence and meaningful measured
+speedup.
 
 **Confirmation.** Narrow and deep. Only capabilities whose screening result crosses the effect
 threshold proceed to the full tier set, full repetitions and the held-out split. Promotion and demotion
@@ -900,8 +944,9 @@ The active B0a target is `docs/evaluation/b0a-quality-target-v2.json`:
 The B0a baseline denominator is therefore 54 cells: one model × nine tasks × two arms (`native/off`)
 × three repetitions. Existing Qwen results are reused only through the existing compatibility audit,
 Bridge Proof and checkpoint-migration contracts when task, oracle, model limits and ECA semantics are
-compatible; only proven residual cells rerun. The unchanged 714-cell local-practical screening and
-local-practical held-out B0b confirmation follow. While this exception is active, promotion is bounded
+compatible; only proven residual cells rerun. The 714-cell exhaustive schedule is the hard maximum;
+Invariant 11 adaptive local-practical screening and local-practical held-out B0b confirmation follow
+without changing tasks, oracles, corpus or effect threshold. While this exception is active, promotion is bounded
 to `active-scoped(local-practical)` unless a stricter existing rule applies.
 
 R0 may close only as a **production-capable local-only baseline**. Unexecuted tiers are never passes;
