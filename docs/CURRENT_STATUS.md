@@ -4,7 +4,19 @@ Status date: 2026-08-17
 
 ## Program state
 
-Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0 COMPLETE — B1 SKIPPED — B2 COMPLETE — C0 NEXT**
+Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0 COMPLETE — B1 SKIPPED — B2 COMPLETE — C0 COMPLETE — C1 NEXT**
+
+C0 completed at implementation revision `b5dad76` without an LLM call. The new host-neutral runtime
+contract has an exhaustive 12-capability descriptor, explicit supported/degraded/unavailable states,
+and a bounded `TaskSignalCollector` consuming task, session, exact ProjectRef workspace/root,
+mutation, model and advisory-delivery signals. Existing immutable `RuntimeObservation` remains the
+single tool/verification evidence path and now carries optional runtime session/call identity with
+backward-compatible loading. OpenCode 1.18.18 normalizes its task/model/session/advisory types inside
+the TypeScript adapter and passes a real TypeScript-to-Python sidecar conformance check. Automatic
+context delivery and ECA-owned model requests are `UNAVAILABLE`, not PASS; mutation observation and
+verification are explicitly degraded. Full gates pass 212 Python + 14 adapter fast tests, 96 Python
++ 14 adapter integration tests, and both builds. Evidence:
+`docs/evidence/final/c0-runtime-contract-result-v1.json`. C1 Shadow task-aware planner is next.
 
 B2 completed at exact main `87ced9f`. Its zero-model preflight passed all five stack/restart checks and
 both degraded-sidecar orders. The Qwen Bridge then accounted for five stacks with 16 newly executed
@@ -14,7 +26,7 @@ lingering sidecar occurred. Full prompt context had p95 17,958 and maximum 17,99
 tuple is classified `degraded`, not `compatible`, because OMO's standalone tool inventory already
 duplicates `glob/grep/skill/task` and both combined orders preserve that same limitation. C6 remains
 `NOT_TESTED_TEAM_MODE_OFF`; no recommended-stack, general-model or P4 comparative claim is made. See
-`docs/evidence/final/b2-omo-coexistence-result-v1.json`. C0 Minimal runtime contract is next.
+`docs/evidence/final/b2-omo-coexistence-result-v1.json`. C0 then completed as recorded above.
 
 B2's first exact-main Qwen Bridge completed the native and ECA controls before stopping on the ECA
 control. Native passed with four model requests; the ECA coding oracle also passed, but the required

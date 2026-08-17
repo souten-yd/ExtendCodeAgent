@@ -19,36 +19,36 @@ Do not schedule work from the legacy identifiers (`RV-x`, `TA-x`, `AL-x`, `CV-x`
 
 ## Current stage
 
-**Phase 2 — C0 Minimal runtime contract.**
+**Phase 2 — C1 Shadow task-aware planner.**
 
-B2 is complete with a truthful `degraded` compatibility classification for the exact tuple OpenCode
-1.18.18 + oh-my-openagent 4.19.4 + ECA `87ced9f`, Team Mode off. All five bounded coding/verification
-stacks passed, both combined orders recorded four runtime observations, no duplicate tool execution or
-lingering exact-workspace sidecar occurred, and the local Qwen route was exact. OMO's own inventory
-contains duplicate IDs `glob/grep/skill/task`; the combined stacks have the same set, so it remains an
-inherited C0 limitation rather than an ECA regression or PASS. C6 is
-`NOT_TESTED_TEAM_MODE_OFF`; no recommended-stack or P4 benefit claim exists. Evidence:
-`docs/evidence/final/b2-omo-coexistence-result-v1.json`.
+C0 is complete at implementation revision `b5dad76`. The host-neutral contract reuses `ProjectRef`
+and immutable `RuntimeObservation`, adds exhaustive runtime capability negotiation, and supplies a
+bounded in-memory `TaskSignalCollector` for task/session/mutation/model/advisory signals. OpenCode
+1.18.18 maps its own event types only inside the adapter. `deliver_context` and `request_model` are
+truthfully unavailable; file mutation and verification are degraded with explicit reasons. No LLM
+call was needed. Evidence: `docs/evidence/final/c0-runtime-contract-result-v1.json`.
 
-Follow `docs/RUNTIME_ADAPTER_ARCHITECTURE_PLAN.md` only as the active C0 design detail. Implement the
-Master Plan §8 C0 scope:
+Follow `docs/TRANSPARENT_PI_ORCHESTRATION_PLAN.md` only as the active C1 design detail. Implement the
+Master Plan §8 C1 scope:
 
-- inventory the host-neutral observations that current PI consumers actually read: task/session,
-  workspace/worktree, mutation, tool execution, model, verification and advisory delivery;
-- add no field without a named consumer and conformance test;
-- keep OpenCode event/API shapes inside the adapter and preserve one numerical/revision truth in the
-  host-neutral core;
-- classify absent OpenCode capabilities explicitly as unavailable/degraded rather than synthesizing
-  success or unsupported identity;
-- dogfood deterministic inspection and existing evidence before any model call. C0 should require no
-  LLM inference unless a concrete unresolved evidence gap proves otherwise;
-- retain the local-only model policy if a model-bearing check becomes necessary; do not call or probe
-  Copilot, host-default or unavailable local-low.
+- project the C0 collector into compact `TaskSignals`, then deterministically classify `TaskIntent`
+  and produce an `IntelligencePlan` plus `PlanOutcome` telemetry;
+- remain shadow-only: record what would be selected, but do not change context, model route, tool use,
+  capability execution, verification or user-visible OpenCode behavior;
+- treat the sealed EvaluationPIPlan as human-reviewed expected-plan ground truth, not as production
+  planner rules copied verbatim;
+- evaluate tuning and held-out tasks separately and record intent accuracy, capability selection
+  precision/recall, under-selection and over-selection; preserve `EXPECTED_BUT_NOT_USED` as a
+  selection gap rather than an efficacy failure;
+- keep classifier/planner deterministic and cheap with no repository-scale synchronous hook work and
+  no LLM classifier call;
+- retain local-only execution policy if a model-bearing comparison is contractually required; do not
+  call or probe Copilot, host-default or unavailable local-low.
 
-Exit: a runtime-contract conformance test proves every retained field has a consumer, adapter mapping
-and truthful missing-capability behavior; test/build/evidence/handoff updated; PR reviewed and merged.
-Do not pull C1 planner behavior, C3 automatic selection, V-series truth stores or P4 comparison into
-C0.
+Exit: deterministic classifier/planner tests, bounded decision-latency evidence, selection-quality
+report against tuning and held-out expected plans, native behavior unchanged, test/build/evidence/
+handoff updated, and PR reviewed/merged. Do not pull C3 advisory selection or active context delivery
+into C1.
 
 The B0a execution notes below are retained as immutable history and are not current scheduling
 instructions.
@@ -174,8 +174,7 @@ prompt or transcript. See `docs/evidence/final/e5-trace-proof.json`.
 - **E5** minimal PI trace as evaluation infrastructure — done, including explicit
   planned-versus-observed state provenance and reserved `used_features` shape.
 
-**B0a** environment/integration freeze and observational adaptive screening is complete. The
-**B0b entry gate** is current; held-out confirmation starts only after causal correction merges.
+**B0a/B0b**, conditional B1 disposition, B2 and C0 are complete. **C1** is the current stage.
 
 ## Ablation arms available after E1
 
@@ -204,7 +203,7 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/b0b-local-confirmation
+git switch -c agent/task-aware-shadow
 ```
 
 Update `CURRENT_HANDOFF.md` after each stage.
