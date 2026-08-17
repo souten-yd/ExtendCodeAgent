@@ -966,3 +966,6 @@ correction below because its active-trace relevance would have mixed efficacy wi
   Full validation passes `tools/local/all-fast` (208 Python plus 10 adapter),
   `tools/local/test-integration` (92 Python plus 10 adapter), `tools/local/build` and
   `git diff --check`.
+- PR self-review separated operator interruption from provider gaps, prevents same-head resume from
+  bypassing a failed native/ECA/OMO control, and includes staged product changes in the dirty-worktree
+  compatibility audit. Focused coverage pins all three fail-closed behaviors.

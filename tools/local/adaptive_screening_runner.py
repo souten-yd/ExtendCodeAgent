@@ -1316,7 +1316,7 @@ def _product_semantics_compatible(source_revision: str) -> tuple[bool, list[str]
     changed.update(
         [
             *subprocess.check_output(
-                ["git", "diff", "--name-only", "--", *scope], cwd=ROOT, text=True
+                ["git", "diff", "--name-only", "HEAD", "--", *scope], cwd=ROOT, text=True
             ).splitlines()
         ]
     )

@@ -220,6 +220,7 @@ def test_model_bridge_classifies_combined_regression_against_controls(
     assert report["llm_calls_executed"] == expected_runs
     if failed_stack == "native":
         assert report["execution_stop_reason"] == "CONTROL_FAILURE_REPAIR_REQUIRED:native"
+        assert report["provider_gap_pending"] is False
     assert report["recommended_stack_claim"] is False
     runner._verify_seal(report, "result")
 
@@ -328,6 +329,52 @@ def test_model_bridge_resume_reuses_completed_stack(
     assert complete["complete"] is True
     assert complete["agent_runs_completed"] == 5
     assert calls == ["native", "eca", "omo", "omo_eca", "eca_omo"]
+
+
+def test_model_bridge_resume_does_not_bypass_failed_control(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(runner, "_head", lambda: "a" * 40)
+    plan = runner._seal({"source_revision": "a" * 40})
+    preflight = runner._seal({"execution_plan": plan["seal"]["canonical_payload"], "pass": True})
+    failed = _model_result("eca", "FAIL")
+    previous = runner._model_report(plan, preflight, [_model_result("native"), failed], [], [])
+    plan_path = tmp_path / "plan.json"
+    preflight_path = tmp_path / "preflight.json"
+    output = tmp_path / "result.json"
+    plan_path.write_text(json.dumps(plan), encoding="utf-8")
+    preflight_path.write_text(json.dumps(preflight), encoding="utf-8")
+    output.write_text(json.dumps(previous), encoding="utf-8")
+    monkeypatch.setattr(runner, "_require_clean", lambda: None)
+    monkeypatch.setattr(runner, "_verify_plan", lambda _: None)
+    monkeypatch.setattr(
+        runner,
+        "_provider_readiness",
+        lambda: pytest.fail("failed control must stop same-head resume before provider access"),
+    )
+
+    resumed = runner.run_model_bridge(
+        plan_path, preflight_path, output, tmp_path / "raw", resume=True
+    )
+
+    assert resumed == previous
+    assert resumed["execution_stop_reason"] == "CONTROL_FAILURE_REPAIR_REQUIRED:eca"
+    assert resumed["provider_gap_pending"] is False
+
+
+def test_operator_interruption_is_incomplete_but_not_a_provider_gap(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(runner, "_head", lambda: "a" * 40)
+    plan = runner._seal({"source_revision": "a" * 40})
+    preflight = runner._seal({"execution_plan": plan["seal"]["canonical_payload"], "pass": True})
+    interrupted = _model_result("native", "OPERATOR_INTERRUPTED")
+
+    report = runner._model_report(plan, preflight, [], [interrupted], [])
+
+    assert report["complete"] is False
+    assert report["execution_stop_reason"] == "OPERATOR_INTERRUPTED"
+    assert report["provider_gap_pending"] is False
 
 
 def test_native_result_reuse_requires_equal_sealed_inputs_and_success(

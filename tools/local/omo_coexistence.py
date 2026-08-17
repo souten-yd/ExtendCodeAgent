@@ -1293,7 +1293,10 @@ def _model_report(
             "execution_stop_reason": execution_stop_reason,
             "provider_gap_pending": not complete
             and (
-                bool(incomplete_attempts)
+                any(
+                    item.get("result") in {"PROVIDER_GAP", "REQUEST_GAP"}
+                    for item in incomplete_attempts
+                )
                 or bool(readiness_checks and readiness_checks[-1].get("status") != "PASS")
             ),
             "agent_runs_requested": len(STACKS),
@@ -1370,6 +1373,11 @@ def run_model_bridge(
         incomplete_attempts = [dict(item) for item in previous.get("incomplete_attempts", [])]
         readiness_checks = [dict(item) for item in previous.get("provider_readiness_checks", [])]
         if previous.get("complete") is True:
+            return dict(previous)
+        if any(
+            item.get("stack") in {"native", "eca", "omo"} and item.get("result") != "PASS"
+            for item in results
+        ):
             return dict(previous)
     else:
         results = (
