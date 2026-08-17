@@ -134,3 +134,27 @@ def test_report_separates_compatible_reuse_from_new_model_calls(tmp_path: Path) 
     assert report["efficiency"]["llm_calls_executed"] == 0
     assert report["efficiency"]["llm_calls_reused"] == 1
     assert report["efficiency"]["reused_model_wall_time_ms"] == 12
+
+
+def test_compatible_reclassification_keeps_existing_immutable_trace(tmp_path: Path) -> None:
+    plan_path = tmp_path / "plan.json"
+    runner.create_plan(OBSERVATIONAL, PILOT, plan_path)
+    plan = json.loads(plan_path.read_text())
+    cell = plan["forced_cells"][0]
+    tasks = {item["id"]: item for item in json.loads(legacy.TASK_SUITE.read_text())["tasks"]}
+    result = {
+        **cell,
+        "outcome": "FAIL",
+        "model_id": "eca-local-practical/llama",
+        "wall_ms": 100,
+        "pi_capabilities_used": [],
+    }
+    trace = EvaluationTraceLog(tmp_path / "traces.jsonl")
+    legacy._append_trace(trace, result, tasks[cell["task_id"]])
+    migrated = {**result, "wall_ms": 200, "result_origin": "COMPATIBILITY_MIGRATION"}
+
+    runner._append_missing_traces(trace, {cell["cell_id"]: migrated}, tasks)
+
+    replayed = trace.replay()
+    assert len(replayed) == 1
+    assert replayed[0].timings_ms["agent_wall"] == 100

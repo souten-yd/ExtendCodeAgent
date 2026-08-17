@@ -436,6 +436,19 @@ def _report(
     return adaptive._sealed(body)
 
 
+def _append_missing_traces(
+    trace_log: EvaluationTraceLog,
+    results: dict[str, dict[str, Any]],
+    tasks: dict[str, dict[str, Any]],
+) -> None:
+    """Keep immutable source traces when compatible results are reclassified."""
+
+    traced_cells = {trace.cell_id for trace in trace_log.replay()}
+    for result in results.values():
+        if result["cell_id"] not in traced_cells:
+            legacy._append_trace(trace_log, result, tasks[result["task_id"]])
+
+
 def run(
     plan_path: Path,
     raw_root: Path,
@@ -491,7 +504,6 @@ def run(
     templates = adaptive.WorkspaceTemplates(raw_root / "workspace-state", tasks)
     templates.strategy = "git_worktree"
     trace_log = EvaluationTraceLog(raw_root / "traces.jsonl")
-    trace_log.replay()
     started = time.monotonic()
 
     def checkpoint() -> None:
@@ -503,8 +515,7 @@ def run(
         results[result["cell_id"]] = result
         legacy._append_trace(trace_log, result, tasks[result["task_id"]])
 
-    for result in results.values():
-        legacy._append_trace(trace_log, result, tasks[result["task_id"]])
+    _append_missing_traces(trace_log, results, tasks)
 
     def execute(cells: list[dict[str, Any]]) -> bool:
         pending = [item for item in cells if item["cell_id"] not in results]

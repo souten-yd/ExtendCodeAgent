@@ -33,6 +33,9 @@
   response expected by `forced_off` or the named `forced_ablation:X`; any other tool/input/route error
   remains fail-closed. Re-finalize compatible captures deterministically on the repaired runner, with
   source/current revision and original result hash provenance, rather than spending eight new calls.
+- The first reclassification attempt correctly stopped on a trace-ID conflict because rerunning the
+  deterministic oracle changed only timing. Keep the immutable source trace and do not append a
+  second envelope for an already traced migrated cell; no new model call occurred in this attempt.
 
 ## Shared GitHub Copilot monthly quota defers 17 historical Codex cells
 
