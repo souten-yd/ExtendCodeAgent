@@ -317,18 +317,32 @@ class WorkspaceTemplates:
         if self.strategy is None:
             raise AdaptiveError("workspace strategy has not been benchmarked")
         template = self.ensure_template(task_id)
-        target = self.workspace_root / workspace_id
+        safe_id = "".join(
+            character if character.isalnum() or character in "-_." else "_"
+            for character in workspace_id
+        )
+        if safe_id != workspace_id:
+            digest = hashlib.sha256(workspace_id.encode()).hexdigest()[:8]
+            safe_id = f"{safe_id}--{digest}"
+        target = self.workspace_root / safe_id
         self._create(template, target, self.strategy)
         return target
 
     def prepare_retry_safe(self, task_id: str, workspace_id: str) -> Path:
         """Preserve an interrupted workspace and allocate a fresh isolated retry."""
 
-        candidate = workspace_id
+        safe_id = "".join(
+            character if character.isalnum() or character in "-_." else "_"
+            for character in workspace_id
+        )
+        if safe_id != workspace_id:
+            digest = hashlib.sha256(workspace_id.encode()).hexdigest()[:8]
+            safe_id = f"{safe_id}--{digest}"
+        candidate = safe_id
         attempt = 0
         while (self.workspace_root / candidate).exists():
             attempt += 1
-            candidate = f"{workspace_id}--retry{attempt}"
+            candidate = f"{safe_id}--retry{attempt}"
         return self.prepare(task_id, candidate)
 
 

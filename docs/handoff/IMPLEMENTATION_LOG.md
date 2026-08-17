@@ -850,3 +850,16 @@ correction below because its active-trace relevance would have mixed efficacy wi
 - Validation passes `tools/local/all-fast` (208 Python plus 9 adapter),
   `tools/local/test-integration` (68 Python plus 9 adapter), `tools/local/build`, immutable migrated-
   trace coverage and `git diff --check`.
+
+## 2026-08-17 — Causal ablation workspace identifiers are path-safe
+
+- The first `forced_ablation:graph` cell exposed an OpenCode worktree-path encoding gap: `:` became
+  `%3A` for the PI sidecar root, so the cell is preserved as diagnostic `PI_TOOL_API_GAP` and is not
+  efficacy evidence. The following in-flight cell was stopped before completion.
+- Evaluation workspaces now use a deterministic filesystem-safe name plus source-ID digest while
+  cell IDs, captures and evidence identities remain unchanged. Compatibility migration rejects a
+  forced capture whose exact-use compliance failed, so the diagnostic capture is preserved but
+  rerun after repair rather than promoted.
+- Validation passes `tools/local/all-fast` (208 Python plus 9 adapter),
+  `tools/local/test-integration` (69 Python plus 9 adapter), `tools/local/build`, focused path-safety
+  coverage and `git diff --check`.

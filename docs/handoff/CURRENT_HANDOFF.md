@@ -65,6 +65,9 @@ Current task: merge and run the causal-correction entry gate before B0b
 - The first reclassification on `65dad4d` made no model call and stopped on immutable trace conflict:
   regenerated oracle timing differed for an existing trace ID. Preserve the source hash-chain and
   append only previously untraced new cells after the trace-reuse repair merges.
+- Exact-main execution reached 8 compatible reused plus 6 new cells before the first graph ablation
+  exposed `%3A` workspace-root encoding. The diagnostic cell is `PI_TOOL_API_GAP`, not efficacy
+  evidence; resume only after the path-safe workspace and noncompliant-capture rejection repair.
 
 The chronology below is retained as history. Its four-model/306-cell and three-model/162-cell
 statements describe superseded protocols and are not current execution instructions.

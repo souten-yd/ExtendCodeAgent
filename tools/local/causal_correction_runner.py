@@ -508,6 +508,10 @@ def run(
                 result = adaptive._finalize_agent(capture, raw_root)
                 if should_reclassify:
                     assert capture_source_revision is not None
+                    compliance = result.get("forced_use_compliance")
+                    if isinstance(compliance, dict) and not compliance.get("compliant", False):
+                        results.pop(cell_id, None)
+                        continue
                     result = adaptive._migrated_result(result, capture_source_revision, _head())
                 results[result["cell_id"]] = result
 

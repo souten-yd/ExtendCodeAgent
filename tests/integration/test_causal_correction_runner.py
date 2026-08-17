@@ -55,6 +55,20 @@ def test_workspace_templates_resolve_relative_root_before_git_worktree_creation(
     assert templates.workspace_root == (tmp_path / "relative/workspace-state/workspaces")
 
 
+def test_workspace_templates_make_treatment_ids_path_safe(tmp_path: Path) -> None:
+    templates = adaptive.WorkspaceTemplates(tmp_path, {})
+    templates.strategy = "git_worktree"
+    captured: list[Path] = []
+    templates.ensure_template = lambda task_id: tmp_path / task_id  # type: ignore[method-assign]
+    templates._create = lambda template, target, strategy: captured.append(target)  # type: ignore[method-assign]
+
+    workspace = templates.prepare_retry_safe("task", "causal--forced_ablation:graph--r1")
+
+    assert workspace == captured[0]
+    assert ":" not in workspace.name
+    assert workspace.name.endswith("--363e2c68")
+
+
 def test_corrective_run_stops_positive_capabilities_after_one_pair(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ) -> None:
