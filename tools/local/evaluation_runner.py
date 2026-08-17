@@ -1851,6 +1851,36 @@ def requeue_provider_gaps(checkpoint_path: Path, output: Path, raw_root: Path) -
     return {**body, "seal": {"algorithm": "sha256", "canonical_payload": digest(body)}}
 
 
+def _bind_migrated_checkpoint_to_local_schedule(migrated: dict[str, Any]) -> dict[str, Any]:
+    """Bind compatible migrated cells to the active local-only baseline denominator."""
+    schedule = plan("b0a-baseline")
+    scheduled_ids = {item["cell_id"] for item in schedule["cells"]}
+    results = list(migrated.get("results", ()))
+    unexpected = sorted(
+        str(item.get("cell_id")) for item in results if item.get("cell_id") not in scheduled_ids
+    )
+    if unexpected:
+        raise EvaluationError(f"migrated checkpoint contains non-local target cells: {unexpected}")
+    migration_summary = dict(migrated.get("migration_summary", {}))
+    body = {
+        **{key: value for key, value in migrated.items() if key != "seal"},
+        "schedule": {key: value for key, value in schedule.items() if key != "cells"},
+        "target_completion": {
+            "model_tiers": sorted(B0A_QUALITY_MODELS),
+            "expected_cells": len(schedule["cells"]),
+            "completed_cells": len(results),
+            "pending_cells": len(schedule["cells"]) - len(results),
+        },
+        "migration_summary": {
+            **migration_summary,
+            "remaining_schedule_cells": len(schedule["cells"]) - len(results),
+            "quality_target_cells": len(schedule["cells"]),
+        },
+        **_local_execution_metadata(),
+    }
+    return {**body, "seal": {"algorithm": "sha256", "canonical_payload": digest(body)}}
+
+
 def _validate_resume(
     previous: dict[str, Any],
     scope: str,
@@ -2586,19 +2616,9 @@ def main() -> int:
                 args.bridge.resolve(),
                 args.raw_root.resolve() / "traces.jsonl",
             )
-            migrated_body = {
-                **{key: value for key, value in migrated.items() if key != "seal"},
-                **_local_execution_metadata(),
-            }
             _write_report(
                 args.output,
-                {
-                    **migrated_body,
-                    "seal": {
-                        "algorithm": "sha256",
-                        "canonical_payload": digest(migrated_body),
-                    },
-                },
+                _bind_migrated_checkpoint_to_local_schedule(migrated),
             )
         elif args.command == "promote-pilot":
             _write_report(args.output, promote_pilot(args.source, args.audit))

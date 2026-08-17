@@ -14,6 +14,12 @@
 - Local gates PASS: `tools/local/all-fast` (191 Python + 9 adapter),
   `tools/local/test-integration` (55 Python + 9 adapter), and `tools/local/build` (Python sdist/wheel
   plus TypeScript build).
+- The migration CLI now rebinds compatible migrated results to the active v2 54-cell schedule,
+  rejects any out-of-target result, recomputes pending/complete counts, preserves migration
+  provenance, and seals the local-only execution metadata. Focused runner/compatibility tests pass
+  33/33; `tools/local/all-fast` passes 191 Python + 9 adapter,
+  `tools/local/test-integration` passes 56 Python + 9 adapter, and `tools/local/build` passes the
+  Python sdist/wheel plus TypeScript build.
 
 ## 2026-08-17 — Canonical three-route contract reconciliation
 
