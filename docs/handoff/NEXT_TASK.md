@@ -58,6 +58,12 @@ runtime ingest plus missing-title normalization before resuming model work. Reus
 native/no-plugin result after exact input/task/oracle/route verification; rerun ECA and all later
 stacks. Do not add the semantic runtime-hook change to the lifecycle-only B0 compatibility manifest.
 
+After PR #93, the exact-main ECA control still reported zero observations because the B2 evaluation
+environment selected `advisory`, which correctly rejects automatic runtime ingestion. Change only the
+B2 ECA-containing stack configuration to explicit `active`, seal/merge that runner correction, then
+regenerate exact-main plan/preflight and rerun ECA before any OMO/combined stack. Preserve both failed
+ECA controls as diagnostic evidence and reuse only native.
+
 The B0a execution notes below are retained as immutable history and are not current scheduling
 instructions.
 

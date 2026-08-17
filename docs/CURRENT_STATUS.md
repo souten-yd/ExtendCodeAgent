@@ -16,6 +16,14 @@ checkpoints operator interruption, and may migrate only the already-passing nati
 when every sealed input remains equal. Because the adapter repair changes runtime-evidence semantics,
 it is deliberately outside the existing lifecycle-only B0 compatibility exception.
 
+The repaired exact-main rerun at `ace1e94` correctly migrated only native and executed four fresh ECA
+model requests, but again stopped on zero runtime observations with the task oracle passing. The
+model-free diagnosis found the evaluation configuration—not the task oracle or agent behavior—was
+inconsistent: B2 launched ECA in `advisory`, while automatic runtime ingestion is permitted only in
+`shadow` or `active`. The next bounded runner repair sets ECA-containing B2 stacks to explicit
+`active`, matching the existing `active-scoped(local-practical)` claim; core rollout semantics remain
+unchanged and no combined stack is run before this control passes.
+
 The active `b0a-quality-target-v2` progression target is the ControlDeck-managed `local-practical`
 Qwen route only.
 Its `native`/`off` baseline denominator is 54 cells, followed by an adaptive local screen bounded by

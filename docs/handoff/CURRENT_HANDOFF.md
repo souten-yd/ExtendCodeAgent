@@ -509,6 +509,13 @@ plan/report, exact task instruction, fixture, model route/limits and OpenCode/OM
 ECA result and later stacks must execute fresh. This semantic adapter change fails old B0 product
 compatibility closed and must not be added to the sealed lifecycle-only transition exception.
 
+PR #93 merged that repair as `ace1e94`. Its exact-main Bridge migrated native and spent four fresh
+Qwen requests on ECA; task/oracle passed but runtime count remained zero, so the runner stopped before
+OMO/combined stacks. Deterministic diagnosis showed B2 configured `EXTENDCODEAGENT_MODE=advisory`,
+whose product policy intentionally rejects automatic runtime ingest. The next repair changes only
+ECA-containing B2 evaluation stacks to `active`; this matches the existing active-scoped claim and
+does not redefine core `RolloutMode.ACTIVE` as forced tool use.
+
 ```bash
 cd /home/souten/ExtendCodeAgent
 git switch main
