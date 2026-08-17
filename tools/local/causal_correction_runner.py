@@ -351,6 +351,10 @@ def _report(
             )
         )
     ]
+    reused_model_results = [
+        item for item in model_results if item.get("result_origin") == "COMPATIBILITY_MIGRATION"
+    ]
+    new_model_results = [item for item in model_results if item not in reused_model_results]
     complete = len(accounted) == total_cells and not any(
         item.get("cell_id") not in results for item in provider_attempts
     )
@@ -404,7 +408,8 @@ def _report(
         "pilot_forced_audit": plan["pilot_forced_audit"],
         "efficiency": {
             "llm_calls_requested": total_cells,
-            "llm_calls_executed": len(model_results) + len(provider_attempts),
+            "llm_calls_executed": len(new_model_results) + len(provider_attempts),
+            "llm_calls_reused": len(reused_model_results),
             "llm_calls_not_executed_pre_model": len(results) - len(model_results),
             "llm_calls_avoided": len(skips),
             "avoided_call_ratio": round(len(skips) / total_cells, 6),
@@ -414,11 +419,16 @@ def _report(
                 int(item.get("reasoning_tokens") or 0) for item in results.values()
             ),
             "model_wall_time_ms": sum(
-                float(item.get("model_wall_ms") or 0) for item in model_results
+                float(item.get("model_wall_ms") or 0) for item in new_model_results
+            ),
+            "reused_model_wall_time_ms": sum(
+                float(item.get("model_wall_ms") or 0) for item in reused_model_results
             ),
             "checkpoint_session_wall_time_ms": round((time.monotonic() - started) * 1000, 3),
             "reused_auto_selection_evidence_count": len(plan["observational_auto_reuse_tasks"]),
-            "reused_causal_evidence_count": 0,
+            "reused_causal_evidence_count": sum(
+                item.get("result_origin") == "COMPATIBILITY_MIGRATION" for item in results.values()
+            ),
         },
         "trace_log": str(trace_log.path),
         "promotion_or_demotion_forbidden": True,
@@ -426,10 +436,23 @@ def _report(
     return adaptive._sealed(body)
 
 
-def run(plan_path: Path, raw_root: Path, output: Path, *, resume: bool) -> None:
+def run(
+    plan_path: Path,
+    raw_root: Path,
+    output: Path,
+    *,
+    resume: bool,
+    capture_source_revision: str | None = None,
+) -> None:
     legacy._require_clean_worktree()
     plan = _load(plan_path)
     _verify_plan(plan)
+    if capture_source_revision is not None:
+        compatible, changed = adaptive._product_semantics_compatible(capture_source_revision)
+        if not compatible:
+            raise CausalCorrectionError(
+                f"capture reuse changes product semantics and requires replay: {changed}"
+            )
     if output.exists() and not resume:
         raise CausalCorrectionError("causal correction output exists; use --resume")
     raw_root.mkdir(parents=True, exist_ok=True)
@@ -450,15 +473,19 @@ def run(plan_path: Path, raw_root: Path, output: Path, *, resume: bool) -> None:
     if fragment_root.is_dir():
         for path in sorted(fragment_root.glob("*.json")):
             result = _load(path)
-            if result.get("cell_id") in cell_map:
+            if result.get("cell_id") in cell_map and result.get("cell_id") not in results:
                 results[result["cell_id"]] = result
     capture_root = raw_root / "agent-captures"
     if capture_root.is_dir():
         for path in sorted(capture_root.glob("*.json")):
             capture = _load(path)
             cell_id = capture.get("cell", {}).get("cell_id")
-            if cell_id in cell_map and cell_id not in results:
+            should_reclassify = capture_source_revision is not None and not resume
+            if cell_id in cell_map and (cell_id not in results or should_reclassify):
                 result = adaptive._finalize_agent(capture, raw_root)
+                if should_reclassify:
+                    assert capture_source_revision is not None
+                    result = adaptive._migrated_result(result, capture_source_revision, _head())
                 results[result["cell_id"]] = result
 
     templates = adaptive.WorkspaceTemplates(raw_root / "workspace-state", tasks)
@@ -604,12 +631,19 @@ def main() -> int:
     run_parser.add_argument("--raw-root", type=Path, required=True)
     run_parser.add_argument("--output", type=Path, required=True)
     run_parser.add_argument("--resume", action="store_true")
+    run_parser.add_argument("--capture-source-revision")
     args = parser.parse_args()
     try:
         if args.command == "plan":
             create_plan(args.observational_report, args.pilot_report, args.output)
         else:
-            run(args.plan, args.raw_root, args.output, resume=args.resume)
+            run(
+                args.plan,
+                args.raw_root,
+                args.output,
+                resume=args.resume,
+                capture_source_revision=args.capture_source_revision,
+            )
     except (CausalCorrectionError, legacy.EvaluationError, adaptive.AdaptiveError) as error:
         print(str(error), file=__import__("sys").stderr)
         return 2

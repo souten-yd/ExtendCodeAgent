@@ -23,6 +23,17 @@
 - Keep the raw report as diagnostic history. After the absolute-root repair merges, create a new
   exact-head plan/output rather than resuming or rewriting the failed checkpoint.
 
+## Expected disabled responses need treatment-aware classification
+
+- The `79ffe3c` forced-off cell called the exact five-tool plan. `pi_status` succeeded and each
+  disabled capability route returned `capability_unavailable`, as designed. The generic tool-error
+  classifier labeled those expected treatment responses `PI_TOOL_API_GAP`, which would make every
+  forced-off intrinsic comparison invalid.
+- Preserve the eight completed model captures and stop the run. Accept only a capability-unavailable
+  response expected by `forced_off` or the named `forced_ablation:X`; any other tool/input/route error
+  remains fail-closed. Re-finalize compatible captures deterministically on the repaired runner, with
+  source/current revision and original result hash provenance, rather than spending eight new calls.
+
 ## Shared GitHub Copilot monthly quota defers 17 historical Codex cells
 
 - Exact-head activation proved this is the GitHub Copilot provider's shared monthly quota: both

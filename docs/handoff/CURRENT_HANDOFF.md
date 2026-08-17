@@ -56,6 +56,12 @@ Current task: merge and run the causal-correction entry gate before B0b
   workspaces under each template while OpenCode looked under the repository root. The diagnostic
   report has zero tokens and is not causal/quality evidence. Preserve it; resolve workspace roots to
   absolute paths, merge the repair, regenerate an exact-head plan, and retry from a fresh output.
+- The repaired `79ffe3c` run completed one auto and six forced-ON calls plus the first forced-off call.
+  All six ON traces were compliant; forced ON PASSed requirement/refactor/symbol/tests and FAILed
+  cross-boundary/impact. Auto requirement FAIL versus forced PASS establishes a selection-gap sample.
+  Stop before further calls: off correctly attempted the identical PI plan, but expected
+  `capability_unavailable` responses were generically classified as `PI_TOOL_API_GAP`. Preserve and
+  compatibility-reclassify these eight captures after the classifier repair; do not rerun them.
 
 The chronology below is retained as history. Its four-model/306-cell and three-model/162-cell
 statements describe superseded protocols and are not current execution instructions.
