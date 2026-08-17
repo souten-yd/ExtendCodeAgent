@@ -964,7 +964,7 @@ correction below because its active-trace relevance would have mixed efficacy wi
 - Clean repair head `3104d57` passed the zero-model five-stack/restart preflight and both degraded-
   sidecar orders (seal `f184a3f39eb93cac4352c922602196a8c512beda8b0389b05494973dfd82955b`).
   Full validation passes `tools/local/all-fast` (208 Python plus 10 adapter),
-  `tools/local/test-integration` (92 Python plus 10 adapter), `tools/local/build` and
+  `tools/local/test-integration` (94 Python plus 10 adapter), `tools/local/build` and
   `git diff --check`.
 - PR self-review separated operator interruption from provider gaps, prevents same-head resume from
   bypassing a failed native/ECA/OMO control, and includes staged product changes in the dirty-worktree
