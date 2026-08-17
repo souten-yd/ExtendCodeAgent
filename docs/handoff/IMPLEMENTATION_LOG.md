@@ -1029,7 +1029,7 @@ correction below because its active-trace relevance would have mixed efficacy wi
 - Real TypeScript-client/Python-sidecar conformance transports every retained signal class and proves
   MCP/reconnect compatibility. The B0 semantic compatibility guard continues to fail closed for the
   C0 product change rather than treating it as lifecycle-only migration.
-- No model call was requested or executed. Validation passes `tools/local/all-fast` (212 Python plus
+- No model call was requested or executed. Validation passes `tools/local/all-fast` (213 Python plus
   14 adapter), `tools/local/test-integration` (96 Python plus 14 adapter), `tools/local/build`, seal
   verification and `git diff --check`. Evidence:
   `docs/evidence/final/c0-runtime-contract-result-v1.json`.

@@ -9,7 +9,7 @@ Current task: publish C0 closeout, then start C1 Shadow task-aware planner from 
 
 ## Current authoritative checkpoint (2026-08-17)
 
-- C0 is complete at implementation revision `b5dad76`. It reuses `ProjectRef`, `Provenance` and
+- C0 is complete at implementation revision `d2fb7fa`. It reuses `ProjectRef`, `Provenance` and
   immutable `RuntimeObservation`; no competing runtime truth store was added.
 - A small exhaustive runtime capability descriptor records all 12 host features as supported,
   degraded or unavailable. OpenCode 1.18.18 declares mutation and verification degraded,
@@ -21,7 +21,7 @@ Current task: publish C0 closeout, then start C1 Shadow task-aware planner from 
   test proves task, session, ProjectRef root/worktree, mutation, model, advisory delivery, tool and
   verification transport. Core architecture imports remain host-neutral.
 - C0 used no model call: deterministic inspection and conformance evidence were sufficient. Full
-  gates pass all-fast 212 Python + 14 adapter, integration 96 Python + 14 adapter, Python sdist/wheel,
+  gates pass all-fast 213 Python + 14 adapter, integration 96 Python + 14 adapter, Python sdist/wheel,
   TypeScript build and diff check. Sealed evidence is
   `docs/evidence/final/c0-runtime-contract-result-v1.json`.
 - C1 is next. Read `docs/TRANSPARENT_PI_ORCHESTRATION_PLAN.md`, remain shadow-only, compare the
@@ -515,7 +515,7 @@ Defaults unchanged — every capability still ships `off`.
 
 ## Immediate next work
 
-C0 is complete at implementation revision `b5dad76` with sealed evidence in
+C0 is complete at implementation revision `d2fb7fa` with sealed evidence in
 `docs/evidence/final/c0-runtime-contract-result-v1.json`. After this closeout PR merges, synchronize
 main and start C1 on `agent/task-aware-shadow`. Read
 `docs/TRANSPARENT_PI_ORCHESTRATION_PLAN.md` as the only active design detail.

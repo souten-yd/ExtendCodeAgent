@@ -6,7 +6,7 @@ Status date: 2026-08-17
 
 Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0 COMPLETE — B1 SKIPPED — B2 COMPLETE — C0 COMPLETE — C1 NEXT**
 
-C0 completed at implementation revision `b5dad76` without an LLM call. The new host-neutral runtime
+C0 completed at implementation revision `d2fb7fa` without an LLM call. The new host-neutral runtime
 contract has an exhaustive 12-capability descriptor, explicit supported/degraded/unavailable states,
 and a bounded `TaskSignalCollector` consuming task, session, exact ProjectRef workspace/root,
 mutation, model and advisory-delivery signals. Existing immutable `RuntimeObservation` remains the
@@ -14,7 +14,7 @@ single tool/verification evidence path and now carries optional runtime session/
 backward-compatible loading. OpenCode 1.18.18 normalizes its task/model/session/advisory types inside
 the TypeScript adapter and passes a real TypeScript-to-Python sidecar conformance check. Automatic
 context delivery and ECA-owned model requests are `UNAVAILABLE`, not PASS; mutation observation and
-verification are explicitly degraded. Full gates pass 212 Python + 14 adapter fast tests, 96 Python
+verification are explicitly degraded. Full gates pass 213 Python + 14 adapter fast tests, 96 Python
 + 14 adapter integration tests, and both builds. Evidence:
 `docs/evidence/final/c0-runtime-contract-result-v1.json`. C1 Shadow task-aware planner is next.
 

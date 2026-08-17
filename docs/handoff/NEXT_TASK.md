@@ -21,7 +21,7 @@ Do not schedule work from the legacy identifiers (`RV-x`, `TA-x`, `AL-x`, `CV-x`
 
 **Phase 2 — C1 Shadow task-aware planner.**
 
-C0 is complete at implementation revision `b5dad76`. The host-neutral contract reuses `ProjectRef`
+C0 is complete at implementation revision `d2fb7fa`. The host-neutral contract reuses `ProjectRef`
 and immutable `RuntimeObservation`, adds exhaustive runtime capability negotiation, and supplies a
 bounded in-memory `TaskSignalCollector` for task/session/mutation/model/advisory signals. OpenCode
 1.18.18 maps its own event types only inside the adapter. `deliver_context` and `request_model` are

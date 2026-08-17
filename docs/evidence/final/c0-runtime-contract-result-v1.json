@@ -2,7 +2,7 @@
   "schema": 1,
   "classification": "C0_MINIMAL_RUNTIME_CONTRACT_FINAL",
   "captured_at": "2026-08-17T23:05:41+0900",
-  "source_revision": "b5dad767703100cf7b15de1d8d206ac14fecca7b",
+  "source_revision": "d2fb7fa4cc73380dd680e3c07cc67390460f1dcb",
   "execution_scope": "local-only",
   "model": "Qwen3.6 27B",
   "endpoint": "127.0.0.1:8090",
@@ -76,6 +76,7 @@
   },
   "conformance": {
     "capability_declarations_exhaustive": true,
+    "unnegotiated_signal_rejected": true,
     "non_supported_reason_required": true,
     "unavailable_signal_rejected": true,
     "degraded_signal_accepted_with_diagnostic": true,
@@ -93,8 +94,8 @@
     "reason": "C0 was resolved by deterministic inspection, conformance tests and real local sidecar transport; no evidence gap required model reasoning"
   },
   "gates": {
-    "focused": "PASS_11_PYTHON_14_ADAPTER",
-    "all_fast": "PASS_212_PYTHON_14_ADAPTER",
+    "focused": "PASS_12_PYTHON_14_ADAPTER",
+    "all_fast": "PASS_213_PYTHON_14_ADAPTER",
     "integration": "PASS_96_PYTHON_14_ADAPTER",
     "build": "PASS_PYTHON_SDIST_WHEEL_TYPESCRIPT",
     "diff_check": "PASS"
@@ -122,6 +123,6 @@
   },
   "seal": {
     "algorithm": "sha256",
-    "canonical_payload": "af7a6fb1c1262653748bab4ccdadf6eefc9fd160e743c24ae7fd124f0450b086"
+    "canonical_payload": "059a416625db6bf29072d2f20e659579795b8888034eb355bf9f95007b4b46a4"
   }
 }
