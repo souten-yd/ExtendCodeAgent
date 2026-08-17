@@ -530,6 +530,8 @@ def test_migration_binds_only_local_cells_to_the_v2_baseline(
     migrated = {
         "results": [{**cell, "outcome": "PASS"}],
         "migration_summary": {"migrated_cells": 1},
+        "provider_queue": {"frontier-codex": {"status": "PAUSED_PROVIDER_GAP"}},
+        "provider_attempts": [{"model_tier": "frontier-codex"}],
     }
     bound = _bind_migrated_checkpoint_to_local_schedule(migrated)
     assert bound["schedule"] == {key: value for key, value in schedule.items() if key != "cells"}
@@ -540,6 +542,12 @@ def test_migration_binds_only_local_cells_to_the_v2_baseline(
         "pending_cells": 1,
     }
     assert bound["migration_summary"]["quality_target_cells"] == 2
+    assert bound["migration_summary"]["historical_provider_queue_tiers_excluded"] == [
+        "frontier-codex"
+    ]
+    assert bound["migration_summary"]["historical_provider_attempts_excluded"] == 1
+    assert bound["provider_queue"] == {}
+    assert bound["provider_attempts"] == []
     assert bound["execution_scope"] == "local-only"
     assert bound["seal"] == {
         "algorithm": "sha256",
@@ -710,6 +718,9 @@ def test_answer_instruction_is_exact_for_all_arms_and_preserves_compact_pi_field
 
 
 def test_local_practical_output_is_bounded_for_every_arm(tmp_path: Path) -> None:
+    assert evaluation_runner.plan("b0a-baseline")["cells"][0]["model_id"] == (
+        "eca-local-practical/llama"
+    )
     for arm in ("native", "off", "active"):
         arm_root = tmp_path / arm
         arm_root.mkdir()

@@ -33,7 +33,7 @@ results. Audit an immutable checkpoint against a sealed compatibility manifest f
 ```bash
 tools/local/evaluation-runner audit-checkpoint \
   --source .evaluation/unified-v1/old-result.json \
-  --compatibility docs/evaluation/b0a-checkpoint-compatibility-v2.json \
+  --compatibility docs/evaluation/b0a-checkpoint-compatibility-v3.json \
   --output .evaluation/unified-v1/old-result-audit.json
 ```
 
@@ -49,7 +49,7 @@ Generate and execute the sealed Bridge Sample after the clean merged audit:
 
 ```bash
 tools/local/evaluation-runner bridge-plan --audit <audit.json> \
-  --compatibility docs/evaluation/b0a-checkpoint-compatibility-v2.json \
+  --compatibility docs/evaluation/b0a-checkpoint-compatibility-v3.json \
   --output <bridge-plan.json>
 tools/local/evaluation-runner run-bridge --bridge-plan <bridge-plan.json> \
   --raw-root <bridge-raw> --output <bridge-run.json>

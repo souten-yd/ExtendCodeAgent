@@ -39,7 +39,7 @@ B0A_PLAN = ROOT / "docs/evaluation/b0a-screening-plan-v1.json"
 B0A_ACTIVATION_PLAN = ROOT / "docs/evaluation/b0a-activation-plan-v1.json"
 B0A_QUALITY_TARGET = ROOT / "docs/evaluation/b0a-quality-target-v2.json"
 B0A_BOOTSTRAP = ROOT / "docs/evidence/final/b0a-bootstrap-environment-v1.json"
-B0A_CHECKPOINT_COMPATIBILITY = ROOT / "docs/evaluation/b0a-checkpoint-compatibility-v2.json"
+B0A_CHECKPOINT_COMPATIBILITY = ROOT / "docs/evaluation/b0a-checkpoint-compatibility-v3.json"
 E3_HARNESS = ROOT / "tools/local/e3_task_suite.py"
 PYTHON = ROOT / ".venv/bin/python"
 PLUGIN = ROOT / "adapters/opencode/dist/src/plugin.js"
@@ -363,6 +363,14 @@ def _arms(matrix: dict[str, Any], scope: str) -> list[str]:
     return base + ablations + depths
 
 
+def _resolved_model_id(model: dict[str, Any]) -> str:
+    """Return the exact OpenCode route recorded by execution results and traces."""
+    model_id = str(model.get("model_id") or "")
+    if model.get("id") == "local-practical":
+        return f"eca-local-practical/{model_id}"
+    return model_id
+
+
 def plan(
     scope: str,
     *,
@@ -446,7 +454,7 @@ def plan(
                             ),
                             "arm": arm,
                             "model_tier": model["id"],
-                            "model_id": model.get("model_id"),
+                            "model_id": _resolved_model_id(model),
                             "model_status": model["status"],
                             "repository_id": task["repository_id"],
                             "task_id": task["id"],
@@ -556,7 +564,7 @@ def _environment(arm: str, model_tier: str, workspace: Path) -> tuple[dict[str, 
     model = next(item for item in matrix["model_tiers"] if item["id"] == model_tier)
     mode, modifier = _arm_mode(arm)
     config: dict[str, Any] = {}
-    model_id = str(model.get("model_id") or "")
+    configured_model_id = str(model.get("model_id") or "")
     if model_tier == "local-practical":
         provider = "eca-local-practical"
         config["provider"] = {
@@ -565,7 +573,7 @@ def _environment(arm: str, model_tier: str, workspace: Path) -> tuple[dict[str, 
                 "name": "E3 pinned local practical",
                 "options": {"baseURL": model["base_url"]},
                 "models": {
-                    model_id: {
+                    configured_model_id: {
                         "name": "Qwen3.6 27B on port 8090",
                         "limit": {
                             "context": model["context_window_tokens"],
@@ -575,7 +583,6 @@ def _environment(arm: str, model_tier: str, workspace: Path) -> tuple[dict[str, 
                 },
             }
         }
-        model_id = f"{provider}/{model_id}"
     if mode != "native":
         config["plugin"] = [PLUGIN.as_uri()]
         capabilities = {
@@ -615,7 +622,7 @@ def _environment(arm: str, model_tier: str, workspace: Path) -> tuple[dict[str, 
         # same tools again through MCP creates duplicate names and independent
         # sidecars, which makes an arm's observed state route-dependent.
         env["EXTENDCODEAGENT_PROJECT_CONFIG"] = str(project_config)
-    return env, model_id
+    return env, _resolved_model_id(model)
 
 
 def _isolated_agent_environment() -> dict[str, str]:
@@ -1862,9 +1869,13 @@ def _bind_migrated_checkpoint_to_local_schedule(migrated: dict[str, Any]) -> dic
     if unexpected:
         raise EvaluationError(f"migrated checkpoint contains non-local target cells: {unexpected}")
     migration_summary = dict(migrated.get("migration_summary", {}))
+    historical_provider_queue = dict(migrated.get("provider_queue", {}))
+    historical_provider_attempts = list(migrated.get("provider_attempts", ()))
     body = {
         **{key: value for key, value in migrated.items() if key != "seal"},
         "schedule": {key: value for key, value in schedule.items() if key != "cells"},
+        "provider_queue": {},
+        "provider_attempts": [],
         "target_completion": {
             "model_tiers": sorted(B0A_QUALITY_MODELS),
             "expected_cells": len(schedule["cells"]),
@@ -1875,6 +1886,8 @@ def _bind_migrated_checkpoint_to_local_schedule(migrated: dict[str, Any]) -> dic
             **migration_summary,
             "remaining_schedule_cells": len(schedule["cells"]) - len(results),
             "quality_target_cells": len(schedule["cells"]),
+            "historical_provider_queue_tiers_excluded": sorted(historical_provider_queue),
+            "historical_provider_attempts_excluded": len(historical_provider_attempts),
         },
         **_local_execution_metadata(),
     }

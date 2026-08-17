@@ -92,6 +92,7 @@ non-goals remain binding).
 | `evaluation/b0a-quality-target-v1.json` | Sealed B0a execution contract for the user-requested Qwen/Copilot Sonnet/Copilot Codex quality routes and 162-cell baseline. It narrows the historical matrix without changing task/oracle semantics. |
 | `evaluation/b0a-quality-target-v2.json` | **Active model-execution policy exception.** Narrows execution to the existing port-8090 `local-practical` Qwen route without changing the matrix, task suite, oracle, thresholds, corpus, capabilities, stages or their order. V1 and prior Copilot evidence remain immutable history. |
 | `evaluation/b0a-checkpoint-compatibility-v2.json` | Sealed Bridge/migration contract for promoting only compatible `local-practical` results from the existing 54/54 Qwen checkpoint into the active v2 denominator. |
+| `evaluation/b0a-checkpoint-compatibility-v3.json` | Active sealed Bridge/migration contract for carrying the completed local-only baseline across the runner-only resolved-route provenance-gate repair. |
 
 ## 3. Resolved inconsistencies
 

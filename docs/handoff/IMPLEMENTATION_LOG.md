@@ -24,6 +24,13 @@
   `8f12078`. Core, OpenCode adapter, task/oracle and immutable evaluation-contract fingerprints are
   identical; the Bridge requirement is exactly three `local-practical` task classes. The active
   runner compatibility binding now selects v2 while preserving v1 as historical evidence.
+- The first completed local-only checkpoint exposed a completion-gate provenance defect: planned
+  cells retained the matrix-local model name `llama` while runtime results correctly recorded the
+  resolved route `eca-local-practical/llama`. Planning now records the resolved route. Migration
+  also excludes historical non-target provider queues/attempts from the active local-only report
+  while preserving them unchanged in the immutable source checkpoint and recording exclusion counts.
+- Sealed `b0a-checkpoint-compatibility-v3.json` from completed-baseline head `650b293` to the
+  runner-only repair `1057169`; diagnostic audit reports trace integrity PASS and 54/54 `REUSABLE`.
 
 ## 2026-08-17 — Canonical three-route contract reconciliation
 

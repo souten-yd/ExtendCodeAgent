@@ -1,0 +1,145 @@
+{
+  "schema": 1,
+  "manifest_id": "b0a-checkpoint-compatibility-v3-local-baseline-gate",
+  "source_runner_revision": "650b2930f536addc51cf82def71eb907c938db11",
+  "target_runner_revision": "1057169a269e7828bbcdfd259e7ecd636131e55b",
+  "compatibility": {
+    "eca_core_semantics": "UNCHANGED",
+    "opencode_adapter_semantics": "UNCHANGED",
+    "task_suite": "IDENTICAL",
+    "oracles": "IDENTICAL",
+    "repository_pins": "IDENTICAL",
+    "model_limits": "IDENTICAL",
+    "resolved_route_provenance_gate": "CHANGED",
+    "historical_provider_metadata_separation": "CHANGED",
+    "documentation": "CHANGED"
+  },
+  "input_seals": {
+    "matrix": "7bfa9f1dd8be5bf44fcf3f018c4ccbe2b6a3266846cd7a994f08eb5d4886a0c5",
+    "task_suite": "23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632",
+    "layer_a": "70710dfe82680afd8ab0c2ad3a735b7f82648c65554dbf93d878e0550a986427",
+    "layer_b": "23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632",
+    "screening_plan": "adaee11e4d4a6a65eac977f4c471200dbec378d0336ca5ff6c8968ad30415e4c",
+    "activation_plan": "53c289a1c5916689ef2e4e47acbc28fe9408ce332a354f66e5165a0ede723691"
+  },
+  "runtime": {
+    "opencode_version": "1.18.16",
+    "opencode_distribution": "ControlDeck managed feature",
+    "serial_execution": true,
+    "ollama_forbidden": true,
+    "execution_scope": "local-only",
+    "model": "Qwen3.6 27B",
+    "endpoint": "127.0.0.1:8090",
+    "context": 262144,
+    "output_limit": 8192
+  },
+  "resolved_model_ids": {
+    "local-low": null,
+    "local-practical": "eca-local-practical/llama",
+    "host-default": "opencode/big-pickle",
+    "frontier-sonnet": "github-copilot/claude-sonnet-5",
+    "frontier-codex": "github-copilot/gpt-5.3-codex"
+  },
+  "repository_revisions": {
+    "extendcodeagent": "949f8c12ec7f24db8aa28bed7a5c15301d432a41",
+    "controldeck": "05507ea84cee36682417865500d87e473df7b844",
+    "kasanecore": "d238d291dc1c6283d186ae03020368178df4863f",
+    "peds": "c607943367da648f1598f957ece314b29d2fc683"
+  },
+  "semantic_fingerprints": [
+    {
+      "id": "eca_core",
+      "pathspecs": ["src/extendcodeagent"],
+      "source": "f3e7017f2268563ea1065b2a4e9f7c60f5c1321290e3dd6341d87d3aee5dbc77",
+      "target": "f3e7017f2268563ea1065b2a4e9f7c60f5c1321290e3dd6341d87d3aee5dbc77"
+    },
+    {
+      "id": "opencode_adapter",
+      "pathspecs": ["adapters/opencode/src", "adapters/opencode/package.json", "adapters/opencode/package-lock.json"],
+      "source": "4dace215888373af096db9e7b2202f06b97405fef401f0fe3cdab0ed50edc2e9",
+      "target": "4dace215888373af096db9e7b2202f06b97405fef401f0fe3cdab0ed50edc2e9"
+    },
+    {
+      "id": "task_oracle",
+      "pathspecs": ["docs/evaluation/task-suite-v1.json", "tools/local/e3_task_suite.py"],
+      "source": "54aebcc3e7fe71039aa14d5f5ee38b4f00c9a59923f81bcb48fadedbe0a89402",
+      "target": "54aebcc3e7fe71039aa14d5f5ee38b4f00c9a59923f81bcb48fadedbe0a89402"
+    },
+    {
+      "id": "evaluation_contract",
+      "pathspecs": ["docs/evaluation/evaluation-matrix-v1.json", "docs/evaluation/b0a-screening-plan-v1.json", "docs/evaluation/b0a-activation-plan-v1.json"],
+      "source": "4be6134cee155b3f498256ae8666bea03b6f62861c04061cb0089930af55163f",
+      "target": "4be6134cee155b3f498256ae8666bea03b6f62861c04061cb0089930af55163f"
+    }
+  ],
+  "task_fingerprints": {
+    "eca-symbol-001": "ae8c871d6f4baceb52b9ee127744adb2d63721efc63d9d7e67601135192de6fa",
+    "eca-impact-001": "498591cd113f6148c4e8b85ac145600fc403228292716a5aca4ed43af965619f",
+    "eca-tests-001": "ef1691d105999a750ee4aa9ebae3405b3dbd18fc2dbf60ce245376280df91cda",
+    "eca-refactor-001": "7b14e3ff7f41691b263282190fadfa127c8cf9e279d79fae00185b2ca14cf94a",
+    "eca-negative-001": "9c497a2eef93ab636d68515a6c67afd97a4f12b6d92f16c17eafa2103d848b76",
+    "cd-symbol-001": "0d6d889d0a3d105e3afd4ef2cfc0a412c4b589e2ba9f6660511719615671751e",
+    "cd-bug-001": "f84c0258f9d7817a32ecb2916e3cfb60b98128b2aeee1482402fd51cf3cca72b",
+    "cd-requirement-001": "439dbeebf068b1132b54c7f6b0f0e484c69dfac1c9b2840a60717fb08af4e0eb",
+    "cd-cross-boundary-001": "c5f4a4a3c487cb5b4027af92612243277990a821f82c35ac9eeeca03f5f5bf4c",
+    "kasane-unsafe-001": "acd96ac6acd493a6814219284b9c4eeab959770bc1ad2519a6f2e461de455d53",
+    "kasane-cross-boundary-001": "5d203c3151c6f70fdc98743ad8794fbae752963fb0e44b19e91bc1699c6253a1",
+    "kasane-tests-001": "1b547b6af9db1f4ba72f0b6ece4f200f2bf58012cb6cf58028590679c8d8f26b",
+    "kasane-requirement-001": "60c67653a73db2a5f94dc91f0dc306d4c8ffeff99bb10e9eb02803aaa99c59be"
+  },
+  "change_classification": [
+    {
+      "class": "RUNNER_PROVENANCE_GATE_ONLY",
+      "files": ["tests/integration/test_e4_evaluation_runner.py", "tools/local/evaluation_runner.py"]
+    },
+    {
+      "class": "DOCUMENTATION_ONLY",
+      "files": ["docs/handoff/IMPLEMENTATION_LOG.md"]
+    }
+  ],
+  "allowed_differences": [
+    "planned model route records the same resolved identifier already emitted by runtime and trace evidence",
+    "historical non-target provider metadata remains in source evidence but is excluded from active local-only reports",
+    "documentation"
+  ],
+  "forbidden_differences": [
+    "ECA core semantics",
+    "OpenCode PI tool semantics",
+    "task or oracle semantics",
+    "repository pins",
+    "model identifiers or limits",
+    "workspace setup",
+    "capability rollout or depth",
+    "screening task, ablation, D0-D4, threshold, or corpus semantics"
+  ],
+  "artifacts": {
+    "task_suite": "docs/evaluation/task-suite-v1.json",
+    "provider_gap_evidence": "docs/evidence/final/b0a-provider-gap-runner-repair.json",
+    "quality_target": "docs/evaluation/b0a-quality-target-v2.json"
+  },
+  "provider_gap_evidence_sha256": "4912313e056bbe92921e7ddf0230c159f6be13da9ca0ca15ebc3faca906a96fe",
+  "bridge_sample_policy": {
+    "required": true,
+    "minimum_cells": 3,
+    "maximum_cells": 3,
+    "required_model_tiers": ["local-practical"],
+    "required_task_classes": ["symbol-navigation", "change-impact", "test-selection"],
+    "required_tasks": {
+      "eca-symbol-001": "symbol-reference-lookup",
+      "eca-impact-001": "impact-assessment",
+      "eca-tests-001": "test-selection"
+    },
+    "compare": ["oracle outcome", "answer schema", "task result", "PI state", "tool behavior", "model route"],
+    "exclude_from_equivalence": ["wall time"],
+    "mismatch_action": "REPLAY_RELATED_MODEL_TASK_CLASS"
+  },
+  "latency_policy": {
+    "migrated_status": "LEGACY_RUNNER_LATENCY",
+    "merge_with_current": false,
+    "bridge_required_for_merge": true
+  },
+  "seal": {
+    "algorithm": "sha256",
+    "canonical_payload": "137e7f53910d3712f636db14ef8c8c4eede4a554bedfba12b4e27e1d44189128"
+  }
+}
