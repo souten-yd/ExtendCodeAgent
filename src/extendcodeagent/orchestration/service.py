@@ -240,6 +240,9 @@ def build_intelligence_plan(
         specification.level,
         specification.context_scope,
         context_budget,
+        query_bounds,
+        tuple(dict.fromkeys(evidence_needs)),
+        tuple(dict.fromkeys(escalation)),
     )
     return IntelligencePlan(
         plan_id=plan_id,
@@ -468,6 +471,9 @@ def _plan_id(
     level: IntelligenceLevel,
     context_scope: ContextScope,
     context_budget: int,
+    query_bounds: QueryBounds,
+    evidence_needs: tuple[str, ...],
+    escalation_conditions: tuple[str, ...],
 ) -> str:
     payload = {
         "project": {
@@ -478,6 +484,7 @@ def _plan_id(
             "worktree_fingerprint": signals.project.worktree_fingerprint,
         },
         "objective": signals.objective,
+        "objective_truncated": signals.objective_truncated,
         "referenced_paths": signals.referenced_paths,
         "referenced_symbols": signals.referenced_symbols,
         "changed_paths": signals.changed_paths,
@@ -492,14 +499,24 @@ def _plan_id(
             signals.verification_evidence_available,
             signals.previous_failure_classes,
         ),
-        "intent": intent.primary.value,
-        "secondary": tuple(item.value for item in intent.secondary),
+        "intent": {
+            "primary": intent.primary.value,
+            "secondary": tuple(item.value for item in intent.secondary),
+            "uncertainty": intent.uncertainty.value,
+            "reasons": intent.reasons,
+        },
         "selected": tuple(item.value for item in selected),
         "unavailable": tuple(item.value for item in unavailable),
         "depth": depth.value,
         "level": level.value,
         "context_scope": context_scope.value,
         "context_budget": context_budget,
+        "query_bounds": {
+            "max_items": query_bounds.max_items,
+            "max_depth": query_bounds.max_depth,
+        },
+        "evidence_needs": evidence_needs,
+        "escalation_conditions": escalation_conditions,
     }
     digest = hashlib.sha256(
         json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()

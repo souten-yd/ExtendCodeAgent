@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime
 
 from extendcodeagent.core.config.schema import CapabilityName, Depth, RolloutMode
@@ -116,6 +117,18 @@ def test_shadow_outcome_is_deterministic_and_never_applies_work() -> None:
     assert first.actual_evidence_ids == ()
     assert first.behavior_changed is False
     assert first.llm_calls == 0
+
+
+def test_plan_identity_changes_when_bounded_plan_semantics_change() -> None:
+    signals = _signals("Locate the definition and direct callers.")
+    base = create_shadow_plan(signals, _policy()).plan
+    narrower = create_shadow_plan(replace(signals, max_items=10), _policy()).plan
+    truncated = create_shadow_plan(replace(signals, objective_truncated=True), _policy()).plan
+
+    assert base.query_bounds != narrower.query_bounds
+    assert base.plan_id != narrower.plan_id
+    assert base.intent.uncertainty != truncated.intent.uncertainty
+    assert base.plan_id != truncated.plan_id
 
 
 def test_runtime_projection_is_bounded_and_uses_latest_collector_values() -> None:
