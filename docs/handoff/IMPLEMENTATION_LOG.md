@@ -969,3 +969,11 @@ correction below because its active-trace relevance would have mixed efficacy wi
 - PR self-review separated operator interruption from provider gaps, prevents same-head resume from
   bypassing a failed native/ECA/OMO control, and includes staged product changes in the dirty-worktree
   compatibility audit. Focused coverage pins all three fail-closed behaviors.
+- PR #93 merged as `ace1e94`. Exact-main preflight passed with zero model calls (seal
+  `f5c8d54e59e3519fedeefdd62813ac34db93e406a8c7fa330d53cffd72b94e4d`). The Bridge migrated native
+  and executed four fresh ECA step requests; coding/oracle passed but runtime count stayed zero, so
+  OMO and both combined stacks remained unexecuted.
+- Deterministic policy tracing found `EXTENDCODEAGENT_MODE=advisory` rejects automatic runtime ingest
+  by design (`computes_automatically` permits shadow/active). B2 now declares `eca_rollout_mode=active`
+  and applies it only to ECA-containing isolated stacks. Native/OMO-only stacks explicitly receive
+  `off`; core rollout authority and task/oracle truth are unchanged.

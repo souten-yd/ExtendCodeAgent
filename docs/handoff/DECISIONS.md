@@ -1089,3 +1089,9 @@ may omit the output title before normalization. B2 explicitly requires real agen
 Consequence: rerun the ECA and later B2 stacks after merge. Only the successful native/no-plugin cell
 may migrate after exact sealed-input verification. Existing B0 model results remain historical, but
 affected product compatibility fails closed rather than expanding the sealed lifecycle exception.
+
+Follow-up evidence: awaited delivery alone did not resolve the control. B2 had configured the sidecar
+as `advisory`, and the existing policy correctly permits automatic runtime computation only in
+`shadow` or `active`. B2 therefore uses explicit `active` for ECA-containing evaluation stacks and
+`off` otherwise. This is an evaluation use-policy correction consistent with the existing
+active-scoped claim, not a change to `RolloutMode.ACTIVE` or forced PI tool selection.

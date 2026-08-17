@@ -33,6 +33,7 @@ def test_b2_plan_seals_exact_five_stack_local_only_contract(
     assert plan["execution_scope"] == "local-only"
     assert plan["endpoint"] == "127.0.0.1:8090"
     assert plan["team_mode"] == "off"
+    assert plan["eca_rollout_mode"] == "active"
     assert plan["maximum_agent_runs"] == 5
     assert plan["model_parallelism"] == 1
     assert plan["stacks"] == {
@@ -98,9 +99,13 @@ def test_isolated_environment_forbids_remote_credentials_and_disables_team(
     assert "OPENAI_API_KEY" not in env
     assert "GH_TOKEN" not in env
     assert env["OMO_DISABLE_POSTHOG"] == "1"
+    assert env["EXTENDCODEAGENT_MODE"] == "active"
     assert json.loads(env["OPENCODE_CONFIG_CONTENT"])["model"] == runner.MODEL_ROUTE
     omo_config = json.loads((tmp_path / "profile/config/opencode/oh-my-openagent.json").read_text())
     assert omo_config["team_mode"] == {"enabled": False}
+
+    native_env = runner._isolated_env(plan, "native", tmp_path / "native", tmp_path / "workspace")
+    assert native_env["EXTENDCODEAGENT_MODE"] == "off"
 
 
 def test_token_metrics_count_cached_prompt_context_per_request() -> None:
@@ -417,3 +422,6 @@ def test_native_result_reuse_requires_equal_sealed_inputs_and_success(
     assert reused["result_origin"] == "COMPATIBILITY_MIGRATION"
     assert reused["llm_call_execution"] == "reused"
     assert reused["migration_basis"]["stack_has_eca_plugin"] is False
+    assert reused["migration_basis"]["non_applicable_current_input_differences"] == [
+        "eca_rollout_mode"
+    ]

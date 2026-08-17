@@ -40,6 +40,7 @@ MODEL_ROUTE = f"{MODEL_PROVIDER}/{MODEL_ID}"
 MODEL_ENDPOINT = "http://127.0.0.1:8090/v1"
 MODEL_CONTEXT = 262_144
 MODEL_OUTPUT = 8_192
+ECA_ROLLOUT_MODE = "active"
 MODEL_TASK_INSTRUCTION = (
     "Fix calc.py so add(2, 3) returns 5. Do not modify test_calc.py. "
     "Run python3 -m unittest -q and finish only after it passes."
@@ -211,6 +212,7 @@ def create_plan(output: Path, omo_root: Path | None = None) -> dict[str, Any]:
             "output_limit": MODEL_OUTPUT,
             "claim_scope": "compatibility / active-scoped(local-practical)",
             "team_mode": "off",
+            "eca_rollout_mode": ECA_ROLLOUT_MODE,
             "opencode": {"path": str(opencode), "version": _version(opencode)},
             "omo": {
                 "package": f"{OMO_PACKAGE}@{OMO_VERSION}",
@@ -420,7 +422,7 @@ def _isolated_env(
             "EXTENDCODEAGENT_PYTHON": (
                 str(profile / "missing-python") if degraded_sidecar else str(ECA_PYTHON)
             ),
-            "EXTENDCODEAGENT_MODE": "advisory",
+            "EXTENDCODEAGENT_MODE": (ECA_ROLLOUT_MODE if "eca" in STACKS[stack] else "off"),
             "EXTENDCODEAGENT_ROOT": str(workspace),
         }
     )
@@ -828,6 +830,7 @@ def run_preflight(plan_path: Path, output: Path, raw_root: Path) -> dict[str, An
             "execution_scope": "local-only",
             "model_calls": 0,
             "team_mode": "off",
+            "eca_rollout_mode": ECA_ROLLOUT_MODE,
             "stacks": stacks,
             "degraded_sidecar": degraded,
             "limitations": limitations,
@@ -1214,6 +1217,7 @@ def _native_reuse_result(
         "source_report_seal": source_report["seal"]["canonical_payload"],
         "migration_basis": {
             "stack_has_eca_plugin": False,
+            "non_applicable_current_input_differences": ["eca_rollout_mode"],
             "task_instruction_sha256": hashlib.sha256(source_instruction.encode()).hexdigest(),
             "execution_inputs_equal": list(comparable_fields),
             "reason": "ECA-only product change cannot affect the native no-plugin stack",
@@ -1284,6 +1288,7 @@ def _model_report(
             "context": MODEL_CONTEXT,
             "output_limit": MODEL_OUTPUT,
             "team_mode": "off",
+            "eca_rollout_mode": ECA_ROLLOUT_MODE,
             "results": results,
             "incomplete_attempts": incomplete_attempts,
             "provider_readiness_checks": readiness_checks,
