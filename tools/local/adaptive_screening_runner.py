@@ -847,7 +847,9 @@ def _atomic_json(path: Path, value: Mapping[str, Any]) -> None:
     temporary.replace(path)
 
 
-def _finalize_agent(raw: dict[str, Any], raw_root: Path) -> dict[str, Any]:
+def _finalize_agent(
+    raw: dict[str, Any], raw_root: Path, *, persist_fragment: bool = True
+) -> dict[str, Any]:
     cell = raw["cell"]
     task = raw["task"]
     workspace = Path(raw["workspace"])
@@ -928,8 +930,9 @@ def _finalize_agent(raw: dict[str, Any], raw_root: Path) -> dict[str, Any]:
             },
         }
     )
-    fragment = raw_root / "result-fragments" / f"{cell['cell_id']}.json"
-    _atomic_json(fragment, result)
+    if persist_fragment:
+        fragment = raw_root / "result-fragments" / f"{cell['cell_id']}.json"
+        _atomic_json(fragment, result)
     return result
 
 
@@ -939,6 +942,14 @@ def _persist_agent_capture(raw: Mapping[str, Any], raw_root: Path) -> Path:
         "workspace": str(raw["workspace"]),
     }
     path = raw_root / "agent-captures" / f"{raw['cell']['cell_id']}.json"
+    _atomic_json(path, capture)
+    return path
+
+
+def _persist_provider_attempt(raw: Mapping[str, Any], raw_root: Path) -> Path:
+    capture = {**raw, "workspace": str(raw["workspace"])}
+    suffix = time.time_ns()
+    path = raw_root / "provider-attempts" / f"{raw['cell']['cell_id']}--{suffix}.json"
     _atomic_json(path, capture)
     return path
 
@@ -975,10 +986,12 @@ def _execute_batch(
             )
             # Persist completed model work before CPU oracle/parsing begins. A
             # resume can finish this capture without repeating identical reasoning.
+            if raw["provider_failure"]:
+                _persist_provider_attempt(raw, raw_root)
+                results.append(cpu.submit(_finalize_agent, raw, raw_root, persist_fragment=False))
+                break
             _persist_agent_capture(raw, raw_root)
             results.append(cpu.submit(_finalize_agent, raw, raw_root))
-            if raw["provider_failure"]:
-                break
         return [future.result() for future in results]
 
 
@@ -1212,6 +1225,7 @@ def _adaptive_report(
     plan: Mapping[str, Any],
     results: Sequence[dict[str, Any]],
     skips: Sequence[dict[str, Any]],
+    provider_attempts: Sequence[dict[str, Any]],
     decisions: Mapping[str, Any],
     trace_log: EvaluationTraceLog,
     started: float,
@@ -1222,6 +1236,10 @@ def _adaptive_report(
         if isinstance(value, dict) and value.get("minimum_sufficient_depth")
     }
     migrated = sum(item.get("llm_call_execution") == "reused" for item in results)
+    completed_ids = {item["cell_id"] for item in results}
+    provider_gap_pending = any(
+        item.get("cell_id") not in completed_ids for item in provider_attempts
+    )
     efficiency = efficiency_summary(
         requested_calls=int(plan["base_schedule"]["hard_maximum_cells"]),
         results=results,
@@ -1251,6 +1269,8 @@ def _adaptive_report(
         "executed_or_reused_cells": len(results),
         "outcomes": dict(Counter(item["outcome"] for item in results)),
         "results": list(results),
+        "provider_attempts": list(provider_attempts),
+        "provider_gap_pending": provider_gap_pending,
         "skips": list(skips),
         "skip_counts": dict(Counter(item["reason"] for item in skips)),
         "decisions": dict(decisions),
@@ -1304,6 +1324,7 @@ def run_adaptive(
         for cell_id, result in source_results.items()
     }
     results_by_id: dict[str, dict[str, Any]] = {}
+    provider_attempts: list[dict[str, Any]] = []
     skips_by_id = {item["cell_id"]: dict(item) for item in plan.get("skips", ())}
     decisions: dict[str, Any] = {}
     if resume and output.is_file():
@@ -1311,6 +1332,7 @@ def run_adaptive(
         if previous.get("adaptive_plan") != plan["seal"]["canonical_payload"]:
             raise AdaptiveError("resume output uses another adaptive plan")
         results_by_id.update({item["cell_id"]: item for item in previous.get("results", ())})
+        provider_attempts.extend(previous.get("provider_attempts", ()))
         skips_by_id.update({item["cell_id"]: item for item in previous.get("skips", ())})
         decisions.update(previous.get("decisions", {}))
     fragment_root = raw_root / "result-fragments"
@@ -1353,11 +1375,24 @@ def run_adaptive(
             plan,
             list(results_by_id.values()),
             list(skips_by_id.values()),
+            provider_attempts,
             decisions,
             trace_log,
             started,
         )
         legacy._write_report(output, report)
+
+    def consume(batch: Sequence[dict[str, Any]]) -> bool:
+        """Record quality results and stop the whole frontier on a local provider gap."""
+
+        gap = False
+        for result in batch:
+            if result.get("provider_failure"):
+                provider_attempts.append({**result, "cell_pending": True})
+                gap = True
+            else:
+                add_result(result)
+        return gap
 
     for recovered in recovered_results:
         add_result(recovered)
@@ -1372,15 +1407,17 @@ def run_adaptive(
             add_skip(cell, "REUSED_COMPATIBLE_EVIDENCE")
         else:
             active_pending.append(cell)
-    for result in _execute_batch(
+    active_batch = _execute_batch(
         active_pending,
         tasks=tasks,
         templates=templates,
         raw_root=raw_root,
         output_limit=int(plan["limits"]["output_limit"]),
         step_limit=int(plan["limits"]["step_limit"]),
-    ):
-        add_result(result)
+    )
+    if consume(active_batch):
+        checkpoint()
+        return
     checkpoint()
 
     active_results = {
@@ -1427,15 +1464,17 @@ def run_adaptive(
                     add_skip(cell, "REUSED_COMPATIBLE_EVIDENCE")
                 else:
                     round_cells.append(cell)
-            for result in _execute_batch(
+            round_batch = _execute_batch(
                 round_cells,
                 tasks=tasks,
                 templates=templates,
                 raw_root=raw_root,
                 output_limit=int(plan["limits"]["output_limit"]),
                 step_limit=int(plan["limits"]["step_limit"]),
-            ):
-                add_result(result)
+            )
+            if consume(round_batch):
+                checkpoint()
+                return
             pairs = [
                 {
                     **{key: value for key, value in row.items() if key != "cell"},
@@ -1495,15 +1534,18 @@ def run_adaptive(
                     add_result(result)
                     add_skip(cell, "REUSED_COMPATIBLE_EVIDENCE")
                 else:
-                    result = _execute_batch(
+                    depth_batch = _execute_batch(
                         [cell],
                         tasks=tasks,
                         templates=templates,
                         raw_root=raw_root,
                         output_limit=int(plan["limits"]["output_limit"]),
                         step_limit=int(plan["limits"]["step_limit"]),
-                    )[0]
-                    add_result(result)
+                    )
+                    if consume(depth_batch):
+                        checkpoint()
+                        return
+                    result = depth_batch[0]
                 observed.append(result["outcome"])
                 if repetition == 1 and result["outcome"] == "PASS":
                     minimum = depth

@@ -741,3 +741,7 @@
   outcome from PASS to FAIL and was slower (68,016ms attach versus 55,003ms per-cell, plus 2,710ms
   server startup). Persistent mode is not adopted. Evidence is sealed in
   `docs/evidence/final/b0a-adaptive-screening-execution-v1.json`.
+- PR review found that a local provider gap could stop one batch but still permit later depth work
+  and could classify the unavailable attempt as a completed cell. Provider attempts are now stored
+  separately, the cell remains pending, and the entire adaptive frontier stops without another
+  model call. Final integration count is 61 Python plus 9 adapter tests.

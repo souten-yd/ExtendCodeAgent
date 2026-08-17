@@ -2,7 +2,7 @@
   "schema": 1,
   "classification": "B0A_ADAPTIVE_SCREENING_IMPLEMENTATION_AND_BRIDGE_EVIDENCE",
   "captured_at": "2026-08-17T13:32:45+09:00",
-  "implementation_revision": "6cbacafeb7833e4dbb56b7d2d6bb86c49e32a374",
+  "model_free_plan_revision": "6cbacafeb7833e4dbb56b7d2d6bb86c49e32a374",
   "execution_scope": "local-only",
   "model": "Qwen3.6 27B",
   "endpoint": "127.0.0.1:8090",
@@ -117,13 +117,13 @@
   },
   "gates": {
     "all_fast": "PASS_199_PYTHON_9_ADAPTER",
-    "integration": "PASS_60_PYTHON_9_ADAPTER",
+    "integration": "PASS_61_PYTHON_9_ADAPTER",
     "build": "PASS_PYTHON_SDIST_WHEEL_TYPESCRIPT",
     "diff_check": "PASS"
   },
   "next": "Regenerate the sealed model-free plan at merged main, then resume adaptive screening with per-cell OpenCode and sequential stopping.",
   "seal": {
     "algorithm": "sha256",
-    "canonical_payload": "071a44449234bb2e7f8781cc86f6bea70e7bfb5f8bd200757cfd4a029034eabb"
+    "canonical_payload": "a04a76c4c526eeb080bb6d993c6167f473ac76f9b5110fba6a9694340fa022b6"
   }
 }

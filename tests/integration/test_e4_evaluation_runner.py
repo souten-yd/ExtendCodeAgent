@@ -169,6 +169,66 @@ def test_adaptive_migration_rejects_shared_runner_venv_access(tmp_path: Path) ->
     assert reasons == ["shared_evaluation_venv_access"]
 
 
+def test_adaptive_provider_gap_stops_batch_and_is_not_a_reusable_capture(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+) -> None:
+    cells = [
+        {"cell_id": "gap", "task_id": "task"},
+        {"cell_id": "must-remain-pending", "task_id": "task"},
+    ]
+    invoked: list[str] = []
+    provider_captures: list[str] = []
+
+    class Templates:
+        def ensure_template(self, task_id: str) -> None:
+            pass
+
+        def prepare_retry_safe(self, task_id: str, cell_id: str) -> Path:
+            workspace = tmp_path / cell_id
+            workspace.mkdir()
+            return workspace
+
+    def agent(cell: dict[str, Any], *args: Any, **kwargs: Any) -> dict[str, Any]:
+        invoked.append(cell["cell_id"])
+        return {"cell": cell, "provider_failure": "LOCAL_ENDPOINT_UNAVAILABLE"}
+
+    def finalize(raw: dict[str, Any], *args: Any, **kwargs: Any) -> dict[str, Any]:
+        return {
+            "cell_id": raw["cell"]["cell_id"],
+            "provider_failure": raw["provider_failure"],
+        }
+
+    def persist_provider(raw: dict[str, Any], root: Path) -> Path:
+        provider_captures.append(raw["cell"]["cell_id"])
+        return root / "provider-attempt.json"
+
+    monkeypatch.setattr(adaptive_screening_runner, "_agent_only", agent)
+    monkeypatch.setattr(adaptive_screening_runner, "_finalize_agent", finalize)
+    monkeypatch.setattr(
+        adaptive_screening_runner,
+        "_persist_provider_attempt",
+        persist_provider,
+    )
+    monkeypatch.setattr(
+        adaptive_screening_runner,
+        "_persist_agent_capture",
+        lambda *args: pytest.fail("provider gap must not become a reusable agent capture"),
+    )
+
+    results = adaptive_screening_runner._execute_batch(
+        cells,
+        tasks={"task": {"id": "task"}},
+        templates=Templates(),  # type: ignore[arg-type]
+        raw_root=tmp_path,
+        output_limit=10,
+        step_limit=2,
+    )
+
+    assert invoked == ["gap"]
+    assert provider_captures == ["gap"]
+    assert results == [{"cell_id": "gap", "provider_failure": "LOCAL_ENDPOINT_UNAVAILABLE"}]
+
+
 def test_provider_gap_pauses_only_its_queue_and_other_models_continue(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ) -> None:
