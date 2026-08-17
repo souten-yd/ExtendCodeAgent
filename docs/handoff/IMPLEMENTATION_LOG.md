@@ -1,5 +1,20 @@
 # Implementation Log
 
+## 2026-08-17 — Local-only execution policy v2
+
+- Preserved sealed `b0a-quality-target-v1.json`, the evaluation matrix, task suite, oracles,
+  thresholds, corpus and prior Copilot evidence unchanged. Added minimal
+  `b0a-quality-target-v2.json` selecting only port-8090 `local-practical` Qwen.
+- The v2 denominator is 54 `native/off` cells. The existing 714-cell screen, ablations, D0-D4 arms,
+  tasks and threshold remain unchanged. Existing Qwen 54/54 must be promoted through compatibility
+  audit, Bridge Proof and checkpoint migration; only proven residual cells rerun.
+- Sonnet/Codex and host-default are blocked by user policy at the runner boundary. No automatic
+  provider probe is permitted. Every new evaluation report records the local-only model, endpoint,
+  context and output limit.
+- Local gates PASS: `tools/local/all-fast` (191 Python + 9 adapter),
+  `tools/local/test-integration` (55 Python + 9 adapter), and `tools/local/build` (Python sdist/wheel
+  plus TypeScript build).
+
 ## 2026-08-17 — Canonical three-route contract reconciliation
 
 - Registered the sealed B0a quality target in the canonical master plan and replaced the active

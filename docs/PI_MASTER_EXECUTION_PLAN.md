@@ -90,6 +90,7 @@ non-goals remain binding).
 | `CURRENT_STATUS.md` | Program state and evidence ledger only. No sequencing. |
 | `handoff/*` | Rolling state. `NEXT_TASK.md` points at this document. |
 | `evaluation/b0a-quality-target-v1.json` | Sealed B0a execution contract for the user-requested Qwen/Copilot Sonnet/Copilot Codex quality routes and 162-cell baseline. It narrows the historical matrix without changing task/oracle semantics. |
+| `evaluation/b0a-quality-target-v2.json` | **Active model-execution policy exception.** Narrows execution to the existing port-8090 `local-practical` Qwen route without changing the matrix, task suite, oracle, thresholds, corpus, capabilities, stages or their order. V1 and prior Copilot evidence remain immutable history. |
 
 ## 3. Resolved inconsistencies
 
@@ -876,6 +877,35 @@ R0 may proceed with a recorded exception that states: the exact provider/model/e
 secrets, the native-OpenCode reproduction proving the failure is not ExtendCodeAgent-specific, the
 scope of claims withdrawn, and the re-test trigger. The exception is a documented limitation, never a
 pass. No frontier-tier performance claim may be made under this exception.
+
+### 10.4 Local-only execution exception (2026-08-17)
+
+By explicit user policy, stages B0 through R0 and then P0 through P4 execute model-bearing work only
+with the existing ControlDeck-managed `local-practical` Qwen3.6 27B service at
+`127.0.0.1:8090` (`context=262144`, `output_limit=8192`). This exception changes only model selection
+and claim scope. It does not change stage order, entry/exit conditions, task suite, oracles,
+repetitions, thresholds, corpus, held-out split, OMO work, slow-suite PEDS work, ablations,
+performance evaluation, capability design, or deferred-item entry rules.
+
+The active B0a target is `docs/evaluation/b0a-quality-target-v2.json`:
+
+- `local-practical`: mandatory and must pass the applicable gate;
+- `local-low`: `UNAVAILABLE` while no endpoint is configured; no local-low claim;
+- `host-default`: `NOT_RUN_USER_POLICY`; no host-default claim;
+- Copilot Sonnet/Codex: `NOT_RUN_USER_POLICY / SHARED_QUOTA_EXHAUSTED`; no frontier claim and no new
+  provider call or availability probe without a later explicit user instruction.
+
+The B0a baseline denominator is therefore 54 cells: one model × nine tasks × two arms (`native/off`)
+× three repetitions. Existing Qwen results are reused only through the existing compatibility audit,
+Bridge Proof and checkpoint-migration contracts when task, oracle, model limits and ECA semantics are
+compatible; only proven residual cells rerun. The unchanged 714-cell local-practical screening and
+local-practical held-out B0b confirmation follow. While this exception is active, promotion is bounded
+to `active-scoped(local-practical)` unless a stricter existing rule applies.
+
+R0 may close only as a **production-capable local-only baseline**. Unexecuted tiers are never passes;
+all cross-tier/frontier/general-model claims are withdrawn. Existing §10.3 exception semantics apply
+to the shared Copilot quota, and quota reset plus explicit user authorization is the re-evaluation
+trigger. Historical Copilot evidence remains supplementary and is neither deleted nor reclassified.
 
 ## 11. Evidence layout
 

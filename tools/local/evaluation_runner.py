@@ -37,7 +37,7 @@ METRICS = ROOT / "docs/evaluation/pi-verification-integrated-metrics-v1.json"
 CORPUS = ROOT / "docs/evaluation/test-portfolio-corpus-v1.json"
 B0A_PLAN = ROOT / "docs/evaluation/b0a-screening-plan-v1.json"
 B0A_ACTIVATION_PLAN = ROOT / "docs/evaluation/b0a-activation-plan-v1.json"
-B0A_QUALITY_TARGET = ROOT / "docs/evaluation/b0a-quality-target-v1.json"
+B0A_QUALITY_TARGET = ROOT / "docs/evaluation/b0a-quality-target-v2.json"
 B0A_BOOTSTRAP = ROOT / "docs/evidence/final/b0a-bootstrap-environment-v1.json"
 B0A_CHECKPOINT_COMPATIBILITY = ROOT / "docs/evaluation/b0a-checkpoint-compatibility-v1.json"
 E3_HARNESS = ROOT / "tools/local/e3_task_suite.py"
@@ -60,8 +60,6 @@ CONFIGURABLE_CAPABILITIES = (
 )
 B0A_ACTIVATION_MODELS = (
     "local-practical",
-    "frontier-sonnet",
-    "frontier-codex",
 )
 B0A_QUALITY_MODELS = frozenset(B0A_ACTIVATION_MODELS)
 LOCAL_SOURCES = {
@@ -192,6 +190,25 @@ def _verify_seal(value: dict[str, Any], label: str) -> None:
         raise EvaluationError(f"{label} seal does not match canonical payload")
 
 
+def _local_execution_metadata() -> dict[str, Any]:
+    execution = _load(B0A_QUALITY_TARGET)["execution"]
+    return {
+        "execution_scope": execution["execution_scope"],
+        "model": execution["model"],
+        "endpoint": execution["endpoint"],
+        "context": execution["context"],
+        "output_limit": execution["output_limit"],
+    }
+
+
+def _require_local_only_models(model_tiers: set[str], label: str) -> None:
+    disallowed = model_tiers - B0A_QUALITY_MODELS
+    if disallowed:
+        raise EvaluationError(
+            f"{label} violates the sealed local-only execution policy: {sorted(disallowed)}"
+        )
+
+
 def seal(path: Path) -> None:
     value = _load(path)
     value["seal"] = {"algorithm": "sha256", "canonical_payload": _digest(value)}
@@ -266,14 +283,30 @@ def validate() -> None:
         raise EvaluationError("B0a activation-plan task-suite seal is stale")
     if activation_inputs["screening_plan_seal"] != b0a_plan["seal"]["canonical_payload"]:
         raise EvaluationError("B0a activation plan does not match the screening plan")
-    if not set(B0A_ACTIVATION_MODELS) < set(activation_plan["models"]):
+    if not set(B0A_ACTIVATION_MODELS) <= set(activation_plan["models"]):
         raise EvaluationError("B0a activation plan does not cover every quality model route")
     if tuple(quality_target["quality_models"]) != B0A_ACTIVATION_MODELS:
         raise EvaluationError("B0a quality target does not match the permitted model routes")
     if quality_target["activation_plan_seal"] != activation_plan["seal"]["canonical_payload"]:
         raise EvaluationError("B0a quality target references a stale activation plan")
-    if quality_target["baseline"]["expected_cells"] != 162:
-        raise EvaluationError("B0a quality target baseline size is not 162 cells")
+    expected_baseline_cells = (
+        len(B0A_QUALITY_MODELS)
+        * len(quality_target["baseline"]["arms"])
+        * 9
+        * 3
+    )
+    if quality_target["baseline"]["expected_cells"] != expected_baseline_cells:
+        raise EvaluationError("B0a quality target baseline size is inconsistent")
+    execution = quality_target["execution"]
+    if execution != {
+        "execution_scope": "local-only",
+        "model": "Qwen3.6 27B",
+        "model_tier": "local-practical",
+        "endpoint": "127.0.0.1:8090",
+        "context": 262144,
+        "output_limit": 8192,
+    }:
+        raise EvaluationError("B0a local-only execution metadata is inconsistent")
     pilot = activation_plan["pilot"]
     if pilot["model"] != "local-practical" or pilot["repetitions"] != 3:
         raise EvaluationError("B0a PI pilot must use three port-8090 local-practical repetitions")
@@ -365,6 +398,7 @@ def plan(
         b0a = {
             "screening_plan_seal": b0a_plan["seal"]["canonical_payload"],
             "activation_plan_seal": _load(B0A_ACTIVATION_PLAN)["seal"]["canonical_payload"],
+            "quality_target_seal": _load(B0A_QUALITY_TARGET)["seal"]["canonical_payload"],
             "included_repositories": sorted(included),
             "excluded_repositories": sorted(set(eligibility) - included),
         }
@@ -890,6 +924,7 @@ def _task_instruction(cell: dict[str, Any], task: dict[str, Any], mode: str) -> 
 def _execute(cell: dict[str, Any], task: dict[str, Any], raw_root: Path) -> dict[str, Any]:
     if cell["model_status"] == "UNAVAILABLE":
         return {**cell, "outcome": "UNAVAILABLE", "reason": "sealed model-tier status"}
+    _require_local_only_models({str(cell["model_tier"])}, "model execution")
     workspace = raw_root / "workspaces" / cell["cell_id"]
     log_path = raw_root / "logs" / f"{cell['cell_id']}.jsonl"
     log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1572,6 +1607,7 @@ def run_bridge(
             "provider_queue": provider_queue,
             "provider_attempts": provider_attempts,
             "results": results,
+            **_local_execution_metadata(),
         }
         _write_report(
             output,
@@ -1590,6 +1626,7 @@ def run_bridge(
             "provider_queue": provider_queue,
             "provider_attempts": provider_attempts,
             "results": [],
+            **_local_execution_metadata(),
         }
         _write_report(
             output,
@@ -1614,6 +1651,7 @@ def _available_provider_tiers(paths: list[Path], current_revision: str) -> set[s
 
 def probe_provider(model_tier: str, output: Path) -> None:
     """Run a small provider-only request that is never included in quality results."""
+    _require_local_only_models({model_tier}, "provider probe")
     _require_clean_worktree()
     current_revision = subprocess.check_output(
         ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
@@ -1660,6 +1698,7 @@ def probe_provider(model_tier: str, output: Path) -> None:
         "probe_only_not_quality_result": True,
         "response_observed": bool(stdout.strip()),
         "error_observed": bool(stderr.strip()),
+        **_local_execution_metadata(),
     }
     _write_report(
         output,
@@ -1794,6 +1833,7 @@ def requeue_provider_gaps(checkpoint_path: Path, output: Path, raw_root: Path) -
             "requeued_cells": [item["cell_id"] for item in requeued],
             "requeued_count": len(requeued),
         },
+        **_local_execution_metadata(),
     }
     source_migration_summary = source.get("migration_summary")
     if isinstance(source_migration_summary, dict):
@@ -2075,6 +2115,7 @@ def promote_pilot(source_path: Path, audit_path: Path) -> dict[str, Any]:
         "active_pass_delta_over_best_control": gate["active_pass_delta_over_best_control"],
         "latency_status": "LEGACY_RUNNER_SEPARATE",
         "latency_merge_permitted": False,
+        **_local_execution_metadata(),
     }
     return {**body, "seal": {"algorithm": "sha256", "canonical_payload": digest(body)}}
 
@@ -2116,6 +2157,7 @@ def _report(
         "outcomes": dict(Counter(item["outcome"] for item in results)),
         "integrated_metrics": _metric_projection(),
         "results": results,
+        **_local_execution_metadata(),
     }
     if provider_queue:
         report["provider_queue"] = provider_queue
@@ -2354,6 +2396,7 @@ def screening_table(report: dict[str, Any]) -> dict[str, Any]:
         "unexpected_cells": unexpected,
         "effect_threshold_pass_delta": threshold,
         "adoption_decisions_forbidden": True,
+        **_local_execution_metadata(),
         "capabilities": entries,
     }
 
@@ -2536,15 +2579,26 @@ def main() -> int:
             probe_provider(args.model_tier, args.output)
         elif args.command == "migrate-checkpoint":
             _require_clean_worktree()
+            migrated = migrate_checkpoint(
+                ROOT,
+                args.source.resolve(),
+                args.audit.resolve(),
+                args.bridge.resolve(),
+                args.raw_root.resolve() / "traces.jsonl",
+            )
+            migrated_body = {
+                **{key: value for key, value in migrated.items() if key != "seal"},
+                **_local_execution_metadata(),
+            }
             _write_report(
                 args.output,
-                migrate_checkpoint(
-                    ROOT,
-                    args.source.resolve(),
-                    args.audit.resolve(),
-                    args.bridge.resolve(),
-                    args.raw_root.resolve() / "traces.jsonl",
-                ),
+                {
+                    **migrated_body,
+                    "seal": {
+                        "algorithm": "sha256",
+                        "canonical_payload": digest(migrated_body),
+                    },
+                },
             )
         elif args.command == "promote-pilot":
             _write_report(args.output, promote_pilot(args.source, args.audit))

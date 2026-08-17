@@ -5,28 +5,25 @@ Updated: 2026-08-17 (Asia/Tokyo)
 Canonical branch: `main`; latest audited merged base before this documentation closeout is
 `1cd6d536435493d1082593b2db7146edd4a248ee` (PR #76)
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
-Current task: complete the three-route B0a baseline, then run the gated local-practical screening
+Current task: complete the local-first B0a baseline, then run the gated local-practical screening
 
 ## Current authoritative checkpoint (2026-08-17)
 
-- B0a quality targets are exactly ControlDeck-managed port-8090 Qwen, GitHub Copilot Sonnet and
-  GitHub Copilot Codex. `host-default` and `local-low` are outside the quality denominator.
-- The baseline contract is 162 cells. Valid progress is 145/162: Qwen 54/54, Sonnet 54/54 and Codex
-  37/54. The remaining 17 Codex cells are pending; no provider gap is counted as quality or latency.
-- A fresh exact-head availability probe remains `QUOTA_EXHAUSTED`. The quota is shared by the GitHub
-  Copilot provider: new Sonnet and Codex calls are unavailable while existing valid Sonnet results
-  remain reusable.
+- B0a progression now uses only ControlDeck-managed port-8090 Qwen. The exact-head baseline contract
+  is 54 cells; the following screen is 714 local-practical cells.
+- Sonnet/Codex are `NOT_RUN_USER_POLICY / SHARED_QUOTA_EXHAUSTED`, host-default is
+  `NOT_RUN_USER_POLICY`, and local-low is `UNAVAILABLE / NOT_CONFIGURED`. No new call/probe or
+  cross-tier claim is permitted while the local-only exception is active.
 - The confirmed 27-cell Qwen pilot remains `PROCEED_TO_COMPREHENSIVE`: native/off/active PASS is
   0/0/6, every required PI observation is present and active median wall ratio is 0.658.
-- PR #76 makes the execution order fail closed. The 714-cell screening now requires a sealed,
-  exact-head, trace-complete 162/162 baseline report through `--baseline-report`; 145/162 cannot
-  create a screening workspace.
-- The current mixed checkpoint truth is 100 compatibility-migrated cells plus 45 current-runner
-  cells. Legacy latency remains excluded. Resume only after a successful Codex availability proof,
-  execute the 17 pending cells once, then begin screening.
+- The 714-cell screening requires a sealed, exact-head, trace-complete 54/54 local baseline through
+  `--baseline-report`; the previous 145/162 three-route checkpoint is immutable history.
+- Promote the existing Qwen 54/54 through compatibility audit, Bridge Proof and checkpoint migration,
+  run only proven residual cells, complete exact-head Qwen activation/pilot bindings, then start
+  screening. Do not probe or substitute another model during this sequence.
 
-The chronology below is retained as history. Its four-model/306-cell statements describe superseded
-protocols and are not current execution instructions.
+The chronology below is retained as history. Its four-model/306-cell and three-model/162-cell
+statements describe superseded protocols and are not current execution instructions.
 
 ## B0a contract checkpoint (2026-08-16)
 

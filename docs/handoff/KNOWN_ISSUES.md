@@ -1,6 +1,6 @@
 # Known Issues
 
-## Shared GitHub Copilot monthly quota blocks 17 Codex target cells
+## Shared GitHub Copilot monthly quota defers 17 historical Codex cells
 
 - Exact-head activation proved this is the GitHub Copilot provider's shared monthly quota: both
   `github-copilot/claude-sonnet-5` and `github-copilot/gpt-5.3-codex` now return
@@ -9,9 +9,10 @@
 - Current valid target progress is 145/162: Qwen 54/54, Sonnet 54/54, Codex 37/54. Sixteen quota
   responses must be requeued and one interrupted Codex cell remains pending. They must not enter
   PASS/FAIL or latency aggregates.
-- Resume requires a separate successful availability probe for Copilot Codex. Previously completed
-  Sonnet results remain valid even though new Sonnet calls are currently unavailable;
-  `host-default` recovery is irrelevant because it is outside the target.
+- These cells no longer block local-only progression. Sonnet/Codex are
+  `NOT_RUN_USER_POLICY / SHARED_QUOTA_EXHAUSTED`; no new call or availability probe is permitted while
+  the exception is active. Previously completed Sonnet/Codex results remain immutable supplementary
+  history and are not reclassified.
 
 ## Checkpoint migration is proof-gated, not direct resume
 
