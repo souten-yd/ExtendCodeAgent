@@ -14,6 +14,15 @@
 - All current claims remain bounded to `active-scoped(local-practical)`. B0a provides no evidence for
   frontier, host-default, local-low, or general-model effectiveness.
 
+## First causal-correction attempt did not reach the model
+
+- At exact main `692de70`, the 24 initial cells all exited in about 15 seconds with zero model tokens.
+  A relative raw-root was passed into `git worktree add`; Git resolved the target under each task
+  template, while OpenCode and the oracle used the repository-relative path. Every result is a
+  pre-model runner failure and is excluded from causal/quality evidence.
+- Keep the raw report as diagnostic history. After the absolute-root repair merges, create a new
+  exact-head plan/output rather than resuming or rewriting the failed checkpoint.
+
 ## Shared GitHub Copilot monthly quota defers 17 historical Codex cells
 
 - Exact-head activation proved this is the GitHub Copilot provider's shared monthly quota: both

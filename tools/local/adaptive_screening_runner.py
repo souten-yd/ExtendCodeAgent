@@ -225,6 +225,7 @@ class WorkspaceTemplates:
     """Create isolated cell workspaces from one prepared template per task."""
 
     def __init__(self, root: Path, tasks: Mapping[str, dict[str, Any]]) -> None:
+        root = root.resolve()
         self.root = root
         self.tasks = tasks
         self.template_root = root / "templates"
@@ -934,9 +935,7 @@ def _finalize_agent(
     evaluation_use_policy = str(cell.get("pi_use_policy") or "")
     if evaluation_use_policy in {"forced_pi", "forced_off", "forced_ablation", "auto_pi"}:
         evaluation_plan = _load(legacy.EVALUATION_PI_PLAN)
-        entry = next(
-            item for item in evaluation_plan["tasks"] if item["task_id"] == task["id"]
-        )
+        entry = next(item for item in evaluation_plan["tasks"] if item["task_id"] == task["id"])
         if evaluation_use_policy in {"forced_pi", "forced_off", "forced_ablation"}:
             result["forced_use_compliance"] = forced_use_compliance(entry, result)
         else:

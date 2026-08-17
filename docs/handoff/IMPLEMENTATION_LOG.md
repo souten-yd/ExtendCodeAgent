@@ -808,3 +808,16 @@ correction below because its active-trace relevance would have mixed efficacy wi
   `tools/local/test-integration` (64 Python plus 9 adapter), `tools/local/build`, unified evaluation
   seal validation, focused causal simulation, model-free 24/58 schedule accounting and
   `git diff --check`. No corrective or B0b model call ran before implementation merge.
+
+## 2026-08-17 — Corrective workspace path pre-model repair
+
+- The first exact-main corrective attempt produced 24 process FAIL results but zero tokens and no PI
+  trace. `WorkspaceTemplates` retained a relative root, and Git interpreted each worktree target
+  relative to its template repository. OpenCode therefore received a path that did not exist from the
+  ECA repository cwd. This is runner infrastructure evidence, not Qwen/capability evidence.
+- Resolve the template/workspace root once at construction. Also count an LLM call as executed only
+  after token evidence (or an explicit provider attempt), and record pre-model results separately so
+  infrastructure failures cannot inflate model-call metrics.
+- Repair validation passes `tools/local/all-fast` (207 Python plus 9 adapter),
+  `tools/local/test-integration` (65 Python plus 9 adapter), `tools/local/build`, focused relative-root
+  and causal accounting tests, and `git diff --check`.

@@ -51,6 +51,11 @@ Current task: merge and run the causal-correction entry gate before B0b
 - The active-trace-dependent 108-cell B0b runner was never executed and is retired. A corrected B0b
   plan is generated only after corrective evidence merges. No corrective or B0b model call has run
   on the implementation branch.
+- The first exact-main corrective attempt at `692de70` did not reach Qwen: all 24 initial processes
+  exited before provider/model work because a relative raw-root made `git worktree add` create cell
+  workspaces under each template while OpenCode looked under the repository root. The diagnostic
+  report has zero tokens and is not causal/quality evidence. Preserve it; resolve workspace roots to
+  absolute paths, merge the repair, regenerate an exact-head plan, and retry from a fresh output.
 
 The chronology below is retained as history. Its four-model/306-cell and three-model/162-cell
 statements describe superseded protocols and are not current execution instructions.
