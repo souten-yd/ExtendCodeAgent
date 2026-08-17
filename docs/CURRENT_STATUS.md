@@ -4,7 +4,7 @@ Status date: 2026-08-17
 
 ## Program state
 
-Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0 COMPLETE — B1 SKIPPED — B2 NEXT**
+Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0 COMPLETE — B1 SKIPPED — B2 IN PROGRESS**
 
 The active `b0a-quality-target-v2` progression target is the ControlDeck-managed `local-practical`
 Qwen route only.
@@ -64,7 +64,7 @@ backlog.
 
 This is not a production-capable designation. B0 is complete, but it did not confirm a held-out PI
 causal effect for the covered local-practical tasks. Conditional B1 has no product lifecycle/config/
-provider entry condition after closeout and is explicitly skipped. B2 OMO coexistence is next; the
+provider entry condition after closeout and is explicitly skipped. B2 OMO coexistence is active; the
 selection/projection gaps remain inputs to C1/C3 and X0 rather than being hidden as successful PI.
 
 ## Canonical read order

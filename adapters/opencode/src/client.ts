@@ -78,6 +78,7 @@ export class SidecarClient {
     this.ready = undefined
     this.starting = undefined
     if (!child || child.exitCode !== null) return
+    child.stdin.end()
     child.kill("SIGTERM")
     await Promise.race([
       new Promise<void>((resolve) => child.once("exit", () => resolve())),
@@ -110,6 +111,7 @@ export class SidecarClient {
     if (this.options.mode) args.push("--mode", this.options.mode)
     if (this.options.userConfig) args.push("--user-config", this.options.userConfig)
     if (this.options.projectConfig) args.push("--project-config", this.options.projectConfig)
+    args.push("--parent-stdin-lifecycle")
     const child = spawn(this.options.python ?? "python3", args, {
       cwd: this.options.root,
       stdio: ["pipe", "pipe", "pipe"],

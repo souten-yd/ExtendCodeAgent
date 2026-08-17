@@ -2,10 +2,11 @@
 
 Updated: 2026-08-17 (Asia/Tokyo)
 
-Canonical branch: `agent/b0b-confirmation-closeout`; synchronized merged base is
-`f15064c389e776a875faf1009648696343cbf9e0` (PR #90)
+Canonical branch: `agent/b2-omo-coexistence`; synchronized merged base is
+`58b17970266ebccb1a0cc9c2a0169bfab523ba84` (PR #91)
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
-Current task: seal and merge B0b result/gap evidence, then start B2 OMO coexistence
+Current task: merge the B2 runner, then execute its exact-main model-free preflight and five-stack
+local-practical bridge
 
 ## Current authoritative checkpoint (2026-08-17)
 
@@ -101,6 +102,22 @@ Current task: seal and merge B0b result/gap evidence, then start B2 OMO coexiste
   prepared cells after a provider gap.
 - B0 gap decisions: B1 is `SKIP_NO_ENTRY_CONDITION`; B2 is `KEEP_NEXT`; C1/C3 and X0 retain measured
   selection/projection gaps; four no-coverage candidates are not converted to negative evidence.
+- PR #91 merged the B0b closeout at exact main `58b1797`; exact-main all-fast (208 Python plus 9
+  adapter), integration (79 Python plus 9 adapter) and build gates passed after merge. B2 is active.
+- The B2 runner fixes five isolated stacks (`native`, `eca`, `omo`, `omo_eca`, `eca_omo`), Team Mode
+  off, OpenCode 1.18.18, exact OMO 4.19.4 and port-8090 Qwen. It seals the tuple before execution,
+  performs model-free namespace/lifecycle/session/restart/runtime-observation and degraded-sidecar
+  checks first, and permits at most one serial coding/verification agent run per stack only after the
+  preflight passes. No profile, workspace or session is shared.
+- The first zero-model preflight found that abrupt OpenCode shutdown could orphan ECA's sidecar. The
+  repair uses the existing parent-owned stdin pipe as a lifecycle signal; no OpenCode/OMO patch is
+  introduced. OMO-only duplicate override IDs are retained as an inherited C0 limitation and compared
+  against both combined orders. Direct-shell hook non-exercise is explicit; actual runtime ingestion
+  is fail-closed in the model-bearing agent flow.
+- Repaired branch preflight seal `5e13dd3` passes at `d936372` with zero LLM calls; exact-main plan and
+  preflight regeneration remain mandatory after merge before any model-bearing Bridge begins.
+- B0 evidence compatibility is preserved only through the sealed exact-content lifecycle transition;
+  old cleanup/latency metrics are not reused and any unlisted product change remains replay-required.
 
 The chronology below is retained as history. Its four-model/306-cell and three-model/162-cell
 statements describe superseded protocols and are not current execution instructions.

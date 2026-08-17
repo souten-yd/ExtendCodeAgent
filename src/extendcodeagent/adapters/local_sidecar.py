@@ -6,6 +6,7 @@ import argparse
 import json
 import secrets
 import signal
+import sys
 import threading
 import time
 from collections.abc import Mapping
@@ -287,6 +288,7 @@ def main() -> None:
     parser.add_argument("--project-config", type=Path)
     parser.add_argument("--mode", choices=[item.value for item in RolloutMode])
     parser.add_argument("--port", type=int, default=0)
+    parser.add_argument("--parent-stdin-lifecycle", action="store_true")
     args = parser.parse_args()
     mode = RolloutMode(args.mode) if args.mode else None
     project_config = args.project_config or args.root / "extendcodeagent.jsonc"
@@ -308,6 +310,17 @@ def main() -> None:
 
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
+
+    def stop_when_parent_pipe_closes() -> None:
+        try:
+            while sys.stdin.buffer.read(1):
+                pass
+        except OSError:
+            pass
+        stop()
+
+    if args.parent_stdin_lifecycle:
+        threading.Thread(target=stop_when_parent_pipe_closes, daemon=True).start()
     print(
         json.dumps(
             {

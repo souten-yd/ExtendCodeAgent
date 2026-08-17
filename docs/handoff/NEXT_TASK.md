@@ -31,8 +31,8 @@ is repaired and gated in the B0b closeout. Evidence:
 `docs/evidence/final/baseline-gap-report.md`.
 
 B2 entry is satisfied because B0 is stable and the prior model-free smoke recorded OMO 4.19.4 as
-installable with OpenCode 1.18.18. Follow `docs/OMO_COEXISTENCE_AND_COMPATIBILITY_PLAN.md` §9 only for
-the active design detail.
+installable with OpenCode 1.18.16. B2 revalidates the exact current OpenCode 1.18.18 tuple. Follow
+`docs/OMO_COEXISTENCE_AND_COMPATIBILITY_PLAN.md` §9 only for the active design detail.
 
 Scope:
 

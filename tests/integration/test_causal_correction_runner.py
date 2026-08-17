@@ -27,6 +27,15 @@ def _entry(task_id: str) -> dict[str, Any]:
     return next(item for item in plan["tasks"] if item["task_id"] == task_id)
 
 
+def test_lifecycle_only_transition_is_exact_hash_compatible() -> None:
+    source = json.loads(OBSERVATIONAL.read_text())["source_revision"]
+
+    compatible, unresolved = adaptive._product_semantics_compatible(source)
+
+    assert compatible is True
+    assert unresolved == []
+
+
 def test_correction_plan_is_bounded_and_reclassifies_pilot_reuse(tmp_path: Path) -> None:
     output = tmp_path / "plan.json"
 

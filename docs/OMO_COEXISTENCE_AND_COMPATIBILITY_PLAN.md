@@ -1,6 +1,7 @@
 # OpenCode + OMO + ExtendCodeAgent Coexistence and Compatibility Plan
 
-> **Consolidated 2026-08-16.** Conditional compatibility reference. Executed only at stage P4 of `docs/PI_MASTER_EXECUTION_PLAN.md`.
+> **Consolidated 2026-08-16; stage mapping corrected 2026-08-17.** B2 executes the bounded OMO-C0
+> coexistence baseline. P4 retains the four-way comparative benchmark and benefit claim.
 
 Status: canonical compatibility plan
 Date: 2026-08-16

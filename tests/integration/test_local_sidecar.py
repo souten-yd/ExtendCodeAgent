@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 import threading
 import urllib.error
 import urllib.request
@@ -176,3 +178,38 @@ def test_sidecar_context_runtime_ingest_and_evidence_round_trip(tmp_path: Path) 
     assert context["result"]["items"][0]["why_included"] == "target_ref"
     assert ingest["result"]["accepted"] is True
     assert evidence["result"]["items"][0]["status"] == "observed"
+
+
+def test_sidecar_stops_when_parent_pipe_closes(tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / "service.py").write_text("def leaf():\n    return 1\n", encoding="utf-8")
+    process = subprocess.Popen(
+        [
+            sys.executable,
+            "-m",
+            "extendcodeagent.adapters.local_sidecar",
+            "--root",
+            str(root),
+            "--database",
+            str(tmp_path / "graph.db"),
+            "--mode",
+            "advisory",
+            "--parent-stdin-lifecycle",
+        ],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    try:
+        assert process.stdout is not None
+        ready = json.loads(process.stdout.readline())
+        assert ready["event"] == "ready"
+        assert process.stdin is not None
+        process.stdin.close()
+        assert process.wait(timeout=5) == 0
+    finally:
+        if process.poll() is None:
+            process.terminate()
+            process.wait(timeout=5)
