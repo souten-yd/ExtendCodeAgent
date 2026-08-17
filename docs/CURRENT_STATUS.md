@@ -14,6 +14,11 @@ The B0a quality target is now explicitly limited to three routes: ControlDeck-ma
 `You have exceeded your monthly quota` are provider-gap attempts, not quality outcomes; one further
 Codex cell was interrupted before recording.
 
+PR #76 merged the audit repair: the 714-cell screening now requires a sealed exact-head 162/162
+baseline report, and mixed checkpoint provenance is reported as 100 migrated plus 45 current-runner
+cells with legacy latency excluded. The current 145/162 report is therefore correctly blocked from
+starting screening.
+
 PRs A-I are merged and the implementation baseline is complete. Planning PRs
 [#20](https://github.com/souten-yd/ExtendCodeAgent/pull/20) and
 [#21](https://github.com/souten-yd/ExtendCodeAgent/pull/21) are also merged. All planning documents
@@ -118,11 +123,11 @@ port-8090 Qwen, host-default, GitHub Copilot Sonnet and GitHub Copilot Codex wit
 local-low remains `UNAVAILABLE`. OMO 4.19.4 + ECA model-free namespace/tool visibility recheck passed.
 This is a partial B0a checkpoint, not screening or confirmation evidence.
 
-The post-bootstrap runner defines a 306-cell full-tier `native`/`off` baseline and a 714-cell
-local-practical screen. The latter contains 294 paired active/ablation cells plus capability-specific
-D0-D4 arms only for semantic, impact, test selection and context. A synthetic test proves the
-two-PASS screening-table threshold. The old protocol stopped after 137/306 baseline cells; those
-cells measured OpenCode model variance and are diagnostic only, not PI effect.
+The current runner defines a 162-cell `native`/`off` baseline over the three requested quality routes
+and a 714-cell local-practical screen. The latter contains 294 paired active/ablation cells plus
+capability-specific D0-D4 arms only for semantic, impact, test selection and context. Screening is
+now fail-closed on a sealed exact-head 162/162 baseline report. The old 306-cell protocol and its
+137-cell partial run remain diagnostic history only.
 
 A corrected-head comprehensive baseline reached 229/306 before the host-default provider began
 returning `Rate limit exceeded`. OpenCode exhausted its retries immediately but the runner waited for
@@ -135,7 +140,8 @@ checkpoint remains immutable. The former whole-checkpoint discard decision is su
 sealed compatibility audit: a development-tree diagnostic classified 217 cells as functional reuse
 candidates, four as provider gaps and eight as timeouts. No cell migrates until a clean merged runner
 reproduces the audit and a 10–20-cell multi-provider Bridge Proof matches the affected classes.
-Migrated latency remains separate. See
+Migrated latency remains separate. The compatibility audit, Bridge proof and migration have since
+completed; this paragraph records why the immutable 229-cell source required that process. See
 `docs/evidence/final/b0a-provider-gap-runner-repair.json`.
 
 The first 12-cell Bridge run at merged head `7bfca0e` produced eight semantic matches: both

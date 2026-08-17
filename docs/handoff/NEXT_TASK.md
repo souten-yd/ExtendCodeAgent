@@ -80,7 +80,8 @@ running repetitions 2-3.
 That initial gate passed after PR #62, but confirmation encountered a 420-second Qwen runaway in an
 off-control at 14/27. Merge the sealed 8,192-token local-practical output bound, then use fresh
 activation and pilot paths; do not resume the superseded-seal report. Only a clean 27-cell
-`PROCEED_TO_COMPREHENSIVE` result permits the 306/714 schedules.
+`PROCEED_TO_COMPREHENSIVE` result permitted the then-current comprehensive schedules; the baseline
+denominator was subsequently corrected to 162 by the sealed three-route quality target.
 Use the completed limit pair (context 262,144/output 8,192), not the intermediate output-only
 configuration. After merge, prove it with real OpenCode activation before starting the fresh pilot.
 
@@ -101,17 +102,18 @@ its error log and remained alive until the task deadline. PR #66 at merged head 
 detection and classification. Do not directly resume or modify the 229-cell report. Audit it against
 the sealed compatibility manifest, run the required multi-provider Bridge Sample, migrate only
 validated functional results with provenance, rerun latest activation, and execute only remaining
-cells. Legacy runner latency stays separate. The 714-cell screen remains gated on 306 completion.
+cells. Legacy runner latency stays separate. The 714-cell screen is now mechanically gated on a
+sealed, exact-head 162/162 baseline report.
 
 The conditional B1 storage blocker is repaired at exact implementation head
 `fcd61dff6c66324fed970ecfb1d9b19cae2aa8f7`: KasaneCore and PEDS now pass three-run cold-index
-budgets. Keep that merged result, but restart the 306-cell baseline and PI-enabled screen from zero
-only after the activation gate, effect pilot and missing runtime-route repairs pass at one merged
-exact head. Do not resume or combine old-protocol cells with corrected-head evidence.
+budgets. That earlier restart-from-zero instruction is superseded by the sealed compatibility audit,
+Bridge proof and checkpoint migration. Continue only the current 162-cell target checkpoint; do not
+combine unaudited old-protocol cells with corrected-head evidence.
 
 The pre-activation baseline stopped after 137/306 cells at old exact head `86e8061`. Preserve it as
-diagnostic model-variance history only. After the activation/runtime-route repairs merge, rerun both
-baseline and screening from zero at one corrected exact head and protocol.
+diagnostic model-variance history only. Its former restart-from-zero instruction is superseded by the
+audited migration and current three-route checkpoint.
 
 Evaluation environment mandated by the user:
 
