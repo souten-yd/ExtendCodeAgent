@@ -2,10 +2,10 @@
 
 Updated: 2026-08-17 (Asia/Tokyo)
 
-Canonical branch: `agent/b0a-causal-correction-evidence`; synchronized merged base is
-`88d2e17a658d9e72bf320d1832c01e7d7ff86cf4` (PR #88)
+Canonical branch: `agent/b0b-heldout-confirmation-runner`; synchronized merged base is
+`eab71fbf466b15c0e637a2dadfc2baef3cc857a8` (PR #89)
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
-Current task: merge causal-correction evidence, then start B0b held-out confirmation
+Current task: merge the B0b held-out runner, then execute its sealed exact-main local-only plan
 
 ## Current authoritative checkpoint (2026-08-17)
 
@@ -71,8 +71,15 @@ Current task: merge causal-correction evidence, then start B0b held-out confirma
 - The repaired exact-main run completed at `88d2e17`: 58/58 accounted, 22 new calls, 13 compatible
   reused results, 23 adaptive skips, and 34/34 forced cells exact-trace compliant. The candidate union
   is `blueprint, graph, impact, semantic, strategy, test_obsolescence, test_selection, twin`.
-  Merge `docs/evidence/final/b0a-causal-correction-result-v1.json` and the canonical status updates;
-  then generate the exact-main B0b held-out plan without changing task/oracle/split/threshold.
+  PR #89 merged `docs/evidence/final/b0a-causal-correction-result-v1.json` and the canonical status
+  updates at `eab71fb`; B0b entry is satisfied.
+- The B0b runner implementation fixes a 57-cell local-only schedule over the three candidate-covered
+  held-out KasaneCore tasks and three required repetitions: 9 auto, 9 forced PI, 9 forced off and 30
+  forced ablations. Graph/Twin/Semantic receive nine pairs each and Test Selection three. Blueprint,
+  Impact, Strategy and Test Obsolescence are explicitly `NO_HELD_OUT_TASK_COVERAGE`; the unsafe task
+  has no candidate coverage. The existing absolute two-PASS threshold remains unchanged, forced use
+  is trace-verified fail-closed, auto selection is separate, and no promotion is emitted before the
+  Layer C budget gate. Merge this runner before generating the exact-main plan or making a Qwen call.
 
 The chronology below is retained as history. Its four-model/306-cell and three-model/162-cell
 statements describe superseded protocols and are not current execution instructions.

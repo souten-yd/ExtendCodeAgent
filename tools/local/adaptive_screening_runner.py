@@ -9,11 +9,13 @@ with one model process at a time and CPU-side preparation/finalization workers.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hashlib
 import json
 import math
 import os
 import shutil
+import signal
 import socket
 import subprocess
 import sys
@@ -833,13 +835,21 @@ def _agent_only(
         command.extend(["--attach", attach_url])
     command.append(instruction)
     started = time.monotonic()
-    stdout, stderr, process_exit, timed_out, step_limited, provider_failure = _run_opencode_limited(
-        command,
-        cwd=ROOT,
-        env=env,
-        timeout=task["timeout_seconds"],
-        step_limit=step_limit,
-    )
+    try:
+        stdout, stderr, process_exit, timed_out, step_limited, provider_failure = (
+            _run_opencode_limited(
+                command,
+                cwd=ROOT,
+                env=env,
+                timeout=task["timeout_seconds"],
+                step_limit=step_limit,
+            )
+        )
+        model_wall_ms = round((time.monotonic() - started) * 1000)
+    finally:
+        cleanup_started = time.monotonic()
+        sidecars_terminated = _stop_evaluation_sidecars(workspace)
+        sidecar_cleanup_wall_ms = round((time.monotonic() - cleanup_started) * 1000)
     return {
         "cell": cell,
         "task": task,
@@ -852,8 +862,58 @@ def _agent_only(
         "step_limited": step_limited,
         "provider_failure": provider_failure,
         "opencode_lifecycle": "persistent_attach" if attach_url else "per_cell_run",
-        "model_wall_ms": round((time.monotonic() - started) * 1000),
+        "model_wall_ms": model_wall_ms,
+        "evaluation_sidecars_terminated": sidecars_terminated,
+        "sidecar_cleanup_wall_ms": sidecar_cleanup_wall_ms,
     }
+
+
+def _sidecar_matches_workspace(cmdline: Sequence[str], workspace: Path) -> bool:
+    """Match only the evaluation sidecar rooted at one exact workspace."""
+
+    try:
+        module = cmdline.index("extendcodeagent.adapters.local_sidecar")
+        root_flag = cmdline.index("--root")
+        root_value = cmdline[root_flag + 1]
+    except (ValueError, IndexError):
+        return False
+    if module == 0 or cmdline[module - 1] != "-m":
+        return False
+    return Path(root_value).resolve(strict=False) == workspace.resolve(strict=False)
+
+
+def _evaluation_sidecar_pids(workspace: Path, proc_root: Path = Path("/proc")) -> list[int]:
+    pids: list[int] = []
+    for process_dir in proc_root.iterdir():
+        if not process_dir.name.isdigit():
+            continue
+        try:
+            raw = (process_dir / "cmdline").read_bytes()
+        except (FileNotFoundError, PermissionError, ProcessLookupError, OSError):
+            continue
+        cmdline = [item.decode(errors="replace") for item in raw.split(b"\0") if item]
+        if _sidecar_matches_workspace(cmdline, workspace):
+            pids.append(int(process_dir.name))
+    return sorted(pids)
+
+
+def _stop_evaluation_sidecars(workspace: Path) -> int:
+    """Bound one cell's sidecar lifetime without touching any other workspace."""
+
+    pids = _evaluation_sidecar_pids(workspace)
+    for pid in pids:
+        with contextlib.suppress(ProcessLookupError):
+            os.kill(pid, signal.SIGTERM)
+    deadline = time.monotonic() + 2.0
+    remaining = set(pids)
+    while remaining and time.monotonic() < deadline:
+        remaining = {pid for pid in remaining if Path(f"/proc/{pid}").exists()}
+        if remaining:
+            time.sleep(0.02)
+    for pid in remaining:
+        with contextlib.suppress(ProcessLookupError):
+            os.kill(pid, signal.SIGKILL)
+    return len(pids)
 
 
 def _atomic_json(path: Path, value: Mapping[str, Any]) -> None:
@@ -911,6 +971,8 @@ def _finalize_agent(
         "oracle_exit": oracle.returncode,
         "oracle_diagnostic": oracle.stderr.strip()[-500:],
         "model_wall_ms": raw["model_wall_ms"],
+        "evaluation_sidecars_terminated": raw.get("evaluation_sidecars_terminated", 0),
+        "sidecar_cleanup_wall_ms": raw.get("sidecar_cleanup_wall_ms", 0),
         "oracle_wall_ms": oracle_wall_ms,
         "wall_ms": raw["model_wall_ms"] + oracle_wall_ms,
         "limit_reason": "STEP_LIMIT_P99_MARGIN" if raw["step_limited"] else None,
