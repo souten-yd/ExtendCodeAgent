@@ -1,5 +1,15 @@
 # Known Issues
 
+## B0a screening classifications are not promotion or general-model evidence
+
+- B0a completed with six local-practical B0b candidates, two `no screened effect` capabilities and
+  five `NOT_TESTED_NO_ACTIVE_USE` capabilities. The latter state is unexercised, not zero effect.
+- The 22 compatible reused results include five historical timeouts; this is retained outcome
+  history, while the 30 newly executed cells had no timeout. B0b confirmation must use the unchanged
+  held-out split and full repetitions before any promotion/demotion decision.
+- All current claims remain bounded to `active-scoped(local-practical)`. B0a provides no evidence for
+  frontier, host-default, local-low, or general-model effectiveness.
+
 ## Shared GitHub Copilot monthly quota defers 17 historical Codex cells
 
 - Exact-head activation proved this is the GitHub Copilot provider's shared monthly quota: both

@@ -1,0 +1,147 @@
+{
+  "schema": 1,
+  "classification": "B0A_ADAPTIVE_SCREENING_COMPLETE",
+  "captured_at": "2026-08-17T14:42:32+09:00",
+  "source_revision": "e793103f459dde0947fc43f25720f93db61d2ba8",
+  "execution_scope": "local-only",
+  "model": "Qwen3.6 27B",
+  "endpoint": "127.0.0.1:8090",
+  "context": 262144,
+  "output_limit": 8192,
+  "claim_scope": "B0B_CANDIDATES_ONLY_ACTIVE_SCOPED_LOCAL_PRACTICAL",
+  "promotion_or_demotion_decision": false,
+  "contract": {
+    "policy": "docs/evaluation/b0a-adaptive-screening-policy-v1.json",
+    "policy_seal": "d10358015eed5ae3023511b0a4f77d2a7eccb862e7e613837d7b85fdb0d27b9c",
+    "tasks_changed": false,
+    "oracle_changed": false,
+    "corpus_changed": false,
+    "capabilities_changed": false,
+    "effect_threshold_changed": false,
+    "hard_maximum_cells": 714
+  },
+  "plan": {
+    "path": ".evaluation/unified-v1/b0a-adaptive-plan-e793103.json",
+    "sha256": "067f81a247393e45345cda40f03255f6d45a6ed734331c8eafb2051591459d74",
+    "seal": "b301bb877c63661e83bc80c0582b8d82ff12bc0c61a410c94200e2a15b6a658b",
+    "adaptive_candidate_max_cells": 102,
+    "expected_total_before_first_decision": 50,
+    "expected_reused_before_first_decision": 23,
+    "expected_new_calls_before_first_decision": 27,
+    "maximum_new_calls": 79
+  },
+  "result": {
+    "path": ".evaluation/unified-v1/b0a-adaptive-screening-e793103.json",
+    "sha256": "cee7fc2d629c6214b74165dc69cc56cf1253ac3a38f3e7568317e489da75245a",
+    "seal": "8f56d682c288649acacf0a6a15fc637d01d9756dffea6295040da81003e7ee09",
+    "trace_sha256": "28e52b8379c04e136b0d4dd0bed58fb8d0870373657ae29d0ccb208888169562",
+    "unique_cells_accounted": 714,
+    "executed_or_reused_results": 52,
+    "new_llm_calls": 30,
+    "reused_results": 22,
+    "llm_calls_avoided": 684,
+    "avoided_call_ratio": 0.957983,
+    "provider_attempts": 0,
+    "provider_gap_pending": false
+  },
+  "outcomes": {
+    "new": {"PASS": 6, "FAIL": 24, "TIMEOUT": 0, "UNAVAILABLE": 0},
+    "reused": {"PASS": 9, "FAIL": 8, "TIMEOUT": 5, "UNAVAILABLE": 0},
+    "combined": {"PASS": 15, "FAIL": 32, "TIMEOUT": 5, "UNAVAILABLE": 0},
+    "skipped_cells_are_outcomes": false
+  },
+  "skip_counts": {
+    "NOT_TESTED_NO_ACTIVE_USE": 534,
+    "SKIPPED_DEPTH_OUTPUT_EQUIVALENT": 78,
+    "REUSED_COMPATIBLE_EVIDENCE": 22,
+    "NOT_TESTED_ACTIVE_NOT_PASS": 24,
+    "SKIPPED_EARLY_POSITIVE": 12,
+    "SKIPPED_SEQUENTIAL_NO_REMAINING_SIGNAL": 4,
+    "SKIPPED_ADAPTIVE_FRONTIER_CLOSED": 10
+  },
+  "screening_decisions": {
+    "proceed_to_b0b": [
+      "graph",
+      "twin",
+      "semantic",
+      "impact",
+      "test_selection",
+      "test_obsolescence"
+    ],
+    "no_screened_effect": ["blueprint", "strategy"],
+    "not_tested_no_active_use": [
+      "context",
+      "runtime",
+      "convergence",
+      "research",
+      "traceability"
+    ],
+    "interpretation": "Screening candidates only. Proceed does not promote; no screened effect does not demote; not tested is not no effect."
+  },
+  "depth_decisions": {
+    "minimum_sufficient": {
+      "semantic:cd-bug-001": "D0",
+      "test_selection:eca-tests-001": "D0"
+    },
+    "no_sufficient_depth": [
+      "impact:eca-impact-001",
+      "impact:eca-tests-001",
+      "semantic:cd-cross-boundary-001",
+      "semantic:eca-impact-001",
+      "semantic:eca-symbol-001"
+    ],
+    "D3_D4_calls_for_D2_equivalent_output": 0
+  },
+  "limits_observed": {
+    "derived_step_limit": 24,
+    "maximum_new_steps": 20,
+    "derived_output_limit": 4668,
+    "maximum_new_output_tokens": 4607,
+    "new_step_limited_cells": 0,
+    "new_timeout_cells": 0,
+    "accuracy_or_oracle_weakened": false
+  },
+  "efficiency": {
+    "llm_calls_requested": 714,
+    "llm_calls_executed": 30,
+    "llm_calls_avoided": 684,
+    "avoided_call_ratio": 0.957983,
+    "input_tokens": 1246135,
+    "output_tokens": 105016,
+    "reasoning_tokens": 0,
+    "deterministic_resolution_ratio": 0.904762,
+    "escalation_rate": 0.042017,
+    "average_context_tokens": 25066.367,
+    "max_context_tokens": 64054,
+    "model_wall_time_ms": 3663284,
+    "deterministic_pi_worker_wall_time_ms": 296769.872,
+    "total_wall_time_ms": 3667392.223,
+    "actual_new_cell_per_second": 0.008189,
+    "reused_evidence_count": 22,
+    "invalidated_evidence_count": 1
+  },
+  "workspace_and_lifecycle": {
+    "workspace_strategy": "git_worktree",
+    "model_parallelism": 1,
+    "persistent_opencode_adopted": false,
+    "shared_runner_venv_unchanged": true
+  },
+  "next": {
+    "stage": "B0b",
+    "model_scope": "local-practical-only",
+    "split": "held-out-repository",
+    "capabilities": [
+      "graph",
+      "twin",
+      "semantic",
+      "impact",
+      "test_selection",
+      "test_obsolescence"
+    ],
+    "rules": "Use the existing repetition, held-out split, oracle and promotion/demotion contract."
+  },
+  "seal": {
+    "algorithm": "sha256",
+    "canonical_payload": "09e5ac000f204c4b2578439957b03cfd1d3157f685bfe96eba8506d27228e1e0"
+  }
+}

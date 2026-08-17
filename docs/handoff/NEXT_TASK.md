@@ -19,32 +19,38 @@ Do not schedule work from the legacy identifiers (`RV-x`, `TA-x`, `AL-x`, `CV-x`
 
 ## Current stage
 
-**Phase 1 — B0a: environment, integration and screening.**
+**Phase 1 — B0b: confirmation and gap report.**
 
-Entry conditions satisfied: E1-E5 and V0a are complete. The sealed Layer A/Layer B inputs, fixed
-matrix, resumable runner, verification projection and attributable append-only trace are available.
+Entry conditions satisfied: B0a completed against exact merged head `e793103` and produced its
+screening table without a promotion or demotion decision. The only candidates that proceed are
+`graph`, `twin`, `semantic`, `impact`, `test_selection`, and `test_obsolescence`.
 
 Scope:
 
-- freeze ECA/OpenCode/provider/model/repository/workspace/hardware identities;
-- establish Existing Project Bootstrap conformance for every evaluation repository before any arm
-  runs; exclude and report bootstrap failures instead of attributing them to a capability;
-- rerun lint, typecheck, unit, integration, build and adapter/plugin/MCP lifecycle paths;
-- retain prior provider failures as classified history and run the blocking OMO coexistence smoke;
-- pass the exact-head PI activation gate on port-8090 Qwen, including observed tool
-  use/Twin/provenance; classify every capability route and repair any missing route before local
-  comprehensive execution;
-- run the interleaved 9-cell port-8090 `native/off/active` pilot tranche; only a passing signal may
-  continue to 27-cell confirmation, while no effect, missing PI use, provider/timeout failure or
-  abnormal active latency requires repair and repeat;
-- fix and version the B0a tuning subset, effect threshold and one assigned model tier per ablation;
-- promote the 54-cell local-practical `native`/`off` baseline through compatibility evidence, then
-  run only proven residual baseline cells and the adaptive screening pass bounded by the sealed
-  714-cell hard maximum;
-- emit the screening table with `proceed` or `no screened effect`, without promotion/demotion.
+- use only ControlDeck-managed Qwen3.6 27B at `127.0.0.1:8090`, context 262,144, with the existing
+  local-practical limits; make no Copilot or host-default call or availability probe;
+- confirm only the six screened-through capabilities on the sealed held-out KasaneCore split, using
+  the existing repetition count, task/oracle contract, effect threshold and promotion/demotion rule;
+- apply Minimum Sufficient Reasoning before calls while preserving the confirmation contract:
+  deterministic active-use/relevance evidence may avoid irrelevant calls, but every unexercised or
+  stopped cell must retain a machine-readable non-outcome classification;
+- measure the competition concerns, cross-boundary GUI/runtime follow-through and V0a
+  required-verification-set quality required by Master Plan B0b;
+- produce `docs/evidence/final/baseline-gap-report.md`, including classified failures, ranked gaps,
+  later-stage skip/keep decisions and the section 10.2 program-level criteria;
+- bound every claim to `active-scoped(local-practical)`; no frontier, host-default, local-low or
+  general-model claim is permitted.
 
-Exit evidence: frozen environment and bootstrap records, classified integration results, and a
-screening table naming which capabilities proceed to B0b. See master plan sections 7.5 and 8.
+Entry evidence is sealed in `docs/evidence/final/b0a-adaptive-screening-result-v1.json`. It accounts
+for all 714 cells with 30 new calls, 22 compatible reused results, and 684 machine-classified avoided
+calls. `blueprint` and `strategy` are `no screened effect`; `context`, `runtime`, `convergence`,
+`research`, and `traceability` are `NOT_TESTED_NO_ACTIVE_USE`, not no effect.
+
+Exit evidence and rules are exactly those in Master Plan sections 7.5, 8 B0b and 10.2. Do not widen
+the held-out split or redesign the matrix, tasks, oracle, corpus, capabilities or threshold.
+
+The B0a execution notes below are retained as immutable history and are not current scheduling
+instructions.
 
 The pre-run contract is sealed in `docs/evaluation/b0a-screening-plan-v1.json`. Use
 `tools/local/b0a-bootstrap` to acquire exact pins and emit the initial per-repository baseline; do
@@ -70,8 +76,8 @@ reused cells, 27 expected new calls before the first decision and 79 maximum new
 OpenCode failed oracle-equivalence/speedup adoption and must not be used. After merge, regenerate the
 model-free plan at exact main, then run the per-cell adaptive frontier with `--resume`.
 
-The chronology below is retained as immutable history. Its 306-, 162-, and 145-cell instructions are
-superseded by quality-target v2 and are not current execution instructions.
+The deeper chronology below is retained as immutable history. Its 306-, 162-, and 145-cell
+instructions are superseded by quality-target v2 and are not current execution instructions.
 
 The runner has two comprehensive resumable schedules: `b0a-baseline` has 162 cells across the three
 quality targets (ControlDeck-managed Qwen, GitHub Copilot Sonnet, and GitHub Copilot Codex)
@@ -167,8 +173,8 @@ prompt or transcript. See `docs/evidence/final/e5-trace-proof.json`.
 - **E5** minimal PI trace as evaluation infrastructure — done, including explicit
   planned-versus-observed state provenance and reserved `used_features` shape.
 
-**B0a** environment/integration freeze and screening is current; B0b confirmation follows only for
-capabilities that screen through.
+**B0a** environment/integration freeze and adaptive screening is complete. **B0b** confirmation is
+current and includes only the six screened-through capabilities above.
 
 ## Ablation arms available after E1
 
@@ -197,7 +203,7 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/b0a-baseline-screening
+git switch -c agent/b0b-local-confirmation
 ```
 
 Update `CURRENT_HANDOFF.md` after each stage.

@@ -2,10 +2,10 @@
 
 Updated: 2026-08-17 (Asia/Tokyo)
 
-Canonical branch: `agent/b0a-adaptive-screening`; synchronized merged base is
-`80ac08d8e55dda1945997787ef874e0921506991` (PR #81)
+Canonical branch: `agent/b0a-adaptive-screening-evidence`; synchronized merged base is
+`e793103f459dde0947fc43f25720f93db61d2ba8` (PR #82)
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
-Current task: merge adaptive B0a execution, then run the gated local-practical adaptive screen
+Current task: close B0a evidence, then run B0b local-practical held-out confirmation
 
 ## Current authoritative checkpoint (2026-08-17)
 
@@ -19,17 +19,29 @@ Current task: merge adaptive B0a execution, then run the gated local-practical a
 - The exact-head, trace-complete 54/54 local baseline is sealed. The preserved old screening
   checkpoint remains immutable at 24/714; adaptive migration reuses only compatible cells and does
   not delete or rewrite the old checkpoint/raw evidence.
-- Promote the existing Qwen 54/54 through compatibility audit, Bridge Proof and checkpoint migration,
-  run only proven residual cells, then create an exact-head model-free adaptive plan. It must record
-  active-use relevance, D0-D4 output equivalence, expected/max calls, empirical limits, workspace
-  strategy and skip reasons before any new Qwen inference. Do not probe or substitute another model.
+- The existing Qwen 54/54 was promoted through compatibility audit, Bridge Proof and checkpoint
+  migration. The exact-head model-free plan recorded active-use relevance, D0-D4 output equivalence,
+  expected/max calls, empirical limits, workspace strategy and skip reasons before new inference.
+  No other model was probed or substituted.
 - Development-tree preflight reduced the 714 hard maximum to 102 adaptive candidates, with 534
   `NOT_TESTED_NO_ACTIVE_USE` and 78 depth-equivalent skips. One of 24 old results accessed the shared
   runner `.venv` and is invalid under the corrected isolation contract. Clean commit `6cbacaf`
   reproduced 23 reusable cells, 27 expected new calls before the first decision and 79 maximum new
   calls. The one-call persistent OpenCode Bridge was oracle-inconsistent and 23.7% slower, so retain
   per-cell `opencode run`. Evidence: `docs/evidence/final/b0a-adaptive-screening-execution-v1.json`.
-  Regenerate the model-free plan at merged main before starting the model frontier.
+  The exact-main model-free plan and adaptive frontier then completed as recorded below.
+- Exact-main adaptive screening is complete. The 714-cell contract is fully accounted for by 30 new
+  calls, 22 compatible reused results and 684 machine-classified avoided calls. There were no
+  provider gaps, new timeouts or step-limit terminations. The observed call-avoidance ratio is
+  95.7983%; the oracle and effect threshold were unchanged.
+- `graph`, `twin`, `semantic`, `impact`, `test_selection`, and `test_obsolescence` proceed as B0b
+  candidates only. `blueprint` and `strategy` recorded no screened effect. `context`, `runtime`,
+  `convergence`, `research`, and `traceability` remain `NOT_TESTED_NO_ACTIVE_USE`; they are not
+  classified as no effect. No B0a result promotes or demotes a capability.
+- Next, use the unchanged held-out KasaneCore split, repetition count, oracle and decision rules for
+  B0b, with local-practical Qwen as the sole model route and claim scope bounded to
+  `active-scoped(local-practical)`. Evidence:
+  `docs/evidence/final/b0a-adaptive-screening-result-v1.json`.
 
 The chronology below is retained as history. Its four-model/306-cell and three-model/162-cell
 statements describe superseded protocols and are not current execution instructions.
@@ -416,15 +428,17 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/b0a-baseline-screening
+git switch -c agent/b0b-local-confirmation
 ```
 
-Start B0a by recording Existing Project Bootstrap conformance per evaluation repository. Then freeze
-the exact environment, rerun integration/coexistence gates, and version the screening subset,
-threshold and model-tier assignments before executing any screening cells.
+Start B0b from the sealed B0a screening table. Generate the local-practical-only confirmation
+schedule for the six candidates against the existing held-out KasaneCore split and full required
+repetitions. Preserve task/oracle/corpus/effect and promotion/demotion semantics; use deterministic
+relevance and prior compatible evidence only where the existing contract permits it, with explicit
+non-outcome reasons for every call not executed.
 
-Rollback path: switch to synchronized `main`. E5 adds evaluation-only trace infrastructure and does
-not change default capability modes or add durable Project Evidence Memory.
+Rollback path: switch to synchronized `main`. B0a changed evaluation scheduling only; it did not
+change default capability modes, task/oracle truth, or add a competing evidence store.
 
 ## Stage V0a — complete on this branch
 

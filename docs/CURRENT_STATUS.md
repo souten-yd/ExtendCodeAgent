@@ -4,7 +4,7 @@ Status date: 2026-08-17
 
 ## Program state
 
-Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0a IN PROGRESS**
+Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0a COMPLETE — B0b NEXT**
 
 The active `b0a-quality-target-v2` progression target is the ControlDeck-managed `local-practical`
 Qwen route only.
@@ -13,6 +13,13 @@ the existing sealed 714-cell exhaustive maximum.
 Sonnet/Codex are `NOT_RUN_USER_POLICY / SHARED_QUOTA_EXHAUSTED`, `host-default` is
 `NOT_RUN_USER_POLICY`, and `local-low` is `UNAVAILABLE / NOT_CONFIGURED`. No new call or probe and no
 claim is permitted for those tiers while the local-only exception is active.
+
+B0a adaptive screening completed at exact merged head `e793103`: 30 new Qwen calls plus 22 reused
+results accounted for the full 714-cell contract together with 684 machine-classified avoided calls
+(95.7983%). Six capabilities proceed only as B0b candidates: graph, twin, semantic, impact,
+test-selection and test-obsolescence. Blueprint and Strategy had no screened effect; Context,
+Runtime, Convergence, Research and Traceability remain `NOT_TESTED_NO_ACTIVE_USE`. No capability was
+promoted or demoted. See `docs/evidence/final/b0a-adaptive-screening-result-v1.json`.
 
 The prior three-route checkpoint remains immutable history: Qwen 54/54, Sonnet 54/54, Codex 37/54,
 145/162 overall, with 17 Codex cells blocked by quota. It is not the current local-first denominator
@@ -111,9 +118,9 @@ for the `call_graph` folding and the `ConfigError` policy: `docs/handoff/DECISIO
 
 ## Immediate next action
 
-Phase 1, stage B0a: freeze the evaluation environment, establish Existing Project Bootstrap
-conformance per repository, rerun the integration gates, fix the screening subset/effect threshold/
-model-tier assignments, and execute the baseline plus screening cells. See
+Phase 1, stage B0b: confirm only the six B0a candidates on the unchanged held-out KasaneCore split
+with local-practical Qwen, the existing repetition count, oracle and promotion/demotion rules. Keep
+the claim bounded to `active-scoped(local-practical)` and produce the B0 gap report. See
 `docs/handoff/NEXT_TASK.md`.
 
 The first B0a bootstrap checkpoint attempted all nine pinned repositories: seven established a Twin,

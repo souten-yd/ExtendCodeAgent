@@ -745,3 +745,19 @@
   and could classify the unavailable attempt as a completed cell. Provider attempts are now stored
   separately, the cell remains pending, and the entire adaptive frontier stops without another
   model call. Final integration count is 61 Python plus 9 adapter tests.
+- PR #82 merged the adaptive implementation as exact main `e793103`. Exact-head deterministic
+  planning recorded 714 hard-maximum cells, 102 adaptive candidates, 50 expected total results at
+  the first decision (23 reusable plus 27 expected new), and 79 maximum new calls.
+- The exact-main frontier completed with 30 new Qwen calls and 22 compatible reused results. All 714
+  contract cells are accounted for; 684 calls were avoided with machine-readable reasons, for a
+  95.7983% avoided-call ratio. No new timeout, provider gap, or step-limit termination occurred.
+- Screening sent `graph`, `twin`, `semantic`, `impact`, `test_selection`, and `test_obsolescence` to
+  B0b as candidates only. `blueprint` and `strategy` recorded no screened effect, while five other
+  capabilities remained `NOT_TESTED_NO_ACTIVE_USE`. No promotion or demotion was taken, and the
+  task suite, oracle, corpus, capability set and effect threshold were unchanged.
+- New-call outcomes were 6 PASS and 24 FAIL. The run consumed 1,246,135 input and 105,016 output
+  tokens over 3,663,284ms model wall time; total wall time was 3,667,392ms. Maximum observed steps
+  and output were 20 and 4,607, below the evidence-derived 24/4,668 screening limits.
+- B0a closeout gates passed: `tools/local/all-fast` (199 Python plus 9 adapter),
+  `tools/local/test-integration` (61 Python plus 9 adapter), `tools/local/build`, evidence seal
+  verification and `git diff --check`.
