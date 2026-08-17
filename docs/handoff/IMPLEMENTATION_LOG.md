@@ -961,3 +961,8 @@ correction below because its active-trace relevance would have mixed efficacy wi
 - Adaptive/causal compatibility now also inspects dirty worktree semantics. The runtime-hook and
   normalizer changes invalidate affected old-head product compatibility; the sealed lifecycle-only
   exception is unchanged.
+- Clean repair head `3104d57` passed the zero-model five-stack/restart preflight and both degraded-
+  sidecar orders (seal `f184a3f39eb93cac4352c922602196a8c512beda8b0389b05494973dfd82955b`).
+  Full validation passes `tools/local/all-fast` (208 Python plus 10 adapter),
+  `tools/local/test-integration` (92 Python plus 10 adapter), `tools/local/build` and
+  `git diff --check`.
