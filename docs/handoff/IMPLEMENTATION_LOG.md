@@ -909,3 +909,21 @@ correction below because its active-trace relevance would have mixed efficacy wi
   stage decisions are in `docs/evidence/final/baseline-gap-report.md`. Closeout validation passes
   `tools/local/all-fast` (208 Python plus 9 adapter), `tools/local/test-integration` (79 Python plus 9
   adapter), `tools/local/build` and `git diff --check`.
+
+## 2026-08-17 — B2 coexistence runner
+
+- Added a sealed B2 runner for the existing OMO-C0 contract. It fixes five independent stacks:
+  native OpenCode, ECA, OMO 4.19.4, OMO→ECA and ECA→OMO. Team Mode is explicitly off and every stack
+  receives its own ephemeral HOME/XDG profile, workspace, server and session.
+- Model-free preflight checks unique tool IDs, exact `pi_*`/OMO visibility, absence of `team_*`,
+  deterministic shell verification, one ECA runtime observation, clean sidecar shutdown, session/tool
+  recovery after restart, and OMO usability when the ECA sidecar is unavailable in both plugin orders.
+- Only a passing sealed preflight can open the five-stack coding/verification Bridge. Every request is
+  fixed to Qwen3.6 27B on `127.0.0.1:8090`; Copilot/host-default credentials are removed from child
+  environments, external OMO MCPs and telemetry are disabled, inference stays serial, and exact
+  route/tokens/tool-call uniqueness/oracle/changed-files are recorded. A non-inference `/v1/models`
+  check precedes every stack; provider/request gaps stop the run immediately, while atomic per-stack
+  checkpoints allow completed reasoning to be reused with `--resume`. Context metrics use full
+  `input + cache-read + cache-write` request size and retain p50/p90/p95/p99/max distributions.
+- Corrected the coexistence design header: B2 owns bounded compatibility; P4 still owns the four-way
+  comparative benefit claim. No OMO/OpenCode patch or ECA orchestration copy is introduced.
