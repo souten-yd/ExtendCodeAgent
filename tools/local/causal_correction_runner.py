@@ -443,9 +443,19 @@ def _append_missing_traces(
 ) -> None:
     """Keep immutable source traces when compatible results are reclassified."""
 
-    traced_cells = {trace.cell_id for trace in trace_log.replay()}
+    traced_cells = {trace.cell_id: trace for trace in trace_log.replay()}
     for result in results.values():
-        if result["cell_id"] not in traced_cells:
+        source_trace = traced_cells.get(result["cell_id"])
+        if source_trace is not None:
+            if (
+                source_trace.task_id != result["task_id"]
+                or source_trace.model_id != result.get("model_id")
+                or source_trace.verification_outcome != result["outcome"]
+            ):
+                raise CausalCorrectionError(
+                    f"migrated result conflicts with source trace: {result['cell_id']}"
+                )
+        else:
             legacy._append_trace(trace_log, result, tasks[result["task_id"]])
 
 

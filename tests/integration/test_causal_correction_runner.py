@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import pytest
 from pytest import MonkeyPatch
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -158,3 +159,7 @@ def test_compatible_reclassification_keeps_existing_immutable_trace(tmp_path: Pa
     replayed = trace.replay()
     assert len(replayed) == 1
     assert replayed[0].timings_ms["agent_wall"] == 100
+
+    migrated["outcome"] = "PASS"
+    with pytest.raises(runner.CausalCorrectionError, match="conflicts with source trace"):
+        runner._append_missing_traces(trace, {cell["cell_id"]: migrated}, tasks)
