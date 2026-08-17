@@ -16,11 +16,10 @@ export function createTools(request: Requester): Record<string, ToolDefinition> 
   return {
     pi_status: tool({
       description:
-        "Show ExtendCodeAgent Project Intelligence status, graph revision, and the " +
-        "implementation state and rollout mode of every declared capability.",
+        "Show compact ExtendCodeAgent readiness, graph revision, and configured capability bounds.",
       args: {},
       async execute() {
-        return jsonResult(await request("status"))
+        return jsonResult(await request("status", { view: "compact" }))
       },
     }),
     pi_symbol: tool({
@@ -82,22 +81,29 @@ export function createTools(request: Requester): Record<string, ToolDefinition> 
       },
     }),
     pi_context: tool({
-      description: "Build bounded revision-aware Project Intelligence context.",
+      description:
+        "Build a minimum task-relevant evidence envelope. Start at the inferred/explicit smallest " +
+        "scope and request a broader scope only for an unresolved evidence gap.",
       args: {
         objective: z.string().min(1),
         target_refs: z.array(z.string()).optional(),
         profile: z.enum(["standard", "weak"]).optional(),
         token_budget: z.number().int().positive().optional(),
+        scope: z
+          .enum(["symbol", "neighborhood", "impact", "verification", "subsystem"])
+          .optional(),
+        prior_evidence_ids: z.array(z.string()).optional(),
+        unresolved_gaps: z.array(z.string()).optional(),
       },
       async execute(args) {
-        return jsonResult(await request("context", args))
+        return jsonResult(await request("context", { ...args, view: "envelope" }))
       },
     }),
     pi_runtime_evidence: tool({
       description: "Show bounded revision-aware runtime evidence.",
       args: { refs: z.array(z.string()).optional() },
       async execute(args) {
-        return jsonResult(await request("runtime_evidence", args))
+        return jsonResult(await request("runtime_evidence", { ...args, view: "compact" }))
       },
     }),
     pi_research_plan: tool({

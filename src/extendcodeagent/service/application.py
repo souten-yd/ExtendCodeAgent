@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 import time
 from datetime import UTC, datetime
@@ -24,7 +25,16 @@ from extendcodeagent.blueprint import (
     BlueprintView,
 )
 from extendcodeagent.blueprint.storage import SqliteBlueprintRepository
-from extendcodeagent.context import ContextProfile, ContextRequest, build_context
+from extendcodeagent.context import (
+    ContextProfile,
+    ContextRequest,
+    EvidenceScope,
+    WeakLocalEvidencePackage,
+    WeakLocalEvidenceRequest,
+    build_context,
+    build_weak_local_evidence,
+    stable_evidence_envelope,
+)
 from extendcodeagent.convergence import (
     ActualSnapshot,
     ConvergenceRecommendation,
@@ -188,10 +198,12 @@ class ProjectIntelligenceApplication:
         if self._request_timing is not None:
             self._request_timing[name] = self._request_timing.get(name, 0.0) + elapsed
 
-    def status(self) -> dict[str, Any]:
+    def status(self, *, view: str = "detail") -> dict[str, Any]:
+        if view not in {"compact", "detail"}:
+            raise ValueError("view must be compact or detail")
         mode = self.policy.mode(CapabilityName.GRAPH)
         if mode is RolloutMode.OFF:
-            return {
+            result = {
                 "interface": INTERFACE_VERSION,
                 "depth": None,
                 "readiness": "disabled",
@@ -201,8 +213,9 @@ class ProjectIntelligenceApplication:
                 "edges": 0,
                 "capabilities": self._capability_status(),
             }
+            return self._compact_status(result) if view == "compact" else result
         snapshot = self._load_snapshot(self._ensure_twin())
-        return {
+        result = {
             "interface": INTERFACE_VERSION,
             "depth": None,
             "readiness": "ready" if snapshot.revision else "absent",
@@ -211,6 +224,37 @@ class ProjectIntelligenceApplication:
             "nodes": len(snapshot.nodes),
             "edges": len(snapshot.edges),
             "capabilities": self._capability_status(),
+        }
+        if view == "compact":
+            return self._compact_status(result)
+        if view != "detail":
+            raise ValueError("view must be compact or detail")
+        return result
+
+    def _compact_status(self, result: dict[str, Any]) -> dict[str, Any]:
+        capabilities = result["capabilities"]
+        assert isinstance(capabilities, list)
+        configured = [
+            {
+                "name": item["name"],
+                "mode": item["mode"],
+                "depth": item["depth"],
+                "implementation": item["implementation"],
+            }
+            for item in capabilities
+            if item["implementation"] == "implemented" and item["name"] != "call_graph"
+        ]
+        return {
+            "interface": result["interface"],
+            "readiness": result["readiness"],
+            "mode": result["mode"],
+            "revision_id": result["revision_id"],
+            "nodes": result["nodes"],
+            "edges": result["edges"],
+            "capabilities": configured,
+            "omitted_unimplemented_capabilities": sum(
+                item["implementation"] != "implemented" for item in capabilities
+            ),
         }
 
     def _capability_status(self) -> list[dict[str, Any]]:
@@ -479,12 +523,14 @@ class ProjectIntelligenceApplication:
         )
 
     def _compact_symbol(self, snapshot: GraphSnapshot, matches: list[Any]) -> dict[str, Any]:
+        compact_limit = min(self.max_items, 24)
         definitions = [
             node
             for node in matches
             if node.node_type
             not in {"repository", "directory", "file", "module", "package", "dependency", "test"}
         ] or matches
+        definitions = definitions[:compact_limit]
         refs = tuple(node.canonical_ref.value for node in definitions)
         analysis = self._analysis_service(snapshot)
         report = (
@@ -527,17 +573,24 @@ class ProjectIntelligenceApplication:
             for path in candidate_tests
             if "architecture" not in Path(path).parts or path in intent_architecture
         )
+        fields = {
+            "symbols": sorted(refs),
+            "definition": sorted({node.source_ref for node in definitions}),
+            "exports": exports,
+            "production_callers": production_callers,
+            "tests": tests,
+        }
+        bounded = {name: values[:compact_limit] for name, values in fields.items()}
+        excluded = {name: len(values) - len(bounded[name]) for name, values in fields.items()}
         return _result(
             snapshot,
             depth=self.policy.depth(CapabilityName.SEMANTIC),
             view="compact",
-            symbols=list(refs),
-            definition=sorted({node.source_ref for node in definitions}),
-            exports=exports,
-            production_callers=production_callers,
-            tests=tests,
+            **bounded,
             coverage_complete=False,
             unresolved=["structural/architecture tests may not be represented by call relations"],
+            projection_truncated=any(excluded.values()),
+            excluded_counts=excluded,
         )
 
     def _compact_impact(
@@ -753,7 +806,9 @@ class ProjectIntelligenceApplication:
         if signals is not None:
             self._shadow_plan = create_shadow_plan(signals, self.policy)
 
-    def runtime_evidence(self, refs: tuple[str, ...] = ()) -> dict[str, Any]:
+    def runtime_evidence(
+        self, refs: tuple[str, ...] = (), *, view: str = "detail"
+    ) -> dict[str, Any]:
         if not self.policy.allows_explicit_use(CapabilityName.RUNTIME):
             raise CapabilityUnavailable("runtime is not available for explicit use")
         snapshot = self._snapshot(open_if_missing=True)
@@ -762,6 +817,30 @@ class ProjectIntelligenceApplication:
             refs=tuple(CanonicalRef(item) for item in refs),
             limit=self.max_items,
         )
+        if view == "compact":
+            revision = snapshot.revision.source_revision.value if snapshot.revision else None
+            return {
+                "interface": INTERFACE_VERSION,
+                "source_revision": revision,
+                "depth": self.policy.depth(CapabilityName.RUNTIME).value,
+                "items": [
+                    {
+                        "id": item.observation_id,
+                        "kind": item.kind.value,
+                        "status": item.status.value,
+                        "refs": [ref.value for ref in item.observed_refs],
+                        "tool": item.tool,
+                        "summary": item.summary[:256],
+                    }
+                    for item in observations
+                ],
+                "selected_evidence_ids": [item.observation_id for item in observations],
+                "unresolved_evidence_gaps": (
+                    [] if observations else ["no_matching_runtime_evidence"]
+                ),
+            }
+        if view != "detail":
+            raise ValueError("view must be compact or detail")
         return _result(
             snapshot,
             depth=self.policy.depth(CapabilityName.RUNTIME),
@@ -775,9 +854,29 @@ class ProjectIntelligenceApplication:
         *,
         profile: str = "standard",
         token_budget: int = 2_000,
+        view: str = "detail",
+        scope: str | None = None,
+        prior_evidence_ids: tuple[str, ...] = (),
+        unresolved_gaps: tuple[str, ...] = (),
     ) -> dict[str, Any]:
         snapshot = self._explicit_snapshot(CapabilityName.CONTEXT)
-        package = build_context(
+        if view == "envelope":
+            weak_package = build_weak_local_evidence(
+                snapshot,
+                WeakLocalEvidenceRequest(
+                    objective,
+                    tuple(CanonicalRef(item) for item in target_refs),
+                    token_budget,
+                    min(self.max_items, 32),
+                    scope=EvidenceScope(scope) if scope is not None else None,
+                    prior_evidence_ids=prior_evidence_ids,
+                    unresolved_gaps=unresolved_gaps,
+                ),
+            )
+            return _weak_local_evidence_json(weak_package)
+        if view != "detail":
+            raise ValueError("view must be detail or envelope")
+        context_package = build_context(
             snapshot,
             ContextRequest(
                 objective,
@@ -790,11 +889,11 @@ class ProjectIntelligenceApplication:
         return _result(
             snapshot,
             depth=self.policy.depth(CapabilityName.CONTEXT),
-            items=[_context_json(item) for item in package.items],
-            used_tokens=package.used_tokens,
-            token_budget=package.token_budget,
-            truncated=package.truncated,
-            excluded_count=package.excluded_count,
+            items=[_context_json(item) for item in context_package.items],
+            used_tokens=context_package.used_tokens,
+            token_budget=context_package.token_budget,
+            truncated=context_package.truncated,
+            excluded_count=context_package.excluded_count,
         )
 
     def create_blueprint(
@@ -1587,4 +1686,66 @@ def _context_json(item: Any) -> dict[str, Any]:
         },
         "token_estimate": item.token_estimate,
         "status": item.status,
+    }
+
+
+def _weak_local_evidence_json(package: WeakLocalEvidencePackage) -> dict[str, Any]:
+    stable = stable_evidence_envelope()
+    stable_payload = json.dumps(
+        stable, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode()
+    stable_with_id = {
+        **stable,
+        "stable_prefix_id": hashlib.sha256(stable_payload).hexdigest()[:24],
+    }
+    task_evidence = {
+        "revision_id": package.revision_id,
+        "source_revision": package.source_revision.value if package.source_revision else None,
+        "objective_fingerprint": package.objective_fingerprint,
+        "scope": package.scope.value,
+        "provenance": [
+            {
+                "id": identifier,
+                "source": item.source,
+                "producer": item.producer,
+                "producer_version": item.producer_version,
+            }
+            for identifier, item in package.provenance
+        ],
+        "items": [
+            {
+                "id": item.evidence_id,
+                "ref": item.canonical_ref.value,
+                "kind": item.kind,
+                "summary": item.summary,
+                "reason": item.reason,
+                "confidence": item.confidence,
+                "provenance_id": item.provenance_id,
+                "status": item.status,
+            }
+            for item in package.items
+        ],
+        "selected_evidence_ids": list(package.selected_evidence_ids),
+        "prior_evidence_ids": list(package.prior_evidence_ids),
+        "unresolved_evidence_gaps": list(package.unresolved_gaps),
+        "request_next_scope": package.next_scope.value if package.next_scope else "none",
+    }
+    task_payload = json.dumps(
+        task_evidence, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode()
+    return {
+        "stable_envelope": stable_with_id,
+        "task_evidence": task_evidence,
+        "metrics": {
+            "stable_prefix_canonical_bytes": len(stable_payload),
+            "task_evidence_canonical_bytes": len(task_payload),
+            "candidate_count": package.candidate_count,
+            "selected_count": len(package.items),
+            "excluded_count": package.excluded_count,
+            "estimated_evidence_tokens": package.used_tokens,
+            "token_budget": package.token_budget,
+            "truncated": package.truncated,
+            "deterministic_resolution": package.deterministic_resolution,
+            "cache_observation": "model_response_metrics",
+        },
     }

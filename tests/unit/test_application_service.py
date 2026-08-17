@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -472,6 +473,39 @@ def test_status_reports_capabilities_even_when_disabled(tmp_path: Path) -> None:
     }
     assert all(item["mode"] == "off" for item in status["capabilities"])
     assert not database.exists()
+
+
+def test_weak_local_tool_views_are_compact_and_progressive(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    with ProjectIntelligenceApplication(
+        root, tmp_path / "graph.db", _policy("active")
+    ) as application:
+        detailed_status = application.status()
+        compact_status = application.status(view="compact")
+        first = application.context(
+            "Locate leaf",
+            ("py://service#leaf",),
+            view="envelope",
+            scope="symbol",
+        )
+        expanded = application.context(
+            "Locate leaf and its caller",
+            ("py://service#leaf",),
+            view="envelope",
+            scope="neighborhood",
+            prior_evidence_ids=tuple(first["task_evidence"]["selected_evidence_ids"]),
+            unresolved_gaps=("direct caller missing",),
+        )
+
+    assert len(json.dumps(compact_status)) < len(json.dumps(detailed_status))
+    assert all(item["implementation"] == "implemented" for item in compact_status["capabilities"])
+    assert first["stable_envelope"] == expanded["stable_envelope"]
+    assert "objective" not in first["task_evidence"]
+    assert first["task_evidence"]["request_next_scope"] == "none"
+    assert expanded["task_evidence"]["request_next_scope"] == "impact"
+    assert expanded["task_evidence"]["prior_evidence_ids"]
+    assert expanded["metrics"]["selected_count"] <= 32
+    assert expanded["metrics"]["estimated_evidence_tokens"] <= 2_000
 
 
 def test_every_query_response_reports_the_depth_it_ran_at(tmp_path: Path) -> None:

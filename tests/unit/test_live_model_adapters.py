@@ -45,6 +45,7 @@ def test_openai_compatible_adapter_uses_bounded_chat_completion_contract() -> No
     assert response.text == '{"answer":"ok"}'
     assert (response.input_tokens, response.output_tokens) == (12, 4)
     assert (response.cache_read_tokens, response.reasoning_tokens) == (2, 1)
+    assert response.cache_metrics_observed is True
 
 
 def test_opencode_host_adapter_uses_stable_session_model_contract() -> None:
@@ -86,6 +87,7 @@ def test_opencode_host_adapter_uses_stable_session_model_contract() -> None:
     assert response.cost == 0.012
     assert (response.cache_read_tokens, response.cache_write_tokens) == (20, 4)
     assert response.reasoning_tokens == 2
+    assert response.cache_metrics_observed is True
     assert calls[-1][:2] == ("DELETE", "/session/session-1")
 
 

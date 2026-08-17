@@ -8,6 +8,7 @@ from extendcodeagent.core.model_routing import (
     AdaptiveSignals,
     FakeModelAdapter,
     ModelRequest,
+    ModelResponse,
     ModelUnavailable,
     PolicyModelRouter,
 )
@@ -110,6 +111,30 @@ def test_local_first_falls_back_after_unavailable_local() -> None:
     assert result.escalation_count == 1
     assert result.selected_locality == "host"
     assert result.wall_time_ms >= 0
+
+
+def test_route_telemetry_binds_observable_cache_reuse_to_stable_prefix() -> None:
+    class CachedAdapter:
+        def complete(self, request: ModelRequest) -> ModelResponse:
+            return ModelResponse(
+                "ok",
+                input_tokens=10,
+                cache_read_tokens=30,
+                cache_write_tokens=10,
+                cache_metrics_observed=True,
+            )
+
+    result = PolicyModelRouter(_config("local_only"), {"local-small": CachedAdapter()}).execute(
+        ModelRequest(
+            ModelRole.CODE_REASONER,
+            "bounded question",
+            stable_prefix_id="prefix-1",
+        )
+    )
+
+    assert result.stable_prefix_id == "prefix-1"
+    assert result.cache_metrics_observed is True
+    assert result.cache_reuse_ratio == 0.6
 
 
 def test_remote_code_deny_blocks_remote_endpoint() -> None:

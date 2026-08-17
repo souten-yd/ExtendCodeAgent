@@ -88,6 +88,9 @@ class PolicyModelRouter:
                 rejected=decision.rejected,
                 reasons=decision.reasons + (f"completed:{endpoint_id}",),
             )
+            prompt_context = (
+                response.input_tokens + response.cache_read_tokens + response.cache_write_tokens
+            )
             return RoutedResponse(
                 response=response,
                 decision=final_decision,
@@ -95,6 +98,15 @@ class PolicyModelRouter:
                 wall_time_ms=round((perf_counter() - started) * 1_000, 4),
                 escalation_count=max(0, len(tuple(dict.fromkeys(attempts))) - 1),
                 selected_locality=self.config.endpoints[endpoint_id].locality.value,
+                stable_prefix_id=request.stable_prefix_id,
+                cache_metrics_observed=response.cache_metrics_observed,
+                cache_reuse_ratio=(
+                    round(response.cache_read_tokens / prompt_context, 6)
+                    if response.cache_metrics_observed and prompt_context
+                    else 0.0
+                    if response.cache_metrics_observed
+                    else None
+                ),
             )
         raise ModelUnavailable(f"model endpoints unavailable after attempts: {attempts}")
 
