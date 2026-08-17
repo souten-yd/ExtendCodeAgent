@@ -33,21 +33,23 @@ results. Audit an immutable checkpoint against a sealed compatibility manifest f
 ```bash
 tools/local/evaluation-runner audit-checkpoint \
   --source .evaluation/unified-v1/old-result.json \
-  --compatibility docs/evaluation/b0a-checkpoint-compatibility-v1.json \
+  --compatibility docs/evaluation/b0a-checkpoint-compatibility-v2.json \
   --output .evaluation/unified-v1/old-result-audit.json
 ```
 
 `REUSABLE` means functional outcome only; its timing remains `LEGACY_RUNNER_LATENCY`. Provider gaps,
 timeouts, incomplete cells, seal mismatches and provenance failures never migrate. The audit report
 is hash-bound to the source checkpoint, trace log, every source result and compatibility manifest,
-and is itself sealed. Audit alone does not permit migration: a separately sealed 10–20-cell
-multi-provider Bridge Proof must match the affected model/task classes first.
+and is itself sealed. Audit alone does not permit migration: a separately sealed Bridge Proof must
+match the model/task classes selected by the active compatibility manifest first. The historical v1
+contract used a 10–20-cell multi-provider sample; local-only v2 requires exactly three
+`local-practical` cells covering symbol navigation, impact analysis and test selection.
 
 Generate and execute the sealed Bridge Sample after the clean merged audit:
 
 ```bash
 tools/local/evaluation-runner bridge-plan --audit <audit.json> \
-  --compatibility docs/evaluation/b0a-checkpoint-compatibility-v1.json \
+  --compatibility docs/evaluation/b0a-checkpoint-compatibility-v2.json \
   --output <bridge-plan.json>
 tools/local/evaluation-runner run-bridge --bridge-plan <bridge-plan.json> \
   --raw-root <bridge-raw> --output <bridge-run.json>

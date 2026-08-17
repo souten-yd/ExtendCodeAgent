@@ -20,6 +20,10 @@
   33/33; `tools/local/all-fast` passes 191 Python + 9 adapter,
   `tools/local/test-integration` passes 56 Python + 9 adapter, and `tools/local/build` passes the
   Python sdist/wheel plus TypeScript build.
+- Added and sealed `b0a-checkpoint-compatibility-v2.json` against source `c0d13d7` and target
+  `8f12078`. Core, OpenCode adapter, task/oracle and immutable evaluation-contract fingerprints are
+  identical; the Bridge requirement is exactly three `local-practical` task classes. The active
+  runner compatibility binding now selects v2 while preserving v1 as historical evidence.
 
 ## 2026-08-17 — Canonical three-route contract reconciliation
 
