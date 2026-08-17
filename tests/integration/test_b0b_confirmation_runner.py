@@ -113,6 +113,8 @@ def test_b0b_complete_report_keeps_selection_and_efficacy_separate(tmp_path: Pat
     expected = json.loads(legacy.EVALUATION_PI_PLAN.read_text())
     entries = {item["task_id"]: item for item in expected["tasks"]}
     results: dict[str, dict[str, Any]] = {}
+    log_root = tmp_path / "logs"
+    log_root.mkdir()
     for cell in plan["cells"]:
         entry = entries[cell["task_id"]]
         result = {
@@ -123,10 +125,25 @@ def test_b0b_complete_report_keeps_selection_and_efficacy_separate(tmp_path: Pat
             "output_tokens": 2,
             "reasoning_tokens": 0,
             "model_wall_ms": 5,
+            "pi_analysis_ms": 3,
             "pi_timing_ms": {},
             "pi_capabilities_used": [],
             "errors": [],
             "pi_tool_failures": [],
+            "outcome_attribution": {
+                "required_verification_set_quality": (
+                    {
+                        "status": "MEASURED_BY_SEALED_TASK_ORACLE",
+                        "true_positive": 4,
+                        "false_positive": 0,
+                        "false_negative": 0,
+                        "precision": 1.0,
+                        "recall": 1.0,
+                    }
+                    if cell["task_id"] == "kasane-tests-001"
+                    else None
+                )
+            },
         }
         if cell["pi_use_policy"] == "auto_pi":
             result["pi_tools"] = []
@@ -136,6 +153,23 @@ def test_b0b_complete_report_keeps_selection_and_efficacy_separate(tmp_path: Pat
             result["pi_tool_requests"] = list(entry["tool_requests"])
             result["forced_use_compliance"] = forced_use_compliance(entry, result)
         results[cell["cell_id"]] = result
+        log_root.joinpath(f"{cell['cell_id']}.jsonl").write_text(
+            json.dumps(
+                {
+                    "type": "step_finish",
+                    "part": {
+                        "type": "step-finish",
+                        "tokens": {
+                            "input": 7,
+                            "output": 2,
+                            "cache": {"read": 11, "write": 0},
+                        },
+                    },
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
 
     report = runner._report(
         plan,
@@ -156,6 +190,63 @@ def test_b0b_complete_report_keeps_selection_and_efficacy_separate(tmp_path: Pat
         "impact",
         "strategy",
         "test_obsolescence",
+    }
+    assert report["efficiency"]["context_request_count"] == 57
+    assert report["efficiency"]["average_context_tokens"] == 18
+    assert report["efficiency"]["max_context_tokens"] == 18
+    assert report["efficiency"]["context_metric_basis"] == (
+        "per-model-request input + cache-read + cache-write prompt tokens from step-finish events"
+    )
+    assert report["efficiency"]["deterministic_pi_wall_time_ms"] == 171
+    assert report["efficiency"]["deterministic_pi_wall_time_basis"] == (
+        "sum of observed pi_* tool intervals"
+    )
+    assert report["required_verification_set_quality"] == {
+        "overall": {
+            "status": "MEASURED_BY_SEALED_TASK_ORACLE",
+            "measured_cells": 21,
+            "true_positive": 84,
+            "false_positive": 0,
+            "false_negative": 0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+        },
+        "auto_pi": {
+            "status": "MEASURED_BY_SEALED_TASK_ORACLE",
+            "measured_cells": 3,
+            "true_positive": 12,
+            "false_positive": 0,
+            "false_negative": 0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+        },
+        "forced_pi": {
+            "status": "MEASURED_BY_SEALED_TASK_ORACLE",
+            "measured_cells": 3,
+            "true_positive": 12,
+            "false_positive": 0,
+            "false_negative": 0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+        },
+        "forced_off": {
+            "status": "MEASURED_BY_SEALED_TASK_ORACLE",
+            "measured_cells": 3,
+            "true_positive": 12,
+            "false_positive": 0,
+            "false_negative": 0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+        },
+        "forced_ablation": {
+            "status": "MEASURED_BY_SEALED_TASK_ORACLE",
+            "measured_cells": 12,
+            "true_positive": 48,
+            "false_positive": 0,
+            "false_negative": 0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+        },
     }
 
 

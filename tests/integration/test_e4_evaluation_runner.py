@@ -97,6 +97,7 @@ def test_adaptive_batch_keeps_model_serial_while_cpu_finalization_pipelines(
     second_model_started = threading.Event()
     model_active = 0
     max_model_active = 0
+    discarded: list[str] = []
 
     class Templates:
         def ensure_template(self, task_id: str) -> None:
@@ -106,6 +107,11 @@ def test_adaptive_batch_keeps_model_serial_while_cpu_finalization_pipelines(
             workspace = tmp_path / cell_id
             workspace.mkdir()
             return workspace
+
+        def discard(self, task_id: str, workspace: Path) -> None:
+            assert task_id == "task"
+            discarded.append(workspace.name)
+            workspace.rmdir()
 
     def agent(cell: dict[str, Any], *args: Any, **kwargs: Any) -> dict[str, Any]:
         nonlocal model_active, max_model_active
@@ -138,6 +144,7 @@ def test_adaptive_batch_keeps_model_serial_while_cpu_finalization_pipelines(
 
     assert [item["cell_id"] for item in results] == ["one", "two"]
     assert max_model_active == 1
+    assert discarded == ["one", "two"]
 
 
 def test_adaptive_migration_rejects_shared_runner_venv_access(tmp_path: Path) -> None:
@@ -149,7 +156,10 @@ def test_adaptive_migration_rejects_shared_runner_venv_access(tmp_path: Path) ->
                 "part": {
                     "state": {
                         "input": {
-                            "command": f"source {ROOT}/.venv/bin/activate && pip install -e ."
+                            "command": (
+                                f"source {(ROOT / '.venv').resolve()}/bin/activate "
+                                "&& pip install -e ."
+                            )
                         }
                     }
                 },
@@ -178,6 +188,7 @@ def test_adaptive_provider_gap_stops_batch_and_is_not_a_reusable_capture(
     ]
     invoked: list[str] = []
     provider_captures: list[str] = []
+    discarded: list[str] = []
 
     class Templates:
         def ensure_template(self, task_id: str) -> None:
@@ -187,6 +198,10 @@ def test_adaptive_provider_gap_stops_batch_and_is_not_a_reusable_capture(
             workspace = tmp_path / cell_id
             workspace.mkdir()
             return workspace
+
+        def discard(self, task_id: str, workspace: Path) -> None:
+            discarded.append(workspace.name)
+            workspace.rmdir()
 
     def agent(cell: dict[str, Any], *args: Any, **kwargs: Any) -> dict[str, Any]:
         invoked.append(cell["cell_id"])
@@ -227,6 +242,7 @@ def test_adaptive_provider_gap_stops_batch_and_is_not_a_reusable_capture(
     assert invoked == ["gap"]
     assert provider_captures == ["gap"]
     assert results == [{"cell_id": "gap", "provider_failure": "LOCAL_ENDPOINT_UNAVAILABLE"}]
+    assert discarded == ["gap", "must-remain-pending"]
 
 
 def test_provider_gap_pauses_only_its_queue_and_other_models_continue(
@@ -997,6 +1013,48 @@ def test_metrics_split_pi_and_post_tool_model_time(tmp_path: Path) -> None:
     }
     assert "canonical_ref:py://testing.service#select_tests" in measured["selected_evidence_ids"]
     assert "repo_path:tests/unit/test_test_intelligence.py" in measured["selected_evidence_ids"]
+
+
+def test_metrics_report_request_context_distribution_not_cell_total(tmp_path: Path) -> None:
+    log_path = tmp_path / "events.jsonl"
+    inputs = [17, 1_175, 16_825, 37_718, 41_742]
+    cache_reads = [0, 100, 2_000, 4_000, 8_000]
+    cache_writes = [0, 0, 0, 0, 1_000]
+    log_path.write_text(
+        "\n".join(
+            json.dumps(
+                {
+                    "type": "step_finish",
+                    "part": {
+                        "type": "step-finish",
+                        "tokens": {
+                            "input": value,
+                            "output": 1,
+                            "cache": {"read": cache_read, "write": cache_write},
+                        },
+                    },
+                }
+            )
+            for value, cache_read, cache_write in zip(
+                inputs, cache_reads, cache_writes, strict=True
+            )
+        ),
+        encoding="utf-8",
+    )
+
+    measured = _metrics(log_path)
+
+    assert measured["input_tokens"] == sum(inputs)
+    assert measured["cache_read_tokens"] == sum(cache_reads)
+    assert measured["cache_write_tokens"] == sum(cache_writes)
+    assert measured["context_request_count"] == 5
+    assert measured["context_token_sum"] == 112_577
+    assert measured["average_context_tokens"] == 22_515.4
+    assert measured["p50_context_tokens"] == 18_825
+    assert measured["p90_context_tokens"] == 50_742
+    assert measured["p95_context_tokens"] == 50_742
+    assert measured["p99_context_tokens"] == 50_742
+    assert measured["max_context_tokens"] == 50_742
 
 
 def test_metrics_preserve_pi_tool_error_reason_for_expected_disabled_route(

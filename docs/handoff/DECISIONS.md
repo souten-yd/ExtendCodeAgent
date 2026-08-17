@@ -1054,3 +1054,24 @@ signals; auto requirement use failed while forced use passed, producing the inte
 `PI_SELECTION_GAP`. Twin, Semantic, Blueprint and Strategy proceed as corrective B0b candidates;
 the original six observational candidates are preserved, producing an eight-capability union. See
 `docs/evidence/final/b0a-causal-correction-result-v1.json`.
+
+## 2026-08-17 — B0b confirms no covered held-out causal effect; B2 remains next
+
+Decision: close B0b as a valid negative held-out result for the covered local-practical comparisons.
+Graph, Semantic, Twin and Test Selection are `NO_CONFIRMED_CAUSAL_EFFECT`; Blueprint, Impact,
+Strategy and Test Obsolescence remain `NO_HELD_OUT_TASK_COVERAGE`, not no effect. Do not promote or
+demote a capability before the remaining Layer C and coverage gates.
+
+Reason: all 57 exact-main cells completed, all 48 forced-use traces complied, and no provider/runtime
+gap contaminated scoring. Forced PI versus off and every covered ON/ablation comparison had zero PASS
+delta under the unchanged oracle and threshold. Required-test-set precision/recall was 1.0, but every
+eligible control passed too. Auto selection separately retained precision 0.650794, recall 0.530952
+and 22 expected-but-unused states.
+
+Consequence: §10.2's verification-only, weak-local-only and stop outcomes are not triggered. The
+verification result is not attributable; cross-tier comparison is prohibited/unavailable; and the
+stop criteria are not jointly true because coverage and Layer C remain incomplete and fixable PI
+selection/projection gaps exist. Conditional B1 is `SKIP_NO_ENTRY_CONDITION` after the evaluation-only
+workspace cleanup repair. B2 is `KEEP_NEXT`; C1/C3 and X0 retain the measured gaps. Evidence:
+`docs/evidence/final/b0b-confirmation-result-v1.json` and
+`docs/evidence/final/baseline-gap-report.md`.

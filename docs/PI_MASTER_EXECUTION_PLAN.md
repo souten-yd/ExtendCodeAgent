@@ -204,15 +204,15 @@ These apply to every stage and are not restated per stage.
 - `PR-A .. PR-I` implementation baseline complete; 62 Python modules under `src/extendcodeagent`,
   plus the stable OpenCode 1.18.18 adapter and MCP surface (`pi_status`, `pi_symbol`, `pi_references`,
   `pi_path`, `pi_impact`, `pi_tests`, `pi_context`, `pi_runtime_evidence`, `pi_research_plan`).
-- No production-capable designation. Baseline validation has not started.
-- **No existing evidence supports the product thesis.** The only real-model result on record,
-  `docs/evidence/pr-g/model-evaluation.json`, is 6 scenarios at 1 repetition with `tool_calls = 0` in
-  every arm. Zero tool calls means the agent never performed agentic work: this is a context-injection
-  A/B, not task completion. `local-low` moving from 1/6 to 6/6 between `off` and `active` is close to
-  tautological under that setup, since the needed facts were placed directly in the prompt. Under
-  invariant 1 the result is real model-routing evidence that the routing path works, and nothing more.
-  It is **not** evidence that Project Intelligence improves agent outcomes, and no claim may cite it as
-  such. B0 replaces it against the sealed E3 task suite, with repetitions and real tool use.
+- No production-capable designation. B0 baseline validation is complete and B2 is next.
+- B0b completed 57/57 held-out local-practical cells at `f15064c`: 21 PASS, 36 FAIL, 48/48 forced-use
+  compliant and no provider/runtime gap. Forced PI versus off and all covered ON/ablation comparisons
+  had zero PASS delta. Graph, Twin, Semantic and Test Selection are
+  `NO_CONFIRMED_CAUSAL_EFFECT`; Blueprint, Impact, Strategy and Test Obsolescence are
+  `NO_HELD_OUT_TASK_COVERAGE`, not no effect. Required-test-set precision/recall was 1.0, but every
+  eligible off/ablation arm also passed, so it is not an attributable PI effect. No promotion or
+  demotion occurred. See `docs/evidence/final/b0b-confirmation-result-v1.json` and
+  `docs/evidence/final/baseline-gap-report.md`.
 - Known blockers and measurement limits are recorded in `handoff/KNOWN_ISSUES.md`; the material ones
   for sequencing are: frontier path `0/18 APIError`, `local-low` result instability, py-tree-sitter
   pinned to 0.25.2 after a 0.26.0 segfault, and OpenCode version drift risk beyond 1.18.18.
@@ -223,6 +223,11 @@ These apply to every stage and are not restated per stage.
   eight-capability B0b union `blueprint, graph, impact, semantic, strategy, test_obsolescence,
   test_selection, twin`. This is screening evidence only and makes no promotion/demotion decision.
   See `docs/evidence/final/b0a-causal-correction-result-v1.json`.
+- B0b auto selection measured precision 0.650794, recall 0.530952 and 22 expected-but-unused states.
+  Cross-boundary and requirement tasks remained PI capability/projection gaps; the repeated real
+  boundary failures satisfy X0 entry. Conditional B1 is skipped because no ECA product lifecycle,
+  configuration, version or provider blocker remains after the evaluation-only workspace cleanup
+  repair. B2 is the next stage.
 
 ## 6. Capability inventory and gating status
 
@@ -1047,7 +1052,7 @@ Per-PR evidence directories (`docs/evidence/pr-*`) are historical and are not re
 
 ## 14. Immediate next action
 
-Phase 0, stages E0, E1, E2, V0a, E3, E4 and E5 are complete. Next is B0a.
+Phase 0 and B0 are complete. Conditional B1 is `SKIP_NO_ENTRY_CONDITION`; next is B2.
 
 ```bash
 cd /home/souten/ExtendCodeAgent
@@ -1057,9 +1062,10 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/b0a-baseline-screening
+git switch -c agent/b2-omo-coexistence
 ```
 
-B0 entry is now open. Start with per-repository Existing Project Bootstrap conformance and the B0a
-environment/integration freeze; do not collapse screening and confirmation into one unschedulable
-pass or make promotion/demotion decisions from screening alone.
+B2 uses the recorded OpenCode/OMO/ECA version tuple, Team Mode off and both meaningful plugin load
+orders. Execute the existing startup/tool/session/basic-coding/verification compatibility contract,
+classify conflicts under C0-C6, and keep P4 comparative scoring out of this stage. Model-bearing work
+uses only the configured port-8090 local-practical Qwen route.

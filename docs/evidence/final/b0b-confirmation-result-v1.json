@@ -1,0 +1,183 @@
+{
+  "schema": 1,
+  "classification": "B0B_HELD_OUT_CONFIRMATION_COMPLETE",
+  "captured_at": "2026-08-17T21:16:08+09:00",
+  "source_revision": "f15064c389e776a875faf1009648696343cbf9e0",
+  "execution_scope": "local-only",
+  "model": "Qwen3.6 27B",
+  "endpoint": "127.0.0.1:8090",
+  "context": 262144,
+  "output_limit": 8192,
+  "claim_scope": "active-scoped(local-practical)",
+  "promotion_or_demotion_decision": false,
+  "contract": {
+    "evaluation_pi_plan_seal": "8d324040522c54ab4b2304ba51d411473ea680cb1621bbcea7be78586fd45aa7",
+    "task_suite_seal": "23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632",
+    "evaluation_matrix_seal": "7bfa9f1dd8be5bf44fcf3f018c4ccbe2b6a3266846cd7a994f08eb5d4886a0c5",
+    "quality_target_seal": "ab6b2141b5c8bd99dac5aa18c6e7b2c060c8624fa79f56ef7001edc993d518d9",
+    "causal_evidence_seal": "9ae056017599cced71dcffa683b77b2d0e13b1b662a895c885095423b940b1ed",
+    "tasks_changed": false,
+    "oracle_changed": false,
+    "corpus_changed": false,
+    "effect_threshold_changed": false,
+    "capability_design_changed": false,
+    "repetitions": 3,
+    "effect_threshold_pass_delta": 2
+  },
+  "raw_evidence": {
+    "plan_path": ".evaluation/unified-v1/b0b-confirmation-plan-f15064c.json",
+    "plan_sha256": "487116a60c4c9a44b3124d426fe86bbce2c575d8dadbbda360180fcefded8c52",
+    "plan_seal": "c77996a4c1fb26e8a19042dff5e46a7e3c812386c294924013ddaf400afcdfdd",
+    "result_path": ".evaluation/unified-v1/b0b-confirmation-f15064c.json",
+    "result_sha256": "edc821d2218281808257127a1a83c2347d70b51ae1aaaabdb800cb242d66cbc5",
+    "result_seal": "00cfcc355c242a16aa703ab6ee374c5d676f049d66d6df576fa5337a591f8fc9",
+    "trace_path": ".evaluation/unified-v1/b0b-confirmation-f15064c-raw/traces.jsonl",
+    "trace_sha256": "665cf672e3a4ddbf38429271f6869827a65a8cf79b961a67ccacb813f0077c63",
+    "trace_replay": "PASS_57_UNIQUE_REPLAYABLE"
+  },
+  "result": {
+    "cells_expected": 57,
+    "cells_accounted": 57,
+    "outcomes": {
+      "PASS": 21,
+      "FAIL": 36,
+      "TIMEOUT": 0,
+      "UNAVAILABLE": 0
+    },
+    "forced_cells": 48,
+    "forced_use_compliant": 48,
+    "forced_use_noncompliant": 0,
+    "provider_failure": 0,
+    "process_failure": 0,
+    "evaluation_sidecars_terminated": 57
+  },
+  "intrinsic_pi_results": {
+    "kasane-cross-boundary-001": {
+      "on_pass": 0,
+      "off_pass": 0,
+      "pass_delta": 0,
+      "decision": "NO_CONFIRMED_CAUSAL_EFFECT",
+      "diagnosis": "PI_CAPABILITY_GAP"
+    },
+    "kasane-requirement-001": {
+      "on_pass": 0,
+      "off_pass": 0,
+      "pass_delta": 0,
+      "decision": "NO_CONFIRMED_CAUSAL_EFFECT",
+      "diagnosis": "PI_CAPABILITY_GAP"
+    },
+    "kasane-tests-001": {
+      "on_pass": 3,
+      "off_pass": 3,
+      "pass_delta": 0,
+      "decision": "NO_CONFIRMED_CAUSAL_EFFECT",
+      "diagnosis": "AUTO_SKIP_WAS_CORRECT"
+    }
+  },
+  "capability_results": {
+    "no_confirmed_causal_effect": {
+      "graph": {"pairs": 9, "on_pass": 3, "ablation_pass": 3, "pass_delta": 0},
+      "semantic": {"pairs": 9, "on_pass": 3, "ablation_pass": 3, "pass_delta": 0},
+      "test_selection": {"pairs": 3, "on_pass": 3, "ablation_pass": 3, "pass_delta": 0},
+      "twin": {"pairs": 9, "on_pass": 3, "ablation_pass": 3, "pass_delta": 0}
+    },
+    "no_held_out_task_coverage": [
+      "blueprint",
+      "impact",
+      "strategy",
+      "test_obsolescence"
+    ]
+  },
+  "failure_attribution": {
+    "PASS": 21,
+    "AGENT_REASONING_ERROR": 16,
+    "PROJECTION_SCHEMA_ERROR": 20,
+    "PROVIDER_OR_RUNTIME_ERROR": 0
+  },
+  "selection": {
+    "measured_cells": 9,
+    "mean_capability_selection_precision": 0.650794,
+    "mean_capability_selection_recall": 0.530952,
+    "mean_under_selection_rate": 0.469048,
+    "mean_over_selection_rate": 0.293651,
+    "expected_but_not_used_states": 22,
+    "diagnoses": {
+      "PI_CAPABILITY_GAP": 6,
+      "AUTO_SKIP_WAS_CORRECT": 3
+    }
+  },
+  "required_verification_set_quality": {
+    "status": "MEASURED_BY_SEALED_TASK_ORACLE",
+    "measured_cells": 21,
+    "true_positive": 84,
+    "false_positive": 0,
+    "false_negative": 0,
+    "micro_precision": 1.0,
+    "micro_recall": 1.0,
+    "causal_interpretation": "All PI, off and ablation arms passed; correctness is measured but not attributable to PI."
+  },
+  "efficiency": {
+    "llm_calls_requested": 57,
+    "llm_calls_executed": 57,
+    "llm_calls_reused": 0,
+    "llm_calls_avoided": 0,
+    "avoided_call_ratio": 0.0,
+    "input_tokens": 2392101,
+    "output_tokens": 140982,
+    "reasoning_tokens": 0,
+    "model_wall_time_ms": 12610218,
+    "deterministic_pi_wall_time_ms": 699326,
+    "deterministic_pi_wall_time_basis": "sum of observed pi_* tool intervals",
+    "sidecar_cleanup_wall_time_ms": 23285,
+    "context_request_count": 538,
+    "context_token_sum": 18930895,
+    "average_context_tokens": 35187.537,
+    "p50_context_tokens": 29437,
+    "p90_context_tokens": 62875,
+    "p95_context_tokens": 68512,
+    "p99_context_tokens": 86351,
+    "max_context_tokens": 93189,
+    "context_metric_basis": "per-model-request input + cache-read + cache-write prompt tokens from step-finish events",
+    "observed_prompt_plus_output_limit_max": 101381,
+    "current_workload_context_guidance": "128k practical lower-bound candidate; retain 262144 until a bounded context Bridge confirms quality and truncation equivalence"
+  },
+  "pi_output_size": {
+    "measurement_basis": "serialized PI tool output characters; exact per-tool token attribution is not emitted by OpenCode",
+    "calls": 240,
+    "total_chars": 2043852,
+    "dominant_tools": {
+      "pi_symbol": {"calls": 81, "share": 0.548584, "mean_chars": 13842, "p95_chars": 51536, "max_chars": 51536},
+      "pi_context": {"calls": 16, "share": 0.305821, "mean_chars": 39065, "p95_chars": 48081, "max_chars": 48081},
+      "pi_status": {"calls": 55, "share": 0.117246, "mean_chars": 4356, "p95_chars": 4373, "max_chars": 4373}
+    }
+  },
+  "raw_metric_corrections": {
+    "raw_average_context_tokens": 41966.684,
+    "raw_max_context_tokens": 89631,
+    "raw_context_issue": "raw report summed per-cell input tokens and did not represent a request context window",
+    "intermediate_input_only_context_issue": "input-only request metrics omit cached prompt tokens and are also not a context-window measure",
+    "raw_deterministic_pi_wall_time_ms": 8074006.271,
+    "raw_pi_wall_issue": "raw report included post-tool model reasoning in deterministic PI time",
+    "preservation": "The sealed raw report is immutable; corrected values are derived from its sealed logs and recorded here."
+  },
+  "decision": {
+    "confirmed_held_out_causal_effect": false,
+    "capability_promotion": "NONE",
+    "capability_demotion": "NONE_PENDING_LAYER_C_AND_COVERAGE",
+    "claim": "No held-out causal PI effect was confirmed for local-practical Qwen on covered B0b tasks. Four candidates remain unmeasured due to held-out task coverage, not no effect.",
+    "scope_limit": "No frontier, host-default, local-low, cross-model or general-model claim."
+  },
+  "gates": {
+    "raw_report_seal": "PASS",
+    "trace_replay": "PASS",
+    "forced_use_compliance": "PASS_48_OF_48",
+    "provider_availability": "PASS_LOCAL_PRACTICAL_ONLY",
+    "all_fast": "PASS_208_PYTHON_9_ADAPTER",
+    "integration": "PASS_79_PYTHON_9_ADAPTER",
+    "build": "PASS_PYTHON_SDIST_WHEEL_TYPESCRIPT"
+  },
+  "seal": {
+    "algorithm": "sha256",
+    "canonical_payload": "1c8e06bbfdf49fdf2fd2954408d0bef301930bce663fd13a0bec78f91d4faf96"
+  }
+}

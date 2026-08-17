@@ -4,7 +4,7 @@ Status date: 2026-08-17
 
 ## Program state
 
-Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0a + CAUSAL CORRECTION COMPLETE — B0b NEXT**
+Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0 COMPLETE — B1 SKIPPED — B2 NEXT**
 
 The active `b0a-quality-target-v2` progression target is the ControlDeck-managed `local-practical`
 Qwen route only.
@@ -35,7 +35,19 @@ screening diagnostics, not demotions. `research` and corrective test-obsolescenc
 Auto selection remains a separate axis: eight tasks were measurable, mean precision was 0.666667,
 mean recall 0.534821, and 20 `EXPECTED_BUT_NOT_USED` states were recorded. In particular,
 `cd-requirement-001` is `PI_SELECTION_GAP` because auto failed while forced passed. B0b confirmation
-is now next on the unchanged held-out split and contracts.
+then completed all 57/57 exact-main local-practical cells: 21 PASS, 36 FAIL, 48/48 forced-use
+compliant, with no provider/process/timeout/unavailable outcome. Forced PI versus off and each
+covered ON/ablation comparison had zero PASS delta. Graph, Semantic, Twin and Test Selection are
+`NO_CONFIRMED_CAUSAL_EFFECT`; Blueprint, Impact, Strategy and Test Obsolescence remain
+`NO_HELD_OUT_TASK_COVERAGE`, not no effect. No capability was promoted or demoted.
+
+B0b auto selection measured precision 0.650794, recall 0.530952 and 22
+`EXPECTED_BUT_NOT_USED` states. Required-test-set precision/recall was 1.0 across 21 cells, but all
+PI/off/ablation variants passed, so the accuracy is not attributable to PI. Full request prompt
+context had p95 68,512, p99 86,351 and maximum 93,189 tokens; 128k is a bounded lower-context
+candidate, while the configured 262,144 remains unchanged pending an equivalence Bridge. See
+`docs/evidence/final/b0b-confirmation-result-v1.json` and
+`docs/evidence/final/baseline-gap-report.md`.
 
 The prior three-route checkpoint remains immutable history: Qwen 54/54, Sonnet 54/54, Codex 37/54,
 145/162 overall, with 17 Codex cells blocked by quota. It is not the current local-first denominator
@@ -50,10 +62,10 @@ have since been consolidated into a single canonical execution plan,
 `docs/PI_MASTER_EXECUTION_PLAN.md`, which replaced eight parallel stage-numbering schemes with one
 backlog.
 
-This is not a production-capable designation. Phase 0 now provides the verification contract slice,
-sealed task suite, unified evaluation runner/labels and attributable PI trace. Baseline release
-validation (stage B0, formerly RV-0) is next; it must first establish Existing Project Bootstrap
-conformance and then run the schedulable B0a screening/B0b confirmation split.
+This is not a production-capable designation. B0 is complete, but it did not confirm a held-out PI
+causal effect for the covered local-practical tasks. Conditional B1 has no product lifecycle/config/
+provider entry condition after closeout and is explicitly skipped. B2 OMO coexistence is next; the
+selection/projection gaps remain inputs to C1/C3 and X0 rather than being hidden as successful PI.
 
 ## Canonical read order
 
@@ -134,14 +146,11 @@ for the `call_graph` folding and the `ConfigError` policy: `docs/handoff/DECISIO
 
 ## Immediate next action
 
-Phase 1, B0b held-out confirmation: merge the bounded confirmation runner, then generate its sealed
-plan at exact main before any new Qwen call. The unchanged EvaluationPIPlan covers three held-out
-KasaneCore tasks for the candidate union: 9 `auto_pi`, 9 `forced_pi`, 9 `forced_off`, and 30
-`forced_ablation` cells across the required three repetitions, for 57 cells total. Graph, Twin and
-Semantic each have nine held-out pairs; Test Selection has three. Blueprint, Impact, Strategy and
-Test Obsolescence have no suitable sealed held-out task and remain `NO_HELD_OUT_TASK_COVERAGE`, not
-no effect. After execution, seal `baseline-gap-report.md` under the unchanged oracle, absolute
-two-PASS effect threshold and promotion/demotion rules. See `docs/handoff/NEXT_TASK.md`.
+Phase 1, B2 OMO coexistence baseline. Revalidate the recorded OpenCode/OMO/ECA tuple, keep Team Mode
+off, execute both meaningful plugin load orders, and measure startup/tool/session/basic coding and
+verification compatibility under the existing C0-C6 taxonomy. This is compatibility, not the P4
+comparative score. Model-bearing checks use only the existing port-8090 Qwen route. See
+`docs/handoff/NEXT_TASK.md`.
 
 The first B0a bootstrap checkpoint attempted all nine pinned repositories: seven established a Twin,
 while KasaneCore and PEDS exceeded the bounded 300-second initial-Twin limit and are

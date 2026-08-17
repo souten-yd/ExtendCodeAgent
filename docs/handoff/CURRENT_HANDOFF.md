@@ -2,10 +2,10 @@
 
 Updated: 2026-08-17 (Asia/Tokyo)
 
-Canonical branch: `agent/b0b-heldout-confirmation-runner`; synchronized merged base is
-`eab71fbf466b15c0e637a2dadfc2baef3cc857a8` (PR #89)
+Canonical branch: `agent/b0b-confirmation-closeout`; synchronized merged base is
+`f15064c389e776a875faf1009648696343cbf9e0` (PR #90)
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
-Current task: merge the B0b held-out runner, then execute its sealed exact-main local-only plan
+Current task: seal and merge B0b result/gap evidence, then start B2 OMO coexistence
 
 ## Current authoritative checkpoint (2026-08-17)
 
@@ -79,7 +79,28 @@ Current task: merge the B0b held-out runner, then execute its sealed exact-main 
   Impact, Strategy and Test Obsolescence are explicitly `NO_HELD_OUT_TASK_COVERAGE`; the unsafe task
   has no candidate coverage. The existing absolute two-PASS threshold remains unchanged, forced use
   is trace-verified fail-closed, auto selection is separate, and no promotion is emitted before the
-  Layer C budget gate. Merge this runner before generating the exact-main plan or making a Qwen call.
+  Layer C budget gate. PR #90 merged the runner at `f15064c` before the plan or first B0b call.
+- B0b then completed 57/57 cells at exact source revision `f15064c`: 21 PASS, 36 FAIL, 48/48 forced
+  cells compliant, with no timeout/unavailable/provider/process result. Raw report SHA256 is
+  `edc821d2218281808257127a1a83c2347d70b51ae1aaaabdb800cb242d66cbc5`; trace SHA256 is
+  `665cf672e3a4ddbf38429271f6869827a65a8cf79b961a67ccacb813f0077c63`.
+- Intrinsic PI PASS delta was zero on all three tasks. Graph, Semantic, Twin and Test Selection had
+  equal ON/ablation outcomes and no confirmed held-out causal effect. Blueprint, Impact, Strategy and
+  Test Obsolescence remain `NO_HELD_OUT_TASK_COVERAGE`. No promotion/demotion was made.
+- Auto selection precision was 0.650794 and recall 0.530952, with 22 expected-but-unused states.
+  Test-selection required-set precision/recall was 1.0 across all 21 relevant cells, but every off/
+  ablation control also passed, so the result is not attributable to PI.
+- Full request prompt context (`input + cache-read + cache-write`) across 538 steps was p95 68,512,
+  p99 86,351 and maximum 93,189. A 128k setting is a bounded candidate for this workload; retain the
+  configured 262,144 until a context-equivalence Bridge. The raw report's per-cell context and PI-wall
+  aggregates are preserved but superseded by corrected sealed-log derivations in the compact evidence.
+- The run temporarily exhausted disk because completed evaluation worktrees were retained. Only
+  recreatable generated worktrees were removed; captures, fragments, checkpoint and trace were
+  retained. Resume reused all completed cells without another model call. The closeout runner now
+  discards each exact generated workspace only after durable capture/finalization, including pending
+  prepared cells after a provider gap.
+- B0 gap decisions: B1 is `SKIP_NO_ENTRY_CONDITION`; B2 is `KEEP_NEXT`; C1/C3 and X0 retain measured
+  selection/projection gaps; four no-coverage candidates are not converted to negative evidence.
 
 The chronology below is retained as history. Its four-model/306-cell and three-model/162-cell
 statements describe superseded protocols and are not current execution instructions.
@@ -466,17 +487,18 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/b0b-local-confirmation
+git switch -c agent/b2-omo-coexistence
 ```
 
-Start B0b from the sealed B0a screening table. Generate the local-practical-only confirmation
-schedule for the six candidates against the existing held-out KasaneCore split and full required
-repetitions. Preserve task/oracle/corpus/effect and promotion/demotion semantics; use deterministic
-relevance and prior compatible evidence only where the existing contract permits it, with explicit
-non-outcome reasons for every call not executed.
+After this closeout PR merges, start B2 from synchronized main. Read only
+`docs/OMO_COEXISTENCE_AND_COMPATIBILITY_PLAN.md` §9 as the active design detail. Record the exact
+OpenCode/OMO/ECA tuple, Team Mode off, both meaningful plugin load orders, startup/tool/session/basic
+coding/verification behavior, clean shutdown and C0-C6 classifications. Use port-8090 Qwen only for
+model-bearing checks. This is compatibility evidence; do not pull P4 comparative scoring forward.
 
-Rollback path: switch to synchronized `main`. B0a changed evaluation scheduling only; it did not
-change default capability modes, task/oracle truth, or add a competing evidence store.
+Rollback path: switch to synchronized `main`. B0b closeout changes evaluation cleanup/metrics and
+evidence only; it does not change capability defaults, task/oracle truth, thresholds or product
+rollout authority.
 
 ## Stage V0a — complete on this branch
 

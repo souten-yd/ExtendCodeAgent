@@ -19,51 +19,38 @@ Do not schedule work from the legacy identifiers (`RV-x`, `TA-x`, `AL-x`, `CV-x`
 
 ## Current stage
 
-**Phase 1 — B0b confirmation and gap report.**
+**Phase 1 — B2 OMO coexistence baseline.**
 
-Entry conditions satisfied: observational B0a completed at `e793103`; the corrective causal gate
-completed at `88d2e17` with 58/58 accounted cells, 22 new calls, 13 compatible reused results and 23
-adaptive skips. All 34 forced cells were exact-trace compliant. The corrective evidence is sealed in
-`docs/evidence/final/b0a-causal-correction-result-v1.json` and must be merged before this stage starts.
-The B0b candidate union is `blueprint`, `graph`, `impact`, `semantic`, `strategy`,
-`test_obsolescence`, `test_selection`, and `twin`.
+B0 is complete. The exact-main B0b confirmation accounted for 57/57 local-practical cells with 48/48
+forced-use compliance, 21 PASS, 36 FAIL and no provider/process/timeout/unavailable outcome. No
+covered capability showed a held-out causal PASS delta; four candidates remain
+`NO_HELD_OUT_TASK_COVERAGE`. Conditional B1 is `SKIP_NO_ENTRY_CONDITION`: B0 found no remaining ECA
+product lifecycle/config/version/provider blocker, and the evaluation-runner worktree-retention defect
+is repaired and gated in the B0b closeout. Evidence:
+`docs/evidence/final/b0b-confirmation-result-v1.json` and
+`docs/evidence/final/baseline-gap-report.md`.
+
+B2 entry is satisfied because B0 is stable and the prior model-free smoke recorded OMO 4.19.4 as
+installable with OpenCode 1.18.18. Follow `docs/OMO_COEXISTENCE_AND_COMPATIBILITY_PLAN.md` §9 only for
+the active design detail.
 
 Scope:
 
-- use only ControlDeck-managed Qwen3.6 27B at `127.0.0.1:8090`, context 262,144, with the existing
-  local-practical limits; make no Copilot or host-default call or availability probe;
-- confirm only the eight-capability candidate union on the unchanged held-out KasaneCore split using
-  the existing repetition count, oracle, effect threshold and promotion/demotion rule;
-- preserve the causal evaluation axis: forced PI and forced ablation must hold task, model, prompt
-  and EvaluationPIPlan requests constant, with required trace use verified fail-closed;
-- keep auto selection evidence separate. `EXPECTED_BUT_NOT_USED` remains `PI_SELECTION_GAP`, not a
-  capability failure; corrective gaps/no-signal do not erase observational candidates;
-- retain `research = NO_TASK_COVERAGE` and the corrective `test_obsolescence = NO_TASK_COVERAGE`
-  statement as screening limits; B0b may evaluate test obsolescence only where the already sealed
-  held-out task/oracle contract actually covers it;
-- bound every claim to `active-scoped(local-practical)`; no frontier, host-default, local-low or
-  general-model claim is permitted.
+- record the exact OpenCode / OMO / ExtendCodeAgent version tuple and keep OMO Team Mode off;
+- test startup, tool visibility and invocation, session behavior, one basic coding flow and one
+  verification flow with both meaningful plugin load orders;
+- classify every observation under the existing C0-C6 conflict taxonomy and apply the existing §11
+  stop rules; prefer ECA namespace/idempotence fixes and do not patch OpenCode or OMO;
+- prove cell/session/workspace isolation and clean shutdown; do not infer coexistence from DOM/tool
+  registration alone;
+- use only ControlDeck-managed Qwen3.6 27B at `127.0.0.1:8090` for any model-bearing check. Do not
+  call or probe Copilot, host-default or unavailable local-low;
+- keep claims bounded to compatibility and `active-scoped(local-practical)`. P4 still owns the
+  OpenCode / +OMO / +ECA / +OMO+ECA comparative benchmark.
 
-The bounded implementation schedule is 57 local-practical cells: three candidate-covered held-out
-tasks x three repetitions for each of `auto_pi`, `forced_pi`, and `forced_off` (27 cells), plus 30
-forced-ablation cells. Graph, Twin and Semantic each use all three eligible tasks (nine pairs each);
-Test Selection uses the held-out test-selection task (three pairs). `kasane-unsafe-001` has no B0b
-candidate coverage and is not converted into an efficacy cell. Blueprint, Impact, Strategy and Test
-Obsolescence are `NO_HELD_OUT_TASK_COVERAGE`; do not invent a task or infer no effect. All 57 planned
-cells are required by confirmation, so adaptive screening stopping does not remove repetitions here.
-Merge the runner first, generate a sealed exact-main plan without a model call, inspect it, then run
-resumably with one Qwen inference at a time and CPU-side workspace/oracle/log/seal pipelining.
-
-Entry evidence is sealed in `docs/evidence/final/b0a-adaptive-screening-result-v1.json`. It accounts
-for all 714 cells with 30 new calls, 22 compatible reused results, and 684 machine-classified avoided
-calls. This 95.7983% is evaluation-scheduler call avoidance, not a production ECA call-reduction
-claim. `NOT_TESTED_NO_ACTIVE_USE` says the auto/active agent did not exercise a capability; it is not
-negative capability-efficacy evidence.
-
-Exit: the existing B0b contract is executed and sealed on exact main; `baseline-gap-report.md`
-classifies every failure and records the §10.2 criteria plus ranked keep/repair/defer decisions. Run
-test/build/evidence/handoff gates, review and merge before B1/B2. Do not redesign the matrix, task
-suite, oracle, corpus, capabilities, held-out split or threshold.
+Exit: a reproducible version tuple classified `compatible`, `degraded` or `incompatible`, with every
+conflict and load-order result recorded; test/build/evidence/handoff updated; PR reviewed and merged.
+Do not widen B2 into C-series planner work or P4 scoring.
 
 The B0a execution notes below are retained as immutable history and are not current scheduling
 instructions.

@@ -882,3 +882,30 @@ correction below because its active-trace relevance would have mixed efficacy wi
 - Validation passes `tools/local/all-fast` (208 Python plus 9 adapter),
   `tools/local/test-integration` (70 Python plus 9 adapter), `tools/local/build`, plan/result/final
   evidence seal verification and `git diff --check`.
+
+## 2026-08-17 — B0b local-only held-out confirmation complete
+
+- Merged the bounded runner first at exact main `f15064c`, then sealed a 57-cell plan and executed one
+  ControlDeck-managed Qwen inference at a time. The final checkpoint has 57/57 results, 21 PASS, 36
+  FAIL, 48/48 forced-use compliance and zero provider/process/timeout/unavailable outcomes.
+- Forced PI versus off and Graph/Semantic/Twin/Test Selection ON versus ablation all had zero PASS
+  delta. Four other candidates remain `NO_HELD_OUT_TASK_COVERAGE`. No task, oracle, corpus, threshold,
+  capability or rollout authority changed, and no promotion/demotion was emitted.
+- The run exposed completed-worktree retention after durable capture, eventually filling the local
+  disk. Removed only recreatable generated worktrees, preserved checkpoint/captures/fragments/logs,
+  truncated one partial trace tail to its last valid newline, and resumed without repeating completed
+  model work. The completed trace is unique/replayable for all 57 results.
+- `WorkspaceTemplates.discard` and the CPU finalization pipeline now remove only the exact generated
+  workspace after durable cell capture/finalization; prepared pending cells are also cleaned after a
+  provider-gap stop. Unrelated templates/worktrees are never removed.
+- Corrected efficiency instrumentation measures a request context as input plus cached prompt tokens,
+  rather than per-cell cumulative input. The sealed logs contain 538 requests with p95 68,512, p99
+  86,351 and maximum 93,189 prompt tokens. Deterministic PI wall time uses observed `pi_*` tool
+  intervals only. The immutable raw report is preserved with explicit correction provenance.
+- Added aggregated required-verification-set precision/recall by use policy and overall. All 21
+  measured cells were exact (84 TP, 0 FP, 0 FN), but off and ablation passed equally, so it is not
+  claimed as an attributable PI improvement.
+- Final gate results are recorded in `docs/evidence/final/b0b-confirmation-result-v1.json`; B0 gap and
+  stage decisions are in `docs/evidence/final/baseline-gap-report.md`. Closeout validation passes
+  `tools/local/all-fast` (208 Python plus 9 adapter), `tools/local/test-integration` (79 Python plus 9
+  adapter), `tools/local/build` and `git diff --check`.
