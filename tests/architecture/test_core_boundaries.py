@@ -11,6 +11,7 @@ HOST_NEUTRAL_DIRS = (
     "context",
     "core",
     "graph",
+    "orchestration",
     "runtime",
     "service",
     "storage",
@@ -56,4 +57,15 @@ def test_core_source_contains_no_atlas_or_opencode_contract_names() -> None:
             for token in forbidden:
                 if token in source:
                     violations.append(f"{path.relative_to(PACKAGE_ROOT)}: {token}")
+    assert violations == []
+
+
+def test_task_planner_contains_no_evaluation_task_identity_or_ground_truth_import() -> None:
+    forbidden = ("docs/evaluation", "evaluation-pi-plan", "eca-", "cd-", "kasane-", "task_class")
+    violations = []
+    for path in sorted((PACKAGE_ROOT / "orchestration").rglob("*.py")):
+        source = path.read_text(encoding="utf-8")
+        for token in forbidden:
+            if token in source:
+                violations.append(f"{path.relative_to(PACKAGE_ROOT)}: {token}")
     assert violations == []
