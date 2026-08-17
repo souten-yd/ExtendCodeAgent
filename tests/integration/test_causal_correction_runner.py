@@ -11,6 +11,7 @@ from pytest import MonkeyPatch
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
+from extendcodeagent.evaluation import EvaluationTraceLog  # noqa: E402
 from extendcodeagent.evaluation.causal import forced_use_compliance  # noqa: E402
 from tools.local import adaptive_screening_runner as adaptive  # noqa: E402
 from tools.local import causal_correction_runner as runner  # noqa: E402
@@ -110,3 +111,26 @@ def test_corrective_run_stops_positive_capabilities_after_one_pair(
         item["classification"] == "POSITIVE_CAUSAL_SIGNAL"
         for item in result["intrinsic_pi_results"].values()
     )
+
+
+def test_report_separates_compatible_reuse_from_new_model_calls(tmp_path: Path) -> None:
+    plan_path = tmp_path / "plan.json"
+    runner.create_plan(OBSERVATIONAL, PILOT, plan_path)
+    plan = json.loads(plan_path.read_text())
+    cell = plan["forced_cells"][0]
+    migrated = {
+        **cell,
+        "outcome": "PASS",
+        "input_tokens": 10,
+        "output_tokens": 5,
+        "reasoning_tokens": 0,
+        "model_wall_ms": 12,
+        "result_origin": "COMPATIBILITY_MIGRATION",
+    }
+    trace = EvaluationTraceLog(tmp_path / "traces.jsonl")
+
+    report = runner._report(plan, {cell["cell_id"]: migrated}, {}, [], trace, 0)
+
+    assert report["efficiency"]["llm_calls_executed"] == 0
+    assert report["efficiency"]["llm_calls_reused"] == 1
+    assert report["efficiency"]["reused_model_wall_time_ms"] == 12

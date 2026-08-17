@@ -821,3 +821,20 @@ correction below because its active-trace relevance would have mixed efficacy wi
 - Repair validation passes `tools/local/all-fast` (207 Python plus 9 adapter),
   `tools/local/test-integration` (65 Python plus 9 adapter), `tools/local/build`, focused relative-root
   and causal accounting tests, and `git diff --check`.
+
+## 2026-08-17 — Treatment-aware disabled response and capture reuse repair
+
+- The repaired exact-main run produced eight real Qwen captures: one auto, six forced ON and one
+  forced off. Forced ON request fingerprints all matched. The off route also matched its five-tool
+  request fingerprint, but its expected `capability_unavailable` tool states were indistinguishable
+  from an actual API failure because metrics retained only `tool_state_error`.
+- Preserve the concrete tool error reason. For `forced_off`, capability-unavailable responses are
+  expected treatment observations; for `forced_ablation:X`, only unavailability of X is expected.
+  Missing/reordered/changed/extra requests and every unrelated error remain fail-closed.
+- Add explicit compatible-capture reclassification. It accepts a source revision only when no
+  non-evaluation product/adapter semantic path changed, reruns deterministic oracle/log parsing, and
+  attaches source/current revision plus source-result hash provenance. This prevents eight needless
+  repeated model calls while keeping current-run/new-call metrics separate.
+- Validation passes `tools/local/all-fast` (208 Python plus 9 adapter),
+  `tools/local/test-integration` (67 Python plus 9 adapter), `tools/local/build`, expected-disabled/
+  unexpected-error classification tests, capture-reuse accounting tests and `git diff --check`.

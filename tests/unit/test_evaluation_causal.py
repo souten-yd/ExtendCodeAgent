@@ -104,6 +104,30 @@ def test_forced_tool_error_is_api_gap_and_cannot_score_causally() -> None:
     assert causal["causal_score_permitted"] is False
 
 
+def test_expected_disabled_tool_response_is_compliant_but_other_gaps_fail() -> None:
+    entry = _entry()
+    off = _compliant_result(entry, "FAIL")
+    off["pi_use_policy"] = "forced_off"
+    off["pi_tool_failures"] = [
+        {
+            "tool": "pi_impact",
+            "reason": "capability_unavailable: impact is not available for explicit use",
+        }
+    ]
+
+    compliance = forced_use_compliance(entry, off)
+
+    assert compliance["classification"] == "FORCED_USE_COMPLIANT"
+    assert compliance["expected_disabled_tool_failures"] == off["pi_tool_failures"]
+
+    ablated = copy.deepcopy(off)
+    ablated["pi_use_policy"] = "forced_ablation"
+    ablated["ablation_capability"] = "impact"
+    assert forced_use_compliance(entry, ablated)["compliant"] is True
+    ablated["ablation_capability"] = "semantic"
+    assert forced_use_compliance(entry, ablated)["classification"] == "PI_TOOL_API_GAP"
+
+
 def test_on_off_and_ablation_pairs_use_the_same_request_fingerprint() -> None:
     entry = _entry()
     on = _compliant_result(entry, "PASS")

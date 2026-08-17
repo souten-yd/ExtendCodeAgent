@@ -738,7 +738,10 @@ def _metrics(log_path: Path) -> dict[str, Any]:
                         )
                         if state.get("status") == "error":
                             pi_tool_failures.append(
-                                {"tool": normalized_tool, "reason": "tool_state_error"}
+                                {
+                                    "tool": normalized_tool,
+                                    "reason": str(state.get("error") or "tool_state_error"),
+                                }
                             )
                         timing = state.get("time")
                         if isinstance(timing, dict):

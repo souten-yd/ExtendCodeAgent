@@ -148,9 +148,24 @@ def forced_use_compliance(entry: Mapping[str, Any], result: Mapping[str, Any]) -
     if missing:
         reasons.append("required_pi_tools_not_observed")
     errors = {str(item) for item in result.get("errors", ())}
+    expected_disabled_failures: list[Mapping[str, Any]] = []
+    unexpected_tool_failures: list[Mapping[str, Any]] = []
+    use_policy = str(result.get("pi_use_policy") or "")
+    ablated = str(result.get("ablation_capability") or "")
+    for failure in result.get("pi_tool_failures", ()):
+        reason = str(failure.get("reason") or "")
+        unavailable = reason.removeprefix("capability_unavailable: ").split(" is ", 1)[0]
+        expected_disabled = reason.startswith("capability_unavailable: ") and (
+            use_policy == "forced_off"
+            or (use_policy == "forced_ablation" and unavailable == ablated)
+        )
+        if expected_disabled:
+            expected_disabled_failures.append(failure)
+        else:
+            unexpected_tool_failures.append(failure)
     tool_api_gap = bool(
         errors & {"ConfigError", "ApplicationError", "ToolError", "APIError"}
-        or result.get("pi_tool_failures")
+        or unexpected_tool_failures
     )
     if tool_api_gap:
         reasons.append("forced_route_or_tool_input_failure")
@@ -165,6 +180,8 @@ def forced_use_compliance(entry: Mapping[str, Any], result: Mapping[str, Any]) -
         "compliant": not reasons,
         "reasons": reasons,
         "missing_required_tools": missing,
+        "expected_disabled_tool_failures": expected_disabled_failures,
+        "unexpected_tool_failures": unexpected_tool_failures,
         "planned_request_fingerprint": tool_request_fingerprint(expected),
         "observed_request_fingerprint": tool_request_fingerprint(observed),
     }

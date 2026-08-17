@@ -999,6 +999,36 @@ def test_metrics_split_pi_and_post_tool_model_time(tmp_path: Path) -> None:
     assert "repo_path:tests/unit/test_test_intelligence.py" in measured["selected_evidence_ids"]
 
 
+def test_metrics_preserve_pi_tool_error_reason_for_expected_disabled_route(
+    tmp_path: Path,
+) -> None:
+    log_path = tmp_path / "events.jsonl"
+    log_path.write_text(
+        json.dumps(
+            {
+                "type": "tool_use",
+                "part": {
+                    "tool": "pi_impact",
+                    "state": {
+                        "status": "error",
+                        "input": {"changed_refs": ["py://example#symbol"]},
+                        "error": "capability_unavailable: impact is not available for explicit use",
+                    },
+                },
+            }
+        )
+    )
+
+    measured = _metrics(log_path)
+
+    assert measured["pi_tool_failures"] == [
+        {
+            "tool": "pi_impact",
+            "reason": "capability_unavailable: impact is not available for explicit use",
+        }
+    ]
+
+
 def test_outcome_attribution_measures_required_verification_set_without_weakening_oracle(
     tmp_path: Path,
 ) -> None:
