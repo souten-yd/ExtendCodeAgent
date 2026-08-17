@@ -21,10 +21,10 @@ Do not schedule work from the legacy identifiers (`RV-x`, `TA-x`, `AL-x`, `CV-x`
 
 **Phase 2 — C2 Weak-local evidence protocol (conditional entry satisfied).**
 
-C1 is complete at implementation revision `6601236` with sealed deterministic evidence in
+C1 is complete at implementation revision `aa446d1` with sealed deterministic evidence in
 `docs/evidence/final/c1-shadow-planner-result-v1.json`. All 13 existing manual-reviewed plans were
 reused: 9 tuning and 4 repository-held-out. Intent and capability selection precision/recall are 1.0
-on both splits, under/over-selection is 0.0, p95 decision latency is 24 us, and no repository I/O,
+on both splits, under/over-selection is 0.0, p95 decision latency is 27 us, and no repository I/O,
 model call, capability execution, context delivery or behavior change occurred. This proves only
 shadow plan selection on the sealed tasks; it does not establish task-success or capability efficacy.
 

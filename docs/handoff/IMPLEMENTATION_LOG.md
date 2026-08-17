@@ -1054,8 +1054,11 @@ correction below because its active-trace relevance would have mixed efficacy wi
 - The sealed evaluator reuses 13 existing expected plans (9 tuning, 4 held-out) and never supplies the
   planner task ID/class/oracle. Both splits record intent accuracy, capability precision/recall and
   exact capability/depth match 1.0 with under/over-selection 0.0. Across 1,300 decisions p95 latency
-  is 24 us and max 390 us; repository I/O and LLM calls are zero. Actual injected context is zero;
+  is 27 us and max 412 us; repository I/O and LLM calls are zero. Actual injected context is zero;
   shadow planned budgets average 3,582.769 tokens and are bounded at 8,192.
+- Merge review found that the first deterministic `plan_id` omitted query bounds and truncation-
+  derived uncertainty. The corrected identity now binds query bounds, intent uncertainty/reasons,
+  evidence needs and escalation conditions so semantically different plans cannot share a reuse key.
 - Validation passes `tools/local/all-fast` (220 Python plus 14 adapter),
   `tools/local/test-integration` (97 Python plus 14 adapter), `tools/local/build`, evidence seal and
   `git diff --check`. Evidence: `docs/evidence/final/c1-shadow-planner-result-v1.json`.

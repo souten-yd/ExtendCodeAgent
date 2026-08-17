@@ -6,7 +6,7 @@ Status date: 2026-08-17
 
 Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0 COMPLETE — B1 SKIPPED — B2 COMPLETE — C0-C1 COMPLETE — C2 NEXT**
 
-C1 completed at implementation revision `6601236` without a model call. The host-neutral
+C1 completed at implementation revision `aa446d1` without a model call. The host-neutral
 orchestration layer projects the bounded C0 collector into `TaskSignals`, deterministically emits
 `TaskIntent` and a minimum initial L0-L5 `IntelligencePlan`, and retains only a transient
 `PlanOutcome`. It is strictly shadow-only: no capability executes, no context is delivered, no model
@@ -18,7 +18,7 @@ The sealed C1 evaluation reuses all 13 manual-reviewed expected plans (9 tuning,
 out) without changing the task suite, oracle, corpus or thresholds. Intent accuracy, capability
 precision/recall and exact capability/depth match are 1.0 on both splits; under- and over-selection
 are 0.0. This is plan-selection evidence, not capability-efficacy or task-success evidence. Across
-1,300 deterministic decisions p95 was 24 us and maximum 390 us, with zero repository I/O and zero LLM
+1,300 deterministic decisions p95 was 27 us and maximum 412 us, with zero repository I/O and zero LLM
 calls. Actual injected context is zero; shadow planned context budgets average 3,582.769 tokens and
 max at the existing 8,192-token configured bound. Evidence:
 `docs/evidence/final/c1-shadow-planner-result-v1.json`.

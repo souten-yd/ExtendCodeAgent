@@ -9,7 +9,7 @@ Current task: publish C1 closeout, then start conditional C2 from synchronized m
 
 ## Current authoritative checkpoint (2026-08-17)
 
-- C1 is complete at implementation revision `6601236`. The C0 collector is projected into bounded
+- C1 is complete at implementation revision `aa446d1`. The C0 collector is projected into bounded
   `TaskSignals`; a host-neutral deterministic classifier emits `TaskIntent`, a minimum initial L0-L5
   `IntelligencePlan`, and transient `PlanOutcome` telemetry.
 - C1 is strictly shadow-only. It performs no repository I/O or model call and applies no capability,
@@ -17,7 +17,7 @@ Current task: publish C1 closeout, then start conditional C2 from synchronized m
   refresh only the cheap plan record.
 - The sealed 13-plan review volume is 9 tuning + 4 held-out. Both splits measure intent accuracy and
   capability precision/recall 1.0, under/over-selection 0.0 and exact depth match 1.0. Across 1,300
-  decisions p95 is 24 us and max 390 us. Actual injection is zero; planned context averages 3,582.769
+  decisions p95 is 27 us and max 412 us. Actual injection is zero; planned context averages 3,582.769
   tokens and is capped at 8,192. The production planner receives no task ID/class/oracle.
   This is selection evidence only, not efficacy evidence. See
   `docs/evidence/final/c1-shadow-planner-result-v1.json`.
@@ -529,7 +529,7 @@ Defaults unchanged — every capability still ships `off`.
 
 ## Immediate next work
 
-C1 is complete at implementation revision `6601236` with sealed evidence in
+C1 is complete at implementation revision `aa446d1` with sealed evidence in
 `docs/evidence/final/c1-shadow-planner-result-v1.json`. After this closeout PR merges, synchronize
 main and start C2 on `agent/weak-local-evidence-protocol`. Read
 `docs/COMPETITIVE_ANALYSIS_AND_FEATURE_GAP_ROADMAP.md` §9.1 as the active design detail.

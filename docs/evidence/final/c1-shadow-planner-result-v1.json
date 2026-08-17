@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "classification": "C1_DETERMINISTIC_SHADOW_PLANNER_RESULT",
-  "captured_at": "2026-08-17T14:49:39.219099+00:00",
-  "source_revision": "6601236153a1362a5598ba3227f729f5d0e8d888",
+  "captured_at": "2026-08-17T14:53:06.375764+00:00",
+  "source_revision": "aa446d19957aab8ea302a2cef0413830c42ba78c",
   "execution_scope": "local-only",
   "model": "Qwen3.6 27B",
   "endpoint": "127.0.0.1:8090",
@@ -57,8 +57,8 @@
       "context_scope": "symbol",
       "context_budget_tokens": 2000,
       "unavailable_capabilities": [],
-      "plan_id": "shadow-b29e13d1fa37c02aa85a4cb6",
-      "decision_latency_us": 97,
+      "plan_id": "shadow-6d12001112c3b7e8a99e8b9a",
+      "decision_latency_us": 96,
       "shadow_only": true,
       "behavior_changed": false,
       "llm_calls": 0
@@ -98,8 +98,8 @@
       "context_scope": "impact",
       "context_budget_tokens": 2000,
       "unavailable_capabilities": [],
-      "plan_id": "shadow-504c4d8d6fb05b15cd22c331",
-      "decision_latency_us": 32,
+      "plan_id": "shadow-6301b4e4ed00abd20119eac1",
+      "decision_latency_us": 35,
       "shadow_only": true,
       "behavior_changed": false,
       "llm_calls": 0
@@ -139,8 +139,8 @@
       "context_scope": "neighborhood",
       "context_budget_tokens": 2000,
       "unavailable_capabilities": [],
-      "plan_id": "shadow-e41c38c1159da038b2404389",
-      "decision_latency_us": 28,
+      "plan_id": "shadow-3befdb92e61792db3b344e17",
+      "decision_latency_us": 32,
       "shadow_only": true,
       "behavior_changed": false,
       "llm_calls": 0
@@ -184,8 +184,8 @@
       "context_scope": "strategic",
       "context_budget_tokens": 8192,
       "unavailable_capabilities": [],
-      "plan_id": "shadow-8fb1e98e7a06a6edb29bda13",
-      "decision_latency_us": 31,
+      "plan_id": "shadow-10f63bbfcc874051ed90a167",
+      "decision_latency_us": 35,
       "shadow_only": true,
       "behavior_changed": false,
       "llm_calls": 0
@@ -215,8 +215,8 @@
       "context_scope": "none",
       "context_budget_tokens": 0,
       "unavailable_capabilities": [],
-      "plan_id": "shadow-275858da1f290a2f332c2416",
-      "decision_latency_us": 23,
+      "plan_id": "shadow-d5d53e7157d8f993b3bea4bf",
+      "decision_latency_us": 26,
       "shadow_only": true,
       "behavior_changed": false,
       "llm_calls": 0
@@ -254,8 +254,8 @@
       "context_scope": "symbol",
       "context_budget_tokens": 2000,
       "unavailable_capabilities": [],
-      "plan_id": "shadow-faa7e30232cafe7cb1b5b184",
-      "decision_latency_us": 33,
+      "plan_id": "shadow-5c422c5361709cdff51e1603",
+      "decision_latency_us": 38,
       "shadow_only": true,
       "behavior_changed": false,
       "llm_calls": 0
@@ -297,8 +297,8 @@
       "context_scope": "impact",
       "context_budget_tokens": 4000,
       "unavailable_capabilities": [],
-      "plan_id": "shadow-44031964c5beb99a995a8b59",
-      "decision_latency_us": 28,
+      "plan_id": "shadow-994a9cdb2fbca750dedf4d1a",
+      "decision_latency_us": 32,
       "shadow_only": true,
       "behavior_changed": false,
       "llm_calls": 0
@@ -340,8 +340,8 @@
       "context_scope": "neighborhood",
       "context_budget_tokens": 4000,
       "unavailable_capabilities": [],
-      "plan_id": "shadow-ba1fa96b5a62145ecf337dc2",
-      "decision_latency_us": 29,
+      "plan_id": "shadow-5889acc85b205cca48ec4716",
+      "decision_latency_us": 31,
       "shadow_only": true,
       "behavior_changed": false,
       "llm_calls": 0
@@ -387,8 +387,8 @@
       "context_scope": "runtime_boundary",
       "context_budget_tokens": 8192,
       "unavailable_capabilities": [],
-      "plan_id": "shadow-8997e5c2f326d4ae4df997fb",
-      "decision_latency_us": 38,
+      "plan_id": "shadow-9890ae9006d96c207e2524e1",
+      "decision_latency_us": 42,
       "shadow_only": true,
       "behavior_changed": false,
       "llm_calls": 0
@@ -426,8 +426,8 @@
       "context_scope": "none",
       "context_budget_tokens": 0,
       "unavailable_capabilities": [],
-      "plan_id": "shadow-a175bd539da1a84be59870db",
-      "decision_latency_us": 28,
+      "plan_id": "shadow-0e918203c0d9ca930910abc8",
+      "decision_latency_us": 32,
       "shadow_only": true,
       "behavior_changed": false,
       "llm_calls": 0
@@ -473,8 +473,8 @@
       "context_scope": "runtime_boundary",
       "context_budget_tokens": 8192,
       "unavailable_capabilities": [],
-      "plan_id": "shadow-49f4f57f12cac92660f8c66d",
-      "decision_latency_us": 27,
+      "plan_id": "shadow-ca61468c3e5bab5a17e5022c",
+      "decision_latency_us": 30,
       "shadow_only": true,
       "behavior_changed": false,
       "llm_calls": 0
@@ -514,8 +514,8 @@
       "context_scope": "neighborhood",
       "context_budget_tokens": 2000,
       "unavailable_capabilities": [],
-      "plan_id": "shadow-5957577ee28f4620aa534f38",
-      "decision_latency_us": 27,
+      "plan_id": "shadow-c011b8f24af83cc40f7ef4a7",
+      "decision_latency_us": 31,
       "shadow_only": true,
       "behavior_changed": false,
       "llm_calls": 0
@@ -557,8 +557,8 @@
       "context_scope": "neighborhood",
       "context_budget_tokens": 4000,
       "unavailable_capabilities": [],
-      "plan_id": "shadow-eec771fc7792f761d6690813",
-      "decision_latency_us": 27,
+      "plan_id": "shadow-02a99e1be0384e81b714fe0b",
+      "decision_latency_us": 31,
       "shadow_only": true,
       "behavior_changed": false,
       "llm_calls": 0
@@ -599,11 +599,11 @@
   "decision_latency": {
     "sample_count": 1300,
     "repetitions_per_task": 100,
-    "mean_us": 21.959,
-    "p50_us": 21,
-    "p95_us": 24,
-    "p99_us": 34,
-    "max_us": 390,
+    "mean_us": 24.566,
+    "p50_us": 24,
+    "p95_us": 27,
+    "p99_us": 37,
+    "max_us": 412,
     "repository_io": 0,
     "llm_calls": 0
   },
@@ -636,8 +636,8 @@
       "D1": 7
     },
     "model_wall_time_ms": 0,
-    "deterministic_pi_wall_time_ms": 0.448,
-    "total_wall_time_ms": 0.448,
+    "deterministic_pi_wall_time_ms": 0.491,
+    "total_wall_time_ms": 0.491,
     "reused_evidence_count": 0,
     "invalidated_evidence_count": 0,
     "sealed_expected_plan_reused_count": 13
@@ -657,6 +657,6 @@
   "plan_identity_count": 13,
   "seal": {
     "algorithm": "sha256",
-    "canonical_payload": "9b76d2e47d20af021451aeb7cf9095e652029e25e4e3bd58bb2219f8481b8531"
+    "canonical_payload": "abaa4899e6c86fdb12a15fc34652b89097c597275b2a988b9e45a7901399c2ce"
   }
 }
