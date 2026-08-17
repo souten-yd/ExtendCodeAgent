@@ -957,7 +957,8 @@ actual ControlDeck llama.cpp `--ctx-size`, and real `opencode run` is required b
 
 The sealed 27-cell gate is now the adoption boundary evidence for entering comprehensive evaluation:
 active gained six exact PASS over controls, every active cell observed required PI, and no timeout
-occurred. This authorizes—not completes—the 306-cell baseline and 714-cell screening schedules.
+occurred. This authorizes—not completes—the current 162-cell baseline and 714-cell screening
+schedules. The historical schedule at the time of the pilot contained 306 baseline cells.
 Residual symbol/test variance remains visible in task-level metrics and is not treated as resolved.
 
 ## 2026-08-17 — Evaluation checkpoints migrate only through compatibility and Bridge proof
@@ -981,7 +982,13 @@ Copilot Sonnet/Codex. `host-default` is an opaque OpenCode convenience alias and
 unavailable; neither belongs in the quality denominator. The `native`/`off` baseline is therefore
 3 models x 9 tasks x 2 arms x 3 repetitions = 162 cells.
 
-Provider capacity remains orthogonal to quality. In particular, Copilot Codex monthly quota
-exhaustion moves affected executions to provider attempts, pauses only that route, and leaves the
-cells pending until an availability probe succeeds. It cannot be converted into FAIL/PASS or
+Provider capacity remains orthogonal to quality. The GitHub Copilot monthly quota is shared: fresh
+Sonnet and Codex probes can both be unavailable even though only Codex has unfinished baseline
+cells. Affected executions move to provider attempts, each route pauses independently, and cells
+remain pending until an availability probe succeeds. They cannot be converted into FAIL/PASS or
 substituted with `host-default`.
+
+Screening order is enforced rather than documented convention: `b0a-screening` requires a sealed,
+exact-head `--baseline-report` containing all 162 scheduled cells and one valid trace per result.
+Provider-gap quality results, incomplete cells, changed provenance or a stale head reject screening
+before any workspace or model call is created.

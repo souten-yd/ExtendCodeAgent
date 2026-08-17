@@ -89,6 +89,7 @@ non-goals remain binding).
 | `CODEX_IMPLEMENTATION_GUIDE.md`, `CODEX_PRODUCTIZATION_EXECUTION_GUIDE.md` | Agent working rules. Their read orders and first-task sections are replaced by §8 and `handoff/NEXT_TASK.md`. |
 | `CURRENT_STATUS.md` | Program state and evidence ledger only. No sequencing. |
 | `handoff/*` | Rolling state. `NEXT_TASK.md` points at this document. |
+| `evaluation/b0a-quality-target-v1.json` | Sealed B0a execution contract for the user-requested Qwen/Copilot Sonnet/Copilot Codex quality routes and 162-cell baseline. It narrows the historical matrix without changing task/oracle semantics. |
 
 ## 3. Resolved inconsistencies
 
@@ -303,6 +304,9 @@ path, but remains ordinary OpenCode for ECA architecture and scoring.
 
 Repetition minimums: `local-low` 5 runs, `local-practical` 3, `host-default` 3, and 3 each for the
 Copilot Sonnet and Copilot Codex frontier arms when available. Report distributions, never a best run.
+This is the general evaluation inventory, not the B0a executable denominator. B0a is narrowed by the
+sealed quality target to local-practical Qwen and the two Copilot frontier arms; `local-low` and
+`host-default` remain visible historical/framework tiers but do not create B0a quality cells.
 
 ### 7.3 Corpora and their roles
 
@@ -531,8 +535,8 @@ reproduce provider failures with PI disabled first; run the OMO coexistence smok
 a namespace or duplicate-execution defect surfaces before R0 rather than at P4.
 
 Before any long baseline or screening run, execute an exact-head **PI activation gate** through the
-same ControlDeck-managed OpenCode executable. Every permitted available route (port-8090
-local-practical, host-default, GitHub Copilot Sonnet and GitHub Copilot Codex) must call `pi_status`
+same ControlDeck-managed OpenCode executable. Every quality route in the sealed B0a target
+(port-8090 local-practical Qwen, GitHub Copilot Sonnet and GitHub Copilot Codex) must call `pi_status`
 and a task-bearing non-status PI tool, observe the configured capability modes/depths, a ready Twin
 revision, provenance-bearing canonical evidence and positive PI execution time. The gate also checks
 that every capability scheduled for ablation has at least one reachable OpenCode runtime route and a
@@ -565,8 +569,11 @@ task projection and obligation gaps before deeper graph construction; optimize q
 from the segmented trace. A partial 27-cell confirmation is not resumable as final evidence after a
 timeout or repair-head change.
 
-After that gate passes, establish `native` and `off` baselines at **full** tiers and repetitions,
-since every later number is read against them; then run the **screening** pass — each `ablation(X)` at
+After that gate passes, establish the 162-cell `native` and `off` baseline over all three quality
+routes, nine tasks and three repetitions, since every later number is read against it. `host-default`
+and unavailable `local-low` are outside this quality denominator. Only after a sealed exact-head
+162/162 report passes the baseline-completion gate may the runner start the **screening** pass — each
+`ablation(X)` at
 its one assigned tier over the fixed tuning subset, depth arms only where a depth-dependent claim
 exists. Baseline or screening results produced before the activation contract, or at a different
 exact head, are diagnostic history and cannot be mixed into the final comparison.

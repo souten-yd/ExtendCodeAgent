@@ -17,10 +17,10 @@
 
 - The 229-cell `7e58751` report is immutable and cannot be passed directly to `--resume` on a newer
   runner. It is also no longer discarded wholesale merely because provider supervision changed.
-- A sealed compatibility audit currently yields the diagnostic split 217 reuse candidates, four
-  provider gaps and eight timeouts. Official reuse still requires the clean merged audit plus a
-  matching multi-provider Bridge Proof; the Bridge commands now exist but have not yet run, and no
-  migration command exists yet.
+- The sealed compatibility audit yielded 217 reuse candidates, four provider gaps and eight
+  timeouts. The multi-provider Bridge Proof and migration have completed. Under the current
+  three-route target, 100 cells are retained as migrated evidence and 45 were executed by the current
+  runner; 17 Codex cells remain pending.
 - Functional outcome and legacy latency are separate. Even a migrated functional result remains
   `LEGACY_RUNNER_LATENCY` until an explicit latency bridge permits aggregation.
 - Historical Bridge evidence remains useful for provenance, but `host-default` and `local-low` are
@@ -35,9 +35,9 @@
 - PR #66 at merged head `91b82e3` repairs the harness and has real-route fail-fast evidence, but it does not restore
   provider capacity. The affected checkpoint remains diagnostic and must not enter quality/latency
   aggregates or be resumed across the runner-head change.
-- Resume condition: merge the repair, observe provider recovery through the sealed activation route,
-  rerun activation/pilot at one exact head, then restart baseline from zero. Port 8090 and Ollama are
-  unrelated and must not be changed for this host-default gap.
+- This host-default condition is historical and outside the current quality target. Its cells remain
+  excluded; it is not a resume condition for the three-route baseline. Port 8090 and Ollama are
+  unrelated and must not be changed for this historical gap.
 
 ## E3 evaluation limitations
 

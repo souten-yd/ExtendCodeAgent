@@ -1,10 +1,32 @@
 # Current Handoff
 
-Updated: 2026-08-16 (Asia/Tokyo)
+Updated: 2026-08-17 (Asia/Tokyo)
 
-Current branch: `agent/b1-confirmed-effect-evidence`; latest merged base `7e58751b05ec310412c3406c8b9ae1142fdd1c6c`
+Canonical branch: `main`; latest audited merged base before this documentation closeout is
+`1cd6d536435493d1082593b2db7146edd4a248ee` (PR #76)
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
-Current task: prove real PI activation and repair missing capability routes before comprehensive B0a
+Current task: complete the three-route B0a baseline, then run the gated local-practical screening
+
+## Current authoritative checkpoint (2026-08-17)
+
+- B0a quality targets are exactly ControlDeck-managed port-8090 Qwen, GitHub Copilot Sonnet and
+  GitHub Copilot Codex. `host-default` and `local-low` are outside the quality denominator.
+- The baseline contract is 162 cells. Valid progress is 145/162: Qwen 54/54, Sonnet 54/54 and Codex
+  37/54. The remaining 17 Codex cells are pending; no provider gap is counted as quality or latency.
+- A fresh exact-head availability probe remains `QUOTA_EXHAUSTED`. The quota is shared by the GitHub
+  Copilot provider: new Sonnet and Codex calls are unavailable while existing valid Sonnet results
+  remain reusable.
+- The confirmed 27-cell Qwen pilot remains `PROCEED_TO_COMPREHENSIVE`: native/off/active PASS is
+  0/0/6, every required PI observation is present and active median wall ratio is 0.658.
+- PR #76 makes the execution order fail closed. The 714-cell screening now requires a sealed,
+  exact-head, trace-complete 162/162 baseline report through `--baseline-report`; 145/162 cannot
+  create a screening workspace.
+- The current mixed checkpoint truth is 100 compatibility-migrated cells plus 45 current-runner
+  cells. Legacy latency remains excluded. Resume only after a successful Codex availability proof,
+  execute the 17 pending cells once, then begin screening.
+
+The chronology below is retained as history. Its four-model/306-cell statements describe superseded
+protocols and are not current execution instructions.
 
 ## B0a contract checkpoint (2026-08-16)
 

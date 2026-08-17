@@ -1,5 +1,15 @@
 # Implementation Log
 
+## 2026-08-17 — Canonical three-route contract reconciliation
+
+- Registered the sealed B0a quality target in the canonical master plan and replaced the active
+  four-route/full-tier language with Qwen plus Copilot Sonnet/Codex and a 162-cell baseline.
+- Refreshed the current handoff to 145/162, 100 migrated plus 45 current-runner cells, the shared
+  Copilot quota gap and the PR #76 baseline-completion gate. Historical 306-cell chronology remains
+  explicitly labeled superseded rather than being rewritten as current evidence.
+- Corrected stale checkpoint/Bridge/migration and host-default resume instructions in the rolling
+  handoff and known-issues documents.
+
 ## 2026-08-17 — Baseline-completion gate and mixed-provenance repair
 
 - Added a fail-closed `--baseline-report` gate for B0a screening. The report must be sealed, produced
