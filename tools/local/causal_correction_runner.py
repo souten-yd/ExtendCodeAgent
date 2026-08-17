@@ -459,6 +459,11 @@ def _append_missing_traces(
             legacy._append_trace(trace_log, result, tasks[result["task_id"]])
 
 
+def _capture_is_compliance_compatible(result: dict[str, Any]) -> bool:
+    compliance = result.get("forced_use_compliance")
+    return not isinstance(compliance, dict) or compliance.get("compliant") is True
+
+
 def run(
     plan_path: Path,
     raw_root: Path,
@@ -508,8 +513,7 @@ def run(
                 result = adaptive._finalize_agent(capture, raw_root)
                 if should_reclassify:
                     assert capture_source_revision is not None
-                    compliance = result.get("forced_use_compliance")
-                    if isinstance(compliance, dict) and not compliance.get("compliant", False):
+                    if not _capture_is_compliance_compatible(result):
                         results.pop(cell_id, None)
                         continue
                     result = adaptive._migrated_result(result, capture_source_revision, _head())

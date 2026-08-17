@@ -151,6 +151,16 @@ def test_report_separates_compatible_reuse_from_new_model_calls(tmp_path: Path) 
     assert report["efficiency"]["reused_model_wall_time_ms"] == 12
 
 
+def test_noncompliant_forced_capture_is_not_compatibility_evidence() -> None:
+    assert runner._capture_is_compliance_compatible({})
+    assert runner._capture_is_compliance_compatible(
+        {"forced_use_compliance": {"compliant": True}}
+    )
+    assert not runner._capture_is_compliance_compatible(
+        {"forced_use_compliance": {"compliant": False, "classification": "PI_TOOL_API_GAP"}}
+    )
+
+
 def test_compatible_reclassification_keeps_existing_immutable_trace(tmp_path: Path) -> None:
     plan_path = tmp_path / "plan.json"
     runner.create_plan(OBSERVATIONAL, PILOT, plan_path)
