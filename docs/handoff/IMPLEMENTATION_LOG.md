@@ -1,5 +1,16 @@
 # Implementation Log
 
+## 2026-08-17 — Baseline-completion gate and mixed-provenance repair
+
+- Added a fail-closed `--baseline-report` gate for B0a screening. The report must be sealed, produced
+  at the current exact head, contain exactly all 162 scheduled cells, contain no provider-gap quality
+  result, and have one valid append-only trace per result before any screening workspace is created.
+- Baseline checkpoints are now sealed even without migrated cells, and resume verifies any available
+  checkpoint seal. Screening reports retain the exact baseline evidence binding across resume.
+- Requeue now recomputes retained migrated/current-runner counts and reports mixed provenance
+  explicitly. Legacy-runner timing is excluded from current timing aggregates unless a separate
+  latency bridge permits merging.
+
 ## 2026-08-17 — Three-route B0a target and Copilot quota requeue
 
 - Corrected the B0a quality scope to the user-mandated routes only: ControlDeck-managed Qwen,

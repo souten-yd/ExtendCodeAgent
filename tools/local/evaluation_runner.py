@@ -1334,10 +1334,12 @@ def run(
     raw_root_override: Path | None,
     activation_report: Path | None,
     pilot_report: Path | None,
+    baseline_report: Path | None,
     availability_proof_paths: list[Path],
 ) -> None:
     activation_evidence: dict[str, Any] | None = None
     pilot_evidence: dict[str, Any] | None = None
+    baseline_evidence: dict[str, Any] | None = None
     if scope == "b0a-pilot":
         activation_evidence = _require_activation_report(
             activation_report, require_comprehensive=False
@@ -1347,6 +1349,8 @@ def run(
             activation_report, require_comprehensive=True
         )
         pilot_evidence = _require_pilot_report(pilot_report)
+    if scope == "b0a-screening":
+        baseline_evidence = _require_baseline_report(baseline_report)
     if scope.startswith("b0a-"):
         _require_clean_worktree()
     schedule = plan(
@@ -1377,6 +1381,7 @@ def run(
             schedule,
             activation_evidence,
             pilot_evidence,
+            baseline_evidence,
             trace_log.path,
         )
     elif resume and trace_log.path.exists():
@@ -1390,7 +1395,7 @@ def run(
         results = list(previous.get("results", []))
         provider_attempts = list(previous.get("provider_attempts", []))
         provider_queue = dict(previous.get("provider_queue", {}))
-        if previous.get("result_origin") == "migrated_checkpoint":
+        if "compatibility_proof_seal" in previous:
             migration_provenance = {
                 key: previous[key]
                 for key in (
@@ -1443,6 +1448,7 @@ def run(
                 provider_queue,
                 provider_attempts,
                 migration_provenance,
+                baseline_evidence,
             ),
         )
     report = _report(
@@ -1455,6 +1461,7 @@ def run(
         provider_queue,
         provider_attempts,
         migration_provenance,
+        baseline_evidence,
     )
     _write_report(output, report)
     if scope == "b0a-activation" and report["activation_gate"]["status"] != "PASS":
@@ -1727,6 +1734,16 @@ def requeue_provider_gaps(checkpoint_path: Path, output: Path, raw_root: Path) -
         for item in source.get("provider_attempts", [])
         if item.get("model_tier") in B0A_QUALITY_MODELS
     ]
+    origin_counts = Counter(item.get("result_origin", "current_runner") for item in kept)
+    migrated_cells = origin_counts.get("migrated_checkpoint", 0)
+    current_runner_cells = len(kept) - migrated_cells
+    result_origin = (
+        "provider_gap_only"
+        if not origin_counts
+        else next(iter(origin_counts))
+        if len(origin_counts) == 1
+        else "mixed_checkpoint"
+    )
     body = {
         **{
             key: value
@@ -1739,6 +1756,10 @@ def requeue_provider_gaps(checkpoint_path: Path, output: Path, raw_root: Path) -
                 "schedule",
                 "provider_queue",
                 "provider_attempts",
+                "result_origin",
+                "latency_status",
+                "latency_merge_permitted",
+                "migration_summary",
             }
         },
         "captured_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -1750,6 +1771,15 @@ def requeue_provider_gaps(checkpoint_path: Path, output: Path, raw_root: Path) -
         "provider_queue": provider_queue,
         "provider_attempts": [*prior_attempts, *requeued],
         "results": kept,
+        "result_origin": result_origin,
+        "latency_status": (
+            "LEGACY_RUNNER_SEPARATE"
+            if current_runner_cells == 0
+            else "MIXED_LEGACY_AND_CURRENT_SEPARATE"
+            if migrated_cells
+            else "CURRENT_RUNNER"
+        ),
+        "latency_merge_permitted": False,
         "target_completion": {
             "model_tiers": sorted(B0A_QUALITY_MODELS),
             "expected_cells": len(schedule["cells"]),
@@ -1765,10 +1795,16 @@ def requeue_provider_gaps(checkpoint_path: Path, output: Path, raw_root: Path) -
             "requeued_count": len(requeued),
         },
     }
-    migration_summary = body.get("migration_summary")
-    if isinstance(migration_summary, dict):
+    source_migration_summary = source.get("migration_summary")
+    if isinstance(source_migration_summary, dict):
         body["migration_summary"] = {
-            **migration_summary,
+            **source_migration_summary,
+            "migrated_cells": migrated_cells,
+            "current_runner_cells": current_runner_cells,
+            "excluded_out_of_scope_cells": sum(
+                item.get("cell_id") not in scheduled_ids for item in source.get("results", [])
+            ),
+            "requeued_provider_gap_cells": len(requeued),
             "remaining_schedule_cells": len(schedule["cells"]) - len(kept),
             "quality_target_cells": len(schedule["cells"]),
         }
@@ -1781,6 +1817,7 @@ def _validate_resume(
     schedule: dict[str, Any],
     activation_evidence: dict[str, Any] | None,
     pilot_evidence: dict[str, Any] | None,
+    baseline_evidence: dict[str, Any] | None,
     trace_path: Path,
 ) -> None:
     current_revision = subprocess.check_output(
@@ -1791,13 +1828,15 @@ def _validate_resume(
     expected_schedule = {key: value for key, value in schedule.items() if key != "cells"}
     if previous.get("schedule") != expected_schedule:
         raise EvaluationError("resume report schedule does not match the current sealed schedule")
-    migrated_unbound = previous.get("result_origin") == "migrated_checkpoint"
-    if migrated_unbound:
-        verify_seal(previous, "migrated checkpoint")
-    if not migrated_unbound and previous.get("activation_evidence") != activation_evidence:
+    if "seal" in previous:
+        verify_seal(previous, "resume checkpoint")
+    migration_bound = "compatibility_proof_seal" in previous
+    if not migration_bound and previous.get("activation_evidence") != activation_evidence:
         raise EvaluationError("resume report activation evidence does not match")
-    if not migrated_unbound and previous.get("pilot_evidence") != pilot_evidence:
+    if not migration_bound and previous.get("pilot_evidence") != pilot_evidence:
         raise EvaluationError("resume report pilot evidence does not match")
+    if previous.get("baseline_evidence") != baseline_evidence:
+        raise EvaluationError("resume report baseline evidence does not match")
     if previous.get("trace_log") != str(trace_path):
         raise EvaluationError("resume report points at a different trace log")
     results = list(previous.get("results", ()))
@@ -1806,7 +1845,8 @@ def _validate_resume(
     result_ids = [item.get("cell_id") for item in results]
     if len(result_ids) != len(set(result_ids)):
         raise EvaluationError("resume report contains duplicate cells")
-    expected_ids = {item["cell_id"] for item in schedule["cells"]}
+    expected_cells = {item["cell_id"]: item for item in schedule["cells"]}
+    expected_ids = set(expected_cells)
     if not set(result_ids) <= expected_ids:
         raise EvaluationError("resume report contains cells outside the current schedule")
 
@@ -1874,6 +1914,71 @@ def _require_activation_report(path: Path | None, *, require_comprehensive: bool
         "status": "PARTIAL_PROVIDER_GAP" if partial_provider_gap else "PASS",
         "activated_models": gate.get("observed_models", []),
         "provider_queue": provider_queue,
+    }
+
+
+def _require_baseline_report(path: Path | None) -> dict[str, Any]:
+    """Require a complete, sealed, exact-head B0a baseline before screening."""
+    if path is None:
+        raise EvaluationError("--baseline-report is required for B0a screening")
+    resolved = path.resolve()
+    report = _load(resolved)
+    verify_seal(report, "B0a baseline report")
+    schedule = plan("b0a-baseline")
+    expected_schedule = {key: value for key, value in schedule.items() if key != "cells"}
+    if report.get("schedule") != expected_schedule:
+        raise EvaluationError("B0a baseline report does not match the current sealed schedule")
+    current_revision = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+    ).strip()
+    if report.get("source_revision") != current_revision:
+        raise EvaluationError("B0a baseline report was not produced at the current exact head")
+    expected_cells = {item["cell_id"]: item for item in schedule["cells"]}
+    expected_ids = set(expected_cells)
+    results = list(report.get("results", ()))
+    result_ids = [item.get("cell_id") for item in results]
+    if len(result_ids) != len(set(result_ids)) or set(result_ids) != expected_ids:
+        raise EvaluationError("B0a baseline report is incomplete or contains unexpected cells")
+    identity_keys = (
+        "task_id",
+        "task_class",
+        "repository_id",
+        "model_tier",
+        "model_id",
+        "arm",
+        "repetition",
+    )
+    if any(
+        any(result.get(key) != expected_cells[result["cell_id"]].get(key) for key in identity_keys)
+        for result in results
+    ):
+        raise EvaluationError("B0a baseline result provenance does not match the sealed schedule")
+    expected_completion = {
+        "model_tiers": sorted(B0A_QUALITY_MODELS),
+        "expected_cells": len(expected_ids),
+        "completed_cells": len(expected_ids),
+        "pending_cells": 0,
+    }
+    if report.get("target_completion") != expected_completion:
+        raise EvaluationError("B0a baseline completion summary is not complete")
+    if any(
+        item.get("provider_failure") or item.get("outcome") == "UNAVAILABLE" for item in results
+    ):
+        raise EvaluationError("B0a baseline contains a provider-gap quality result")
+    trace_path = Path(str(report.get("trace_log", "")))
+    if not trace_path.is_file():
+        raise EvaluationError("B0a baseline trace log is missing")
+    traces = EvaluationTraceLog(trace_path).replay()
+    trace_ids = [item.trace_id for item in traces]
+    result_trace_ids = [item.get("trace_id") for item in results]
+    if len(traces) != len(results) or set(trace_ids) != set(result_trace_ids):
+        raise EvaluationError("B0a baseline trace coverage is incomplete")
+    return {
+        "path": str(resolved),
+        "report_seal": report["seal"]["canonical_payload"],
+        "source_revision": current_revision,
+        "completed_cells": len(results),
+        "trace_integrity": "PASS",
     }
 
 
@@ -1984,6 +2089,7 @@ def _report(
     provider_queue: dict[str, dict[str, Any]] | None = None,
     provider_attempts: list[dict[str, Any]] | None = None,
     migration_provenance: dict[str, Any] | None = None,
+    baseline_evidence: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     report = {
         "schema": 1,
@@ -2038,19 +2144,33 @@ def _report(
         "json_serialization_ms",
         "model_reasoning_after_tool_ms",
     )
+    legacy_latency_cells = sum(item.get("latency_status") == "LEGACY_RUNNER" for item in results)
+    latency_merge_permitted = bool(
+        migration_provenance and migration_provenance.get("latency_merge_permitted")
+    )
+    latency_results = (
+        results
+        if latency_merge_permitted
+        else [item for item in results if item.get("latency_status") != "LEGACY_RUNNER"]
+    )
+    report["latency_population"] = {
+        "aggregated_cells": len(latency_results),
+        "legacy_cells_excluded": 0 if latency_merge_permitted else legacy_latency_cells,
+        "legacy_merge_permitted": latency_merge_permitted,
+    }
     report["pi_timing_median_ms_by_arm"] = {
         arm: {
             key: median(
                 [
                     float(item.get("pi_timing_ms", {}).get(key, 0.0))
-                    for item in results
+                    for item in latency_results
                     if item["arm"] == arm
                 ]
             )
             for key in timing_keys
         }
-        for arm in sorted({item["arm"] for item in results})
-        if any(item["arm"] == arm for item in results)
+        for arm in sorted({item["arm"] for item in latency_results})
+        if any(item["arm"] == arm for item in latency_results)
     }
     if scope == "b0a-activation":
         report["activation_gate"] = _activation_gate(results)
@@ -2060,7 +2180,9 @@ def _report(
         report["activation_evidence"] = activation_evidence
     if pilot_evidence is not None:
         report["pilot_evidence"] = pilot_evidence
-    if migration_provenance:
+    if baseline_evidence is not None:
+        report["baseline_evidence"] = baseline_evidence
+    if migration_provenance or scope == "b0a-baseline":
         report["seal"] = {"algorithm": "sha256", "canonical_payload": digest(report)}
     return report
 
@@ -2280,6 +2402,7 @@ def main() -> int:
     run_parser.add_argument("--raw-root", type=Path)
     run_parser.add_argument("--activation-report", type=Path)
     run_parser.add_argument("--pilot-report", type=Path)
+    run_parser.add_argument("--baseline-report", type=Path)
     run_parser.add_argument("--availability-proof", type=Path, action="append")
     _selection_arguments(run_parser)
     screen_parser = sub.add_parser("screen")
@@ -2364,6 +2487,7 @@ def main() -> int:
                 args.raw_root,
                 args.activation_report,
                 args.pilot_report,
+                args.baseline_report,
                 args.availability_proof or [],
             )
         elif args.command == "screen":
