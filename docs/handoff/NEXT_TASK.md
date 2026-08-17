@@ -19,36 +19,39 @@ Do not schedule work from the legacy identifiers (`RV-x`, `TA-x`, `AL-x`, `CV-x`
 
 ## Current stage
 
-**Phase 2 — C1 Shadow task-aware planner.**
+**Phase 2 — C2 Weak-local evidence protocol (conditional entry satisfied).**
 
-C0 is complete at implementation revision `0a8a846`. The host-neutral contract reuses `ProjectRef`
-and immutable `RuntimeObservation`, adds exhaustive runtime capability negotiation, and supplies a
-bounded in-memory `TaskSignalCollector` for task/session/mutation/model/advisory signals. OpenCode
-1.18.18 maps its own event types only inside the adapter. `deliver_context` and `request_model` are
-truthfully unavailable; file mutation and verification are degraded with explicit reasons. No LLM
-call was needed. Evidence: `docs/evidence/final/c0-runtime-contract-result-v1.json`.
+C1 is complete at implementation revision `6601236` with sealed deterministic evidence in
+`docs/evidence/final/c1-shadow-planner-result-v1.json`. All 13 existing manual-reviewed plans were
+reused: 9 tuning and 4 repository-held-out. Intent and capability selection precision/recall are 1.0
+on both splits, under/over-selection is 0.0, p95 decision latency is 24 us, and no repository I/O,
+model call, capability execution, context delivery or behavior change occurred. This proves only
+shadow plan selection on the sealed tasks; it does not establish task-success or capability efficacy.
 
-Follow `docs/TRANSPARENT_PI_ORCHESTRATION_PLAN.md` only as the active C1 design detail. Implement the
-Master Plan §8 C1 scope:
+C2 entry is satisfied narrowly by existing B0/C1 evidence: 20 B0b cells had sufficient required PI
+facts but an incorrect final schema, `pi_symbol` and `pi_context` dominate serialized injected data,
+and C1 can now choose bounded task/capability/depth plans deterministically. Follow Master Plan §8 C2
+and `docs/COMPETITIVE_ANALYSIS_AND_FEATURE_GAP_ROADMAP.md` §9.1 as the active design detail:
 
-- project the C0 collector into compact `TaskSignals`, then deterministically classify `TaskIntent`
-  and produce an `IntelligencePlan` plus `PlanOutcome` telemetry;
-- remain shadow-only: record what would be selected, but do not change context, model route, tool use,
-  capability execution, verification or user-visible OpenCode behavior;
-- treat the sealed EvaluationPIPlan as human-reviewed expected-plan ground truth, not as production
-  planner rules copied verbatim;
-- evaluate tuning and held-out tasks separately and record intent accuracy, capability selection
-  precision/recall, under-selection and over-selection; preserve `EXPECTED_BUT_NOT_USED` as a
-  selection gap rather than an efficacy failure;
-- keep classifier/planner deterministic and cheap with no repository-scale synchronous hook work and
-  no LLM classifier call;
-- retain local-only execution policy if a model-bearing comparison is contractually required; do not
-  call or probe Copilot, host-default or unavailable local-low.
+- define a stable PI envelope separated from task/revision evidence using existing context, trace and
+  routing components rather than a new store or planner framework;
+- reduce candidates deterministically before any model call and begin with minimum capability/depth/
+  context selected by the C1 plan;
+- make ID/enum/exact-schema decisions bounded, compress dominant symbol/context/runtime output, and
+  expand only on an explicit unresolved evidence gap;
+- preserve the sealed task suite, oracle, corpus, effect threshold and B0 evidence; audit compatible
+  reuse before generating any new Qwen cell;
+- measure request context, PI-attributed output size/tokens where observable, output/reasoning bounds,
+  cache/prefix reuse, outcome and wall time on repeated `local-practical` runs;
+- keep `local-low` as `UNAVAILABLE / NOT_CONFIGURED` with no claim. Do not call/probe Copilot,
+  host-default or local-low, and do not substitute another provider;
+- do not pull C3 advisory automatic application, V-series verification mechanisms or P0 evidence
+  memory forward.
 
-Exit: deterministic classifier/planner tests, bounded decision-latency evidence, selection-quality
-report against tuning and held-out expected plans, native behavior unchanged, test/build/evidence/
-handoff updated, and PR reviewed/merged. Do not pull C3 advisory selection or active context delivery
-into C1.
+Exit under the one local-only execution exception: deterministic protocol tests, repeated
+local-practical native/off/bounded-evidence evidence showing whether quality/reliability/efficiency
+improves, explicit local-low unavailability, full test/build/evidence/handoff, PR review and merge.
+Negative or no-effect results remain valid and must not be hidden by loosening the oracle.
 
 The B0a execution notes below are retained as immutable history and are not current scheduling
 instructions.
@@ -174,7 +177,7 @@ prompt or transcript. See `docs/evidence/final/e5-trace-proof.json`.
 - **E5** minimal PI trace as evaluation infrastructure — done, including explicit
   planned-versus-observed state provenance and reserved `used_features` shape.
 
-**B0a/B0b**, conditional B1 disposition, B2 and C0 are complete. **C1** is the current stage.
+**B0a/B0b**, conditional B1 disposition, B2, C0 and C1 are complete. **C2** is the current stage.
 
 ## Ablation arms available after E1
 

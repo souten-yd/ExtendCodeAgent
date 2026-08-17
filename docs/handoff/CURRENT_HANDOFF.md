@@ -2,14 +2,26 @@
 
 Updated: 2026-08-17 (Asia/Tokyo)
 
-Canonical branch: `agent/c0-runtime-contract`; synchronized merged base is
-`f8986b3973ccb17f8186a9ae8dc66d8a2a67c9d8` (PR #95)
+Canonical branch: `agent/task-aware-shadow`; synchronized merged base is
+`c4f968e3234b0056d297f81c6d782355c31c8b25` (PR #96)
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
-Current task: publish C0 closeout, then start C1 Shadow task-aware planner from synchronized main
+Current task: publish C1 closeout, then start conditional C2 from synchronized main
 
 ## Current authoritative checkpoint (2026-08-17)
 
-- C0 is complete at implementation revision `0a8a846`. It reuses `ProjectRef`, `Provenance` and
+- C1 is complete at implementation revision `6601236`. The C0 collector is projected into bounded
+  `TaskSignals`; a host-neutral deterministic classifier emits `TaskIntent`, a minimum initial L0-L5
+  `IntelligencePlan`, and transient `PlanOutcome` telemetry.
+- C1 is strictly shadow-only. It performs no repository I/O or model call and applies no capability,
+  context, model-route, verification or user-visible change. Task/model/mutation/evidence arrivals
+  refresh only the cheap plan record.
+- The sealed 13-plan review volume is 9 tuning + 4 held-out. Both splits measure intent accuracy and
+  capability precision/recall 1.0, under/over-selection 0.0 and exact depth match 1.0. Across 1,300
+  decisions p95 is 24 us and max 390 us. Actual injection is zero; planned context averages 3,582.769
+  tokens and is capped at 8,192. The production planner receives no task ID/class/oracle.
+  This is selection evidence only, not efficacy evidence. See
+  `docs/evidence/final/c1-shadow-planner-result-v1.json`.
+- C0 remains complete at implementation revision `0a8a846`. It reuses `ProjectRef`, `Provenance` and
   immutable `RuntimeObservation`; no competing runtime truth store was added.
 - A small exhaustive runtime capability descriptor records all 12 host features as supported,
   degraded or unavailable. OpenCode 1.18.18 declares mutation and verification degraded,
@@ -24,8 +36,10 @@ Current task: publish C0 closeout, then start C1 Shadow task-aware planner from 
   gates pass all-fast 213 Python + 14 adapter, integration 96 Python + 14 adapter, Python sdist/wheel,
   TypeScript build and diff check. Sealed evidence is
   `docs/evidence/final/c0-runtime-contract-result-v1.json`.
-- C1 is next. Read `docs/TRANSPARENT_PI_ORCHESTRATION_PLAN.md`, remain shadow-only, compare the
-  deterministic planner to the sealed EvaluationPIPlan, and do not pull C3 behavior forward.
+- C2 conditional entry is satisfied by the measured exact-schema misses and dominant symbol/context
+  payload size plus C1's deterministic minimum plan. Read the Competitive Analysis §9.1 only as the
+  active detail; keep `local-low` unavailable and evaluate model-bearing residuals only with the
+  existing port-8090 local-practical route.
 
 The B0/B2 chronology below is retained as immutable history and is not current scheduling guidance.
 
@@ -515,17 +529,16 @@ Defaults unchanged — every capability still ships `off`.
 
 ## Immediate next work
 
-C0 is complete at implementation revision `0a8a846` with sealed evidence in
-`docs/evidence/final/c0-runtime-contract-result-v1.json`. After this closeout PR merges, synchronize
-main and start C1 on `agent/task-aware-shadow`. Read
-`docs/TRANSPARENT_PI_ORCHESTRATION_PLAN.md` as the only active design detail.
+C1 is complete at implementation revision `6601236` with sealed evidence in
+`docs/evidence/final/c1-shadow-planner-result-v1.json`. After this closeout PR merges, synchronize
+main and start C2 on `agent/weak-local-evidence-protocol`. Read
+`docs/COMPETITIVE_ANALYSIS_AND_FEATURE_GAP_ROADMAP.md` §9.1 as the active design detail.
 
-C1 must deterministically produce shadow `TaskSignals`, `TaskIntent`, `IntelligencePlan` and
-`PlanOutcome`; it must not change context, model routing, capability execution, verification or
-normal OpenCode behavior. Compare it against the sealed EvaluationPIPlan on tuning and held-out tasks,
-record intent accuracy and capability precision/recall/under/over-selection, and treat expected-but-
-unused capabilities as selection gaps. Do not copy expected-plan labels into production rules or pull
-C3 advisory/active delivery forward.
+C2 must target only the measured bounded-evidence defects: stable envelope separation, deterministic
+candidate reduction, bounded exact-schema decisions, progressive expansion, dominant PI-output
+compression and observable cache/prefix metrics. Audit B0 compatibility before new inference and use
+only port-8090 local-practical Qwen for residual model evidence. Preserve local-low as unavailable;
+do not pull C3 behavior, V-series mechanisms or P0 memory forward.
 
 ```bash
 cd /home/souten/ExtendCodeAgent
@@ -535,11 +548,11 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/task-aware-shadow
+git switch -c agent/weak-local-evidence-protocol
 ```
 
-Rollback path: switch to synchronized `main`. C0 adds observation/negotiation only; it changes no
-capability defaults, task/oracle truth, thresholds, rollout authority or model route.
+Rollback path: switch to synchronized `main`. C1 records a transient shadow plan only; it changes no
+capability defaults, task/oracle truth, thresholds, rollout authority, context delivery or model route.
 
 ## Stage V0a — complete on this branch
 

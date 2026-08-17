@@ -1,5 +1,18 @@
 # Known Issues
 
+## C1 selection evidence does not prove task outcome or broad-language generalization
+
+- C1 exactly matches all 13 sealed expected plans, including the four repository-held-out tasks, but
+  the task classes and wording remain a small English-heavy benchmark. Generic paraphrase unit cases
+  and an architecture ban on task-ID/evaluation-plan coupling reduce circularity; they do not prove
+  production-language coverage. Unknown or truncated objectives remain high-uncertainty L0/native.
+- C1 context budgets and L0-L5 plans are shadow recommendations only. Automatic delivery,
+  progressive expansion and task outcome comparison remain unimplemented until their existing
+  stages; do not report the C1 1.0 selection score as PI efficacy or user-visible improvement.
+- The conditional C2 entry rests on measured B0 exact-schema/context defects, not on local-low
+  evidence. `local-low` is still `UNAVAILABLE / NOT_CONFIGURED`, so C2 can make only a
+  local-practical-scoped claim under the local-only exception.
+
 ## C0 runtime capabilities remain intentionally degraded or unavailable
 
 - OpenCode 1.18.18 file mutation observation remains `degraded`: ordinary native watcher events were

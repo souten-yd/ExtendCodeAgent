@@ -1128,3 +1128,23 @@ Consequence: OpenCode declares all 12 capabilities explicitly; degraded/unavaila
 reasons and constrain signal acceptance. Task-oriented signals are latest-value telemetry only,
 whereas tool/verification observations retain their existing immutable lineage. C1 may consume the
 collector in shadow mode, but C3 owns automatic selection/delivery.
+
+## 2026-08-17 — C1 plans from generic task signals and never from evaluation identity
+
+Decision: implement C1 as a host-neutral deterministic classifier and minimum-initial planner over
+bounded task/project/runtime/model/evidence signals. Keep the sealed EvaluationPIPlan exclusively in
+the evaluation runner as human-reviewed ground truth; production orchestration receives no task ID,
+task class, oracle or evaluation-plan import. Record the result as transient shadow `PlanOutcome`
+telemetry with zero applied capability, context delivery or model work.
+
+Reason: capability efficacy and selection are independent axes, and copying expected evaluation
+labels into production would make the measured 1.0 selection score circular. A generic intent map,
+policy/depth bounds, bounded context/query recommendations and explicit unresolved evidence needs are
+the smallest C1 implementation. Task/model/mutation/evidence updates can cheaply refresh the plan,
+while C3 remains responsible for actually applying automatic selection.
+
+Consequence: the 13 sealed plans measure tuning and held-out selection without changing task/oracle/
+corpus truth. C1 closes on selection and latency evidence only, not task-success or PI-efficacy
+evidence. The conditional C2 entry is satisfied narrowly because B0 already measured sufficient PI
+facts followed by exact-schema failure and dominant symbol/context payloads; local-low remains
+unavailable under the single local-only execution exception.

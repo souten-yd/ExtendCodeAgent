@@ -4,7 +4,31 @@ Status date: 2026-08-17
 
 ## Program state
 
-Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0 COMPLETE — B1 SKIPPED — B2 COMPLETE — C0 COMPLETE — C1 NEXT**
+Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0 COMPLETE — B1 SKIPPED — B2 COMPLETE — C0-C1 COMPLETE — C2 NEXT**
+
+C1 completed at implementation revision `6601236` without a model call. The host-neutral
+orchestration layer projects the bounded C0 collector into `TaskSignals`, deterministically emits
+`TaskIntent` and a minimum initial L0-L5 `IntelligencePlan`, and retains only a transient
+`PlanOutcome`. It is strictly shadow-only: no capability executes, no context is delivered, no model
+route or verification changes, and no user-visible intervention occurs. Production rules receive no
+evaluation task ID/class/oracle input and the architecture gate rejects EvaluationPIPlan/task-ID
+coupling.
+
+The sealed C1 evaluation reuses all 13 manual-reviewed expected plans (9 tuning, 4 repository-held-
+out) without changing the task suite, oracle, corpus or thresholds. Intent accuracy, capability
+precision/recall and exact capability/depth match are 1.0 on both splits; under- and over-selection
+are 0.0. This is plan-selection evidence, not capability-efficacy or task-success evidence. Across
+1,300 deterministic decisions p95 was 24 us and maximum 390 us, with zero repository I/O and zero LLM
+calls. Actual injected context is zero; shadow planned context budgets average 3,582.769 tokens and
+max at the existing 8,192-token configured bound. Evidence:
+`docs/evidence/final/c1-shadow-planner-result-v1.json`.
+
+C2's conditional entry is now satisfied by the previously measured bounded-evidence defects: 20 B0b
+cells had sufficient PI facts but incorrect final schema, `pi_symbol`/`pi_context` dominate injected
+data, and C1 proves that minimum task/capability/depth plans can be chosen deterministically. C2 must
+address only those measured protocol gaps. `local-low` remains `UNAVAILABLE / NOT_CONFIGURED`; under
+the local-only execution exception C2 may evaluate only `local-practical` and makes no local-low or
+cross-tier claim.
 
 C0 completed at implementation revision `0a8a846` without an LLM call. The new host-neutral runtime
 contract has an exhaustive 12-capability descriptor, explicit supported/degraded/unavailable states,
@@ -16,7 +40,7 @@ the TypeScript adapter and passes a real TypeScript-to-Python sidecar conformanc
 context delivery and ECA-owned model requests are `UNAVAILABLE`, not PASS; mutation observation and
 verification are explicitly degraded. Full gates pass 213 Python + 14 adapter fast tests, 96 Python
 + 14 adapter integration tests, and both builds. Evidence:
-`docs/evidence/final/c0-runtime-contract-result-v1.json`. C1 Shadow task-aware planner is next.
+`docs/evidence/final/c0-runtime-contract-result-v1.json`.
 
 B2 completed at exact main `87ced9f`. Its zero-model preflight passed all five stack/restart checks and
 both degraded-sidecar orders. The Qwen Bridge then accounted for five stacks with 16 newly executed
