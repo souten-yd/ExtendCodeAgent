@@ -945,3 +945,27 @@ correction below because its active-trace relevance would have mixed efficacy wi
   their lifecycle latency/cleanup metrics; any later content change, new product path, task/oracle/
   route/PI-semantic change fails compatibility closed. The causal-runner integration contract covers
   the approved transition so unrelated product edits still require replay.
+
+## 2026-08-17 — B2 agent-flow runtime observation repair in progress
+
+- The exact-main Qwen Bridge completed native PASS with four step requests. The ECA task and oracle
+  passed with four step requests, but the B2 control failed because runtime observation count was zero;
+  the run stopped before combined-stack evidence was accepted. A subsequently interrupted OMO attempt
+  predates interrupt checkpointing, so its exact call count is unknown and remains explicit.
+- The OpenCode post-tool hook now awaits bounded sidecar ingest and the observation normalizer supplies
+  a non-secret fallback title for OpenCode 1.18.18 output lacking `title`. Focused TypeScript and Python
+  tests pass.
+- The B2 runner records operator interruption durably, stops on any failed control, separates executed
+  from reused calls/tokens, and allows only exact-input migration of a successful native/no-plugin
+  result. The task instruction is extracted from the source revision rather than assumed.
+- Adaptive/causal compatibility now also inspects dirty worktree semantics. The runtime-hook and
+  normalizer changes invalidate affected old-head product compatibility; the sealed lifecycle-only
+  exception is unchanged.
+- Clean repair head `3104d57` passed the zero-model five-stack/restart preflight and both degraded-
+  sidecar orders (seal `f184a3f39eb93cac4352c922602196a8c512beda8b0389b05494973dfd82955b`).
+  Full validation passes `tools/local/all-fast` (208 Python plus 10 adapter),
+  `tools/local/test-integration` (94 Python plus 10 adapter), `tools/local/build` and
+  `git diff --check`.
+- PR self-review separated operator interruption from provider gaps, prevents same-head resume from
+  bypassing a failed native/ECA/OMO control, and includes staged product changes in the dirty-worktree
+  compatibility audit. Focused coverage pins all three fail-closed behaviors.

@@ -66,3 +66,15 @@ test("Project Intelligence tools do not recursively create runtime evidence", ()
     undefined,
   )
 })
+
+test("missing runtime title degrades to a bounded non-secret summary", () => {
+  const normalizer = new ToolObservationNormalizer()
+  const result = normalizer.after(
+    { tool: "bash", sessionID: "session", callID: "call", args: { command: "pytest -q" } },
+    { title: undefined, output: "secret output", metadata: { exitCode: 0 } } as never,
+  )
+
+  assert.equal(result?.summary, "OpenCode bash execution")
+  assert.equal(result?.status, "passed")
+  assert.equal(JSON.stringify(result).includes("secret output"), false)
+})

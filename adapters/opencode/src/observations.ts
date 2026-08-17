@@ -54,7 +54,10 @@ export class ToolObservationNormalizer {
       observed_refs: refs,
       ...(typeof command === "string" ? { command } : {}),
       tool: input.tool,
-      summary: output.title.slice(0, 500),
+      summary:
+        typeof output.title === "string"
+          ? output.title.slice(0, 500)
+          : `OpenCode ${input.tool} execution`,
       automatic: true,
     }
   }

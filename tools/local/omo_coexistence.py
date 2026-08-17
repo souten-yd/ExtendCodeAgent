@@ -10,6 +10,7 @@ isolated profile, workspace, server and session.
 from __future__ import annotations
 
 import argparse
+import ast
 import hashlib
 import json
 import math
@@ -39,6 +40,10 @@ MODEL_ROUTE = f"{MODEL_PROVIDER}/{MODEL_ID}"
 MODEL_ENDPOINT = "http://127.0.0.1:8090/v1"
 MODEL_CONTEXT = 262_144
 MODEL_OUTPUT = 8_192
+MODEL_TASK_INSTRUCTION = (
+    "Fix calc.py so add(2, 3) returns 5. Do not modify test_calc.py. "
+    "Run python3 -m unittest -q and finish only after it passes."
+)
 EXPECTED_PI_TOOLS = {
     "pi_status",
     "pi_symbol",
@@ -235,6 +240,7 @@ def create_plan(output: Path, omo_root: Path | None = None) -> dict[str, Any]:
                 "C6": "NOT_TESTED_TEAM_MODE_OFF",
             },
             "task_fixture_fingerprint": _fixture_fingerprint(),
+            "task_instruction_sha256": hashlib.sha256(MODEL_TASK_INSTRUCTION.encode()).hexdigest(),
             "adoption_contract": {
                 "compatible": "all preflight and model bridge stacks pass with equivalent oracles",
                 "degraded": (
@@ -641,7 +647,7 @@ def _classified_conflicts(errors: Sequence[str]) -> list[dict[str, str]]:
     conflicts: list[dict[str, str]] = []
     for error in errors:
         key = error.split(":", 1)[0]
-        if key in {"model_request", "message_capture"}:
+        if key in {"model_request", "message_capture", "operator_interrupted"}:
             taxonomy = "C4"
         elif key == "runtime":
             taxonomy = "C0"
@@ -966,10 +972,7 @@ def _model_stack(plan: Mapping[str, Any], stack: str, root: Path) -> dict[str, A
                 "parts": [
                     {
                         "type": "text",
-                        "text": (
-                            "Fix calc.py so add(2, 3) returns 5. Do not modify test_calc.py. "
-                            "Run python3 -m unittest -q and finish only after it passes."
-                        ),
+                        "text": MODEL_TASK_INSTRUCTION,
                     }
                 ],
             },
@@ -977,6 +980,9 @@ def _model_stack(plan: Mapping[str, Any], stack: str, root: Path) -> dict[str, A
         )
     except (OSError, urllib.error.URLError, TimeoutError) as error:
         errors.append(f"model_request:{type(error).__name__}")
+        request_failed = True
+    except KeyboardInterrupt:
+        errors.append("operator_interrupted")
         request_failed = True
     finally:
         if session_id is not None:
@@ -1020,7 +1026,9 @@ def _model_stack(plan: Mapping[str, Any], stack: str, root: Path) -> dict[str, A
     request_gap = request_failed
     if not request_gap and route != {"provider_id": MODEL_PROVIDER, "model_id": MODEL_ID}:
         errors.append("resolved_model_route_mismatch")
-    if request_gap:
+    if "operator_interrupted" in errors:
+        result = "OPERATOR_INTERRUPTED"
+    elif request_gap:
         result = "PROVIDER_GAP" if tokens["llm_calls_executed"] == 0 else "REQUEST_GAP"
     else:
         result = "PASS" if not errors else "FAIL"
@@ -1028,6 +1036,7 @@ def _model_stack(plan: Mapping[str, Any], stack: str, root: Path) -> dict[str, A
         "stack": stack,
         "plugins": list(STACKS[stack]),
         "result": result,
+        "llm_call_execution": "executed",
         "errors": errors,
         "conflicts": _classified_conflicts(errors),
         "oracle_exit": oracle.returncode,
@@ -1054,6 +1063,7 @@ def _model_runtime_failure(stack: str, error: CoexistenceError) -> dict[str, Any
         "stack": stack,
         "plugins": list(STACKS[stack]),
         "result": "FAIL",
+        "llm_call_execution": "executed",
         "errors": errors,
         "conflicts": _classified_conflicts(errors),
         "oracle_exit": None,
@@ -1124,6 +1134,93 @@ def _taxonomy_assessment(
     return assessment
 
 
+def _task_instruction_at_revision(revision: str) -> str:
+    try:
+        source = subprocess.check_output(
+            ["git", "show", f"{revision}:tools/local/omo_coexistence.py"],
+            cwd=ROOT,
+            text=True,
+        )
+    except subprocess.CalledProcessError as error:
+        raise CoexistenceError("cannot read source B2 runner for reuse audit") from error
+    candidates = {
+        value.value
+        for value in ast.walk(ast.parse(source))
+        if isinstance(value, ast.Constant)
+        and isinstance(value.value, str)
+        and value.value.startswith("Fix calc.py so add(2, 3) returns 5.")
+    }
+    if len(candidates) != 1:
+        raise CoexistenceError("source B2 task instruction is ambiguous")
+    return candidates.pop()
+
+
+def _native_reuse_result(
+    plan: Mapping[str, Any], source_plan_path: Path, source_report_path: Path
+) -> dict[str, Any]:
+    source_plan = _load(source_plan_path)
+    source_report = _load(source_report_path)
+    _verify_seal(source_plan, "source B2 plan")
+    _verify_seal(source_report, "source B2 report")
+    if source_report.get("execution_plan") != source_plan["seal"]["canonical_payload"]:
+        raise CoexistenceError("source B2 report uses another plan")
+    if source_report.get("source_revision") != source_plan.get("source_revision"):
+        raise CoexistenceError("source B2 report revision does not match its plan")
+    comparable_fields = (
+        "execution_scope",
+        "model",
+        "endpoint",
+        "context",
+        "output_limit",
+        "team_mode",
+        "opencode",
+        "omo",
+        "stacks",
+        "task_fixture_fingerprint",
+    )
+    if any(source_plan.get(key) != plan.get(key) for key in comparable_fields):
+        raise CoexistenceError("source B2 native result has incompatible execution inputs")
+    source_instruction = _task_instruction_at_revision(str(source_plan["source_revision"]))
+    if source_instruction != MODEL_TASK_INSTRUCTION:
+        raise CoexistenceError("source B2 native task instruction changed")
+    native = [
+        item
+        for item in source_report.get("results", [])
+        if isinstance(item, Mapping) and item.get("stack") == "native"
+    ]
+    if len(native) != 1:
+        raise CoexistenceError("source B2 report does not contain one native result")
+    result = dict(native[0])
+    expected_route = {"provider_id": MODEL_PROVIDER, "model_id": MODEL_ID}
+    if (
+        result.get("result") != "PASS"
+        or result.get("oracle_exit") != 0
+        or result.get("changed_files") != ["calc.py"]
+        or result.get("plugins") != []
+        or result.get("route") != expected_route
+        or result.get("errors")
+    ):
+        raise CoexistenceError("source B2 native result is not reusable successful evidence")
+    original = json.dumps(
+        result, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode()
+    return {
+        **result,
+        "llm_call_execution": "reused",
+        "result_origin": "COMPATIBILITY_MIGRATION",
+        "original_source_revision": source_plan["source_revision"],
+        "validated_by_revision": _head(),
+        "original_result_sha256": hashlib.sha256(original).hexdigest(),
+        "source_report_seal": source_report["seal"]["canonical_payload"],
+        "migration_basis": {
+            "stack_has_eca_plugin": False,
+            "task_instruction_sha256": hashlib.sha256(source_instruction.encode()).hexdigest(),
+            "execution_inputs_equal": list(comparable_fields),
+            "reason": "ECA-only product change cannot affect the native no-plugin stack",
+        },
+    }
+
+
 def _model_report(
     plan: Mapping[str, Any],
     preflight: Mapping[str, Any],
@@ -1149,9 +1246,30 @@ def _model_report(
         else:
             compatibility = "compatible"
     attempts = [*results, *incomplete_attempts]
+    executed_attempts = [item for item in attempts if item.get("llm_call_execution") != "reused"]
+    reused_results = [item for item in results if item.get("llm_call_execution") == "reused"]
     context_values = [
         int(value) for item in attempts for value in item.get("context_request_tokens", [])
     ]
+    if complete:
+        execution_stop_reason = None
+    elif incomplete_attempts:
+        execution_stop_reason = str(incomplete_attempts[-1]["result"])
+    else:
+        failed_control = next(
+            (
+                str(item["stack"])
+                for item in results
+                if item["stack"] in {"native", "eca", "omo"} and item["result"] != "PASS"
+            ),
+            None,
+        )
+        if failed_control is not None:
+            execution_stop_reason = f"CONTROL_FAILURE_REPAIR_REQUIRED:{failed_control}"
+        elif readiness_checks and readiness_checks[-1].get("status") != "PASS":
+            execution_stop_reason = "LOCAL_PROVIDER_UNAVAILABLE"
+        else:
+            execution_stop_reason = "INCOMPLETE"
     return _seal(
         {
             "schema": 1,
@@ -1172,16 +1290,26 @@ def _model_report(
             "conflict_taxonomy": _taxonomy_assessment(preflight, results, incomplete_attempts),
             "pending_stacks": pending_stacks,
             "complete": complete,
+            "execution_stop_reason": execution_stop_reason,
             "provider_gap_pending": not complete
             and (
-                bool(incomplete_attempts)
+                any(
+                    item.get("result") in {"PROVIDER_GAP", "REQUEST_GAP"}
+                    for item in incomplete_attempts
+                )
                 or bool(readiness_checks and readiness_checks[-1].get("status") != "PASS")
             ),
             "agent_runs_requested": len(STACKS),
-            "agent_runs_executed": len(attempts),
+            "agent_runs_executed": len(executed_attempts),
+            "agent_runs_reused": len(reused_results),
             "agent_runs_completed": len(results),
-            "llm_calls_executed": sum(int(item["llm_calls_executed"]) for item in attempts),
+            "llm_calls_executed": sum(
+                int(item["llm_calls_executed"]) for item in executed_attempts
+            ),
+            "llm_calls_reused": sum(int(item["llm_calls_executed"]) for item in reused_results),
             "input_tokens": sum(int(item["input_tokens"]) for item in attempts),
+            "executed_input_tokens": sum(int(item["input_tokens"]) for item in executed_attempts),
+            "reused_input_tokens": sum(int(item["input_tokens"]) for item in reused_results),
             "output_tokens": sum(int(item["output_tokens"]) for item in attempts),
             "reasoning_tokens": sum(int(item["reasoning_tokens"]) for item in attempts),
             "cache_read_tokens": sum(int(item["cache_read_tokens"]) for item in attempts),
@@ -1220,6 +1348,8 @@ def run_model_bridge(
     raw_root: Path,
     *,
     resume: bool,
+    reuse_plan_path: Path | None = None,
+    reuse_report_path: Path | None = None,
 ) -> dict[str, Any]:
     _require_clean()
     plan = _load(plan_path)
@@ -1232,6 +1362,10 @@ def run_model_bridge(
         raise CoexistenceError("B2 model bridge is blocked by model-free preflight")
     if output.exists() and not resume:
         raise CoexistenceError("B2 model output exists; use --resume or a fresh path")
+    if (reuse_plan_path is None) != (reuse_report_path is None):
+        raise CoexistenceError("--reuse-plan and --reuse-report must be supplied together")
+    if resume and reuse_plan_path is not None:
+        raise CoexistenceError("reuse inputs are only valid for a fresh B2 model output")
     if output.is_file():
         previous = _load(output)
         _validate_model_resume(previous, plan, preflight)
@@ -1240,8 +1374,17 @@ def run_model_bridge(
         readiness_checks = [dict(item) for item in previous.get("provider_readiness_checks", [])]
         if previous.get("complete") is True:
             return dict(previous)
+        if any(
+            item.get("stack") in {"native", "eca", "omo"} and item.get("result") != "PASS"
+            for item in results
+        ):
+            return dict(previous)
     else:
-        results = []
+        results = (
+            [_native_reuse_result(plan, reuse_plan_path, reuse_report_path)]
+            if reuse_plan_path is not None and reuse_report_path is not None
+            else []
+        )
         incomplete_attempts = []
         readiness_checks = []
     raw_root.mkdir(parents=True, exist_ok=True)
@@ -1265,14 +1408,16 @@ def run_model_bridge(
             except CoexistenceError as error:
                 result = _model_runtime_failure(stack, error)
             _preserve_logs(root, raw_root / f"logs/model/attempt-{attempt_number:02d}-{stack}")
-        if result["result"] in {"PROVIDER_GAP", "REQUEST_GAP"}:
+        if result["result"] in {"PROVIDER_GAP", "REQUEST_GAP", "OPERATOR_INTERRUPTED"}:
             incomplete_attempts.append(result)
         else:
             results.append(result)
             completed_stacks.add(stack)
         checkpoint = _model_report(plan, preflight, results, incomplete_attempts, readiness_checks)
         _write(output, checkpoint)
-        if result["result"] in {"PROVIDER_GAP", "REQUEST_GAP"}:
+        if result["result"] in {"PROVIDER_GAP", "REQUEST_GAP", "OPERATOR_INTERRUPTED"}:
+            break
+        if stack in {"native", "eca", "omo"} and result["result"] != "PASS":
             break
     user_omo_after = _user_omo_fingerprint()
     if user_omo_before != user_omo_after:
@@ -1298,6 +1443,8 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--output", type=Path, required=True)
     run.add_argument("--raw-root", type=Path, required=True)
     run.add_argument("--resume", action="store_true")
+    run.add_argument("--reuse-plan", type=Path)
+    run.add_argument("--reuse-report", type=Path)
     return parser
 
 
@@ -1310,7 +1457,13 @@ def main() -> None:
             value = run_preflight(args.plan, args.output, args.raw_root)
         else:
             value = run_model_bridge(
-                args.plan, args.preflight, args.output, args.raw_root, resume=args.resume
+                args.plan,
+                args.preflight,
+                args.output,
+                args.raw_root,
+                resume=args.resume,
+                reuse_plan_path=args.reuse_plan,
+                reuse_report_path=args.reuse_report,
             )
     except CoexistenceError as error:
         raise SystemExit(str(error)) from error

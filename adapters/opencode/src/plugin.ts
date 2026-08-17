@@ -49,7 +49,7 @@ const ExtendCodeAgentPlugin: Plugin = async ({ directory, worktree }) => {
       queue.enqueue("tool.execute.after")
       const observation = observations.after(input, output)
       if (observation) {
-        void client.request("runtime_ingest", observation).catch(() => {
+        await client.request("runtime_ingest", observation).catch(() => {
           // Runtime evidence capture must not break native tool execution.
         })
       }

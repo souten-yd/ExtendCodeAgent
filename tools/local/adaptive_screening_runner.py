@@ -1301,22 +1301,28 @@ def bridge_benchmark(
 
 
 def _product_semantics_compatible(source_revision: str) -> tuple[bool, list[str]]:
-    changed = subprocess.check_output(
+    scope = [
+        "src/extendcodeagent",
+        "adapters/opencode/src",
+        "adapters/opencode/dist/src/plugin.js",
+    ]
+    changed = set(
+        subprocess.check_output(
+            ["git", "diff", "--name-only", source_revision, "HEAD", "--", *scope],
+            cwd=ROOT,
+            text=True,
+        ).splitlines()
+    )
+    changed.update(
         [
-            "git",
-            "diff",
-            "--name-only",
-            source_revision,
-            "HEAD",
-            "--",
-            "src/extendcodeagent",
-            "adapters/opencode/src",
-            "adapters/opencode/dist/src/plugin.js",
-        ],
-        cwd=ROOT,
-        text=True,
-    ).splitlines()
-    material = [path for path in changed if not path.startswith("src/extendcodeagent/evaluation/")]
+            *subprocess.check_output(
+                ["git", "diff", "--name-only", "HEAD", "--", *scope], cwd=ROOT, text=True
+            ).splitlines()
+        ]
+    )
+    material = sorted(
+        path for path in changed if not path.startswith("src/extendcodeagent/evaluation/")
+    )
     if not material:
         return True, []
     manifest = _load(COMPATIBLE_PRODUCT_TRANSITIONS)
