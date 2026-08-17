@@ -916,8 +916,10 @@ correction below because its active-trace relevance would have mixed efficacy wi
   native OpenCode, ECA, OMO 4.19.4, OMO→ECA and ECA→OMO. Team Mode is explicitly off and every stack
   receives its own ephemeral HOME/XDG profile, workspace, server and session.
 - Model-free preflight checks unique tool IDs, exact `pi_*`/OMO visibility, absence of `team_*`,
-  deterministic shell verification, one ECA runtime observation, clean sidecar shutdown, session/tool
-  recovery after restart, and OMO usability when the ECA sidecar is unavailable in both plugin orders.
+  deterministic shell verification, clean sidecar shutdown, session/tool recovery after restart, and
+  OMO usability when the ECA sidecar is unavailable in both plugin orders. OpenCode 1.18.18's direct
+  shell route does not exercise plugin tool hooks, so that state is recorded explicitly rather than
+  treated as efficacy evidence; the agent Bridge instead requires a real ECA runtime observation.
 - Only a passing sealed preflight can open the five-stack coding/verification Bridge. Every request is
   fixed to Qwen3.6 27B on `127.0.0.1:8090`; Copilot/host-default credentials are removed from child
   environments, external OMO MCPs and telemetry are disabled, inference stays serial, and exact
@@ -927,3 +929,9 @@ correction below because its active-trace relevance would have mixed efficacy wi
   `input + cache-read + cache-write` request size and retain p50/p90/p95/p99/max distributions.
 - Corrected the coexistence design header: B2 owns bounded compatibility; P4 still owns the four-way
   comparative benefit claim. No OMO/OpenCode patch or ECA orchestration copy is introduced.
+- The first real model-free preflight used zero LLM calls and exposed an ECA lifecycle defect: abrupt
+  OpenCode termination did not call plugin `dispose`, leaving the spawned Python sidecar alive. The
+  sidecar now treats closure of its parent-owned stdin pipe as shutdown, with a real subprocess test.
+  It also showed OMO's own `glob`/`grep`/`task`/`skill` override IDs duplicated in the tool inventory;
+  the runner compares both combined orders to that OMO-only control and records an unchanged set as
+  an inherited C0 limitation, not as an ECA-induced registration regression or a PASS.

@@ -51,7 +51,7 @@ EXPECTED_PI_TOOLS = {
     "pi_research_plan",
 }
 EXPECTED_OMO_TOOLS = {"background_output", "background_cancel", "call_omo_agent"}
-EXPECTED_OMO_AGENTS = {"Sisyphus", "Hephaestus", "Prometheus"}
+EXPECTED_OMO_AGENT_PREFIXES = {"Sisyphus", "Hephaestus", "Prometheus"}
 STACKS: dict[str, tuple[str, ...]] = {
     "native": (),
     "eca": ("eca",),
@@ -66,7 +66,9 @@ ERROR_TAXONOMY = {
     "missing_omo_tool": "C0",
     "unexpected_omo_tool": "C0",
     "missing_omo_agent": "C0",
+    "duplicate_tool_id_delta": "C0",
     "runtime_observation_count_not_one": "C1",
+    "runtime_observation_not_observed_in_agent_flow": "C1",
     "verification_oracle_failed": "C2",
     "unexpected_changed_files": "C2",
     "omo_tools_lost_when_eca_sidecar_unavailable": "C3",
@@ -389,12 +391,11 @@ def _isolated_env(
         "provider": _provider_config(),
         "plugin": _plugin_paths(plan, stack),
     }
+    remote_credential_markers = ("API_KEY", "TOKEN", "SECRET", "CREDENTIAL", "COPILOT")
     env = {
         key: value
         for key, value in os.environ.items()
-        if "COPILOT" not in key.upper()
-        and not key.upper().endswith("_API_KEY")
-        and key.upper() not in {"GITHUB_TOKEN", "GH_TOKEN", "OPENAI_API_KEY"}
+        if not any(marker in key.upper() for marker in remote_credential_markers)
     }
     env.update(
         {
@@ -573,6 +574,16 @@ def _runtime_observations(database: Path) -> int:
         return 0
 
 
+def _wait_runtime_observations(database: Path, *, minimum: int, timeout: float = 10) -> int:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        count = _runtime_observations(database)
+        if count >= minimum:
+            return count
+        time.sleep(0.05)
+    return _runtime_observations(database)
+
+
 def _user_omo_fingerprint() -> dict[str, Any]:
     path = Path.home() / ".omo"
     if not path.exists():
@@ -606,8 +617,6 @@ def _preserve_logs(run_root: Path, destination: Path) -> None:
 def _stack_expectations(stack: str, tools: Sequence[str], agents: set[str]) -> list[str]:
     errors: list[str] = []
     tool_set = set(tools)
-    if len(tools) != len(tool_set):
-        errors.append("duplicate_tool_id")
     has_eca = "eca" in STACKS[stack]
     has_omo = "omo" in STACKS[stack]
     if has_eca and not tool_set >= EXPECTED_PI_TOOLS:
@@ -618,7 +627,10 @@ def _stack_expectations(stack: str, tools: Sequence[str], agents: set[str]) -> l
         errors.append("missing_omo_tool")
     if not has_omo and EXPECTED_OMO_TOOLS & tool_set:
         errors.append("unexpected_omo_tool")
-    if has_omo and not agents >= EXPECTED_OMO_AGENTS:
+    if has_omo and any(
+        not any(agent.startswith(prefix) for agent in agents)
+        for prefix in EXPECTED_OMO_AGENT_PREFIXES
+    ):
         errors.append("missing_omo_agent")
     if any(item.startswith("team_") for item in tool_set):
         errors.append("team_mode_not_off")
@@ -664,8 +676,6 @@ def _preflight_stack(plan: Mapping[str, Any], stack: str, root: Path) -> dict[st
         )
         time.sleep(0.5)
         observations = _runtime_observations(database)
-        if "eca" in STACKS[stack] and observations != 1:
-            errors.append("runtime_observation_count_not_one")
     finally:
         first_returncode = _stop(first)
     lingering_first = _wait_sidecar_exit(workspace)
@@ -699,10 +709,18 @@ def _preflight_stack(plan: Mapping[str, Any], stack: str, root: Path) -> dict[st
         "pi_tools": sorted(EXPECTED_PI_TOOLS & set(tools)),
         "omo_tools": sorted(EXPECTED_OMO_TOOLS & set(tools)),
         "agent_count": len(agents),
-        "omo_agents": sorted(EXPECTED_OMO_AGENTS & agents),
+        "omo_agents": sorted(
+            agent
+            for agent in agents
+            if any(agent.startswith(prefix) for prefix in EXPECTED_OMO_AGENT_PREFIXES)
+        ),
+        "duplicate_tool_ids": sorted(item for item in set(tools) if tools.count(item) > 1),
         "team_tools": sorted(item for item in tools if item.startswith("team_")),
         "shell_response_observed": isinstance(shell, Mapping),
         "runtime_observation_count": observations,
+        "runtime_observation_status": (
+            "OBSERVED" if observations else "NOT_EXERCISED_BY_DIRECT_SHELL_ROUTE"
+        ),
         "session_recovered": session_id in session_ids,
         "first_returncode": first_returncode,
         "second_returncode": second_returncode,
@@ -764,6 +782,28 @@ def run_preflight(plan_path: Path, output: Path, raw_root: Path) -> dict[str, An
     with tempfile.TemporaryDirectory(prefix="eca-b2-preflight-", dir=raw_root) as directory:
         root = Path(directory)
         stacks = [_preflight_stack(plan, stack, root) for stack in STACKS]
+        by_stack = {str(item["stack"]): item for item in stacks}
+        limitations: list[dict[str, Any]] = []
+        for stack in ("native", "eca"):
+            if by_stack[stack]["duplicate_tool_ids"]:
+                by_stack[stack]["errors"].append("duplicate_tool_id")
+        omo_duplicates = set(by_stack["omo"]["duplicate_tool_ids"])
+        for stack in ("omo_eca", "eca_omo"):
+            if set(by_stack[stack]["duplicate_tool_ids"]) != omo_duplicates:
+                by_stack[stack]["errors"].append("duplicate_tool_id_delta")
+        if omo_duplicates:
+            limitations.append(
+                {
+                    "conflict_class": "C0",
+                    "observation": "omo_control_duplicate_tool_ids:"
+                    + ",".join(sorted(omo_duplicates)),
+                    "disposition": "INHERITED_OMO_CONTROL_LIMITATION",
+                }
+            )
+        for item in stacks:
+            item["errors"] = list(dict.fromkeys(item["errors"]))
+            item["conflicts"] = _classified_conflicts(item["errors"])
+            item["result"] = "PASS" if not item["errors"] else "FAIL"
         degraded = [_degraded_sidecar(plan, stack, root) for stack in ("omo_eca", "eca_omo")]
         _preserve_logs(root, raw_root / "logs/preflight")
     user_omo_after = _user_omo_fingerprint()
@@ -784,6 +824,7 @@ def run_preflight(plan_path: Path, output: Path, raw_root: Path) -> dict[str, An
             "team_mode": "off",
             "stacks": stacks,
             "degraded_sidecar": degraded,
+            "limitations": limitations,
             "real_user_omo_unchanged": True,
             "pass": complete,
         }
@@ -901,6 +942,7 @@ def _model_stack(plan: Mapping[str, Any], stack: str, root: Path) -> dict[str, A
     profile = root / stack / "profile"
     logs = root / stack / "logs"
     _create_fixture(workspace, broken=True)
+    database = workspace / ".extendcodeagent/graph.db"
     started = time.perf_counter()
     server = _start(plan, stack, profile, workspace, logs / "model.log")
     errors: list[str] = []
@@ -908,6 +950,7 @@ def _model_stack(plan: Mapping[str, Any], stack: str, root: Path) -> dict[str, A
     messages: Any = []
     session_id: str | None = None
     request_failed = False
+    runtime_observation_count = 0
     try:
         session = _request(
             server.url, "/session", method="POST", body={"title": f"B2 model {stack}"}
@@ -941,6 +984,8 @@ def _model_stack(plan: Mapping[str, Any], stack: str, root: Path) -> dict[str, A
                 messages = _request(server.url, f"/session/{session_id}/message", timeout=30)
             except (OSError, urllib.error.URLError, TimeoutError) as error:
                 errors.append(f"message_capture:{type(error).__name__}")
+        if "eca" in STACKS[stack] and not request_failed:
+            runtime_observation_count = _wait_runtime_observations(database, minimum=1)
         returncode = _stop(server)
     lingering = _wait_sidecar_exit(workspace)
     if lingering:
@@ -962,6 +1007,8 @@ def _model_stack(plan: Mapping[str, Any], stack: str, root: Path) -> dict[str, A
     tools = _tool_metrics(messages)
     if tools["duplicate_call_ids"]:
         errors.append("duplicate_tool_execution")
+    if "eca" in STACKS[stack] and not request_failed and runtime_observation_count < 1:
+        errors.append("runtime_observation_not_observed_in_agent_flow")
     tokens = _token_metrics(messages)
     response_info = response.get("info") if isinstance(response, Mapping) else None
     route = {
@@ -990,6 +1037,12 @@ def _model_stack(plan: Mapping[str, Any], stack: str, root: Path) -> dict[str, A
         "startup_ms": server.startup_ms,
         "returncode": returncode,
         "lingering_sidecars": lingering,
+        "runtime_observation_count": runtime_observation_count,
+        "runtime_observation_status": (
+            "OBSERVED"
+            if runtime_observation_count
+            else ("NOT_EVALUATED_REQUEST_GAP" if request_failed else "NOT_OBSERVED")
+        ),
         **tokens,
         **tools,
     }
@@ -1010,6 +1063,8 @@ def _model_runtime_failure(stack: str, error: CoexistenceError) -> dict[str, Any
         "startup_ms": 0,
         "returncode": None,
         "lingering_sidecars": [],
+        "runtime_observation_count": 0,
+        "runtime_observation_status": "NOT_EVALUATED_RUNTIME_FAILURE",
         "llm_calls_executed": 0,
         "input_tokens": 0,
         "output_tokens": 0,
@@ -1031,6 +1086,10 @@ def _taxonomy_assessment(
     incomplete_attempts: Sequence[Mapping[str, Any]],
 ) -> dict[str, dict[str, Any]]:
     records = [
+        {
+            "stack": "preflight",
+            "conflicts": preflight.get("limitations", []),
+        },
         *(item for item in preflight.get("stacks", []) if isinstance(item, Mapping)),
         *(item for item in preflight.get("degraded_sidecar", []) if isinstance(item, Mapping)),
         *results,
@@ -1085,7 +1144,7 @@ def _model_report(
         )
         if combined_failed and control_passed:
             compatibility = "incompatible"
-        elif any(item["result"] != "PASS" for item in results):
+        elif any(item["result"] != "PASS" for item in results) or preflight.get("limitations"):
             compatibility = "degraded"
         else:
             compatibility = "compatible"

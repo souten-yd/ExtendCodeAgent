@@ -109,6 +109,11 @@ local-practical bridge
   performs model-free namespace/lifecycle/session/restart/runtime-observation and degraded-sidecar
   checks first, and permits at most one serial coding/verification agent run per stack only after the
   preflight passes. No profile, workspace or session is shared.
+- The first zero-model preflight found that abrupt OpenCode shutdown could orphan ECA's sidecar. The
+  repair uses the existing parent-owned stdin pipe as a lifecycle signal; no OpenCode/OMO patch is
+  introduced. OMO-only duplicate override IDs are retained as an inherited C0 limitation and compared
+  against both combined orders. Direct-shell hook non-exercise is explicit; actual runtime ingestion
+  is fail-closed in the model-bearing agent flow.
 
 The chronology below is retained as history. Its four-model/306-cell and three-model/162-cell
 statements describe superseded protocols and are not current execution instructions.

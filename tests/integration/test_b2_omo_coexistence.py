@@ -46,12 +46,13 @@ def test_b2_plan_seals_exact_five_stack_local_only_contract(
 
 def test_stack_expectations_keep_namespaces_and_team_mode_fail_closed() -> None:
     tools = sorted(runner.EXPECTED_PI_TOOLS | runner.EXPECTED_OMO_TOOLS)
-    assert runner._stack_expectations("omo_eca", tools, runner.EXPECTED_OMO_AGENTS) == []
+    agents = {f"{name} agent" for name in runner.EXPECTED_OMO_AGENT_PREFIXES}
+    assert runner._stack_expectations("omo_eca", tools, agents) == []
     assert "missing_pi_tool" in runner._stack_expectations(
-        "omo_eca", sorted(runner.EXPECTED_OMO_TOOLS), runner.EXPECTED_OMO_AGENTS
+        "omo_eca", sorted(runner.EXPECTED_OMO_TOOLS), agents
     )
     assert "team_mode_not_off" in runner._stack_expectations(
-        "omo_eca", [*tools, "team_create"], runner.EXPECTED_OMO_AGENTS
+        "omo_eca", [*tools, "team_create"], agents
     )
 
 
