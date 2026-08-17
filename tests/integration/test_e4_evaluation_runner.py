@@ -21,6 +21,7 @@ from tools.local.evaluation_runner import (  # noqa: E402
     CONFIGURABLE_CAPABILITIES,
     _activation_assessment,
     _activation_gate,
+    _bind_migrated_checkpoint_to_local_schedule,
     _environment,
     _execute,
     _isolated_agent_environment,
@@ -513,6 +514,37 @@ def test_requeue_moves_quota_failures_out_of_quality_results(
     assert repaired["migration_summary"]["migrated_cells"] == 1
     assert repaired["migration_summary"]["current_runner_cells"] == 1
     assert len(EvaluationTraceLog(Path(repaired["trace_log"])).replay()) == 2
+
+
+def test_migration_binds_only_local_cells_to_the_v2_baseline(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    cell = evaluation_runner.plan("b0a-baseline")["cells"][0]
+    schedule = {
+        "scope": "b0a-baseline",
+        "counts": {"cells": 2, "available": 2, "unavailable": 0},
+        "b0a": {"quality_target_seal": "v2"},
+        "cells": [cell, {**cell, "cell_id": f"{cell['cell_id']}-second"}],
+    }
+    monkeypatch.setattr(evaluation_runner, "plan", lambda *args, **kwargs: schedule)
+    migrated = {
+        "results": [{**cell, "outcome": "PASS"}],
+        "migration_summary": {"migrated_cells": 1},
+    }
+    bound = _bind_migrated_checkpoint_to_local_schedule(migrated)
+    assert bound["schedule"] == {key: value for key, value in schedule.items() if key != "cells"}
+    assert bound["target_completion"] == {
+        "model_tiers": ["local-practical"],
+        "expected_cells": 2,
+        "completed_cells": 1,
+        "pending_cells": 1,
+    }
+    assert bound["migration_summary"]["quality_target_cells"] == 2
+    assert bound["execution_scope"] == "local-only"
+    assert bound["seal"] == {
+        "algorithm": "sha256",
+        "canonical_payload": _digest(bound),
+    }
 
 
 def test_promoted_pilot_requires_a_fully_reusable_sealed_audit(
