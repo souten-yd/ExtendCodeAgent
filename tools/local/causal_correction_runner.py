@@ -337,6 +337,20 @@ def _report(
     }
     total_cells = len(plan["auto_cells"]) + len(plan["forced_cells"])
     accounted = set(results) | set(skips)
+    model_results = [
+        item
+        for item in results.values()
+        if any(
+            int(item.get(key) or 0) > 0
+            for key in (
+                "input_tokens",
+                "output_tokens",
+                "reasoning_tokens",
+                "cache_read_tokens",
+                "cache_write_tokens",
+            )
+        )
+    ]
     complete = len(accounted) == total_cells and not any(
         item.get("cell_id") not in results for item in provider_attempts
     )
@@ -390,7 +404,8 @@ def _report(
         "pilot_forced_audit": plan["pilot_forced_audit"],
         "efficiency": {
             "llm_calls_requested": total_cells,
-            "llm_calls_executed": len(results) + len(provider_attempts),
+            "llm_calls_executed": len(model_results) + len(provider_attempts),
+            "llm_calls_not_executed_pre_model": len(results) - len(model_results),
             "llm_calls_avoided": len(skips),
             "avoided_call_ratio": round(len(skips) / total_cells, 6),
             "input_tokens": sum(int(item.get("input_tokens") or 0) for item in results.values()),
@@ -399,8 +414,7 @@ def _report(
                 int(item.get("reasoning_tokens") or 0) for item in results.values()
             ),
             "model_wall_time_ms": sum(
-                float(item.get("model_wall_ms") or item.get("wall_ms") or 0)
-                for item in results.values()
+                float(item.get("model_wall_ms") or 0) for item in model_results
             ),
             "checkpoint_session_wall_time_ms": round((time.monotonic() - started) * 1000, 3),
             "reused_auto_selection_evidence_count": len(plan["observational_auto_reuse_tasks"]),

@@ -43,6 +43,16 @@ def test_correction_plan_is_bounded_and_reclassifies_pilot_reuse(tmp_path: Path)
     assert set(plan["no_task_coverage"]) == {"research", "test_obsolescence"}
 
 
+def test_workspace_templates_resolve_relative_root_before_git_worktree_creation(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    templates = adaptive.WorkspaceTemplates(Path("relative/workspace-state"), {})
+
+    assert templates.root.is_absolute()
+    assert templates.workspace_root == (tmp_path / "relative/workspace-state/workspaces")
+
+
 def test_corrective_run_stops_positive_capabilities_after_one_pair(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ) -> None:
