@@ -62,6 +62,9 @@ Current task: merge and run the causal-correction entry gate before B0b
   Stop before further calls: off correctly attempted the identical PI plan, but expected
   `capability_unavailable` responses were generically classified as `PI_TOOL_API_GAP`. Preserve and
   compatibility-reclassify these eight captures after the classifier repair; do not rerun them.
+- The first reclassification on `65dad4d` made no model call and stopped on immutable trace conflict:
+  regenerated oracle timing differed for an existing trace ID. Preserve the source hash-chain and
+  append only previously untraced new cells after the trace-reuse repair merges.
 
 The chronology below is retained as history. Its four-model/306-cell and three-model/162-cell
 statements describe superseded protocols and are not current execution instructions.

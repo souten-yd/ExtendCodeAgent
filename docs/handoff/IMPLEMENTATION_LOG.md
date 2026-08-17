@@ -838,3 +838,15 @@ correction below because its active-trace relevance would have mixed efficacy wi
 - Validation passes `tools/local/all-fast` (208 Python plus 9 adapter),
   `tools/local/test-integration` (67 Python plus 9 adapter), `tools/local/build`, expected-disabled/
   unexpected-error classification tests, capture-reuse accounting tests and `git diff --check`.
+
+## 2026-08-17 — Compatible result reclassification preserves source trace
+
+- The first exact-main capture-reclassification attempt stopped before a new model call because it
+  tried to append a regenerated trace with the same ID but a fresh deterministic-oracle wall time.
+  The hash-chain correctly rejected that conflict.
+- Reuse the already verified immutable source trace for a migrated cell and append only traces for
+  cell IDs absent from the source chain. Compliance classification is report evidence and does not
+  require rewriting the source execution trace. New cells continue to append normally.
+- Validation passes `tools/local/all-fast` (208 Python plus 9 adapter),
+  `tools/local/test-integration` (68 Python plus 9 adapter), `tools/local/build`, immutable migrated-
+  trace coverage and `git diff --check`.
