@@ -40,6 +40,7 @@ from extendcodeagent.core.config.schema import (
     KNOWN_ANALYZERS,
     CapabilityName,
     Depth,
+    RemoteCodePolicy,
     RolloutMode,
     governing_capability,
 )
@@ -116,6 +117,7 @@ class ProjectIntelligenceApplication:
         max_items: int = 100,
         max_depth: int = 6,
         context_max_tokens: int = 8_192,
+        privacy_policy: RemoteCodePolicy = RemoteCodePolicy.DENY,
         analyzers: tuple[str, ...] = KNOWN_ANALYZERS,
     ) -> None:
         self.root = Path(root).resolve()
@@ -124,6 +126,7 @@ class ProjectIntelligenceApplication:
         self.max_items = max_items
         self.max_depth = max_depth
         self.context_max_tokens = context_max_tokens
+        self.privacy_policy = privacy_policy
         self.analyzers = analyzers
         digest = hashlib.sha256(str(self.root).encode()).hexdigest()[:12]
         self.project = ProjectRef(f"{self.root.name}-{digest}", "default", self.root.as_uri())
@@ -745,6 +748,7 @@ class ProjectIntelligenceApplication:
             context_token_limit=self.context_max_tokens,
             max_items=self.max_items,
             max_depth=self.max_depth,
+            privacy_policy=self.privacy_policy,
         )
         if signals is not None:
             self._shadow_plan = create_shadow_plan(signals, self.policy)

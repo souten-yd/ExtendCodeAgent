@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from extendcodeagent.core.config import ConfigLayer, ConfigResolver, RolloutMode, load_jsonc
+from extendcodeagent.core.config.schema import RemoteCodePolicy
 from extendcodeagent.core.contracts import CanonicalRef
 from extendcodeagent.core.policy import CapabilityPolicy
 from extendcodeagent.research import ResearchDepth
@@ -283,7 +284,7 @@ def resolve_policy(
     user_config: Path | None = None,
     project_config: Path | None = None,
     mode: RolloutMode | None = None,
-) -> tuple[CapabilityPolicy, int, int, int, tuple[str, ...]]:
+) -> tuple[CapabilityPolicy, int, int, int, RemoteCodePolicy, tuple[str, ...]]:
     layers: list[ConfigLayer] = []
     for name, path in (("user", user_config), ("project", project_config)):
         if path is not None and path.is_file():
@@ -308,6 +309,7 @@ def resolve_policy(
         config.context.max_items,
         config.analysis.max_depth,
         config.context.max_tokens,
+        resolved.models.remote_code_policy,
         config.analyzers,
     )
 
@@ -324,7 +326,7 @@ def main() -> None:
     args = parser.parse_args()
     mode = RolloutMode(args.mode) if args.mode else None
     project_config = args.project_config or args.root / "extendcodeagent.jsonc"
-    policy, max_items, max_depth, context_max_tokens, analyzers = resolve_policy(
+    policy, max_items, max_depth, context_max_tokens, privacy_policy, analyzers = resolve_policy(
         user_config=args.user_config, project_config=project_config, mode=mode
     )
     application = ProjectIntelligenceApplication(
@@ -334,6 +336,7 @@ def main() -> None:
         max_items=max_items,
         max_depth=max_depth,
         context_max_tokens=context_max_tokens,
+        privacy_policy=privacy_policy,
         analyzers=analyzers,
     )
     server = LocalApiServer(application, secrets.token_urlsafe(32), port_address(args.port))

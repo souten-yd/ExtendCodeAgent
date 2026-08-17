@@ -9,7 +9,7 @@ import time
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from extendcodeagent.core.config.schema import CapabilityName, Depth, depth_rank
+from extendcodeagent.core.config.schema import CapabilityName, Depth, RemoteCodePolicy, depth_rank
 from extendcodeagent.core.contracts import QueryBounds
 from extendcodeagent.core.policy import CapabilityPolicy
 from extendcodeagent.runtime import RuntimeSignalKind, RuntimeSignalSnapshot
@@ -32,6 +32,14 @@ _SYMBOL_PATTERN = re.compile(
     r"(?<![\w])(?:_?[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)+|"
     r"[A-Za-z][A-Za-z0-9]*\.[A-Za-z_][A-Za-z0-9_]*)"
 )
+_LANGUAGE_BY_SUFFIX = {
+    ".py": "python",
+    ".js": "javascript",
+    ".jsx": "javascript",
+    ".ts": "typescript",
+    ".tsx": "typescript",
+}
+_FRAMEWORK_TOKENS = ("fastapi", "playwright", "pytest", "react", "unittest", "xterm")
 
 _PROJECT_TRUTH = (
     CapabilityName.GRAPH,
@@ -46,6 +54,7 @@ def project_task_signals(
     context_token_limit: int = 8_192,
     max_items: int = 100,
     max_depth: int = 6,
+    privacy_policy: RemoteCodePolicy = RemoteCodePolicy.DENY,
 ) -> TaskSignals | None:
     """Project the C0 collector without repository I/O or retaining another truth store."""
 
@@ -59,12 +68,30 @@ def project_task_signals(
     model = snapshot.latest_model
     referenced_paths = tuple(_PATH_PATTERN.findall(objective))
     symbol_source = _PATH_PATTERN.sub(" ", objective)
+    all_paths = (*referenced_paths, *(mutation.paths if mutation else ()))
+    language_signals = tuple(
+        sorted(
+            {
+                language
+                for path in all_paths
+                for suffix, language in _LANGUAGE_BY_SUFFIX.items()
+                if path.casefold().endswith(suffix)
+            }
+        )
+    )
+    normalized_objective = _normalized(objective)
     return TaskSignals(
         project=snapshot.project,
         objective=objective,
         referenced_paths=_bounded_values(referenced_paths),
         referenced_symbols=_bounded_values(tuple(_SYMBOL_PATTERN.findall(symbol_source))),
         changed_paths=_bounded_values(mutation.paths if mutation else ()),
+        language_signals=language_signals,
+        framework_signals=tuple(
+            token for token in _FRAMEWORK_TOKENS if token in normalized_objective
+        ),
+        pi_freshness="unknown",
+        privacy_policy=privacy_policy,
         model_provider=model.model_provider if model else None,
         model_id=model.model_id if model else None,
         runtime_evidence_available=snapshot.tool_execution_count > 0,
@@ -454,6 +481,11 @@ def _plan_id(
         "referenced_paths": signals.referenced_paths,
         "referenced_symbols": signals.referenced_symbols,
         "changed_paths": signals.changed_paths,
+        "language_signals": signals.language_signals,
+        "framework_signals": signals.framework_signals,
+        "prior_task_stage": signals.prior_task_stage,
+        "pi_freshness": signals.pi_freshness,
+        "privacy_policy": signals.privacy_policy.value,
         "model": (signals.model_provider, signals.model_id),
         "evidence": (
             signals.runtime_evidence_available,

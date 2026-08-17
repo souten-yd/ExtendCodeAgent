@@ -165,6 +165,9 @@ def test_runtime_projection_is_bounded_and_uses_latest_collector_values() -> Non
     assert signals.objective_truncated is True
     assert signals.referenced_paths == ("src/service.py",)
     assert signals.referenced_symbols == ("helper_symbol",)
+    assert signals.language_signals == ("python",)
+    assert signals.framework_signals == ()
+    assert signals.pi_freshness == "unknown"
     assert len(signals.changed_paths) == 64
 
 

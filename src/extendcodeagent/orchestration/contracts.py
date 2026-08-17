@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
-from extendcodeagent.core.config.schema import CapabilityName, Depth
+from extendcodeagent.core.config.schema import CapabilityName, Depth, RemoteCodePolicy
 from extendcodeagent.core.contracts import ProjectRef, QueryBounds
 
 
@@ -60,6 +60,11 @@ class TaskSignals:
     referenced_paths: tuple[str, ...] = ()
     referenced_symbols: tuple[str, ...] = ()
     changed_paths: tuple[str, ...] = ()
+    language_signals: tuple[str, ...] = ()
+    framework_signals: tuple[str, ...] = ()
+    prior_task_stage: str | None = None
+    pi_freshness: str = "unknown"
+    privacy_policy: RemoteCodePolicy = RemoteCodePolicy.DENY
     model_provider: str | None = None
     model_id: str | None = None
     runtime_evidence_available: bool = False
@@ -79,10 +84,14 @@ class TaskSignals:
             (self.referenced_paths, "referenced_paths"),
             (self.referenced_symbols, "referenced_symbols"),
             (self.changed_paths, "changed_paths"),
+            (self.language_signals, "language_signals"),
+            (self.framework_signals, "framework_signals"),
             (self.previous_failure_classes, "previous_failure_classes"),
         ):
             if any(not value.strip() for value in values):
                 raise ValueError(f"{name} must not contain empty values")
+        if not self.pi_freshness.strip():
+            raise ValueError("pi_freshness must not be empty")
 
 
 @dataclass(frozen=True, slots=True)
