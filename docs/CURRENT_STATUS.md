@@ -6,18 +6,18 @@ Status date: 2026-08-17
 
 Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0a IN PROGRESS**
 
-The B0a quality target is now explicitly limited to three routes: ControlDeck-managed
-`local-practical` Qwen, GitHub Copilot Sonnet, and GitHub Copilot Codex. `host-default` and
-`local-low` are not quality targets. The corrected `native`/`off` baseline denominator is therefore
-162 cells. Qwen and Sonnet are complete at 54/54 each; Codex has 37 valid cells and 17 pending, for
-145/162 valid cells overall. Sixteen Codex cells that OpenCode returned after
-`You have exceeded your monthly quota` are provider-gap attempts, not quality outcomes; one further
-Codex cell was interrupted before recording.
+The active `b0a-quality-target-v2` progression target is the ControlDeck-managed `local-practical`
+Qwen route only.
+Its `native`/`off` baseline denominator is 54 cells, followed by the existing 714-cell local screen.
+Sonnet/Codex are `NOT_RUN_USER_POLICY / SHARED_QUOTA_EXHAUSTED`, `host-default` is
+`NOT_RUN_USER_POLICY`, and `local-low` is `UNAVAILABLE / NOT_CONFIGURED`. No new call or probe and no
+claim is permitted for those tiers while the local-only exception is active.
 
-PR #76 merged the audit repair: the 714-cell screening now requires a sealed exact-head 162/162
-baseline report, and mixed checkpoint provenance is reported as 100 migrated plus 45 current-runner
-cells with legacy latency excluded. The current 145/162 report is therefore correctly blocked from
-starting screening.
+The prior three-route checkpoint remains immutable history: Qwen 54/54, Sonnet 54/54, Codex 37/54,
+145/162 overall, with 17 Codex cells blocked by quota. It is not the current local-first denominator
+and its mixed legacy/current latency is not imported blindly. Its Qwen 54/54 subset must pass the
+existing compatibility audit, Bridge Proof and checkpoint migration contracts; only proven residual
+cells rerun.
 
 PRs A-I are merged and the implementation baseline is complete. Planning PRs
 [#20](https://github.com/souten-yd/ExtendCodeAgent/pull/20) and
@@ -123,11 +123,11 @@ port-8090 Qwen, host-default, GitHub Copilot Sonnet and GitHub Copilot Codex wit
 local-low remains `UNAVAILABLE`. OMO 4.19.4 + ECA model-free namespace/tool visibility recheck passed.
 This is a partial B0a checkpoint, not screening or confirmation evidence.
 
-The current runner defines a 162-cell `native`/`off` baseline over the three requested quality routes
-and a 714-cell local-practical screen. The latter contains 294 paired active/ablation cells plus
-capability-specific D0-D4 arms only for semantic, impact, test selection and context. Screening is
-now fail-closed on a sealed exact-head 162/162 baseline report. The old 306-cell protocol and its
-137-cell partial run remain diagnostic history only.
+The current runner defines a 54-cell local-practical `native`/`off` baseline and a 714-cell
+local-practical screen. The latter contains 294 paired active/ablation cells plus capability-specific
+D0-D4 arms only for semantic, impact, test selection and context. Screening fails closed unless the
+exact-head 54/54 report binds the current local-first target seal. The old 306- and 162-cell protocols
+remain diagnostic history only.
 
 A corrected-head comprehensive baseline reached 229/306 before the host-default provider began
 returning `Rate limit exceeded`. OpenCode exhausted its retries immediately but the runner waited for

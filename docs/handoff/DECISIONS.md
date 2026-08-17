@@ -992,3 +992,21 @@ Screening order is enforced rather than documented convention: `b0a-screening` r
 exact-head `--baseline-report` containing all 162 scheduled cells and one valid trace per result.
 Provider-gap quality results, incomplete cells, changed provenance or a stale head reject screening
 before any workspace or model call is created.
+
+## 2026-08-17 — Execute the existing Master Plan local-only
+
+Decision: preserve the existing plan, stage order, entry/exit conditions, task suite, oracles,
+thresholds, corpus, capability design and historical evidence. Change only model execution selection
+through sealed `b0a-quality-target-v2.json`: ControlDeck-managed Qwen3.6 27B at port 8090 is mandatory;
+Sonnet/Codex and host-default receive no new calls; local-low remains unavailable.
+
+The B0a denominator is 54 cells and the unchanged screen is 714 cells. Existing Qwen 54/54 is not
+discarded or rerun by default: the existing compatibility audit, Bridge Proof and checkpoint migration
+must prove task/oracle/model-limit/ECA-semantic compatibility, and only residual invalid cells replay.
+Local evidence can promote at most `active-scoped(local-practical)` and cannot support a frontier,
+host-default, local-low or general-model claim.
+
+R0 closes first as a production-capable local-only baseline under the single Master Plan §10.4
+exception. P0-P4 then follow their existing entry conditions and use the same Qwen route for any
+model-bearing evaluation. Unavailable or policy-excluded tiers are never passes, and prior Copilot
+results remain historical/supplementary evidence without deletion or reclassification.

@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "policy_id": "b0a-quality-target-v2-local-only",
+  "created_at": "2026-08-17",
+  "supersedes_for_execution": "docs/evaluation/b0a-quality-target-v1.json",
+  "preserved_inputs": {
+    "evaluation_matrix": "docs/evaluation/evaluation-matrix-v1.json",
+    "task_suite": "docs/evaluation/task-suite-v1.json",
+    "screening_plan": "docs/evaluation/b0a-screening-plan-v1.json",
+    "task_oracle_threshold_corpus_capability_design": "UNCHANGED"
+  },
+  "activation_plan": "docs/evaluation/b0a-activation-plan-v1.json",
+  "activation_plan_seal": "53c289a1c5916689ef2e4e47acbc28fe9408ce332a354f66e5165a0ede723691",
+  "quality_models": [
+    "local-practical"
+  ],
+  "execution": {
+    "execution_scope": "local-only",
+    "model": "Qwen3.6 27B",
+    "model_tier": "local-practical",
+    "endpoint": "127.0.0.1:8090",
+    "context": 262144,
+    "output_limit": 8192
+  },
+  "non_execution": {
+    "frontier-sonnet": {
+      "status": "NOT_RUN_USER_POLICY",
+      "reason": "SHARED_QUOTA_EXHAUSTED",
+      "claim": "NONE",
+      "retest_trigger": "explicit user authorization after quota reset"
+    },
+    "frontier-codex": {
+      "status": "NOT_RUN_USER_POLICY",
+      "reason": "SHARED_QUOTA_EXHAUSTED",
+      "claim": "NONE",
+      "retest_trigger": "explicit user authorization after quota reset"
+    },
+    "host-default": {
+      "status": "NOT_RUN_USER_POLICY",
+      "reason": "OUTSIDE_QUALITY_TARGET",
+      "claim": "NONE"
+    },
+    "local-low": {
+      "status": "UNAVAILABLE",
+      "reason": "NOT_CONFIGURED",
+      "claim": "NONE"
+    }
+  },
+  "baseline": {
+    "arms": [
+      "native",
+      "off"
+    ],
+    "tasks": 9,
+    "repetitions": 3,
+    "expected_cells": 54
+  },
+  "reuse_policy": "Promote the existing Qwen 54/54 through compatibility audit, Bridge Proof and checkpoint migration when task, oracle, model limits and ECA semantics remain compatible; replay only cells proven non-reusable.",
+  "screening": {
+    "expected_cells": 714,
+    "contract": "UNCHANGED"
+  },
+  "maximum_promotion_scope": "active-scoped(local-practical)",
+  "provider_gap_policy": "Unavailable and user-policy-excluded tiers are never PASS and never enter local-only quality or latency aggregates.",
+  "seal": {
+    "algorithm": "sha256",
+    "canonical_payload": "ab6b2141b5c8bd99dac5aa18c6e7b2c060c8624fa79f56ef7001edc993d518d9"
+  }
+}

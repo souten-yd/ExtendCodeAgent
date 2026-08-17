@@ -22,6 +22,7 @@ from tools.local.evaluation_runner import (  # noqa: E402
     _activation_assessment,
     _activation_gate,
     _environment,
+    _execute,
     _isolated_agent_environment,
     _metrics,
     _outcome_attribution,
@@ -42,6 +43,8 @@ MATRIX = ROOT / "docs/evaluation/evaluation-matrix-v1.json"
 LABELS = ROOT / "docs/evaluation/labels-v1/graph-quality-labels.json"
 METRICS = ROOT / "docs/evaluation/pi-verification-integrated-metrics-v1.json"
 ACTIVATION_PLAN = ROOT / "docs/evaluation/b0a-activation-plan-v1.json"
+QUALITY_TARGET_V1 = ROOT / "docs/evaluation/b0a-quality-target-v1.json"
+QUALITY_TARGET_V2 = ROOT / "docs/evaluation/b0a-quality-target-v2.json"
 
 
 def _run(*args: str) -> subprocess.CompletedProcess[str]:
@@ -99,6 +102,31 @@ def test_provider_gap_pauses_only_its_queue_and_other_models_continue(
     assert report["provider_queue"]["host-default"]["status"] == "PAUSED_PROVIDER_GAP"
     assert len(report["provider_attempts"]) == 1
     assert [item["cell_id"] for item in report["results"]] == [local["cell_id"]]
+    assert report["execution_scope"] == "local-only"
+    assert report["model"] == "Qwen3.6 27B"
+    assert report["endpoint"] == "127.0.0.1:8090"
+    assert report["context"] == 262144
+    assert report["output_limit"] == 8192
+
+
+def test_local_only_policy_blocks_new_nonlocal_provider_execution(tmp_path: Path) -> None:
+    cell = {
+        "model_status": "AVAILABLE",
+        "model_tier": "frontier-codex",
+    }
+    with pytest.raises(evaluation_runner.EvaluationError, match="local-only execution policy"):
+        _execute(cell, {}, tmp_path)
+
+    probe = _run(
+        "probe-provider",
+        "--model-tier",
+        "frontier-sonnet",
+        "--output",
+        str(tmp_path / "probe.json"),
+    )
+    assert probe.returncode == 1
+    assert "local-only execution policy" in probe.stderr
+    assert not (tmp_path / "probe.json").exists()
 
 
 def test_opencode_provider_failure_is_classified_and_stops_early(tmp_path: Path) -> None:
@@ -138,6 +166,16 @@ def test_matrix_and_promoted_layer_a_labels_are_sealed() -> None:
         "new_human_reviews": 0,
         "promotion_source": "Existing manually reviewed PR-C and PR-H ground-truth reports",
     }
+    quality_v1 = json.loads(QUALITY_TARGET_V1.read_text(encoding="utf-8"))
+    quality_v2 = json.loads(QUALITY_TARGET_V2.read_text(encoding="utf-8"))
+    assert quality_v1["seal"]["canonical_payload"] == (
+        "64f9ec41f05f245e5e13d89a99dfccae8adce3a8902ed739c7203cd63fa98667"
+    )
+    assert quality_v2["seal"] == {
+        "algorithm": "sha256",
+        "canonical_payload": _digest(quality_v2),
+    }
+    assert quality_v2["quality_models"] == ["local-practical"]
 
 
 def test_full_plan_is_fixed_and_keeps_unavailable_cells_visible() -> None:
@@ -155,14 +193,10 @@ def test_b0a_schedules_enforce_bootstrap_exclusions_and_screening_contract() -> 
     activation = _run("plan", "--scope", "b0a-activation")
     assert activation.returncode == 0, activation.stderr
     activation_plan = json.loads(activation.stdout)
-    assert activation_plan["counts"] == {"cells": 3, "available": 3, "unavailable": 0}
+    assert activation_plan["counts"] == {"cells": 1, "available": 1, "unavailable": 0}
     assert {item["arm"] for item in activation_plan["cells"]} == {"active"}
     assert {item["task_id"] for item in activation_plan["cells"]} == {"eca-symbol-001"}
-    assert {item["model_tier"] for item in activation_plan["cells"]} == {
-        "local-practical",
-        "frontier-sonnet",
-        "frontier-codex",
-    }
+    assert {item["model_tier"] for item in activation_plan["cells"]} == {"local-practical"}
     assert all(item["pi_activation_gate"] for item in activation_plan["cells"])
 
     pilot = _run("plan", "--scope", "b0a-pilot")
@@ -188,12 +222,8 @@ def test_b0a_schedules_enforce_bootstrap_exclusions_and_screening_contract() -> 
     baseline = _run("plan", "--scope", "b0a-baseline")
     assert baseline.returncode == 0, baseline.stderr
     baseline_plan = json.loads(baseline.stdout)
-    assert baseline_plan["counts"] == {"cells": 162, "available": 162, "unavailable": 0}
-    assert {item["model_tier"] for item in baseline_plan["cells"]} == {
-        "local-practical",
-        "frontier-sonnet",
-        "frontier-codex",
-    }
+    assert baseline_plan["counts"] == {"cells": 54, "available": 54, "unavailable": 0}
+    assert {item["model_tier"] for item in baseline_plan["cells"]} == {"local-practical"}
     assert {item["arm"] for item in baseline_plan["cells"]} == {"native", "off"}
     assert {item["repository_id"] for item in baseline_plan["cells"]} == {
         "extendcodeagent",
@@ -258,7 +288,7 @@ def test_activation_contract_blocks_comprehensive_run_until_every_route_is_reach
 
 def test_activation_gate_requires_observed_runtime_state_and_provenance() -> None:
     results = []
-    for model in ("local-practical", "frontier-sonnet", "frontier-codex"):
+    for model in ("local-practical",):
         result: dict[str, Any] = {
             "model_tier": model,
             "outcome": "FAIL",
@@ -293,9 +323,9 @@ def test_activation_gate_requires_observed_runtime_state_and_provenance() -> Non
     assert failed["assessment_mismatches"] == ["local-practical"]
 
 
-def test_activation_requires_only_the_three_quality_models(tmp_path: Path) -> None:
+def test_activation_requires_only_the_local_first_quality_model(tmp_path: Path) -> None:
     results = []
-    for model in ("local-practical", "frontier-sonnet", "frontier-codex"):
+    for model in ("local-practical",):
         result: dict[str, Any] = {
             "model_tier": model,
             "outcome": "FAIL",
@@ -322,18 +352,13 @@ def test_activation_requires_only_the_three_quality_models(tmp_path: Path) -> No
         "schedule": {"scope": "b0a-activation"},
         "results": results,
         "activation_gate": _activation_gate(results),
-        "provider_queue": {
-            "host-default": {
-                "status": "PAUSED_PROVIDER_GAP",
-                "failure": "RATE_LIMIT",
-            }
-        },
+        "provider_queue": {},
     }
     path = tmp_path / "activation.json"
     path.write_text(json.dumps(report))
     evidence = _require_activation_report(path, require_comprehensive=True)
     assert evidence["status"] == "PASS"
-    assert evidence["provider_queue"]["host-default"]["status"] == ("PAUSED_PROVIDER_GAP")
+    assert evidence["activated_models"] == ["local-practical"]
 
 
 def test_screening_requires_a_complete_sealed_exact_head_baseline(

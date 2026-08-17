@@ -101,9 +101,11 @@ tools/local/evaluation-runner promote-pilot --source <old-pilot.json> \
 
 Promoted pilot latency remains legacy and separate. Any non-reusable pilot cell rejects promotion.
 
-B0a screening additionally requires the complete, sealed, exact-head 162-cell baseline. The runner
-verifies the result set, target completion summary and append-only trace before creating a screening
-workspace; a 145/162 checkpoint or any provider-gap quality result fails closed:
+B0a local-only screening additionally requires the complete, sealed, exact-head 54-cell
+port-8090 `local-practical` baseline. The runner verifies the quality-target seal, result set,
+target completion summary and append-only trace before creating a screening workspace. Sonnet,
+Codex and `host-default` remain `NOT_RUN_USER_POLICY`; `local-low` remains `UNAVAILABLE` for this progression
+gate and cannot be presented as passed:
 
 ```bash
 tools/local/evaluation-runner run --scope b0a-screening \

@@ -30,15 +30,16 @@ Scope:
 - establish Existing Project Bootstrap conformance for every evaluation repository before any arm
   runs; exclude and report bootstrap failures instead of attributing them to a capability;
 - rerun lint, typecheck, unit, integration, build and adapter/plugin/MCP lifecycle paths;
-- reproduce provider failures with PI disabled first and run the blocking OMO coexistence smoke;
-- pass the exact-head PI activation gate on port-8090 Qwen and both GitHub Copilot
-  frontier routes, including observed tool use/Twin/provenance; classify every capability route and
-  repair any missing route before comprehensive execution;
+- retain prior provider failures as classified history and run the blocking OMO coexistence smoke;
+- pass the exact-head PI activation gate on port-8090 Qwen, including observed tool
+  use/Twin/provenance; classify every capability route and repair any missing route before local
+  comprehensive execution;
 - run the interleaved 9-cell port-8090 `native/off/active` pilot tranche; only a passing signal may
   continue to 27-cell confirmation, while no effect, missing PI use, provider/timeout failure or
   abnormal active latency requires repair and repeat;
 - fix and version the B0a tuning subset, effect threshold and one assigned model tier per ablation;
-- run full-tier/repetition `native` and `off` baselines, then the bounded screening pass;
+- promote the 54-cell local-practical `native`/`off` baseline through compatibility evidence, then
+  run only proven residual baseline cells and the bounded screening pass;
 - emit the screening table with `proceed` or `no screened effect`, without promotion/demotion.
 
 Exit evidence: frozen environment and bootstrap records, classified integration results, and a
@@ -52,6 +53,16 @@ The original bootstrap evidence excludes KasaneCore and PEDS after 300-second Tw
 that historical result in old-head schedules/reports. The B1 evidence below supersedes their current
 eligibility for repaired-head screening and confirmation. See
 `docs/evidence/final/b0a-bootstrap-environment-v1.json`.
+
+The active execution contract is sealed in `docs/evaluation/b0a-quality-target-v2.json`. It changes
+only model selection and claim scope: port-8090 `local-practical` Qwen is the sole execution route;
+Sonnet/Codex and host-default receive no calls or probes; local-low remains unavailable. Promote the
+existing Qwen 54/54 through the existing compatibility audit, Bridge Proof and checkpoint migration
+when task/oracle/model limits/ECA semantics match, and rerun only proven residual cells. A sealed
+exact-head 54/54 report opens the unchanged 714-cell screening schedule.
+
+The chronology below is retained as immutable history. Its 306-, 162-, and 145-cell instructions are
+superseded by quality-target v2 and are not current execution instructions.
 
 The runner has two comprehensive resumable schedules: `b0a-baseline` has 162 cells across the three
 quality targets (ControlDeck-managed Qwen, GitHub Copilot Sonnet, and GitHub Copilot Codex)
@@ -121,8 +132,8 @@ Evaluation environment mandated by the user:
   behavior to the host-neutral ECA core;
 - use the existing Llama-compatible Qwen3.6 27B service on port 8090 for `local-practical`; wait for
   wake-up and never start Ollama or a substitute server;
-- use Sonnet and Codex through OpenCode's registered GitHub Copilot provider as the two mandatory
-  frontier model arms; discover and seal their exact installed identifiers before the first run.
+- retain the sealed Sonnet and Codex identifiers as historical configuration; do not call or probe
+  them while the local-only execution exception is active.
 
 ## E5 closeout
 
