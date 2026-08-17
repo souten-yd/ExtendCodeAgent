@@ -134,10 +134,14 @@ for the `call_graph` folding and the `ConfigError` policy: `docs/handoff/DECISIO
 
 ## Immediate next action
 
-Phase 1, B0b entry gate: merge the EvaluationPIPlan/use-policy/trace-compliance implementation, run
-and merge the bounded local-practical causal correction, then derive B0b candidates from the preserved
-six plus any corrective positives. Only afterward confirm on the unchanged held-out KasaneCore split
-with the existing repetitions, oracle and promotion/demotion rules. See `docs/handoff/NEXT_TASK.md`.
+Phase 1, B0b held-out confirmation: merge the bounded confirmation runner, then generate its sealed
+plan at exact main before any new Qwen call. The unchanged EvaluationPIPlan covers three held-out
+KasaneCore tasks for the candidate union: 9 `auto_pi`, 9 `forced_pi`, 9 `forced_off`, and 30
+`forced_ablation` cells across the required three repetitions, for 57 cells total. Graph, Twin and
+Semantic each have nine held-out pairs; Test Selection has three. Blueprint, Impact, Strategy and
+Test Obsolescence have no suitable sealed held-out task and remain `NO_HELD_OUT_TASK_COVERAGE`, not
+no effect. After execution, seal `baseline-gap-report.md` under the unchanged oracle, absolute
+two-PASS effect threshold and promotion/demotion rules. See `docs/handoff/NEXT_TASK.md`.
 
 The first B0a bootstrap checkpoint attempted all nine pinned repositories: seven established a Twin,
 while KasaneCore and PEDS exceeded the bounded 300-second initial-Twin limit and are

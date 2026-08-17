@@ -44,6 +44,16 @@ Scope:
 - bound every claim to `active-scoped(local-practical)`; no frontier, host-default, local-low or
   general-model claim is permitted.
 
+The bounded implementation schedule is 57 local-practical cells: three candidate-covered held-out
+tasks x three repetitions for each of `auto_pi`, `forced_pi`, and `forced_off` (27 cells), plus 30
+forced-ablation cells. Graph, Twin and Semantic each use all three eligible tasks (nine pairs each);
+Test Selection uses the held-out test-selection task (three pairs). `kasane-unsafe-001` has no B0b
+candidate coverage and is not converted into an efficacy cell. Blueprint, Impact, Strategy and Test
+Obsolescence are `NO_HELD_OUT_TASK_COVERAGE`; do not invent a task or infer no effect. All 57 planned
+cells are required by confirmation, so adaptive screening stopping does not remove repetitions here.
+Merge the runner first, generate a sealed exact-main plan without a model call, inspect it, then run
+resumably with one Qwen inference at a time and CPU-side workspace/oracle/log/seal pipelining.
+
 Entry evidence is sealed in `docs/evidence/final/b0a-adaptive-screening-result-v1.json`. It accounts
 for all 714 cells with 30 new calls, 22 compatible reused results, and 684 machine-classified avoided
 calls. This 95.7983% is evaluation-scheduler call avoidance, not a production ECA call-reduction
