@@ -2,10 +2,10 @@
 
 Updated: 2026-08-17 (Asia/Tokyo)
 
-Canonical branch: `agent/b0a-adaptive-screening-evidence`; synchronized merged base is
-`e793103f459dde0947fc43f25720f93db61d2ba8` (PR #82)
+Canonical branch: `agent/b0b-local-confirmation`; synchronized merged base is
+`f5c8ea954c8e43a9d296cafad784bdd0ca32a442` (PR #83)
 Milestone: A-I implementation and Phase 0 evaluation enablement complete
-Current task: close B0a evidence, then run B0b local-practical held-out confirmation
+Current task: merge and run the causal-correction entry gate before B0b
 
 ## Current authoritative checkpoint (2026-08-17)
 
@@ -33,15 +33,24 @@ Current task: close B0a evidence, then run B0b local-practical held-out confirma
 - Exact-main adaptive screening is complete. The 714-cell contract is fully accounted for by 30 new
   calls, 22 compatible reused results and 684 machine-classified avoided calls. There were no
   provider gaps, new timeouts or step-limit terminations. The observed call-avoidance ratio is
-  95.7983%; the oracle and effect threshold were unchanged.
+  95.7983%; the oracle and effect threshold were unchanged. This is observational / agent-selection-
+  weighted scheduler evidence, not product-runtime call reduction or causal evidence for every
+  capability.
 - `graph`, `twin`, `semantic`, `impact`, `test_selection`, and `test_obsolescence` proceed as B0b
   candidates only. `blueprint` and `strategy` recorded no screened effect. `context`, `runtime`,
   `convergence`, `research`, and `traceability` remain `NOT_TESTED_NO_ACTIVE_USE`; they are not
   classified as no effect. No B0a result promotes or demotes a capability.
-- Next, use the unchanged held-out KasaneCore split, repetition count, oracle and decision rules for
-  B0b, with local-practical Qwen as the sole model route and claim scope bounded to
-  `active-scoped(local-practical)`. Evidence:
-  `docs/evidence/final/b0a-adaptive-screening-result-v1.json`.
+- Before B0b, merge a causal-correction gate. The sealed EvaluationPIPlan covers all 13 tasks and was
+  constructed without observed Qwen selection. It separates `auto_pi` selection evidence from
+  forced ON/OFF/ablation efficacy and requires exact trace request equality.
+- The corrective plan uses six representative tasks for eleven covered capabilities, preserves the
+  six existing candidates, and records Research/Test Obsolescence as `NO_TASK_COVERAGE`. Five auto
+  task traces are reusable only as selection evidence; `cd-requirement-001` needs one new auto call.
+  The initial plan is 24 calls and the hard maximum 58. The old 27-cell forced pilot remains
+  replay-required because it lacks exact request-input provenance.
+- The active-trace-dependent 108-cell B0b runner was never executed and is retired. A corrected B0b
+  plan is generated only after corrective evidence merges. No corrective or B0b model call has run
+  on the implementation branch.
 
 The chronology below is retained as history. Its four-model/306-cell and three-model/162-cell
 statements describe superseded protocols and are not current execution instructions.

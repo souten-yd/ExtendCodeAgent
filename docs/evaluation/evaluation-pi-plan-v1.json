@@ -1,0 +1,192 @@
+{
+  "schema": 1,
+  "plan_id": "evaluation-pi-plan-v1",
+  "purpose": "Manual-reviewed expected PI use for causal efficacy and independent auto-selection evaluation.",
+  "task_suite_seal": "23bf76039ea1e95a29c31c09823f2501bd3658dea305a4e38868eb9e1e6f6632",
+  "matrix_seal": "7bfa9f1dd8be5bf44fcf3f018c4ccbe2b6a3266846cd7a994f08eb5d4886a0c5",
+  "construction": {
+    "inputs": ["sealed task instruction", "task class", "sealed oracle", "capability responsibility"],
+    "excluded_inputs": ["Qwen tool choice", "observed active pi_* trace", "screening outcome"],
+    "review": "deterministic/manual-reviewed before corrective model execution"
+  },
+  "use_policies": {
+    "native": "ECA absent",
+    "off": "ECA present but disabled",
+    "auto_pi": "PI tools available; agent/controller chooses use",
+    "forced_pi": "runner requires the task EvaluationPIPlan tool requests",
+    "forced_off": "same forced request plan and prompt with all PI capabilities disabled",
+    "forced_ablation": "same forced plan and prompt with exactly one capability disabled"
+  },
+  "tasks": [
+    {
+      "task_id": "eca-symbol-001",
+      "task_class": "symbol-reference-lookup",
+      "expected_capabilities": ["graph", "twin", "semantic"],
+      "required_pi_tools": ["pi_status", "pi_symbol"],
+      "optional_pi_tools": ["pi_tests"],
+      "tool_requests": [{"tool": "pi_status", "input": {}}, {"tool": "pi_symbol", "input": {"query": "select_tests"}}],
+      "rationale": "Definition, export, caller and test lookup is the direct graph/Twin/Semantic responsibility.",
+      "minimum_depth": "D0",
+      "escalation_conditions": ["canonical reference unresolved", "caller or export set incomplete"]
+    },
+    {
+      "task_id": "eca-impact-001",
+      "task_class": "impact-assessment",
+      "expected_capabilities": ["graph", "twin", "semantic", "impact"],
+      "required_pi_tools": ["pi_status", "pi_symbol", "pi_impact"],
+      "optional_pi_tools": ["pi_tests", "pi_path"],
+      "tool_requests": [{"tool": "pi_status", "input": {}}, {"tool": "pi_symbol", "input": {"query": "_edge_meets_confidence"}}, {"tool": "pi_impact", "input": {"changed_refs": ["py://src.extendcodeagent.analysis.service#_edge_meets_confidence"]}}],
+      "rationale": "The oracle asks for the changed definition, production impact and focused tests.",
+      "minimum_depth": "D0",
+      "escalation_conditions": ["impact closure incomplete", "uncertainty remains", "focused tests uncovered"]
+    },
+    {
+      "task_id": "eca-tests-001",
+      "task_class": "test-selection",
+      "expected_capabilities": ["graph", "twin", "semantic", "test_selection"],
+      "required_pi_tools": ["pi_status", "pi_symbol", "pi_tests"],
+      "optional_pi_tools": ["pi_impact"],
+      "tool_requests": [{"tool": "pi_status", "input": {}}, {"tool": "pi_symbol", "input": {"query": "derive_required_verification_set"}}, {"tool": "pi_tests", "input": {"objective": "cover the required-verification projection, Twin integration, and no-second-truth-store architecture boundary"}}],
+      "rationale": "The oracle directly measures the minimum required verification provider set.",
+      "minimum_depth": "D0",
+      "escalation_conditions": ["verification obligation uncovered", "selected-test evidence conflicted"]
+    },
+    {
+      "task_id": "eca-refactor-001",
+      "task_class": "cross-file-refactor",
+      "expected_capabilities": ["graph", "twin", "semantic", "impact", "blueprint", "strategy"],
+      "required_pi_tools": ["pi_status", "pi_symbol", "pi_impact", "pi_plan"],
+      "optional_pi_tools": ["pi_tests"],
+      "tool_requests": [{"tool": "pi_status", "input": {}}, {"tool": "pi_symbol", "input": {"query": "_edge_meets_confidence"}}, {"tool": "pi_impact", "input": {"changed_refs": ["py://src.extendcodeagent.analysis.service#_edge_meets_confidence"]}}, {"tool": "pi_plan", "input": {"goal": "extract edge_meets_confidence without changing behavior", "target_refs": ["py://src.extendcodeagent.analysis.service#_edge_meets_confidence"], "constraints": ["private to analysis package", "update all production call sites"], "persist_blueprint": false}}],
+      "rationale": "A cross-file behavior-preserving change requires truth, impact and bounded alternative/Blueprint planning.",
+      "minimum_depth": "D1",
+      "escalation_conditions": ["call site unresolved", "alternative scores tied", "verification obligation uncovered"]
+    },
+    {
+      "task_id": "eca-negative-001",
+      "task_class": "negative-control",
+      "expected_capabilities": [],
+      "required_pi_tools": [],
+      "optional_pi_tools": [],
+      "tool_requests": [],
+      "rationale": "Mechanical file creation requires no Project Intelligence.",
+      "minimum_depth": "D0",
+      "escalation_conditions": []
+    },
+    {
+      "task_id": "cd-symbol-001",
+      "task_class": "symbol-reference-lookup",
+      "expected_capabilities": ["graph", "twin", "semantic"],
+      "required_pi_tools": ["pi_status", "pi_symbol"],
+      "optional_pi_tools": ["pi_context"],
+      "tool_requests": [{"tool": "pi_status", "input": {}}, {"tool": "pi_symbol", "input": {"query": "tui_command"}}],
+      "rationale": "Definition, direct caller and UI entry lookup is graph/Twin/Semantic responsibility.",
+      "minimum_depth": "D0",
+      "escalation_conditions": ["frontend entry unresolved", "cross-language edge missing"]
+    },
+    {
+      "task_id": "cd-bug-001",
+      "task_class": "failing-test-bug-localization",
+      "expected_capabilities": ["graph", "twin", "semantic", "impact", "test_selection"],
+      "required_pi_tools": ["pi_status", "pi_symbol", "pi_impact", "pi_tests"],
+      "optional_pi_tools": ["pi_context"],
+      "tool_requests": [{"tool": "pi_status", "input": {}}, {"tool": "pi_symbol", "input": {"query": "review"}}, {"tool": "pi_impact", "input": {"changed_refs": ["pyname://review"]}}, {"tool": "pi_tests", "input": {"objective": "localize and verify the seeded read-only review operation regression"}}],
+      "rationale": "Bug localization needs semantic lookup, impact closure and focused verification selection.",
+      "minimum_depth": "D1",
+      "escalation_conditions": ["seeded failure not localized", "production call path unresolved", "fix verification uncovered"]
+    },
+    {
+      "task_id": "cd-requirement-001",
+      "task_class": "requirement-to-code-tracing",
+      "expected_capabilities": ["graph", "twin", "semantic", "traceability", "convergence"],
+      "required_pi_tools": ["pi_status", "pi_symbol", "pi_verify"],
+      "optional_pi_tools": ["pi_context"],
+      "tool_requests": [{"tool": "pi_status", "input": {}}, {"tool": "pi_symbol", "input": {"query": "opencode"}}, {"tool": "pi_verify", "input": {"requirements": [{"requirement_id": "opencode-opt-in", "description": "OpenCode is opt-in and disabled routes are absent", "expected_actual_refs": ["file://backend/app/features/registry.py", "file://backend/app/integrations/opencode/router.py", "file://backend/app/workflows/catalog.py", "file://frontend/src/App.tsx"], "mandatory": true, "requires_verification": true}]}}],
+      "rationale": "The oracle is an explicit requirement-to-current-code and focused-test trace.",
+      "minimum_depth": "D1",
+      "escalation_conditions": ["requirement mapping missing", "actual reference stale", "verification gap remains"]
+    },
+    {
+      "task_id": "cd-cross-boundary-001",
+      "task_class": "cross-boundary-gui-runtime-causal-flow",
+      "expected_capabilities": ["graph", "twin", "semantic", "context", "runtime", "traceability", "convergence"],
+      "required_pi_tools": ["pi_status", "pi_symbol", "pi_context", "pi_runtime_evidence", "pi_verify"],
+      "optional_pi_tools": ["pi_impact", "pi_path"],
+      "tool_requests": [{"tool": "pi_status", "input": {}}, {"tool": "pi_symbol", "input": {"query": "tui_command"}}, {"tool": "pi_context", "input": {"objective": "trace OpenCode session start from UI through HTTP, wake-up, command, tmux, React state, and Xterm", "target_refs": ["py://backend.app.integrations.opencode.provider#tui_command"], "profile": "standard", "token_budget": 8192}}, {"tool": "pi_runtime_evidence", "input": {"refs": ["file://frontend/src/features/opencode/OpenCodePage.tsx", "file://backend/app/integrations/opencode/router.py", "file://backend/app/models_mgmt/llama.py", "file://backend/app/integrations/opencode/provider.py", "file://backend/app/terminals/manager.py", "file://frontend/src/features/terminal/XtermView.tsx"]}}, {"tool": "pi_verify", "input": {"requirements": [{"requirement_id": "opencode-session-causal-flow", "description": "UI session start reaches the visible Xterm through the runtime boundary", "expected_actual_refs": ["file://frontend/src/features/opencode/OpenCodePage.tsx", "file://backend/app/integrations/opencode/router.py", "file://backend/app/models_mgmt/llama.py", "file://backend/app/integrations/opencode/provider.py", "file://backend/app/terminals/manager.py", "file://frontend/src/features/terminal/XtermView.tsx"], "mandatory": true, "requires_verification": true}]}}],
+      "rationale": "The task explicitly spans static truth, bounded context, runtime boundary and convergence evidence.",
+      "minimum_depth": "D1",
+      "escalation_conditions": ["boundary edge unresolved", "runtime evidence absent", "visible-state obligation uncovered"]
+    },
+    {
+      "task_id": "kasane-unsafe-001",
+      "task_class": "unsafe-or-insufficient-evidence",
+      "expected_capabilities": ["runtime", "traceability", "convergence"],
+      "required_pi_tools": ["pi_status", "pi_runtime_evidence", "pi_verify"],
+      "optional_pi_tools": ["pi_context"],
+      "tool_requests": [{"tool": "pi_status", "input": {}}, {"tool": "pi_runtime_evidence", "input": {"refs": ["file://docs/atlas_project_restore_visual_recovery_plan.md"]}}, {"tool": "pi_verify", "input": {"requirements": [{"requirement_id": "live-8080-rubik-validation", "description": "live 8080 Rubik validation is complete", "expected_actual_refs": ["file://docs/atlas_project_restore_visual_recovery_plan.md"], "mandatory": true, "requires_verification": true}]}}],
+      "rationale": "The safe answer depends on distinguishing absent live runtime evidence from PASS.",
+      "minimum_depth": "D1",
+      "escalation_conditions": ["live evidence missing", "evidence contradiction", "verification obligation unresolved"]
+    },
+    {
+      "task_id": "kasane-cross-boundary-001",
+      "task_class": "cross-boundary-gui-runtime-causal-flow",
+      "expected_capabilities": ["graph", "twin", "semantic", "context", "runtime", "traceability", "convergence"],
+      "required_pi_tools": ["pi_status", "pi_symbol", "pi_context", "pi_runtime_evidence", "pi_verify"],
+      "optional_pi_tools": ["pi_impact", "pi_path"],
+      "tool_requests": [{"tool": "pi_status", "input": {}}, {"tool": "pi_symbol", "input": {"query": "project restore isolation"}}, {"tool": "pi_context", "input": {"objective": "trace project restore isolation to the empty or no-plan visible state", "profile": "standard", "token_budget": 8192}}, {"tool": "pi_runtime_evidence", "input": {"refs": ["file://web/js/atlas_claude_panel.js", "file://app/api/atlas_pipeline.py", "file://agent/atlas_journal.py"]}}, {"tool": "pi_verify", "input": {"requirements": [{"requirement_id": "project-restore-isolation", "description": "selected project restore remains workspace-scoped through the visible empty state", "expected_actual_refs": ["file://web/js/atlas_claude_panel.js", "file://app/api/atlas_pipeline.py", "file://agent/atlas_journal.py"], "mandatory": true, "requires_verification": true}]}}],
+      "rationale": "The task is a cross-boundary causal flow with explicit workspace and visible-state obligations.",
+      "minimum_depth": "D1",
+      "escalation_conditions": ["workspace scope unresolved", "runtime/static evidence conflict", "visible-state edge missing"]
+    },
+    {
+      "task_id": "kasane-tests-001",
+      "task_class": "test-selection",
+      "expected_capabilities": ["graph", "twin", "semantic", "test_selection"],
+      "required_pi_tools": ["pi_status", "pi_symbol", "pi_tests"],
+      "optional_pi_tools": ["pi_impact"],
+      "tool_requests": [{"tool": "pi_status", "input": {}}, {"tool": "pi_symbol", "input": {"query": "atlas_project_restore_visual_recovery_plan"}}, {"tool": "pi_tests", "input": {"objective": "cover project restore, bootstrap, continuation workspace isolation, and Rubik visual contract"}}],
+      "rationale": "The oracle directly names the minimum tests required by the active recovery plan.",
+      "minimum_depth": "D0",
+      "escalation_conditions": ["plan-to-test trace missing", "verification obligation uncovered"]
+    },
+    {
+      "task_id": "kasane-requirement-001",
+      "task_class": "requirement-to-code-tracing",
+      "expected_capabilities": ["graph", "twin", "semantic", "traceability", "convergence"],
+      "required_pi_tools": ["pi_status", "pi_symbol", "pi_verify"],
+      "optional_pi_tools": ["pi_context"],
+      "tool_requests": [{"tool": "pi_status", "input": {}}, {"tool": "pi_symbol", "input": {"query": "atlas_visual_contract_registry"}}, {"tool": "pi_verify", "input": {"requirements": [{"requirement_id": "html-rubik-no-canvas-default", "description": "HTML Rubik solver does not require canvas unless canvas or WebGL is explicit", "expected_actual_refs": ["file://agent/atlas_visual_artifact_verifier.py", "file://agent/atlas_visual_contract_registry.py"], "mandatory": true, "requires_verification": true}]}}],
+      "rationale": "The oracle is a requirement-to-registry/verifier/test trace.",
+      "minimum_depth": "D1",
+      "escalation_conditions": ["requirement source unresolved", "implementation trace incomplete", "focused-test evidence missing"]
+    }
+  ],
+  "causal_correction": {
+    "existing_observational_candidates": ["graph", "twin", "semantic", "impact", "test_selection", "test_obsolescence"],
+    "representative_tasks": {
+      "graph": "eca-symbol-001",
+      "twin": "eca-symbol-001",
+      "semantic": "eca-symbol-001",
+      "impact": "eca-impact-001",
+      "test_selection": "eca-tests-001",
+      "context": "cd-cross-boundary-001",
+      "runtime": "cd-cross-boundary-001",
+      "blueprint": "eca-refactor-001",
+      "strategy": "eca-refactor-001",
+      "convergence": "cd-requirement-001",
+      "traceability": "cd-requirement-001"
+    },
+    "no_task_coverage": {
+      "test_obsolescence": "No sealed oracle distinguishes obsolescence/health from test selection.",
+      "research": "No sealed task requires external/provider-neutral research retrieval."
+    },
+    "initial_repetitions": [1],
+    "boundary_repetitions": [2, 3],
+    "initial_forced_calls": 23,
+    "maximum_forced_calls": 57,
+    "positive_stop": "send capability to B0b after a compliant forced_pi PASS and paired forced_ablation non-PASS",
+    "no_effect_is_not_no_task_coverage": true
+  },
+  "seal": {"algorithm": "sha256", "canonical_payload": "8d324040522c54ab4b2304ba51d411473ea680cb1621bbcea7be78586fd45aa7"}
+}

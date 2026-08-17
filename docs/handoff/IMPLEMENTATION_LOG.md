@@ -761,3 +761,50 @@
 - B0a closeout gates passed: `tools/local/all-fast` (199 Python plus 9 adapter),
   `tools/local/test-integration` (61 Python plus 9 adapter), `tools/local/build`, evidence seal
   verification and `git diff --check`.
+
+## 2026-08-17 — B0b local-only held-out confirmation runner
+
+- Added `b0b-confirmation` to the unified schedule without changing the sealed matrix/task suite.
+  The B0a result supplies exactly six candidates; the quality-target v2 exception supplies only
+  local-practical Qwen; the sealed held-out split supplies four KasaneCore tasks and three runs.
+- The resulting hard maximum is 108 calls: 36 mandatory native/off/active baselines and 72
+  conditional ablations. Expected calls are conservatively 108 before active traces exist. After
+  those baselines, only a capability-task pair exercised in all three PASSing active repetitions
+  generates its complete three-repetition ablation; all skips keep machine-readable non-outcomes.
+- Confirmation does not use screening's sequential positive stop or derived step cutoff. It keeps
+  task timeouts and the sealed 8,192 model output limit so call economy cannot weaken correctness.
+- The existing answer oracle now emits compact required-verification-set true/false positive and
+  false negative counts plus precision/recall for held-out test-selection results; it stores no
+  answer text and does not change oracle acceptance. B0b also aggregates cross-boundary exact
+  follow-through and unsafe-claim completion correctness over active repetitions.
+- Reused the sealed workspace Bridge result selecting git worktree; no compatible prior held-out
+  confirmation evidence exists. Model execution remains serial while preparation and finalization
+  use the existing CPU pipeline. Provider gaps remain attempts, leave the cell pending and stop the
+  run without creating a quality result.
+- Validation passes `tools/local/all-fast` (199 Python plus 9 adapter),
+  `tools/local/test-integration` (66 Python plus 9 adapter), `tools/local/build`, five focused B0b
+  scheduling/execution tests and `git diff --check`. No B0b model call ran before merge.
+
+This implementation was never pushed or executed. It is superseded and removed by the causal-axis
+correction below because its active-trace relevance would have mixed efficacy with agent selection.
+
+## 2026-08-17 — Separate causal capability efficacy from auto selection
+
+- Added a sealed EvaluationPIPlan covering all 13 unchanged tasks. Its inputs are task instruction,
+  task class, oracle and capability responsibility; prior Qwen tool choice and outcome are excluded.
+- Added evaluation-only `auto_pi`, `forced_pi`, `forced_off` and `forced_ablation:X` policies without
+  changing core ACTIVE authority. Forced conditions receive the same task/model/prompt and exact
+  tool request plan. Ordered tool inputs are retained from OpenCode logs and validated fail-closed;
+  compliance/API gaps cannot enter causal scoring.
+- Auto-use now reports expected/observed capabilities, precision/recall, under/over-selection and
+  explicit per-capability states. `EXPECTED_BUT_NOT_USED` becomes `PI_SELECTION_GAP`.
+- Added the B0b entry-gate runner with 24 initial and 58 maximum new local-practical calls. It reuses
+  five current B0a task traces only for selection, requests one missing auto task, begins causal
+  coverage at repetition 1, and spends repetitions 2/3 only on boundaries. Existing six candidates
+  are preserved; Research and Test Obsolescence are `NO_TASK_COVERAGE` in this corrective gate.
+- Audited nine forced pilot cells: required tool names were present, but exact inputs were not
+  retained, so they are `REPLAY_REQUIRED_INPUT_PROVENANCE_MISSING`, not causal reuse.
+- Validation passes `tools/local/all-fast` (207 Python plus 9 adapter),
+  `tools/local/test-integration` (64 Python plus 9 adapter), `tools/local/build`, unified evaluation
+  seal validation, focused causal simulation, model-free 24/58 schedule accounting and
+  `git diff --check`. No corrective or B0b model call ran before implementation merge.

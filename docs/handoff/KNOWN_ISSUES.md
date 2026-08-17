@@ -3,7 +3,11 @@
 ## B0a screening classifications are not promotion or general-model evidence
 
 - B0a completed with six local-practical B0b candidates, two `no screened effect` capabilities and
-  five `NOT_TESTED_NO_ACTIVE_USE` capabilities. The latter state is unexercised, not zero effect.
+  five `NOT_TESTED_NO_ACTIVE_USE` capabilities. The latter state is an auto/active selection
+  observation, not zero effect or any other negative capability-efficacy evidence.
+- The 95.7983% avoided-call ratio measures the adaptive evaluation scheduler, not production ECA call
+  reduction. A causal-correction gate now holds the PI plan constant and measures auto selection
+  separately before B0b.
 - The 22 compatible reused results include five historical timeouts; this is retained outcome
   history, while the 30 newly executed cells had no timeout. B0b confirmation must use the unchanged
   held-out split and full repetitions before any promotion/demotion decision.
