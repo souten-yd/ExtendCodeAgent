@@ -45,10 +45,11 @@ class TaskSignalCollector:
         self._verification_count = 0
         self._latest_tool_observation_id: str | None = None
         self._latest_verification_observation_id: str | None = None
-        self._diagnostics: list[str] = []
+        self._diagnostics: dict[str, None] = {}
 
     def connect(self, capabilities: RuntimeCapabilities) -> None:
         self._capabilities = capabilities
+        self._diagnostics.clear()
 
     def collect(self, signal: RuntimeSignal) -> bool:
         self._validate_project(signal.project)
@@ -84,19 +85,19 @@ class TaskSignalCollector:
             self._verification_count,
             self._latest_tool_observation_id,
             self._latest_verification_observation_id,
-            tuple(dict.fromkeys(self._diagnostics)),
+            tuple(self._diagnostics),
         )
 
     def _accepts(self, capability: RuntimeAdapterCapability) -> bool:
         if self._capabilities is None:
-            self._diagnostics.append("runtime_capabilities_not_negotiated")
-            return True
+            self._diagnostics["runtime_capabilities_not_negotiated"] = None
+            return False
         declaration = self._capabilities.declaration(capability)
         if declaration.status is RuntimeCapabilityStatus.UNAVAILABLE:
-            self._diagnostics.append(f"{capability.value}:unavailable:{declaration.reason}")
+            self._diagnostics[f"{capability.value}:unavailable:{declaration.reason}"] = None
             return False
         if declaration.status is RuntimeCapabilityStatus.DEGRADED:
-            self._diagnostics.append(f"{capability.value}:degraded:{declaration.reason}")
+            self._diagnostics[f"{capability.value}:degraded:{declaration.reason}"] = None
         return True
 
     def _validate_project(self, project: ProjectRef) -> None:

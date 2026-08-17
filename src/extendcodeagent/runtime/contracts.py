@@ -132,6 +132,8 @@ class RuntimeSignal:
     def __post_init__(self) -> None:
         if not self.signal_id.strip():
             raise ValueError("signal_id must not be empty")
+        if any(not path.strip() for path in self.paths):
+            raise ValueError("runtime signal paths must not contain empty values")
         required: tuple[tuple[object, str], ...]
         if self.kind is RuntimeSignalKind.TASK:
             required = (

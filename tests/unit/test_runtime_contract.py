@@ -164,6 +164,15 @@ def test_missing_and_degraded_capabilities_fail_or_degrade_explicitly() -> None:
     )
 
 
+def test_unnegotiated_signal_is_rejected_and_diagnostic_is_bounded() -> None:
+    collector = TaskSignalCollector(PROJECT)
+    signal = _signal(RuntimeSignalKind.TASK, runtime_session_id="session", task_text="task")
+    assert collector.collect(signal) is False
+    assert collector.collect(signal) is False
+    assert collector.snapshot().latest_task is None
+    assert collector.snapshot().diagnostics == ("runtime_capabilities_not_negotiated",)
+
+
 def test_verification_observation_does_not_depend_on_general_tool_observation() -> None:
     collector = TaskSignalCollector(PROJECT)
     capability = RuntimeAdapterCapability.OBSERVE_TOOL_EXECUTION
