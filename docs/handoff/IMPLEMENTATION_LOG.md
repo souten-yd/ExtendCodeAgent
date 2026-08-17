@@ -935,3 +935,13 @@ correction below because its active-trace relevance would have mixed efficacy wi
   It also showed OMO's own `glob`/`grep`/`task`/`skill` override IDs duplicated in the tool inventory;
   the runner compares both combined orders to that OMO-only control and records an unchanged set as
   an inherited C0 limitation, not as an ECA-induced registration regression or a PASS.
+- The repaired branch preflight at `d936372` passed with zero model calls (seal
+  `5e13dd36354b8474b4c6692b46cd9f68eef66b2f0b8b4f8a94fafc1db905fbd1`): all five stack/restart
+  checks and both degraded-sidecar orders passed, sessions recovered, the real user OMO profile was
+  unchanged, and no exact-workspace sidecar remained. The inherited OMO-only C0 limitation remains
+  explicit. Exact-main regeneration is still required after the runner PR merges.
+- Sealed `b0a-compatible-product-transitions-v1.json` binds the exact before/after SHA-256 pair for
+  the two lifecycle-only adapter files. This preserves completed B0 model outcomes without reusing
+  their lifecycle latency/cleanup metrics; any later content change, new product path, task/oracle/
+  route/PI-semantic change fails compatibility closed. The causal-runner integration contract covers
+  the approved transition so unrelated product edits still require replay.

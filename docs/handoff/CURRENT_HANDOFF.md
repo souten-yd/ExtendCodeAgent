@@ -114,6 +114,10 @@ local-practical bridge
   introduced. OMO-only duplicate override IDs are retained as an inherited C0 limitation and compared
   against both combined orders. Direct-shell hook non-exercise is explicit; actual runtime ingestion
   is fail-closed in the model-bearing agent flow.
+- Repaired branch preflight seal `5e13dd3` passes at `d936372` with zero LLM calls; exact-main plan and
+  preflight regeneration remain mandatory after merge before any model-bearing Bridge begins.
+- B0 evidence compatibility is preserved only through the sealed exact-content lifecycle transition;
+  old cleanup/latency metrics are not reused and any unlisted product change remains replay-required.
 
 The chronology below is retained as history. Its four-model/306-cell and three-model/162-cell
 statements describe superseded protocols and are not current execution instructions.

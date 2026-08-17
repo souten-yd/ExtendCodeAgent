@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "classification": "B0_COMPATIBLE_PRODUCT_TRANSITIONS",
+  "transitions": [
+    {
+      "path": "adapters/opencode/src/client.ts",
+      "source_sha256": "0ac9b9c913ac1206a2aeb2c9297c5befb094475feb71b824e18302d16e03943d",
+      "current_sha256": "89aa7bd39f7d0f04bf2ae2e286b706cb0330a21246d07cf008c4120c67b5750a",
+      "change_class": "PROCESS_LIFECYCLE_ONLY",
+      "evidence": [
+        "tests/integration/test_local_sidecar.py::test_sidecar_stops_when_parent_pipe_closes",
+        "B2 preflight 5e13dd36354b8474b4c6692b46cd9f68eef66b2f0b8b4f8a94fafc1db905fbd1"
+      ]
+    },
+    {
+      "path": "src/extendcodeagent/adapters/local_sidecar.py",
+      "source_sha256": "f7c1d1324251cf19549377ce48acc0f4b5d022825ec1017b17e32f9ec0aa7248",
+      "current_sha256": "f2b1aebedce7c972ddfdc8828b4511c0955fac50872dfa1a4a605128ce2b99b4",
+      "change_class": "PROCESS_LIFECYCLE_ONLY",
+      "evidence": [
+        "tests/integration/test_local_sidecar.py::test_sidecar_stops_when_parent_pipe_closes",
+        "B2 preflight 5e13dd36354b8474b4c6692b46cd9f68eef66b2f0b8b4f8a94fafc1db905fbd1"
+      ]
+    }
+  ],
+  "preserved_contracts": [
+    "task suite",
+    "oracle",
+    "model route and limits",
+    "PI tool inputs and outputs",
+    "rollout and capability semantics"
+  ],
+  "reuse_scope": "Existing completed model results only; lifecycle latency and cleanup metrics are not reused.",
+  "seal": {
+    "algorithm": "sha256",
+    "canonical_payload": "59b921fe7c2aa549f8f2043f8674d428d1d826ecf17479a65fe845a64a3c39b8"
+  }
+}

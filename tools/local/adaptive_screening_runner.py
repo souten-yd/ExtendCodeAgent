@@ -47,6 +47,7 @@ from tools.local import evaluation_runner as legacy
 
 ROOT = Path(__file__).resolve().parents[2]
 POLICY = ROOT / "docs/evaluation/b0a-adaptive-screening-policy-v1.json"
+COMPATIBLE_PRODUCT_TRANSITIONS = ROOT / "docs/evaluation/b0a-compatible-product-transitions-v1.json"
 DEFAULT_SUCCESS_REPORTS = (ROOT / ".evaluation/unified-v1/b0a-pilot-7e58751.json",)
 DEPTH_CAPABILITIES = ("semantic", "impact", "test_selection", "context")
 
@@ -1316,7 +1317,34 @@ def _product_semantics_compatible(source_revision: str) -> tuple[bool, list[str]
         text=True,
     ).splitlines()
     material = [path for path in changed if not path.startswith("src/extendcodeagent/evaluation/")]
-    return not material, material
+    if not material:
+        return True, []
+    manifest = _load(COMPATIBLE_PRODUCT_TRANSITIONS)
+    legacy._verify_seal(manifest, "compatible product transitions")
+    transitions = manifest.get("transitions")
+    if not isinstance(transitions, list):
+        raise AdaptiveError("compatible product transitions must be a list")
+    unresolved: list[str] = []
+    for path in material:
+        try:
+            source = subprocess.check_output(["git", "show", f"{source_revision}:{path}"], cwd=ROOT)
+            current = (ROOT / path).read_bytes()
+        except (subprocess.CalledProcessError, OSError):
+            unresolved.append(path)
+            continue
+        source_sha256 = hashlib.sha256(source).hexdigest()
+        current_sha256 = hashlib.sha256(current).hexdigest()
+        approved = any(
+            isinstance(item, Mapping)
+            and item.get("path") == path
+            and item.get("source_sha256") == source_sha256
+            and item.get("current_sha256") == current_sha256
+            and item.get("change_class") == "PROCESS_LIFECYCLE_ONLY"
+            for item in transitions
+        )
+        if not approved:
+            unresolved.append(path)
+    return not unresolved, unresolved
 
 
 def _migrated_result(
