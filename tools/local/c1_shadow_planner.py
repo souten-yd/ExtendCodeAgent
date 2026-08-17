@@ -10,7 +10,7 @@ import math
 import statistics
 import subprocess
 import time
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -211,6 +211,7 @@ def evaluate(latency_repetitions: int) -> dict[str, Any]:
                     item.value for item in outcome.plan.unavailable_capabilities
                 ],
                 "plan_id": outcome.plan.plan_id,
+                "decision_latency_us": outcome.decision_latency_us,
                 "shadow_only": outcome.plan.shadow_only,
                 "behavior_changed": outcome.behavior_changed,
                 "llm_calls": outcome.llm_calls,
@@ -220,6 +221,8 @@ def evaluate(latency_repetitions: int) -> dict[str, Any]:
     by_split: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for item in results:
         by_split[str(item["split"])].append(item)
+    planned_context_budgets = [int(item["context_budget_tokens"]) for item in results]
+    depth_distribution = Counter(str(item["planned_minimum_depth"]) for item in results)
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
     body = {
         "schema": 1,
@@ -275,8 +278,33 @@ def evaluate(latency_repetitions: int) -> dict[str, Any]:
             "llm_calls_executed": 0,
             "llm_calls_avoided": len(results),
             "avoided_call_ratio": 1.0,
+            "avoidance_basis": "deterministic C1 decisions requiring no model classifier",
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "reasoning_tokens": 0,
+            "average_context_tokens": 0,
+            "max_context_tokens": 0,
+            "planned_context_budget_mean_tokens": round(
+                statistics.mean(planned_context_budgets), 3
+            ),
+            "planned_context_budget_max_tokens": max(planned_context_budgets),
+            "planned_context_budget_basis": (
+                "shadow recommendation only; existing 8192 configured cap and 2000-token "
+                "bounded context baseline"
+            ),
             "deterministic_resolution_ratio": 1.0,
             "escalation_rate": 0.0,
+            "minimum_sufficient_depth": dict(sorted(depth_distribution.items())),
+            "model_wall_time_ms": 0,
+            "deterministic_pi_wall_time_ms": round(
+                sum(int(item["decision_latency_us"]) for item in results) / 1_000, 3
+            ),
+            "total_wall_time_ms": round(
+                sum(int(item["decision_latency_us"]) for item in results) / 1_000, 3
+            ),
+            "reused_evidence_count": 0,
+            "invalidated_evidence_count": 0,
+            "sealed_expected_plan_reused_count": len(expectations),
         },
         "gates": {
             "sealed_expected_plan_reused": True,
