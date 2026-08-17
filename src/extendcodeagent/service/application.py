@@ -40,6 +40,7 @@ from extendcodeagent.core.config.schema import (
     KNOWN_ANALYZERS,
     CapabilityName,
     Depth,
+    RemoteCodePolicy,
     RolloutMode,
     governing_capability,
 )
@@ -58,6 +59,7 @@ from extendcodeagent.graph.analyzers import (
     JavaScriptTypeScriptGraphAnalyzer,
     PythonGraphAnalyzer,
 )
+from extendcodeagent.orchestration import PlanOutcome, create_shadow_plan, project_task_signals
 from extendcodeagent.research import ResearchDepth, ResearchRequest, build_research_plan
 from extendcodeagent.runtime import (
     ObservationKind,
@@ -114,6 +116,8 @@ class ProjectIntelligenceApplication:
         *,
         max_items: int = 100,
         max_depth: int = 6,
+        context_max_tokens: int = 8_192,
+        privacy_policy: RemoteCodePolicy = RemoteCodePolicy.DENY,
         analyzers: tuple[str, ...] = KNOWN_ANALYZERS,
     ) -> None:
         self.root = Path(root).resolve()
@@ -121,10 +125,13 @@ class ProjectIntelligenceApplication:
         self.policy = policy
         self.max_items = max_items
         self.max_depth = max_depth
+        self.context_max_tokens = context_max_tokens
+        self.privacy_policy = privacy_policy
         self.analyzers = analyzers
         digest = hashlib.sha256(str(self.root).encode()).hexdigest()[:12]
         self.project = ProjectRef(f"{self.root.name}-{digest}", "default", self.root.as_uri())
         self._task_signals = TaskSignalCollector(self.project)
+        self._shadow_plan: PlanOutcome | None = None
         self._store: SqliteGraphStore | None = None
         self._twin: TwinService | None = None
         self._blueprints: BlueprintService | None = None
@@ -224,7 +231,7 @@ class ProjectIntelligenceApplication:
 
     def process_event(self, paths: tuple[str, ...], kind: str) -> dict[str, Any]:
         if kind in {"file.edited", "file.watcher.updated"}:
-            self._task_signals.collect(
+            collected = self._task_signals.collect(
                 RuntimeSignal(
                     f"event:{kind}:{time.time_ns()}",
                     RuntimeSignalKind.MUTATION,
@@ -235,6 +242,8 @@ class ProjectIntelligenceApplication:
                     source_category=kind,
                 )
             )
+            if collected:
+                self._refresh_shadow_plan()
         if not all(
             self.policy.computes_automatically(capability)
             for capability in (CapabilityName.GRAPH, CapabilityName.TWIN, CapabilityName.SEMANTIC)
@@ -646,6 +655,8 @@ class ProjectIntelligenceApplication:
         )
         inserted = self._ensure_store().put_observation(observation)
         collected = self._task_signals.collect_observation(observation)
+        if collected:
+            self._refresh_shadow_plan()
         return {
             "accepted": True,
             "observation_id": observation_id,
@@ -712,15 +723,35 @@ class ProjectIntelligenceApplication:
             tool,
         )
         accepted = self._task_signals.collect(signal)
+        if accepted and signal.kind in {
+            RuntimeSignalKind.TASK,
+            RuntimeSignalKind.MUTATION,
+            RuntimeSignalKind.MODEL,
+        }:
+            self._refresh_shadow_plan()
         return {
             "accepted": accepted,
             "signal_id": signal.signal_id,
             "kind": signal.kind.value,
             "diagnostics": list(self._task_signals.snapshot().diagnostics),
+            "shadow_plan_id": self._shadow_plan.plan.plan_id if self._shadow_plan else None,
         }
 
     def runtime_contract(self) -> dict[str, Any]:
-        return _runtime_snapshot_json(self._task_signals.snapshot())
+        payload = _runtime_snapshot_json(self._task_signals.snapshot())
+        payload["shadow_plan"] = _plan_outcome_json(self._shadow_plan)
+        return payload
+
+    def _refresh_shadow_plan(self) -> None:
+        signals = project_task_signals(
+            self._task_signals.snapshot(),
+            context_token_limit=self.context_max_tokens,
+            max_items=self.max_items,
+            max_depth=self.max_depth,
+            privacy_policy=self.privacy_policy,
+        )
+        if signals is not None:
+            self._shadow_plan = create_shadow_plan(signals, self.policy)
 
     def runtime_evidence(self, refs: tuple[str, ...] = ()) -> dict[str, Any]:
         if not self.policy.allows_explicit_use(CapabilityName.RUNTIME):
@@ -1500,6 +1531,44 @@ def _runtime_snapshot_json(item: Any) -> dict[str, Any]:
         "latest_tool_observation_id": item.latest_tool_observation_id,
         "latest_verification_observation_id": item.latest_verification_observation_id,
         "diagnostics": list(item.diagnostics),
+    }
+
+
+def _plan_outcome_json(item: PlanOutcome | None) -> dict[str, Any] | None:
+    if item is None:
+        return None
+    plan = item.plan
+    return {
+        "plan_id": plan.plan_id,
+        "status": item.status,
+        "recorded_at": item.recorded_at.isoformat(),
+        "decision_latency_us": item.decision_latency_us,
+        "behavior_changed": item.behavior_changed,
+        "llm_calls": item.llm_calls,
+        "intent": {
+            "primary": plan.intent.primary.value,
+            "secondary": [value.value for value in plan.intent.secondary],
+            "uncertainty": plan.intent.uncertainty.value,
+            "reasons": list(plan.intent.reasons),
+        },
+        "level": plan.level.value,
+        "capabilities": [value.value for value in plan.capabilities],
+        "unavailable_capabilities": [value.value for value in plan.unavailable_capabilities],
+        "minimum_depth": plan.minimum_depth.value,
+        "context_scope": plan.context_scope.value,
+        "context_budget_tokens": plan.context_budget_tokens,
+        "query_bounds": {
+            "max_items": plan.query_bounds.max_items,
+            "max_depth": plan.query_bounds.max_depth,
+        },
+        "evidence_needs": list(plan.evidence_needs),
+        "escalation_conditions": list(plan.escalation_conditions),
+        "fallback_rule": plan.fallback_rule,
+        "reasons": list(plan.reasons),
+        "actual_capabilities": [value.value for value in item.actual_capabilities],
+        "actual_evidence_ids": list(item.actual_evidence_ids),
+        "expansion_count": item.expansion_count,
+        "fallback_reason": item.fallback_reason,
     }
 
 

@@ -79,6 +79,63 @@ def test_off_is_inert_and_does_not_create_a_database(tmp_path: Path) -> None:
     assert not database.exists()
 
 
+def test_task_signal_records_shadow_plan_without_project_or_model_work(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    database = tmp_path / "graph.db"
+    with ProjectIntelligenceApplication(root, database, _policy("shadow")) as application:
+        application.connect_runtime(
+            runtime_name="test-runtime",
+            runtime_version="1",
+            declarations=tuple(
+                (name, "supported", "")
+                for name in (
+                    "observe_task",
+                    "observe_session",
+                    "observe_file_mutation",
+                    "observe_tool_execution",
+                    "observe_model_route",
+                    "observe_verification",
+                    "deliver_context",
+                    "expose_tools",
+                    "request_model",
+                    "session_lifecycle",
+                    "reconnect",
+                    "mcp",
+                )
+            ),
+        )
+        result = application.ingest_runtime_signal(
+            signal_id="task",
+            kind="task",
+            observed_at=datetime(2026, 8, 17, tzinfo=UTC),
+            runtime_session_id="session",
+            task_text="Locate the definition and direct callers of leaf.",
+            producer="test-runtime",
+            producer_version="1",
+        )
+        first_plan_id = result["shadow_plan_id"]
+        model = application.ingest_runtime_signal(
+            signal_id="model",
+            kind="model",
+            observed_at=datetime(2026, 8, 17, tzinfo=UTC),
+            runtime_session_id="session",
+            model_provider="local",
+            model_id="qwen",
+            producer="test-runtime",
+            producer_version="1",
+        )
+        contract = application.runtime_contract()
+
+    assert result["accepted"] is True
+    assert result["shadow_plan_id"].startswith("shadow-")
+    assert model["shadow_plan_id"] != first_plan_id
+    assert contract["shadow_plan"]["intent"]["primary"] == "locate_explain"
+    assert contract["shadow_plan"]["capabilities"] == ["graph", "twin", "semantic"]
+    assert contract["shadow_plan"]["behavior_changed"] is False
+    assert contract["shadow_plan"]["llm_calls"] == 0
+    assert not database.exists()
+
+
 def test_research_plan_and_project_traceability_use_central_policy(tmp_path: Path) -> None:
     root = _repo(tmp_path)
     with ProjectIntelligenceApplication(

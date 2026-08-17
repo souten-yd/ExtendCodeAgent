@@ -329,6 +329,10 @@ def test_sidecar_runtime_contract_negotiates_and_collects_host_neutral_signals(
     assert contract["signals"]["mutation"]["paths"] == ["service.py"]
     assert contract["signals"]["model"]["model_id"] == "qwen"
     assert contract["signals"]["advisory_delivery"]["tool"] == "pi_symbol"
+    assert contract["shadow_plan"]["status"] == "shadow_recorded"
+    assert contract["shadow_plan"]["intent"]["primary"] == "change"
+    assert contract["shadow_plan"]["behavior_changed"] is False
+    assert contract["shadow_plan"]["llm_calls"] == 0
     assert contract["tool_execution_count"] == 1
     assert contract["verification_count"] == 1
     assert contract["diagnostics"] == []

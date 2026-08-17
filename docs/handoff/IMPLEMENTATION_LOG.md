@@ -1036,3 +1036,29 @@ correction below because its active-trace relevance would have mixed efficacy wi
   14 adapter), `tools/local/test-integration` (96 Python plus 14 adapter), `tools/local/build`, seal
   verification and `git diff --check`. Evidence:
   `docs/evidence/final/c0-runtime-contract-result-v1.json`.
+
+## 2026-08-17 — C1 deterministic shadow task-aware planner complete
+
+- Added compact host-neutral `TaskSignals`, `TaskIntent`, `IntelligencePlan` and `PlanOutcome`
+  contracts with L0-L5 levels, configured capability/depth bounds, bounded context/query scopes,
+  evidence needs, escalation conditions and native fallback.
+- The C0 collector projects at most 16,384 objective characters and 64 referenced/changed paths or
+  symbols. Classification and planning use no repository I/O and no model. Unknown/truncated intent
+  fails to high uncertainty/L0 rather than broad intelligence.
+- Application integration records only a transient shadow plan. Task, model, mutation and accepted
+  evidence updates refresh that record; no planned capability executes and no context, model route,
+  verification or OpenCode-visible behavior changes.
+- Architecture tests keep the orchestration package host-neutral and reject EvaluationPIPlan/task-ID
+  coupling. General-language paraphrase tests exercise every retained intent, while a real sidecar
+  round trip exposes the latest plan and proves `behavior_changed=false`, `llm_calls=0`.
+- The sealed evaluator reuses 13 existing expected plans (9 tuning, 4 held-out) and never supplies the
+  planner task ID/class/oracle. Both splits record intent accuracy, capability precision/recall and
+  exact capability/depth match 1.0 with under/over-selection 0.0. Across 1,300 decisions p95 latency
+  is 27 us and max 412 us; repository I/O and LLM calls are zero. Actual injected context is zero;
+  shadow planned budgets average 3,582.769 tokens and are bounded at 8,192.
+- Merge review found that the first deterministic `plan_id` omitted query bounds and truncation-
+  derived uncertainty. The corrected identity now binds query bounds, intent uncertainty/reasons,
+  evidence needs and escalation conditions so semantically different plans cannot share a reuse key.
+- Validation passes `tools/local/all-fast` (220 Python plus 14 adapter),
+  `tools/local/test-integration` (97 Python plus 14 adapter), `tools/local/build`, evidence seal and
+  `git diff --check`. Evidence: `docs/evidence/final/c1-shadow-planner-result-v1.json`.
