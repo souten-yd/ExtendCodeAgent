@@ -6,6 +6,16 @@ Status date: 2026-08-17
 
 Overall: **A-I COMPLETE — PHASE 0 COMPLETE — E0-E5 AND V0a COMPLETE — B0 COMPLETE — B1 SKIPPED — B2 IN PROGRESS**
 
+B2's first exact-main Qwen Bridge completed the native and ECA controls before stopping on the ECA
+control. Native passed with four model requests; the ECA coding oracle also passed, but the required
+agent-flow runtime observation was absent. The later OMO attempt was operator-interrupted before a
+durable cell checkpoint and is retained as an uncounted incomplete request attempt, not as a zero-call
+or completed result. A focused repair now awaits runtime ingest in the OpenCode post-tool hook and
+handles OpenCode 1.18.18's missing tool-output title. The runner stops after any failed control,
+checkpoints operator interruption, and may migrate only the already-passing native/no-plugin result
+when every sealed input remains equal. Because the adapter repair changes runtime-evidence semantics,
+it is deliberately outside the existing lifecycle-only B0 compatibility exception.
+
 The active `b0a-quality-target-v2` progression target is the ControlDeck-managed `local-practical`
 Qwen route only.
 Its `native`/`off` baseline denominator is 54 cells, followed by an adaptive local screen bounded by

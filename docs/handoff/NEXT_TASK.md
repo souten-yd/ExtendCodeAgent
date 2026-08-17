@@ -52,6 +52,12 @@ Exit: a reproducible version tuple classified `compatible`, `degraded` or `incom
 conflict and load-order result recorded; test/build/evidence/handoff updated; PR reviewed and merged.
 Do not widen B2 into C-series planner work or P4 scoring.
 
+Current interruption point: the first exact-main model Bridge passed native, then passed the ECA task
+oracle but failed its mandatory runtime-observation control. Repair and merge the awaited post-tool
+runtime ingest plus missing-title normalization before resuming model work. Reuse only the sealed
+native/no-plugin result after exact input/task/oracle/route verification; rerun ECA and all later
+stacks. Do not add the semantic runtime-hook change to the lifecycle-only B0 compatibility manifest.
+
 The B0a execution notes below are retained as immutable history and are not current scheduling
 instructions.
 

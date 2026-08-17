@@ -496,6 +496,19 @@ Defaults unchanged — every capability still ships `off`.
 
 ## Immediate next work
 
+B2 is currently on `agent/b2-omo-hook-repair`. The first exact-main Qwen Bridge at `c219970` completed
+native PASS (four step-level model requests) and the ECA coding oracle PASS, but the ECA control failed
+because no runtime observation reached the agent flow. An OMO attempt was then manually interrupted
+before the runner wrote a cell checkpoint; preserve it as `INTERRUPTED_UNCHECKPOINTED_REQUEST_ATTEMPT`
+with unknown precise request count. Do not report it as zero calls.
+
+The repair awaits `runtime_ingest` in `tool.execute.after`, tolerates a missing OpenCode output title,
+records operator interruption, and stops the Bridge after any failed native/ECA/OMO control. The
+passing native result may be compatibility-migrated because it has no plugin, but only after sealed
+plan/report, exact task instruction, fixture, model route/limits and OpenCode/OMO versions match. The
+ECA result and later stacks must execute fresh. This semantic adapter change fails old B0 product
+compatibility closed and must not be added to the sealed lifecycle-only transition exception.
+
 ```bash
 cd /home/souten/ExtendCodeAgent
 git switch main

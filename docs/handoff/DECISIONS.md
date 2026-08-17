@@ -1075,3 +1075,17 @@ selection/projection gaps exist. Conditional B1 is `SKIP_NO_ENTRY_CONDITION` aft
 workspace cleanup repair. B2 is `KEEP_NEXT`; C1/C3 and X0 retain the measured gaps. Evidence:
 `docs/evidence/final/b0b-confirmation-result-v1.json` and
 `docs/evidence/final/baseline-gap-report.md`.
+
+## 2026-08-17 — Runtime-evidence delivery is part of B2 product semantics
+
+Decision: await the bounded OpenCode post-tool runtime ingest before the hook returns, while continuing
+to suppress sidecar failures so native tool execution remains authoritative. Treat this change and the
+missing-title normalization as runtime-evidence semantic changes, not as lifecycle-only compatibility.
+
+Reason: the first exact-main ECA control completed the coding task and oracle but recorded zero runtime
+observations. Fire-and-forget delivery can be lost at session/process boundaries, and OpenCode 1.18.18
+may omit the output title before normalization. B2 explicitly requires real agent-flow observation.
+
+Consequence: rerun the ECA and later B2 stacks after merge. Only the successful native/no-plugin cell
+may migrate after exact sealed-input verification. Existing B0 model results remain historical, but
+affected product compatibility fails closed rather than expanding the sealed lifecycle exception.

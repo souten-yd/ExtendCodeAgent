@@ -27,17 +27,23 @@ def _entry(task_id: str) -> dict[str, Any]:
     return next(item for item in plan["tasks"] if item["task_id"] == task_id)
 
 
-def test_lifecycle_only_transition_is_exact_hash_compatible() -> None:
+def test_runtime_hook_change_is_not_promoted_as_lifecycle_only_compatibility() -> None:
     source = json.loads(OBSERVATIONAL.read_text())["source_revision"]
 
     compatible, unresolved = adaptive._product_semantics_compatible(source)
 
-    assert compatible is True
-    assert unresolved == []
+    assert compatible is False
+    assert unresolved == [
+        "adapters/opencode/src/observations.ts",
+        "adapters/opencode/src/plugin.ts",
+    ]
 
 
-def test_correction_plan_is_bounded_and_reclassifies_pilot_reuse(tmp_path: Path) -> None:
+def test_correction_plan_is_bounded_and_reclassifies_pilot_reuse(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+) -> None:
     output = tmp_path / "plan.json"
+    monkeypatch.setattr(adaptive, "_product_semantics_compatible", lambda _revision: (True, []))
 
     runner.create_plan(OBSERVATIONAL, PILOT, output)
 
@@ -83,6 +89,7 @@ def test_corrective_run_stops_positive_capabilities_after_one_pair(
 ) -> None:
     plan_path = tmp_path / "plan.json"
     output = tmp_path / "result.json"
+    monkeypatch.setattr(adaptive, "_product_semantics_compatible", lambda _revision: (True, []))
     runner.create_plan(OBSERVATIONAL, PILOT, plan_path)
     executed: list[str] = []
 
@@ -137,8 +144,11 @@ def test_corrective_run_stops_positive_capabilities_after_one_pair(
     )
 
 
-def test_report_separates_compatible_reuse_from_new_model_calls(tmp_path: Path) -> None:
+def test_report_separates_compatible_reuse_from_new_model_calls(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+) -> None:
     plan_path = tmp_path / "plan.json"
+    monkeypatch.setattr(adaptive, "_product_semantics_compatible", lambda _revision: (True, []))
     runner.create_plan(OBSERVATIONAL, PILOT, plan_path)
     plan = json.loads(plan_path.read_text())
     cell = plan["forced_cells"][0]
@@ -168,8 +178,11 @@ def test_noncompliant_forced_capture_is_not_compatibility_evidence() -> None:
     )
 
 
-def test_compatible_reclassification_keeps_existing_immutable_trace(tmp_path: Path) -> None:
+def test_compatible_reclassification_keeps_existing_immutable_trace(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+) -> None:
     plan_path = tmp_path / "plan.json"
+    monkeypatch.setattr(adaptive, "_product_semantics_compatible", lambda _revision: (True, []))
     runner.create_plan(OBSERVATIONAL, PILOT, plan_path)
     plan = json.loads(plan_path.read_text())
     cell = plan["forced_cells"][0]

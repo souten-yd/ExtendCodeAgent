@@ -144,7 +144,12 @@ def test_token_metrics_count_cached_prompt_context_per_request() -> None:
 def _model_result(stack: str, result: str = "PASS") -> dict[str, Any]:
     return {
         "stack": stack,
+        "plugins": list(runner.STACKS[stack]),
         "result": result,
+        "errors": [],
+        "oracle_exit": 0,
+        "changed_files": ["calc.py"],
+        "route": {"provider_id": runner.MODEL_PROVIDER, "model_id": runner.MODEL_ID},
         "llm_calls_executed": 1,
         "input_tokens": 10,
         "output_tokens": 2,
@@ -157,14 +162,20 @@ def _model_result(stack: str, result: str = "PASS") -> dict[str, Any]:
 
 
 @pytest.mark.parametrize(
-    ("failed_stack", "expected"),
-    [(None, "compatible"), ("omo_eca", "incompatible"), ("native", "degraded")],
+    ("failed_stack", "expected", "expected_runs", "complete"),
+    [
+        (None, "compatible", 5, True),
+        ("omo_eca", "incompatible", 5, True),
+        ("native", "NOT_EVALUATED_INCOMPLETE", 1, False),
+    ],
 )
 def test_model_bridge_classifies_combined_regression_against_controls(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     failed_stack: str | None,
     expected: str,
+    expected_runs: int,
+    complete: bool,
 ) -> None:
     plan = runner._seal(
         {
@@ -204,8 +215,11 @@ def test_model_bridge_classifies_combined_regression_against_controls(
     )
 
     assert report["compatibility"] == expected
-    assert report["agent_runs_executed"] == 5
-    assert report["llm_calls_executed"] == 5
+    assert report["complete"] is complete
+    assert report["agent_runs_executed"] == expected_runs
+    assert report["llm_calls_executed"] == expected_runs
+    if failed_stack == "native":
+        assert report["execution_stop_reason"] == "CONTROL_FAILURE_REPAIR_REQUIRED:native"
     assert report["recommended_stack_claim"] is False
     runner._verify_seal(report, "result")
 
@@ -314,3 +328,45 @@ def test_model_bridge_resume_reuses_completed_stack(
     assert complete["complete"] is True
     assert complete["agent_runs_completed"] == 5
     assert calls == ["native", "eca", "omo", "omo_eca", "eca_omo"]
+
+
+def test_native_result_reuse_requires_equal_sealed_inputs_and_success(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    comparable = {
+        "execution_scope": "local-only",
+        "model": "Qwen3.6 27B",
+        "endpoint": "127.0.0.1:8090",
+        "context": runner.MODEL_CONTEXT,
+        "output_limit": runner.MODEL_OUTPUT,
+        "team_mode": "off",
+        "opencode": {"path": "/opencode", "version": "1.18.18"},
+        "omo": {"package": "oh-my-openagent@4.19.4", "plugin_sha256": "x"},
+        "stacks": {name: list(plugins) for name, plugins in runner.STACKS.items()},
+        "task_fixture_fingerprint": runner._fixture_fingerprint(),
+    }
+    source_plan = runner._seal({**comparable, "source_revision": "a" * 40})
+    source_result = _model_result("native")
+    source_report = runner._seal(
+        {
+            "source_revision": "a" * 40,
+            "execution_plan": source_plan["seal"]["canonical_payload"],
+            "results": [source_result],
+        }
+    )
+    plan_path = tmp_path / "source-plan.json"
+    report_path = tmp_path / "source-report.json"
+    plan_path.write_text(json.dumps(source_plan), encoding="utf-8")
+    report_path.write_text(json.dumps(source_report), encoding="utf-8")
+    monkeypatch.setattr(runner, "_head", lambda: "b" * 40)
+    monkeypatch.setattr(
+        runner, "_task_instruction_at_revision", lambda _revision: runner.MODEL_TASK_INSTRUCTION
+    )
+
+    reused = runner._native_reuse_result(
+        {**comparable, "source_revision": "b" * 40}, plan_path, report_path
+    )
+
+    assert reused["result_origin"] == "COMPATIBILITY_MIGRATION"
+    assert reused["llm_call_execution"] == "reused"
+    assert reused["migration_basis"]["stack_has_eca_plugin"] is False
