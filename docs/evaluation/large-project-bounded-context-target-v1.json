@@ -1,10 +1,10 @@
 {
   "schema": 1,
   "classification": "LARGE_PROJECT_BOUNDED_CONTEXT_TARGET",
-  "purpose": "Prove that ECA can support large-project creation, editing, improvement/refactoring and feature addition with quality-preserving bounded context and at least four independent concurrent workstreams.",
+  "purpose": "Prove that ECA can support large-project creation, editing, improvement/refactoring and feature addition with quality-preserving bounded context and at least four independent concurrent workstreams, with context-aware dynamic concurrency when the host can consume ECA resource hints.",
   "scope": {
     "stages": ["C2", "C3", "V-series", "R0"],
-    "note": "C2 builds and measures the bounded evidence mechanism. Greenfield/new-project and long-horizon claims require later Blueprint/Strategy/Convergence/Verification behavior and are not considered proven by C2 alone."
+    "note": "C2 builds and measures the bounded evidence mechanism. C3 is the natural point for shadow/advisory task resource forecasts. Greenfield/new-project, long-horizon and automatic concurrency claims require later Blueprint/Strategy/Convergence/Verification and host-orchestrator behavior and are not considered proven by C2 alone."
   },
   "workload_classes": [
     "large_existing_project_edit",
@@ -16,8 +16,9 @@
   ],
   "quality_policy": {
     "priority": "hard_gate",
-    "rule": "Do not sacrifice task/oracle correctness, critical-evidence recall, required verification, projection fidelity or truthfulness merely to fit a context target.",
+    "rule": "Do not sacrifice task/oracle correctness, critical-evidence recall, required verification, projection fidelity or truthfulness merely to fit a context or concurrency target.",
     "insufficient_context_behavior": "Expand targeted evidence within the bounded profile when possible; otherwise report the task/profile as not yet supported instead of silently truncating required truth.",
+    "concurrency_behavior": "Minimum Sufficient Context is determined before concurrency. If aggregate safe capacity is insufficient, reduce/queue parallel work rather than prune required evidence merely to preserve a higher parallel count.",
     "comparison": "Same-head paired comparison against the best compatible full/current or manual-best condition, with predeclared non-inferiority criteria."
   },
   "context_targets": {
@@ -31,19 +32,36 @@
   },
   "parallelism_target": {
     "logical_concurrent_workstreams_min": 4,
+    "configured_backend_max_parallel": "Hard upper bound owned by the model backend/runtime. ECA may consume or receive this value but must never recommend above it.",
+    "dynamic_concurrency_goal": "When the host exposes admission control, vary active workstreams according to conservative per-task context/resource forecasts. Small-context tasks may use the configured maximum; larger or expansion-prone tasks reduce the safe parallel ceiling automatically.",
+    "sizing_basis": [
+      "minimum-sufficient evidence/context estimate",
+      "reserved output headroom",
+      "expected targeted-expansion ceiling",
+      "semantic working set rather than repository size alone",
+      "impact-closure and verification-obligation size",
+      "forecast uncertainty/confidence",
+      "observed aggregate context/KV/memory capacity when available"
+    ],
     "requirements": [
-      "four independent task/session identities can remain active without Project Truth, Evidence, plan or workspace cross-contamination",
+      "four independent task/session identities can remain active without Project Truth, Evidence, plan or workspace cross-contamination when capacity permits",
       "no PI-induced OOM",
       "no PI-induced primary-model eviction or reload",
       "no forced reduction of per-task quality/evidence below the accepted bounded-context profile",
       "workspace/revision identity remains exact for every workstream",
-      "sidecar/cache/storage behavior remains isolated or safely shared according to explicit keys"
+      "sidecar/cache/storage behavior remains isolated or safely shared according to explicit keys",
+      "dynamic recommendation never exceeds backend configured max_parallel",
+      "large repository size alone does not reduce concurrency when the current semantic working set is small"
     ],
+    "hint_ownership": "ECA derives TaskResourceForecast/ConcurrencyHint-style advisory information; the external orchestrator owns queue/admission decisions. See docs/handoff/CLAUDE_CONTEXT_AWARE_CONCURRENCY.md.",
     "physical_inference_concurrency": "Measure four-way simultaneous primary-model inference when the configured backend/runtime supports it. Otherwise record backend scheduler/serialization as an external limit; ECA must not create a competing scheduler merely to satisfy this metric.",
     "quality_comparison": "Each workstream must remain non-inferior to its accepted single-workstream condition. Aggregate throughput alone cannot compensate for a per-task quality failure."
   },
   "resource_metrics": [
     "per_workstream_context_tokens_p50_p95_max",
+    "forecast_context_tokens_vs_actual",
+    "forecast_error_and_confidence",
+    "recommended_parallel_vs_actual_safe_parallel",
     "aggregate_active_context_requirement",
     "peak_ram",
     "peak_vram",
@@ -51,29 +69,32 @@
     "primary_model_eviction_or_reload_count",
     "oom_count",
     "cold_start_or_model_reload_time",
+    "queue_wait_time",
     "sidecar_process_count",
     "cross_workspace_identity_error_count"
   ],
   "latency_policy": {
     "priority": "secondary_to_quality_and_feasibility",
-    "rule": "Measure p50/p95 end-to-end and preprocessing/prefill components, but bounded-context and four-workstream feasibility may justify a moderate slowdown. Use the general C2 effect contract to classify large slowdowns as TRADEOFF rather than hiding them.",
-    "do_not_ignore": "A feature that technically fits 64k/4-way but creates extreme preprocessing, queueing, model reloads or operational fragility is not an automatic default win."
+    "rule": "Measure p50/p95 end-to-end and preprocessing/prefill components, but bounded-context and safe dynamic concurrency may justify a moderate slowdown. Use the general C2 effect contract to classify large slowdowns as TRADEOFF rather than hiding them.",
+    "do_not_ignore": "A feature that technically fits 64k or adjusts parallelism but creates extreme preprocessing, queueing, oscillation, model reloads or operational fragility is not an automatic default win."
   },
   "acceptance_progression": [
-    "C2: prove bounded evidence/context behavior and quality on current sealed/compatible tasks; measure full vs bounded/optimized variants",
-    "C3: prove automatic capability/depth selection can preserve the bounded profile on real editing/refactor/feature-addition tasks",
-    "V-series: prove required verification and evidence reuse do not force uncontrolled context growth",
+    "C2: prove bounded evidence/context behavior and quality on current sealed/compatible tasks; measure full vs bounded/optimized variants and collect actual context/resource data usable for forecasting",
+    "C3: prove automatic capability/depth selection can preserve the bounded profile on real editing/refactor/feature-addition tasks; add shadow/advisory task resource and concurrency hints before any automatic scheduling claim",
+    "V-series: prove required verification and evidence reuse do not force uncontrolled context growth and are represented in forecast expansion headroom",
     "R0: include realistic large-project lifecycle evidence covering existing-project changes plus a controlled greenfield/new-project workflow before claiming large-project <=64k support",
-    "R0/P3 when runtime identities permit: run the four-workstream isolation/resource soak; measure physical four-way inference only when backend supports it"
+    "P3 or another host integration with real task/worktree identities: consume the accepted hint for automatic admission control if the runtime supports it; if not, retain advisory and record the runtime gap",
+    "R0/P3 when runtime identities permit: run the mixed-size four-workstream isolation/resource soak; prove small tasks can rise to configured max_parallel and large tasks reduce the active safe parallel count without quality loss; measure physical four-way inference only when backend supports it"
   ],
   "decision_rule": {
-    "positive_effect": "Quality-equivalent context reduction, improved bounded-profile feasibility, or increased safe concurrency is a real PI effect even when final task accuracy is unchanged.",
-    "strong_effect": "A mechanism or bundle moves a previously unsupported task into the <=65536 total-context profile or enables >=4 safe concurrent workstreams without quality regression.",
+    "positive_effect": "Quality-equivalent context reduction, improved bounded-profile feasibility, safer/more accurate concurrency sizing or increased safe concurrency is a real PI effect even when final task accuracy is unchanged.",
+    "strong_effect": "A mechanism or bundle moves a previously unsupported task into the <=65536 total-context profile or enables >=4 safe concurrent workstreams without quality regression, or prevents an OOM/context overflow by correctly lowering concurrency without dropping required evidence.",
     "portfolio": "Keep only mechanisms/bundles that contribute marginally or conditionally to quality, bounded-context feasibility, concurrency, verification or meaningful efficiency; otherwise consolidate, default-off, defer or remove according to AGENTS.md."
   },
   "references": [
     "docs/evaluation/c2-effect-metrics-v1.json",
     "docs/handoff/C2_EVIDENCE_DELIVERY_DECISION.md",
+    "docs/handoff/CLAUDE_CONTEXT_AWARE_CONCURRENCY.md",
     "docs/PI_MASTER_EXECUTION_PLAN.md"
   ]
 }
