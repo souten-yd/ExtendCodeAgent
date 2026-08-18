@@ -1,6 +1,6 @@
 # Next Task
 
-Updated: 2026-08-17 (Asia/Tokyo)
+Updated: 2026-08-18 (Asia/Tokyo)
 
 ## Canonical plan
 
@@ -30,28 +30,75 @@ shadow plan selection on the sealed tasks; it does not establish task-success or
 
 C2 entry is satisfied narrowly by existing B0/C1 evidence: 20 B0b cells had sufficient required PI
 facts but an incorrect final schema, `pi_symbol` and `pi_context` dominate serialized injected data,
-and C1 can now choose bounded task/capability/depth plans deterministically. Follow Master Plan §8 C2
-and `docs/COMPETITIVE_ANALYSIS_AND_FEATURE_GAP_ROADMAP.md` §9.1 as the active design detail:
+and C1 can now choose bounded task/capability/depth plans deterministically. Follow Master Plan §8 C2,
+`docs/COMPETITIVE_ANALYSIS_AND_FEATURE_GAP_ROADMAP.md` §9.1, and the stage-local decision
+`docs/handoff/C2_EVIDENCE_DELIVERY_DECISION.md`.
 
-- define a stable PI envelope separated from task/revision evidence using existing context, trace and
-  routing components rather than a new store or planner framework;
-- reduce candidates deterministically before any model call and begin with minimum capability/depth/
-  context selected by the C1 plan;
-- make ID/enum/exact-schema decisions bounded, compress dominant symbol/context/runtime output, and
-  expand only on an explicit unresolved evidence gap;
-- preserve the sealed task suite, oracle, corpus, effect threshold and B0 evidence; audit compatible
-  reuse before generating any new Qwen cell;
-- measure request context, PI-attributed output size/tokens where observable, output/reasoning bounds,
-  cache/prefix reuse, outcome and wall time on repeated `local-practical` runs;
-- keep `local-low` as `UNAVAILABLE / NOT_CONFIGURED` with no claim. Do not call/probe Copilot,
-  host-default or local-low, and do not substitute another provider;
-- do not pull C3 advisory automatic application, V-series verification mechanisms or P0 evidence
-  memory forward.
+### C2 implementation contract
+
+C2 is not merely context compression. It must improve the complete evidence-to-answer path while
+preserving correctness. Context reduction is expected to reduce model accidents such as attention
+dilution, duplicate/conflicting cues, copying mistakes and schema overload, but that hypothesis must be
+measured and must never authorize dropping required truth.
+
+Execute the following work packages in order, reusing existing context/orchestration/trace/truth
+components instead of creating a parallel planner or store:
+
+1. **C2-A attribution telemetry** — trace `available -> selected -> delivered -> used -> projected -> verified` where observable and distinguish `TRUTH_MISSING`, `SELECTION_MISSING`, `DELIVERY_MISSING`, `UTILIZATION_MISS`, `PROJECTION_SCHEMA_MISS`, `REASONING_MISS` and `VERIFICATION_MISS`.
+2. **C2-B bounded evidence/obligation projection** — project existing Project Truth into small evidence atoms with stable IDs, provenance, revision, role, confidence/freshness, covered obligations and estimated cost; protected mandatory/contradictory/gap evidence can never be ranked away.
+3. **C2-C AnswerIR / deterministic exact projection** — bind already-known paths, symbols, canonical refs, tests, requirements, enums/booleans and exact schema fields directly to evidence instead of asking the model to copy them. Use a minimal `ChangeIR` only where a coding task needs target/must-preserve/verification constraints.
+4. **C2-D Sufficiency + Utilization Gate** — machine-classify unresolved states (`MISSING_SYMBOL`, `REFERENCE_INCOMPLETE`, `IMPACT_INCOMPLETE`, `REQUIREMENT_UNMAPPED`, `VERIFICATION_UNCOVERED`, `RUNTIME_UNOBSERVED`, `CONTRADICTORY_EVIDENCE`, `STALE_EVIDENCE`, `INTENT_UNCERTAIN`) and reject completion when required evidence/output obligations were not used/projected. Bounded repair handles only the missing obligation.
+5. **C2-E deterministic coverage optimizer + role budgets** — optimize mandatory obligation coverage per serialization/token cost, preserving structural/verification/runtime importance and useful evidence diversity. Fixed Top-K is forbidden for protected truth. An expensive exact/set-cover reference solver may be evaluation-only; runtime stays cheap/deterministic.
+6. **C2-F progressive targeted expansion + shadow reservoir** — C1 context budgets are starting budgets, not hard caps. Expand only the capability/scope responsible for the active Evidence Gap, and keep non-delivered evidence addressable by ID so `not in context` never means `forgotten by ECA`.
+7. **C2-G context Bridge** — compare current/full PI delivery with deterministic bounded/coverage-optimized delivery across small-to-larger starting budgets. Do not preclaim that 2k/4k/8k is sufficient; quality and critical evidence coverage dominate compression.
+8. **C2-H shadow ranker/reranker** — only after the deterministic baseline exists. Rank optional/supporting evidence, never protected truth. Prefer no learned ranker, then cheap lexical/embedding, then a small cross-encoder; an LLM ranker is allowed only for a narrowly unresolved ambiguity if comparative evidence proves a material quality gain.
+9. **C2-I adoption + causal rerun** — compare full/current PI, deterministic bounded, deterministic coverage-optimized, and any winning ranker/model-assisted variant on compatible sealed tasks. Seal the result before C3.
+
+### LLM-use rule for C2 and later stages
+
+Default to **zero or minimum model calls**. Do not use an LLM for classification, narrowing, ranking,
+schema projection, sufficiency checks or validation when deterministic methods can meet the contract.
+First establish the non-LLM baseline. A model-assisted component is adopted only when a predeclared
+comparison on appropriate tuning + held-out evidence shows a material correctness/projection/reasoning
+gain that justifies its latency/token/resource cost, without unacceptable regression in critical
+evidence recall, false-sufficient rate, privacy or required verification. Record model/provider scope,
+calls, context/tokens and wall time. If it does not win, keep it disabled; if it wins only for one
+bounded task class, enable it only there.
+
+### C2 quality/adoption metrics
+
+Correctness metrics outrank cost metrics. At minimum record task/oracle success, critical-evidence
+recall/miss rate, mandatory obligation coverage, false-sufficient rate, evidence
+availability/selection/delivery/utilization recall, projection fidelity and stale/conflicting evidence
+retention. Then record request/evidence context size, compression ratio, LLM/tool calls, cache/prefix
+reuse where observable, wall time and resource cost where observable. Ranker recall@K/MRR/nDCG are
+diagnostic only and can never compensate for a critical evidence miss.
+
+Prefer Pareto/non-inferiority decisions over a single weighted score: accept a cheaper context method
+when correctness/critical coverage are not worse and meaningful cost improves; accept a more expensive
+model-assisted method only when its predeclared material quality gain justifies the increase.
+
+Preserve the sealed task suite, oracle, corpus, effect threshold and B0 evidence; audit compatible reuse
+before generating any new Qwen cell. Keep `local-low` as `UNAVAILABLE / NOT_CONFIGURED` with no claim.
+Do not call/probe Copilot, host-default or local-low, and do not substitute another provider. Do not pull
+C3 active/advisory application, V-series mechanisms, X0 graph expansion or P0 durable memory into C2.
 
 Exit under the one local-only execution exception: deterministic protocol tests, repeated
-local-practical native/off/bounded-evidence evidence showing whether quality/reliability/efficiency
+local-practical native/off/full-vs-bounded evidence showing whether quality/reliability/efficiency
 improves, explicit local-low unavailability, full test/build/evidence/handoff, PR review and merge.
 Negative or no-effect results remain valid and must not be hidden by loosening the oracle.
+
+### Safe continuation after C2
+
+Do not reorder the Master Plan backlog. After C2 evidence merges:
+
+- **C3** applies only the C1 planner and C2 delivery mechanisms that survived evaluation; compare `native / manual-best / static-depth / auto`, keep automatic selection/depth advisory until held-out evidence passes, and continue the same deterministic-first LLM rule.
+- Run a **bounded post-C2/C3 causal confirmation** on the previously failing/diagnostic task classes before treating B0b's no-effect result as the final statement on PI value. This is confirmation within the existing evaluation programme, not a new roadmap stage.
+- If browser/API/runtime cross-boundary failures remain after correct evidence delivery/utilization, proceed with the already-authorized **X0 smallest runtime/static bridge**; do not widen all graphs or build a repository-wide UI graph.
+- Continue **V0-V4** in order. V2 required-verification and V3 invalidation-aware evidence reuse remain the primary differentiation work; their effect/false-verified gates may not be skipped.
+- **A0/A1** may activate only accepted low-risk classes and must degrade on stale/uncertain/missing evidence.
+- **R0** remains the production-capable baseline gate.
+- **P0/P3/P4** remain post-baseline work unless their existing entry conditions explicitly promote them. Project Evidence Memory and parallel/worktree intelligence must reuse the same evidence IDs, provenance, revision identity and invalidation model rather than creating another context/memory system.
 
 The B0a execution notes below are retained as immutable history and are not current scheduling
 instructions.
@@ -206,7 +253,7 @@ git status --short
 tools/local/all-fast
 tools/local/test-integration
 tools/local/build
-git switch -c agent/task-aware-shadow
+git switch -c agent/c2-evidence-delivery
 ```
 
-Update `CURRENT_HANDOFF.md` after each stage.
+For C2, execute C2-A through C2-I in order and update `CURRENT_HANDOFF.md` after each bounded work package. Do not start C3 until C2-I evidence is sealed and merged.
