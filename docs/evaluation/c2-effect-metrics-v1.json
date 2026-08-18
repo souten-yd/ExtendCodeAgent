@@ -1,0 +1,119 @@
+{
+  "schema": 1,
+  "classification": "C2_MULTI_OBJECTIVE_EFFECT_CONTRACT",
+  "purpose": "Treat quality-equivalent reductions in context, tokens, latency or resource use as real PI effects while preventing cost shifting into wall time, memory, model contention or operational dependencies.",
+  "baseline_reference": {
+    "artifact": "docs/evidence/final/b0b-confirmation-result-v1.json",
+    "context_tokens": {
+      "mean": 35187.537,
+      "p50": 29437,
+      "p95": 68512,
+      "max": 93189
+    },
+    "input_tokens": 2392101,
+    "model_wall_time_ms": 12610218,
+    "deterministic_pi_wall_time_ms": 699326,
+    "note": "Historical B0b values are a reference snapshot, not a substitute for same-head paired C2 measurements."
+  },
+  "effect_vector": {
+    "quality": [
+      "task_oracle_success",
+      "critical_evidence_recall",
+      "critical_evidence_miss_rate",
+      "mandatory_obligation_coverage",
+      "required_verification_recall",
+      "false_sufficient_rate",
+      "evidence_utilization_recall",
+      "projection_fidelity"
+    ],
+    "context_and_tokens": [
+      "request_context_tokens_p50",
+      "request_context_tokens_p95",
+      "request_context_tokens_max",
+      "pi_evidence_tokens_or_serialized_size",
+      "input_tokens",
+      "compression_ratio",
+      "context_overflow_or_truncation_rate"
+    ],
+    "latency": [
+      "end_to_end_wall_time_p50",
+      "end_to_end_wall_time_p95",
+      "deterministic_pi_wall_time_p50",
+      "deterministic_pi_wall_time_p95",
+      "primary_model_prefill_time_when_observable",
+      "auxiliary_model_startup_and_inference_time_when_applicable"
+    ],
+    "resource_and_operations": [
+      "peak_ram",
+      "peak_vram",
+      "primary_model_eviction_or_reload",
+      "primary_model_context_reduction_due_to_auxiliary_residency",
+      "new_model_or_api_dependency_count",
+      "auxiliary_model_availability",
+      "cold_start_cost"
+    ],
+    "work": [
+      "primary_model_calls",
+      "auxiliary_model_calls",
+      "tool_calls",
+      "cache_or_prefix_reuse_when_observable"
+    ]
+  },
+  "quality_hard_gates": {
+    "rule": "Efficiency never compensates for a critical correctness regression.",
+    "small_sealed_evaluation": "Require no new critical task/oracle failure and no regression in critical-evidence or required-verification recall.",
+    "larger_repeated_evaluation": "Predeclare a non-inferiority margin before execution; do not derive it from the result.",
+    "critical_evidence_miss_rate": "must_not_increase",
+    "false_sufficient_rate": "must_not_increase",
+    "projection_fidelity": "must_not_decrease_on_structured_tasks",
+    "privacy_and_truthfulness": "must_not_regress"
+  },
+  "provisional_effect_thresholds": {
+    "context_reduction": {
+      "meaningful": 0.15,
+      "strong": 0.30,
+      "major": 0.50
+    },
+    "default_latency_budget": {
+      "median_wall_time_max_increase": 0.05,
+      "p95_wall_time_max_increase": 0.10
+    },
+    "scoped_tradeoff_latency_budget": {
+      "median_wall_time_max_increase": 0.15,
+      "condition": "Only when quality hard gates pass and there is a strong context/resource gain or the change enables a task that otherwise exceeds the usable context/resource limit."
+    },
+    "note": "Thresholds are provisional engineering adoption thresholds. Recalibration requires a recorded evidence-based rationale before changing them."
+  },
+  "adoption_classes": {
+    "QUALITY_GAIN": "Quality improves materially and added cost is within a predeclared justified budget; KEEP or scoped KEEP.",
+    "EFFICIENCY_GAIN": "Quality hard gates pass, at least one meaningful context/token/latency/resource dimension improves, median wall-time regression is <=5%, p95 regression is <=10%, and there is no harmful primary-model contention; counts as a real positive effect.",
+    "FEASIBILITY_GAIN": "Quality hard gates pass and a task that previously overflowed/truncated or could not coexist in memory now fits. May justify a scoped mode even with up to the scoped latency budget; do not automatically make it default.",
+    "TRADEOFF": "Quality is non-inferior and one cost improves but another exceeds the default budget. Keep OFF_BY_DEFAULT/scoped until optimization or user-specific policy justifies it.",
+    "NO_MATERIAL_EFFECT": "Quality is non-inferior but no metric crosses a predeclared meaningful threshold; consolidate/off/defer unless needed as SUBSTRATE_ONLY in a winning bundle.",
+    "REGRESSION": "Any quality hard gate fails, or resource/operational harm is unacceptable; reject/default-off regardless of context savings."
+  },
+  "resource_reject_conditions": [
+    "Auxiliary model causes primary coding model eviction/reload in the normal target configuration.",
+    "Auxiliary model forces a smaller primary-model context budget that removes the claimed context benefit.",
+    "New API/model dependency is required for default operation but is not available/reliable enough for the target environment.",
+    "End-to-end median wall-time regression exceeds 15% without a predeclared material quality or feasibility gain.",
+    "Any OOM, correctness-critical truncation, privacy regression or false verification is introduced."
+  ],
+  "interaction_policy": {
+    "apply_to": "individual mechanisms and mechanism bundles",
+    "order": [
+      "standalone marginal effect when meaningful",
+      "smallest expected working bundle",
+      "leave-one-out ablation of a successful bundle",
+      "targeted pairwise or higher-order interaction only with a causal rationale"
+    ],
+    "no_exhaustive_power_set": true,
+    "substrate_rule": "A mechanism with null standalone effect may remain SUBSTRATE_ONLY when removing it from a successful bundle causes a quality, coverage, feasibility or meaningful efficiency regression.",
+    "redundancy_rule": "If removal preserves quality/coverage and improves context, latency, memory, dependency or maintenance cost, prefer CONSOLIDATE/OFF/REMOVE."
+  },
+  "decision_method": {
+    "primary": "correctness-first Pareto/non-inferiority",
+    "forbidden": "Do not collapse all dimensions into a single weighted score for adoption.",
+    "paired_measurement": "Prefer same-head, same-task, same-model, same-repetition paired comparisons; record p50/p95 and distributions rather than best-run values."
+  }
+}

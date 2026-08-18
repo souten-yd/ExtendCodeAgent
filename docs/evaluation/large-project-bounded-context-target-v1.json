@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "classification": "LARGE_PROJECT_BOUNDED_CONTEXT_TARGET",
+  "purpose": "Prove that ECA can support large-project creation, editing, improvement/refactoring and feature addition with quality-preserving bounded context and at least four independent concurrent workstreams.",
+  "scope": {
+    "stages": ["C2", "C3", "V-series", "R0"],
+    "note": "C2 builds and measures the bounded evidence mechanism. Greenfield/new-project and long-horizon claims require later Blueprint/Strategy/Convergence/Verification behavior and are not considered proven by C2 alone."
+  },
+  "workload_classes": [
+    "large_existing_project_edit",
+    "large_existing_project_feature_addition",
+    "large_existing_project_refactor_or_improvement",
+    "large_project_bug_fix_with_cross_file_impact",
+    "greenfield_large_project_creation_from_requirements",
+    "multi-step_long_horizon_project_evolution"
+  ],
+  "quality_policy": {
+    "priority": "hard_gate",
+    "rule": "Do not sacrifice task/oracle correctness, critical-evidence recall, required verification, projection fidelity or truthfulness merely to fit a context target.",
+    "insufficient_context_behavior": "Expand targeted evidence within the bounded profile when possible; otherwise report the task/profile as not yet supported instead of silently truncating required truth.",
+    "comparison": "Same-head paired comparison against the best compatible full/current or manual-best condition, with predeclared non-inferiority criteria."
+  },
+  "context_targets": {
+    "definition": "Total primary-model context requirement is model-visible prompt/cache context plus reserved output headroom. A 64k-capable claim requires this total to fit within 65536 tokens; input alone being below 64k is insufficient.",
+    "required_supported_profile_max_tokens": 65536,
+    "preferred_p95_total_tokens": 32768,
+    "preferred_p50_total_tokens": 16384,
+    "initial_evidence_envelope_target_tokens": 8192,
+    "aspiration": "Reduce below these preferred targets when quality is non-inferior. Smaller context is a positive effect, not a goal that overrides correctness.",
+    "overflow_policy": "No correctness-critical truncation. If targeted expansion would exceed the supported profile, mark NOT_64K_CAPABLE for that task class/revision and retain a higher-context fallback outside the 64k claim until repaired."
+  },
+  "parallelism_target": {
+    "logical_concurrent_workstreams_min": 4,
+    "requirements": [
+      "four independent task/session identities can remain active without Project Truth, Evidence, plan or workspace cross-contamination",
+      "no PI-induced OOM",
+      "no PI-induced primary-model eviction or reload",
+      "no forced reduction of per-task quality/evidence below the accepted bounded-context profile",
+      "workspace/revision identity remains exact for every workstream",
+      "sidecar/cache/storage behavior remains isolated or safely shared according to explicit keys"
+    ],
+    "physical_inference_concurrency": "Measure four-way simultaneous primary-model inference when the configured backend/runtime supports it. Otherwise record backend scheduler/serialization as an external limit; ECA must not create a competing scheduler merely to satisfy this metric.",
+    "quality_comparison": "Each workstream must remain non-inferior to its accepted single-workstream condition. Aggregate throughput alone cannot compensate for a per-task quality failure."
+  },
+  "resource_metrics": [
+    "per_workstream_context_tokens_p50_p95_max",
+    "aggregate_active_context_requirement",
+    "peak_ram",
+    "peak_vram",
+    "kv_or_backend_context_memory_when_observable",
+    "primary_model_eviction_or_reload_count",
+    "oom_count",
+    "cold_start_or_model_reload_time",
+    "sidecar_process_count",
+    "cross_workspace_identity_error_count"
+  ],
+  "latency_policy": {
+    "priority": "secondary_to_quality_and_feasibility",
+    "rule": "Measure p50/p95 end-to-end and preprocessing/prefill components, but bounded-context and four-workstream feasibility may justify a moderate slowdown. Use the general C2 effect contract to classify large slowdowns as TRADEOFF rather than hiding them.",
+    "do_not_ignore": "A feature that technically fits 64k/4-way but creates extreme preprocessing, queueing, model reloads or operational fragility is not an automatic default win."
+  },
+  "acceptance_progression": [
+    "C2: prove bounded evidence/context behavior and quality on current sealed/compatible tasks; measure full vs bounded/optimized variants",
+    "C3: prove automatic capability/depth selection can preserve the bounded profile on real editing/refactor/feature-addition tasks",
+    "V-series: prove required verification and evidence reuse do not force uncontrolled context growth",
+    "R0: include realistic large-project lifecycle evidence covering existing-project changes plus a controlled greenfield/new-project workflow before claiming large-project <=64k support",
+    "R0/P3 when runtime identities permit: run the four-workstream isolation/resource soak; measure physical four-way inference only when backend supports it"
+  ],
+  "decision_rule": {
+    "positive_effect": "Quality-equivalent context reduction, improved bounded-profile feasibility, or increased safe concurrency is a real PI effect even when final task accuracy is unchanged.",
+    "strong_effect": "A mechanism or bundle moves a previously unsupported task into the <=65536 total-context profile or enables >=4 safe concurrent workstreams without quality regression.",
+    "portfolio": "Keep only mechanisms/bundles that contribute marginally or conditionally to quality, bounded-context feasibility, concurrency, verification or meaningful efficiency; otherwise consolidate, default-off, defer or remove according to AGENTS.md."
+  },
+  "references": [
+    "docs/evaluation/c2-effect-metrics-v1.json",
+    "docs/handoff/C2_EVIDENCE_DELIVERY_DECISION.md",
+    "docs/PI_MASTER_EXECUTION_PLAN.md"
+  ]
+}
