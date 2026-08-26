@@ -17,6 +17,13 @@ from .contracts import (
     RuntimeSignalSnapshot,
 )
 from .coverage import observation_from_coverage, symbols_touched
+from .execution_profile import (
+    ExecutionCommand,
+    ExecutionProfile,
+    KnowledgeSource,
+    profile_json,
+)
+from .execution_discovery import declared_profile, discover_from_root
 from .receipt import EditReceipt, completed_paths, receipt_json
 from .service import (
     TaskSignalCollector,
@@ -39,7 +46,10 @@ __all__ = [
     "Attempt",
     "AttemptOutcome",
     "EditReceipt",
+    "ExecutionCommand",
+    "ExecutionProfile",
     "ImprovementTrigger",
+    "KnowledgeSource",
     "ObservedAbsence",
     "ObservationKind",
     "ObservationRollup",
@@ -60,12 +70,15 @@ __all__ = [
     "advance",
     "completed_paths",
     "covering_tests",
+    "declared_profile",
+    "discover_from_root",
     "established_absences",
     "receipt_json",
     "remaining_after",
     "task_state_json",
     "detect_triggers",
     "observation_from_coverage",
+    "profile_json",
     "symbols_touched",
     "reconcile_observations",
     "summarize_observations",
