@@ -231,9 +231,16 @@ def _measure(
     evidence = envelope["task_evidence"]
     metrics = envelope["metrics"]
     delivered = json.dumps(evidence, ensure_ascii=False)
-    recoverable = {
-        value for item in evidence["items"] for value in expansions.get(item["ref"], (item["ref"],))
-    }
+    # A lean item carries `path` and its stable `id` rather than the canonical ref, so the
+    # instrument reads whichever identity the shape provides.
+    recoverable: set[str] = set()
+    for item in evidence["items"]:
+        ref = item.get("ref")
+        if ref:
+            recoverable.update(expansions.get(ref, (ref,)))
+        for name in ("path", "summary"):
+            if item.get(name):
+                recoverable.add(item[name])
     facts = case.required_facts
     raw = tuple(fact for fact in facts if fact in delivered)
     normalized = tuple(fact for fact in facts if fact in recoverable)
