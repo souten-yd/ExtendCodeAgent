@@ -58,6 +58,30 @@ def test_relocated_domain_helpers_are_not_redefined_in_the_facade() -> None:
     )
 
 
+def test_module_level_facade_functions_do_not_traverse_the_graph() -> None:
+    """The facade serializes; the domain computes.
+
+    A line budget is a coarse backstop that can be satisfied by shuffling code. Graph
+    traversal is the precise signal: a module-level function that walks `snapshot.nodes` or
+    `snapshot.edges` is a domain heuristic, whatever it is named or how short it is.
+    """
+
+    source = APPLICATION.read_text(encoding="utf-8")
+    offenders: list[str] = []
+    for node in _application_tree().body:
+        if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            continue
+        body = ast.get_source_segment(source, node) or ""
+        traversed = sorted({name for name in ("snapshot.nodes", "snapshot.edges") if name in body})
+        if traversed:
+            offenders.append(f"{node.name} (line {node.lineno}): {', '.join(traversed)}")
+
+    assert offenders == [], (
+        "these module-level facade functions traverse the Graph and belong in a domain "
+        "package: " + "; ".join(offenders)
+    )
+
+
 def test_context_payload_and_its_cost_estimate_share_one_owner() -> None:
     """A budget enforced against a different shape than the one delivered is not a budget."""
 
