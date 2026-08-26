@@ -18,6 +18,8 @@ from extendcodeagent.core.contracts import CanonicalRef
 from extendcodeagent.graph import GraphSnapshot
 from extendcodeagent.testing import focused_test_paths, objective_test_paths
 
+from .contracts import EvidenceRole, RequiredRef
+
 _CONSUMER_EDGES = frozenset({"calls", "may_call", "references", "imports"})
 
 # "Never rank away required truth" holds for a handful of obligations. A file-level target
@@ -52,7 +54,7 @@ def obligation_refs(
     equivalents: Equivalents,
     recommended_tests: RecommendedTests,
     max_obligations: int = DEFAULT_MAX_OBLIGATIONS,
-) -> tuple[CanonicalRef, ...]:
+) -> tuple[RequiredRef, ...]:
     if not target_refs:
         return ()
 
@@ -86,13 +88,19 @@ def obligation_refs(
         if node.node_type == "file" and node.source_ref in intent_paths
     )
 
-    return tuple(
-        CanonicalRef(value)
-        for value in _by_role_budget((targets, tests, consumers), max_obligations)
+    return _by_role_budget(
+        (
+            (EvidenceRole.TARGET, targets),
+            (EvidenceRole.TEST, tests),
+            (EvidenceRole.CONSUMER, consumers),
+        ),
+        max_obligations,
     )
 
 
-def _by_role_budget(roles: tuple[list[str], ...], budget: int) -> list[str]:
+def _by_role_budget(
+    roles: tuple[tuple[EvidenceRole, list[str]], ...], budget: int
+) -> tuple[RequiredRef, ...]:
     """Give every role a floor, then spend what is left in priority order.
 
     First-come allocation starves whichever role sorts last. On
@@ -101,23 +109,23 @@ def _by_role_budget(roles: tuple[list[str], ...], budget: int) -> list[str]:
     reached — the envelope answered "which tests?" without a single test in it.
     """
 
-    populated = [role for role in roles if role]
+    populated = [(role, values) for role, values in roles if values]
     if not populated:
-        return []
+        return ()
     floor = max(1, budget // len(populated))
 
-    taken: list[str] = []
+    taken: list[RequiredRef] = []
     seen: set[str] = set()
-    for role in populated:
-        for value in role[:floor]:
+    for role, values in populated:
+        for value in values[:floor]:
             if value not in seen:
                 seen.add(value)
-                taken.append(value)
-    for role in populated:
-        for value in role:
+                taken.append(RequiredRef(CanonicalRef(value), role))
+    for role, values in populated:
+        for value in values:
             if len(taken) >= budget:
-                return taken[:budget]
+                return tuple(taken[:budget])
             if value not in seen:
                 seen.add(value)
-                taken.append(value)
-    return taken[:budget]
+                taken.append(RequiredRef(CanonicalRef(value), role))
+    return tuple(taken[:budget])

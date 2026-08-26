@@ -18,6 +18,7 @@ from .contracts import (
     ContextPackage,
     ContextProfile,
     ContextRequest,
+    EvidenceRole,
     EvidenceScope,
     WeakLocalEvidenceItem,
     WeakLocalEvidencePackage,
@@ -39,9 +40,19 @@ _MAX_ANCHOR_MATCHES = 64
 _PROTOCOL_MAX_SEEDS = 64
 _PROTOCOL_MAX_CANDIDATES = 256
 _SCOPE_ORDER = tuple(EvidenceScope)
+
+
 # Evidence an obligation requires is never ranked away for cost; see
 # docs/handoff/C2_EVIDENCE_DELIVERY_DECISION.md "Never rank away required truth".
-_PROTECTED_REASONS = frozenset({"target_ref", "required_obligation"})
+def _is_protected(reason: str) -> bool:
+    """Evidence an obligation requires is never dropped for a bound.
+
+    See docs/handoff/C2_EVIDENCE_DELIVERY_DECISION.md, "Never rank away required truth".
+    """
+
+    return reason == "target_ref" or reason.startswith("required:")
+
+
 _TERM_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9_.:/#-]{2,}")
 _STOP_TERMS = {
     "and",
@@ -137,11 +148,12 @@ def build_weak_local_evidence(
                     provenance_ids[_provenance_key(node)],
                     node.status.value,
                     0,
+                    _role_of(reason),
                     *_span(node),
                 )
             )
         )
-        protected = reason in _PROTECTED_REASONS
+        protected = _is_protected(reason)
         if not protected and (len(items) >= max_items or used_tokens + estimate > token_budget):
             continue
         items.append(
@@ -156,6 +168,7 @@ def build_weak_local_evidence(
                 provenance_ids[_provenance_key(node)],
                 node.status.value,
                 estimate,
+                _role_of(reason),
                 *_span(node),
             )
         )
@@ -200,6 +213,14 @@ def build_weak_local_evidence(
     )
 
 
+def _role_of(reason: str) -> EvidenceRole:
+    if reason == "target_ref":
+        return EvidenceRole.TARGET
+    if reason.startswith("required:"):
+        return EvidenceRole(reason.removeprefix("required:"))
+    return EvidenceRole.SUPPORTING
+
+
 def _span(node: GraphNode) -> tuple[int | None, int | None]:
     start = node.properties.get("start_line")
     end = node.properties.get("end_line")
@@ -232,7 +253,7 @@ def attach_excerpts(
     for item in package.items:
         excerpt = None
         if (
-            item.reason in _PROTECTED_REASONS
+            _is_protected(item.reason)
             and item.start_line is not None
             and item.end_line is not None
             and item.end_line - item.start_line + 1 <= max_lines
@@ -300,7 +321,7 @@ def _reduced_candidates(
         if node.confidence.value >= request.min_confidence
     }
     targets = {value.value.casefold() for value in request.target_refs}
-    required = {value.value.casefold() for value in request.required_refs}
+    required = {item.canonical_ref.value.casefold(): item.role for item in request.required_refs}
     terms = _objective_terms(request.objective)
     gap_terms = {
         value.partition(":")[2].casefold()
@@ -330,7 +351,8 @@ def _reduced_candidates(
         if canonical in targets or source in targets or f"file://{source}" in targets:
             score, reason = 10_000, "target_ref"
         elif canonical in required or source in required:
-            score, reason = 9_500, "required_obligation"
+            role = required.get(canonical) or required.get(source)
+            score, reason = 9_500, f"required:{role.value if role else 'supporting'}"
         elif ref in gap_seed_refs:
             score, reason = 9_000, "unresolved_objective_anchor"
         elif not targets:
@@ -341,9 +363,7 @@ def _reduced_candidates(
         if score:
             seed_scores[ref] = (score, reason)
     # Required truth is never dropped for a bound, so only inferred seeds are capped.
-    protected_seeds = {
-        ref: value for ref, value in seed_scores.items() if value[1] in _PROTECTED_REASONS
-    }
+    protected_seeds = {ref: value for ref, value in seed_scores.items() if _is_protected(value[1])}
     inferred_seeds = {
         ref: value for ref, value in seed_scores.items() if ref not in protected_seeds
     }

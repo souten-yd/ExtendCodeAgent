@@ -64,6 +64,26 @@ class ContextPackage:
     excluded_count: int
 
 
+class EvidenceRole(StrEnum):
+    """Which part of an answer a piece of evidence belongs to.
+
+    A consumer asking "which tests must run?" should be able to read the tests without
+    filtering ninety-eight facts for them. The role travels with the ref so the delivered
+    payload can be grouped rather than flat.
+    """
+
+    TARGET = "target"
+    CONSUMER = "consumer"
+    TEST = "test"
+    SUPPORTING = "supporting"
+
+
+@dataclass(frozen=True, slots=True)
+class RequiredRef:
+    canonical_ref: CanonicalRef
+    role: EvidenceRole = EvidenceRole.SUPPORTING
+
+
 @dataclass(frozen=True, slots=True)
 class WeakLocalEvidenceRequest:
     """A bounded request for task-relevant evidence, never repository-wide by default."""
@@ -74,7 +94,7 @@ class WeakLocalEvidenceRequest:
     max_items: int = 12
     min_confidence: float = 0.0
     scope: EvidenceScope | None = None
-    required_refs: tuple[CanonicalRef, ...] = ()
+    required_refs: tuple[RequiredRef, ...] = ()
     prior_evidence_ids: tuple[str, ...] = ()
     unresolved_gaps: tuple[str, ...] = ()
 
@@ -105,6 +125,7 @@ class WeakLocalEvidenceItem:
     provenance_id: str
     status: str
     token_estimate: int
+    role: EvidenceRole = EvidenceRole.SUPPORTING
     start_line: int | None = None
     end_line: int | None = None
     excerpt: str | None = None

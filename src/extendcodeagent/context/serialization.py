@@ -70,6 +70,7 @@ def weak_local_evidence_item_json(item: Any) -> dict[str, Any]:
         "confidence": item.confidence,
         "provenance_id": item.provenance_id,
         "status": item.status,
+        "role": str(item.role),
         # A symbol's exact span is what lets a consumer read seven lines instead of the
         # three hundred and sixty-seven the file happens to contain.
         **({"lines": [item.start_line, item.end_line]} if item.start_line else {}),
@@ -100,6 +101,13 @@ def weak_local_evidence_json(
             for identifier, item in package.provenance
         ],
         "items": [weak_local_evidence_item_json(item) for item in package.items],
+        # Grouped as well as listed: a consumer asking "which tests must run?" reads
+        # `answer.test` instead of filtering the whole envelope for them.
+        "answer": {
+            role: [item.evidence_id for item in package.items if str(item.role) == role]
+            for role in ("target", "consumer", "test")
+            if any(str(item.role) == role for item in package.items)
+        },
         "selected_evidence_ids": list(package.selected_evidence_ids),
         "prior_evidence_ids": list(package.prior_evidence_ids),
         "unresolved_evidence_gaps": list(package.unresolved_gaps),

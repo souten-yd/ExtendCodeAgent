@@ -3,7 +3,9 @@ from __future__ import annotations
 from extendcodeagent.context import (
     ContextProfile,
     ContextRequest,
+    EvidenceRole,
     EvidenceScope,
+    RequiredRef,
     WeakLocalEvidenceRequest,
     attach_excerpts,
     build_context,
@@ -170,7 +172,10 @@ def test_required_evidence_survives_the_item_cap_and_reports_the_overflow() -> N
     """An obligation's evidence is never ranked away, but exceeding the bound is visible."""
 
     snapshot = _snapshot(size=60)
-    required = tuple(CanonicalRef(f"py://module#function_{index}") for index in range(40))
+    required = tuple(
+        RequiredRef(CanonicalRef(f"py://module#function_{index}"), EvidenceRole.TEST)
+        for index in range(40)
+    )
 
     package = build_weak_local_evidence(
         snapshot,
@@ -183,7 +188,7 @@ def test_required_evidence_survives_the_item_cap_and_reports_the_overflow() -> N
     )
 
     delivered = {item.canonical_ref.value for item in package.items}
-    assert {ref.value for ref in required} <= delivered
+    assert {ref.canonical_ref.value for ref in required} <= delivered
     assert len(package.items) > 8
     assert "protected_evidence_exceeds_budget" in package.unresolved_gaps
 
@@ -204,7 +209,10 @@ def test_a_seed_bound_never_evicts_required_evidence() -> None:
     """Capping seeds must bite the inferred ones; required truth is not rankable."""
 
     snapshot = _snapshot(size=200)
-    required = tuple(CanonicalRef(f"py://module#function_{index}") for index in range(80))
+    required = tuple(
+        RequiredRef(CanonicalRef(f"py://module#function_{index}"), EvidenceRole.TEST)
+        for index in range(80)
+    )
 
     package = build_weak_local_evidence(
         snapshot,
@@ -217,7 +225,7 @@ def test_a_seed_bound_never_evicts_required_evidence() -> None:
     )
 
     delivered = {item.canonical_ref.value for item in package.items}
-    assert {ref.value for ref in required} <= delivered
+    assert {ref.canonical_ref.value for ref in required} <= delivered
 
 
 def test_targeted_evidence_carries_the_symbol_body_not_just_its_name() -> None:
