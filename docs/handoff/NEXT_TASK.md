@@ -31,6 +31,16 @@ Both are repaired (`C2_TRUTH_SCOPE_AND_COST_FIDELITY_CORRECTIVE_DESIGN.md`). The
 leaves 30,417 of 32,768 tokens unused because the 32-item cap binds first, recall is flat from 4k to
 32k, and mean normalized recall is 0.244 against mean raw recall 0.056.
 
+The corrective slice closed both: recall on the three sealed `eca-*` tuning tasks went 0.24 -> 1.00
+with 3,105-4,385 delivered tokens, by consolidating capabilities ECA already had. **That is an
+instrument reading on three cells of this program's own repository, not product evidence.**
+
+**Active work order: `C2_EXTERNAL_VALIDATION_PLAN.md`.** All 13 sealed tasks are from our own
+repositories; no public project is in the corpus. Prove effect against a plain-search baseline on
+external code before building any further mechanism. Steps: generalise the recall instrument, pin one
+public repository and derive oracles from merged pull requests, then run the paired PI-versus-baseline
+comparison reported per task class. If the high-value classes show no effect, stop and report it.
+
 **Context size is not the binding constraint. Selection recall and projection encoding are.** Start at
 `C2-0b` (seal the recall baseline on the repaired Twin), then `C2-C'` deterministic exact projection —
 not `C2-A`. Exit is recall >= 0.90 inside the 8k envelope, not a task-success delta that B0b already

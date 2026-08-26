@@ -91,6 +91,7 @@ non-goals remain binding).
 | `handoff/*` | Rolling state. `NEXT_TASK.md` points at this document. |
 | `handoff/C2_EVIDENCE_DELIVERY_DECISION.md` | **Canonical C2 evidence-delivery contract.** EvidenceAtom, protected evidence, coverage optimizer, Sufficiency Gate, AnswerIR/ChangeIR, shadow reservoir, ranker policy. Its work packages stand; their order is superseded by the plan revision below. |
 | `handoff/C2_TRUTH_SCOPE_AND_COST_FIDELITY_CORRECTIVE_DESIGN.md` | **Canonical C2-0 corrective contract.** Project scope, truncation severity, payload/cost co-ownership, facade boundary (C-1..C-4) and open gaps G-1..G-6. |
+| `handoff/C2_EXTERNAL_VALIDATION_PLAN.md` | **Active C2 work order.** Task-class stratification by whether PI can plausibly help, merged-PR oracles for public corpora, and the paired PI-versus-plain-search comparison that gates every remaining C2 mechanism. |
 | `handoff/C2_PLAN_REVISION_AND_ADOPTION_DECISIONS.md` | **Canonical C2 work order and exit criterion**, and the adoption ruling on every mechanism proposed for context virtualization. Supersedes the C2 implementation order in `C2_EVIDENCE_DELIVERY_DECISION.md`. |
 | `audit/C2_CONTEXT_VIRTUALIZATION_INDEPENDENT_AUDIT.md` | Independent audit of PR #102 (`NARROW_AND_RETEST`) with the concept classification and the reduced architecture. Evidence, not sequencing. |
 | `audit/EXTERNAL_AI_C2_CORRECTIVE_AUDIT_REQUEST.md` | Ready-to-use second-reviewer request covering both the design and the corrective implementation. |
