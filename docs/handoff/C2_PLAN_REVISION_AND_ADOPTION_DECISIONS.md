@@ -446,6 +446,79 @@ local route how often the model (a) cites delivered evidence IDs rather than res
 (b) requests expansion only for a named gap, and (c) refrains from redundant native search when the
 envelope is in fact sufficient. A sufficiency gate the model ignores is not a gate.
 
+### 4b.7 MEASURED — the output budget is a cliff, and ECA's default is below it
+
+Real 15,556-character envelope (protocol + 32 evidence items + task), `Qwen3.8-27B`:
+
+| `max_output_tokens` | finish | reasoning | answer | verdict |
+|---|---|---|---|---|
+| **512** (ECA default) | `length` | 2,673 chars | **0 chars** | whole budget wasted |
+| 1,024 | `length` | 5,102 chars | **0 chars** | whole budget wasted |
+| 2,048 | `length` | 5,034 chars | **1,898 chars** | first usable answer |
+
+This answers the question directly: **bounding the output budget does lose required information, and
+it loses it discontinuously.** A reasoning model emits `reasoning_content` first, so below the floor
+the result is not a shortened answer — it is *no answer*, at full token cost. Input truncation
+degrades gracefully (omitted evidence stays addressable and can be paged in at 78% cache discount);
+output truncation destroys the work outright.
+
+`ModelRequest.max_output_tokens` defaults to **512**, which is four times below the measured floor for
+this model class on a real envelope.
+
+**Design gap: ECA has no output-headroom accounting at all.** `context_budget_tokens` bounds input
+evidence; `max_output_tokens` is an unrelated per-request number; nothing anywhere computes
+`total = prompt + reserved output`. `large-project-bounded-context-target-v1.json` defines a 64k claim
+as *total* including reserved output headroom, so **that claim currently cannot be computed by the
+code that would have to honour it.**
+
+Corrected principle for C2: **output headroom is a floor reserved first, not a remainder.** Evidence
+gets what is left. Never trade output headroom for more evidence — the trade returns zero.
+
+### 4b.8 MEASURED — cache reuse has a fixed ~520-token overhead, and the stable block is inside it
+
+Shared-head sweep, identical head with a divergent tail:
+
+| shared head | prompt tokens | cached | **uncached** | reuse |
+|---|---|---|---|---|
+| 781 chars | 206 | 42 | 164 | 0.20 |
+| 1,562 chars | 349 | 42 | 307 | 0.12 |
+| 3,053 chars | 622 | 102 | **520** | 0.16 |
+| 6,035 chars | 1,168 | 648 | **520** | 0.55 |
+| 12,070 chars | 2,273 | 1,753 | **520** | 0.77 |
+
+The uncached remainder is **constant at ~520 tokens** once the head is large enough. The backend is not
+applying a threshold; it reuses everything except a fixed block-quantised remainder. So:
+
+> reuse ≈ (prompt_tokens − 520) / prompt_tokens
+
+ECA's stable envelope plus rules is 1,312 characters ≈ **330 tokens — entirely inside the 520-token
+uncached remainder.** It can never be cached, at any position. Making it *first* is necessary but not
+sufficient; it must also exceed ~520 tokens (~2,000+ characters) before a single token of it is reused.
+
+That is a usable design rule, and it is not an argument for padding. There is real protocol content
+that belongs in a task-invariant head — the gap taxonomy, the scope ladder, the AnswerIR/ChangeIR
+schema, the citation contract — currently scattered or absent. Consolidating it into one 2–4k-character
+block that is emitted first would be worth doing on clarity grounds alone, and would then also be ~78%
+free after the first call.
+
+### 4b.9 Concurrency interacts with prefix cache — 4 slots, not one
+
+The host runs llama.cpp with **4 parallel slots**. This explains the erratic readings in §4b.5, where
+two real task envelopes sharing a 1,349-character head reused nothing beyond the 42-token baseline:
+with `-np 4` the KV cache is partitioned, and a request that lands in a different slot finds no prefix
+to reuse.
+
+Consequence for the architecture, and it is not obvious: **a shared prefix is only free if it is
+resident in the slot that serves the request.** With four workstreams either the prefix occupies all
+four slots — four times the KV cost, competing with the very context budget C2 is trying to protect —
+or reuse becomes probabilistic. `large-project-bounded-context-target-v1.json` asks for four
+independent workstreams *and* bounded context; this is the first measured place where those two goals
+trade against each other, and neither the target nor PR #102 accounts for it.
+
+Do not resolve this by building a scheduler. ControlDeck already owns admission control, which is where
+the target says the decision belongs. Record it as a measured constraint on the concurrency claim and
+measure aggregate KV requirement before asserting four-way capability.
+
 ## 5. What this revision does not claim
 
 - 0.244 is measured on **three tuning tasks in one Python repository**. It is a strong signal about the
