@@ -4,7 +4,6 @@ from extendcodeagent.context import (
     ContextProfile,
     ContextRequest,
     EvidenceRole,
-    EvidenceScope,
     RequiredRef,
     WeakLocalEvidenceRequest,
     attach_excerpts,
@@ -22,7 +21,7 @@ from extendcodeagent.core.contracts import (
     Provenance,
     SourceRevision,
 )
-from extendcodeagent.graph import FactStatus, GraphEdge, GraphNode, GraphSnapshot
+from extendcodeagent.graph import FactStatus, GraphNode, GraphSnapshot
 
 PROJECT = ProjectRef("project", "workspace", "file:///repo")
 REVISION = SourceRevision("rev-1")
@@ -79,69 +78,65 @@ def test_weak_profile_is_materially_smaller_than_standard() -> None:
     assert len(weak.items) <= 8 < len(standard.items)
 
 
-def test_weak_local_protocol_reduces_candidates_before_projection() -> None:
-    snapshot = _snapshot()
+def test_the_envelope_carries_what_was_asked_for_and_nothing_else() -> None:
+    """PI answers about refs; finding the ref is what search is for.
+
+    The envelope used to run its own term match and graph walk. Measured on Django that
+    walk saw 256 of 49,775 nodes and its additions were the dilution, so it was removed.
+    """
+
     package = build_weak_local_evidence(
-        snapshot,
-        WeakLocalEvidenceRequest("Locate function_0", token_budget=2_000, max_items=12),
+        _snapshot(),
+        WeakLocalEvidenceRequest(
+            "Locate function_0",
+            target_refs=(CanonicalRef("py://module#function_0"),),
+            token_budget=2_000,
+            max_items=12,
+        ),
     )
 
-    assert package.scope is EvidenceScope.SYMBOL
-    assert package.candidate_count == 1
     assert [item.canonical_ref.value for item in package.items] == ["py://module#function_0"]
-    assert package.deterministic_resolution is True
-    assert package.next_scope is None
+    assert package.items[0].role is EvidenceRole.TARGET
     assert package.used_tokens <= package.token_budget
     assert package.selected_evidence_ids == tuple(item.evidence_id for item in package.items)
 
 
-def test_weak_local_protocol_expands_only_for_an_explicit_gap() -> None:
+def test_an_objective_without_a_ref_returns_nothing_rather_than_guessing() -> None:
+    """Guessing a location from prose is what search already does better."""
+
+    package = build_weak_local_evidence(
+        _snapshot(), WeakLocalEvidenceRequest("Locate function_0", token_budget=2_000)
+    )
+
+    assert package.items == ()
+    assert package.candidate_count == 0
+
+
+def test_widening_is_the_caller_naming_more_obligations() -> None:
+    """The ladder widens because a narrow answer did not hold, not by walking outward."""
+
     nodes = _snapshot(2).nodes
-    snapshot = GraphSnapshot(
-        PROJECT,
-        None,
-        nodes,
-        (
-            GraphEdge(
-                "edge-1",
-                nodes[1].canonical_ref,
-                nodes[0].canonical_ref,
-                "calls",
-                "module.py",
-                PROVENANCE,
-                Confidence(1.0),
-                FactStatus.DECLARED,
-                REVISION,
-            ),
-        ),
+    snapshot = GraphSnapshot(PROJECT, None, nodes)
+    narrow = build_weak_local_evidence(
+        snapshot,
+        WeakLocalEvidenceRequest("Locate function_0", target_refs=(nodes[0].canonical_ref,)),
     )
-    resolved = build_weak_local_evidence(
+    widened = build_weak_local_evidence(
         snapshot,
         WeakLocalEvidenceRequest(
             "Locate function_0",
             target_refs=(nodes[0].canonical_ref,),
-            scope=EvidenceScope.SYMBOL,
-        ),
-    )
-    expanded = build_weak_local_evidence(
-        snapshot,
-        WeakLocalEvidenceRequest(
-            "Locate function_0",
-            target_refs=(nodes[0].canonical_ref,),
-            scope=EvidenceScope.NEIGHBORHOOD,
-            prior_evidence_ids=resolved.selected_evidence_ids,
-            unresolved_gaps=("direct caller missing",),
+            required_refs=(RequiredRef(nodes[1].canonical_ref, EvidenceRole.CONSUMER),),
+            prior_evidence_ids=narrow.selected_evidence_ids,
         ),
     )
 
-    assert len(resolved.items) == 1
-    assert resolved.next_scope is None
-    assert {item.canonical_ref.value for item in expanded.items} == {
+    assert {item.canonical_ref.value for item in narrow.items} == {"py://module#function_0"}
+    assert {item.canonical_ref.value for item in widened.items} == {
         "py://module#function_0",
         "py://module#function_1",
     }
-    assert expanded.deterministic_resolution is False
-    assert expanded.next_scope is EvidenceScope.IMPACT
+    assert widened.prior_evidence_ids == narrow.selected_evidence_ids
 
 
 def test_stable_evidence_envelope_contains_no_task_or_revision_data() -> None:
@@ -197,7 +192,12 @@ def test_evidence_items_carry_the_source_path_an_answer_has_to_name() -> None:
     """Emitting only `py://a.b.c#d` made the model derive `a/b/c.py` itself."""
 
     package = build_weak_local_evidence(
-        _snapshot(), WeakLocalEvidenceRequest("locate function_1", token_budget=4_096)
+        _snapshot(),
+        WeakLocalEvidenceRequest(
+            "locate function_1",
+            target_refs=(CanonicalRef("py://module#function_1"),),
+            token_budget=4_096,
+        ),
     )
 
     assert package.items

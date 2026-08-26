@@ -5,10 +5,9 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from collections import defaultdict, deque
+from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import replace
-from pathlib import PurePosixPath
 
 from extendcodeagent.core.contracts import Provenance
 from extendcodeagent.graph import GraphNode, GraphSnapshot
@@ -37,8 +36,6 @@ _WEAK_MAX_ITEMS = 8
 _PROTOCOL_MAX_TOKENS = 8_192
 _PROTOCOL_MAX_ITEMS = 32
 _MAX_ANCHOR_MATCHES = 64
-_PROTOCOL_MAX_SEEDS = 64
-_PROTOCOL_MAX_CANDIDATES = 256
 _SCOPE_ORDER = tuple(EvidenceScope)
 
 
@@ -117,7 +114,7 @@ def build_weak_local_evidence(
     scope = request.scope or infer_evidence_scope(request.objective)
     token_budget = min(request.token_budget, _PROTOCOL_MAX_TOKENS)
     max_items = min(request.max_items, _PROTOCOL_MAX_ITEMS)
-    candidates, search_truncated = _reduced_candidates(snapshot, request, scope)
+    candidates, search_truncated = _answer_candidates(snapshot, request)
     provenance_values = [
         value
         for _, value in sorted(
@@ -310,146 +307,53 @@ def _node_search_text(node: GraphNode) -> str:
     ).casefold()
 
 
-def _reduced_candidates(
-    snapshot: GraphSnapshot,
-    request: WeakLocalEvidenceRequest,
-    scope: EvidenceScope,
+def _answer_candidates(
+    snapshot: GraphSnapshot, request: WeakLocalEvidenceRequest
 ) -> tuple[list[tuple[GraphNode, str, int]], bool]:
+    """Take the refs an obligation named, and nothing else.
+
+    This used to run its own search: match the objective's terms against node text, walk the
+    graph outward, widen by scope. That is localization, and localization is what plain
+    search already does — measured across thirty Django changes, grep reaches recall 0.96 at
+    14 tokens per path while this walk saw 256 of 49,775 nodes. Worse, the facts it added
+    were the dilution: precision over the envelope was 0.0085 against 0.112 for the
+    capability it wrapped.
+
+    So it no longer searches. A caller who does not yet know the ref uses search to find it;
+    PI answers what search cannot — which symbol this is, who consumes it, what verifies it.
+    """
+
     nodes = {
         node.canonical_ref.value: node
         for node in snapshot.nodes
         if node.confidence.value >= request.min_confidence
     }
-    targets = {value.value.casefold() for value in request.target_refs}
-    required = {item.canonical_ref.value.casefold(): item.role for item in request.required_refs}
-    terms = _objective_terms(request.objective)
-    gap_terms = {
-        value.partition(":")[2].casefold()
-        for value in request.unresolved_gaps
-        if value.startswith("objective_anchor_missing:") and value.partition(":")[2]
-    }
-    gap_seed_refs = {
-        ref
-        for term in gap_terms
-        for ref in [
-            item[0]
-            for item in sorted(
-                ((ref, node) for ref, node in nodes.items() if term in _node_search_text(node)),
-                key=lambda item: (
-                    item[1].node_type in {"test", "verification"},
-                    item[0],
-                ),
-            )[:8]
-        ]
-    }
-    seed_scores: dict[str, tuple[int, str]] = {}
+    by_source: dict[str, list[str]] = defaultdict(list)
     for ref, node in nodes.items():
-        canonical = ref.casefold()
-        source = node.source_ref.casefold()
-        score = 0
-        reason = "objective_term"
-        if canonical in targets or source in targets or f"file://{source}" in targets:
-            score, reason = 10_000, "target_ref"
-        elif canonical in required or source in required:
-            role = required.get(canonical) or required.get(source)
-            score, reason = 9_500, f"required:{role.value if role else 'supporting'}"
-        elif ref in gap_seed_refs:
-            score, reason = 9_000, "unresolved_objective_anchor"
-        elif not targets:
-            matching = tuple(term for term in terms if term in _node_search_text(node))
-            if matching:
-                exact_name = str(node.properties.get("name", "")).casefold() in matching
-                score = (2_000 if exact_name else 500) + sum(len(value) for value in matching)
-        if score:
-            seed_scores[ref] = (score, reason)
-    # Required truth is never dropped for a bound, so only inferred seeds are capped.
-    protected_seeds = {ref: value for ref, value in seed_scores.items() if _is_protected(value[1])}
-    inferred_seeds = {
-        ref: value for ref, value in seed_scores.items() if ref not in protected_seeds
-    }
-    remaining = max(0, _PROTOCOL_MAX_SEEDS - len(protected_seeds))
-    search_truncated = len(inferred_seeds) > remaining
-    seed_scores = protected_seeds | dict(
-        sorted(inferred_seeds.items(), key=lambda item: (-item[1][0], item[0]))[:remaining]
-    )
+        by_source[node.source_ref].append(ref)
 
-    adjacency: dict[str, set[str]] = defaultdict(set)
-    for edge in snapshot.edges:
-        source = edge.source.value
-        target = edge.target.value
-        if source in nodes and target in nodes:
-            adjacency[source].add(target)
-            adjacency[target].add(source)
-
-    max_hops = {
-        EvidenceScope.SYMBOL: 0,
-        EvidenceScope.NEIGHBORHOOD: 1,
-        EvidenceScope.IMPACT: 2,
-        EvidenceScope.VERIFICATION: 2,
-        EvidenceScope.SUBSYSTEM: 3,
-    }[scope]
-    distances: dict[str, int] = {ref: 0 for ref in seed_scores}
-    queue = deque(sorted(distances))
-    while queue:
-        current = queue.popleft()
-        distance = distances[current]
-        if distance >= max_hops:
-            continue
-        for related in sorted(adjacency[current]):
-            if related not in distances:
-                if len(distances) >= _PROTOCOL_MAX_CANDIDATES:
-                    search_truncated = True
-                    break
-                distances[related] = distance + 1
-                queue.append(related)
-
-    if scope is EvidenceScope.VERIFICATION:
-        relevant_sources = {
-            nodes[ref].source_ref
-            for ref in distances
-            if nodes[ref].node_type in {"test", "requirement", "verification"}
-        }
-        for ref, node in nodes.items():
-            if node.node_type in {"test", "requirement", "verification"} and (
-                node.source_ref in relevant_sources
-                or any(term in _node_search_text(node) for term in terms)
-            ):
-                if len(distances) >= _PROTOCOL_MAX_CANDIDATES:
-                    search_truncated = True
-                    break
-                distances.setdefault(ref, max_hops)
-
-    if scope is EvidenceScope.SUBSYSTEM:
-        seed_directories = {
-            str(PurePosixPath(nodes[ref].source_ref).parent) for ref in seed_scores if ref in nodes
-        }
-        for ref, node in nodes.items():
-            parent = str(PurePosixPath(node.source_ref).parent)
-            if any(parent == value or parent.startswith(f"{value}/") for value in seed_directories):
-                if len(distances) >= _PROTOCOL_MAX_CANDIDATES:
-                    search_truncated = True
-                    break
-                distances.setdefault(ref, max_hops)
+    def resolve(value: str) -> list[str]:
+        if value in nodes:
+            return [value]
+        source = value.removeprefix("file://")
+        return sorted(by_source.get(source, ()))
 
     ranked: list[tuple[GraphNode, str, int]] = []
-    for ref, distance in distances.items():
-        node = nodes[ref]
-        if ref in seed_scores:
-            score, reason = seed_scores[ref]
-        else:
-            score = 300 - distance * 25
-            reason = f"graph_neighborhood:{distance}"
-        if node.node_type in {"test", "requirement", "verification"}:
-            score += 100 if scope is EvidenceScope.VERIFICATION else 0
-        ranked.append((node, reason, score))
-    ranked.sort(
-        key=lambda item: (
-            -item[2],
-            -item[0].confidence.value,
-            item[0].canonical_ref.value,
-        )
+    seen: set[str] = set()
+    ordered: list[tuple[str, str, int]] = [
+        (target.value, "target_ref", 10_000) for target in request.target_refs
+    ]
+    ordered.extend(
+        (item.canonical_ref.value, f"required:{item.role.value}", 9_500)
+        for item in request.required_refs
     )
-    return ranked, search_truncated
+    for value, reason, score in ordered:
+        for ref in resolve(value):
+            if ref in seen:
+                continue
+            seen.add(ref)
+            ranked.append((nodes[ref], reason, score))
+    return ranked, False
 
 
 def _next_scope(scope: EvidenceScope) -> EvidenceScope | None:
