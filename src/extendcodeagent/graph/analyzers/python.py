@@ -23,12 +23,16 @@ from .contracts import GraphAnalysis
 if TYPE_CHECKING:
     from extendcodeagent.twin.source_snapshot import SourceSnapshot
 
-PYTHON_ANALYZER_VERSION = "python_ast.v3"
+PYTHON_ANALYZER_VERSION = "python_ast.v4"
 
 #: Directories a project may keep its importable packages under. `src/flask/app.py` is
 #: imported as `flask.app`, so without these an internal import resolves to nothing and
 #: gets recorded as a third-party dependency instead.
 PYTHON_SOURCE_ROOTS = ("src", "lib")
+
+#: Whole-file names that hold tests without matching `test_*.py`. Django gives every app a
+#: `tests.py`, and both pytest and unittest discover it.
+_TEST_FILENAMES = frozenset({"tests.py", "test.py"})
 _BUILTINS = frozenset(dir(builtins))
 
 
@@ -544,9 +548,17 @@ def _expression_name(node: ast.AST) -> str | None:
 
 
 def _is_test(definition: _Definition) -> bool:
+    """Whether a definition is a test the project would actually run.
+
+    `tests.py` is the convention every Django application uses, and pytest and unittest
+    both discover it. Requiring `test_*.py` left 16 of 30 measured Django changes with
+    their required test absent from the graph entirely — not mis-ranked, but impossible to
+    select, because it was never a test.
+    """
+
     filename = Path(definition.path).name
     return definition.name.startswith("test_") and (
-        filename.startswith("test_") or filename.endswith("_test.py")
+        filename.startswith("test_") or filename.endswith("_test.py") or filename in _TEST_FILENAMES
     )
 
 
