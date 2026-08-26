@@ -66,7 +66,9 @@ def _is_test(path: str) -> bool:
     name = Path(path).name
     if not name.endswith(".py"):
         return False
-    return name.startswith("test_") or name.endswith("_test.py")
+    # `tests.py` is Django's convention; `models.py` or `urls.py` beside it are fixtures
+    # that support a test rather than tests that must run.
+    return name in {"tests.py", "test.py"} or name.startswith("test_") or name.endswith("_test.py")
 
 
 def _under_test_tree(path: str) -> bool:

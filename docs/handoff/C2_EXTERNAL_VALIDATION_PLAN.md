@@ -136,6 +136,43 @@ with **one** repository large enough to discriminate. Breadth is worthless until
 Exit: a sealed corpus file with at least 30 cases across the high-value classes, held-out split
 reserved.
 
+### 4.2b RESULT — on a repository large enough to decide, plain search wins
+
+`django/django` pinned at `05a5244b`, 7,085 files, Twin of 49,775 nodes and 220,934 edges across 609
+test files. Thirty test-selection cases from its own later commits. **All thirty budget-constrained**,
+so the comparison is meaningful — unlike `psf/requests`, where none were.
+
+```
+PI envelope   recall 0.428     105 items    7,842 tokens    74.8 tokens per item
+plain search  recall 0.964     562 paths    7,840 tokens    14.0 tokens per path
+delta        -0.537      PI ahead 0 of 30, tied 13, search ahead 17
+```
+
+**PI does not win a single case.** Three limits compound, and each is measured rather than inferred:
+
+1. **Candidate cap.** `_PROTOCOL_MAX_CANDIDATES = 256` against a Twin of 49,775 nodes. Every case
+   reports `candidate_search_bound_reached`: PI selects from **0.5% of the graph** while the search arm
+   ranks 3,872 candidates.
+2. **Representation cost.** An evidence item carries id, ref, path, kind, summary, reason, confidence,
+   provenance_id and status — 74.8 tokens. For a question whose answer is a path, eight of nine fields
+   are overhead, and the baseline pays 14.0. That is a 5.3x handicap PI's selection would have to
+   overcome before it can win anything.
+3. **Selection does not compensate.** Even where PI's items land, 0 of 30 cases come out ahead.
+
+This is a **scale** finding, and it is the regime the product is aimed at. At 96 files nothing
+discriminated; at 7,085 files PI is decisively behind plain search on this task class.
+
+What it does not show: only `test_selection` was measured, on one repository, with one oracle type,
+at the delivery layer. Impact, requirement trace, cross-boundary and safe-deletion classes are
+untested, and task outcome is not measured at all. It also does not show PI's fields are worthless —
+confidence, provenance and status buy trust, which recall does not score.
+
+What it does show, and what §4.4 must respect: **on path-shaped questions over a large repository, the
+current envelope is a net loss against grep at equal cost.** Optimising its prefix or its compression
+curve cannot repair a 5.3x representation handicap over a 0.5% candidate pool. If PI is to earn its
+place it must deliver what search cannot produce — relations, obligations, staleness, contradiction —
+and be measured on classes where those are the answer.
+
 ### 4.3 Paired effect measurement: PI envelope versus plain search
 
 The first measurement in this programme that can say "PI is useful".

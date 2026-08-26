@@ -1,0 +1,702 @@
+{
+  "classification": "C2_DELIVERY_BASELINE_COMPARISON",
+  "note": "Diagnostic. Delivery layer only; task outcome is not measured here.",
+  "repository": "/tmp/claude-1000/-home-souten-ExtendCodeAgent/834e8784-5cdd-4621-acbc-e318c839c3cd/scratchpad/corpus-django",
+  "source_revision": "05a5244b8924c47cc5b1332dd15aaa1be6abbe1e",
+  "token_budget": 8192,
+  "model_execution": "NOT_RUN_DETERMINISTIC_COMPARISON",
+  "by_pi_value_class": {
+    "high": {
+      "cases": 30,
+      "pi_recall_mean": 0.427778,
+      "search_recall_mean": 0.964444,
+      "mean_delta": -0.536667,
+      "pi_ahead": 0,
+      "tied": 13,
+      "search_ahead": 17,
+      "discriminating_cases": 30,
+      "verdict": "comparison is meaningful for the budget-constrained cases"
+    }
+  },
+  "results": [
+    {
+      "case_id": "pr-0f581cd29d42",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 15,
+      "pi": {
+        "delivered_items": 245,
+        "delivered_tokens": 17625,
+        "recall": 0.333333,
+        "missing_facts": [
+          "tests/admin_views/tests.py",
+          "tests/auth_tests/test_forms.py",
+          "tests/auth_tests/test_models.py",
+          "tests/auth_tests/test_views.py",
+          "tests/logging_tests/tests.py",
+          "tests/mail/tests.py",
+          "tests/middleware/tests.py",
+          "tests/test_client/tests.py",
+          "tests/test_utils/tests.py",
+          "tests/view_tests/tests/test_debug.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 1208,
+        "delivered_tokens": 17625,
+        "candidates": 1865,
+        "budget_constrained": true,
+        "recall": 0.933333,
+        "missing_facts": [
+          "tests/project_template/test_settings.py"
+        ]
+      },
+      "delta": -0.6
+    },
+    {
+      "case_id": "pr-25cf1cbb1cb9",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 50,
+        "delivered_tokens": 3925,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 291,
+        "delivered_tokens": 3923,
+        "candidates": 4147,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-da6567da7ea0",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 62,
+        "delivered_tokens": 4636,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 351,
+        "delivered_tokens": 4630,
+        "candidates": 4223,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-0e1d950fbb44",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 188,
+        "delivered_tokens": 13663,
+        "recall": 0.0,
+        "missing_facts": [
+          "tests/queries/test_qs_combinators.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 989,
+        "delivered_tokens": 13657,
+        "candidates": 4171,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": -1.0
+    },
+    {
+      "case_id": "pr-6bbe2656e1e8",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 130,
+        "delivered_tokens": 9965,
+        "recall": 0.0,
+        "missing_facts": [
+          "tests/queries/test_qs_combinators.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 732,
+        "delivered_tokens": 9961,
+        "candidates": 4141,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": -1.0
+    },
+    {
+      "case_id": "pr-3e4e0db66961",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 71,
+        "delivered_tokens": 5349,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 403,
+        "delivered_tokens": 5344,
+        "candidates": 4152,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-7c125f6a6660",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 157,
+        "delivered_tokens": 11876,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 824,
+        "delivered_tokens": 11871,
+        "candidates": 4242,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-8fd29079ed12",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 157,
+        "delivered_tokens": 11876,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 824,
+        "delivered_tokens": 11871,
+        "candidates": 4242,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-20960df455ff",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 81,
+        "delivered_tokens": 6084,
+        "recall": 0.0,
+        "missing_facts": [
+          "tests/transactions/tests.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 456,
+        "delivered_tokens": 6079,
+        "candidates": 4103,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": -1.0
+    },
+    {
+      "case_id": "pr-e78a46a8fb29",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 92,
+        "delivered_tokens": 6826,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 500,
+        "delivered_tokens": 6826,
+        "candidates": 4157,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-bc9bed573ce3",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 220,
+        "delivered_tokens": 16131,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 1129,
+        "delivered_tokens": 16130,
+        "candidates": 4163,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-53645750412e",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 86,
+        "delivered_tokens": 6118,
+        "recall": 0.0,
+        "missing_facts": [
+          "tests/responses/tests.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 461,
+        "delivered_tokens": 6117,
+        "candidates": 4260,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": -1.0
+    },
+    {
+      "case_id": "pr-a53e02af6d7a",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 157,
+        "delivered_tokens": 11876,
+        "recall": 0.0,
+        "missing_facts": [
+          "tests/admin_views/tests.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 824,
+        "delivered_tokens": 11871,
+        "candidates": 4242,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": -1.0
+    },
+    {
+      "case_id": "pr-7ae70e7504b9",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 32,
+        "delivered_tokens": 3031,
+        "recall": 0.0,
+        "missing_facts": [
+          "scripts/tests.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 187,
+        "delivered_tokens": 3028,
+        "candidates": 517,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": -1.0
+    },
+    {
+      "case_id": "pr-6e15ac806631",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 86,
+        "delivered_tokens": 6118,
+        "recall": 0.0,
+        "missing_facts": [
+          "tests/httpwrappers/tests.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 461,
+        "delivered_tokens": 6117,
+        "candidates": 4260,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": -1.0
+    },
+    {
+      "case_id": "pr-8f84f269353e",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 50,
+        "delivered_tokens": 3669,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 275,
+        "delivered_tokens": 3669,
+        "candidates": 4179,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-2c8c0ca0a0b7",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 43,
+        "delivered_tokens": 3485,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 261,
+        "delivered_tokens": 3479,
+        "candidates": 4175,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-ea9742c6d02e",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 32,
+        "delivered_tokens": 2599,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 201,
+        "delivered_tokens": 2598,
+        "candidates": 4129,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-804660d685a5",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 2,
+      "pi": {
+        "delivered_items": 115,
+        "delivered_tokens": 8595,
+        "recall": 0.5,
+        "missing_facts": [
+          "tests/urlpatterns/tests.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 632,
+        "delivered_tokens": 8595,
+        "candidates": 4179,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": -0.5
+    },
+    {
+      "case_id": "pr-22d25eff1510",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 52,
+        "delivered_tokens": 3976,
+        "recall": 0.0,
+        "missing_facts": [
+          "tests/urlpatterns/tests.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 304,
+        "delivered_tokens": 3976,
+        "candidates": 4135,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": -1.0
+    },
+    {
+      "case_id": "pr-9383fae0d55a",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 52,
+        "delivered_tokens": 3992,
+        "recall": 0.0,
+        "missing_facts": [
+          "tests/admin_scripts/tests.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 305,
+        "delivered_tokens": 3991,
+        "candidates": 4116,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": -1.0
+    },
+    {
+      "case_id": "pr-ba70e1bcdd8d",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 82,
+        "delivered_tokens": 5685,
+        "recall": 0.0,
+        "missing_facts": [
+          "tests/asgi/tests.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 427,
+        "delivered_tokens": 5684,
+        "candidates": 4290,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": -1.0
+    },
+    {
+      "case_id": "pr-672cfaa53c72",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 40,
+        "delivered_tokens": 3069,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 200,
+        "delivered_tokens": 3069,
+        "candidates": 803,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-70d36515b9cc",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 195,
+        "delivered_tokens": 13293,
+        "recall": 0.0,
+        "missing_facts": [
+          "tests/signed_cookies_tests/tests.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 961,
+        "delivered_tokens": 13290,
+        "candidates": 4296,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": -1.0
+    },
+    {
+      "case_id": "pr-df887f501985",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 50,
+        "delivered_tokens": 3925,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 291,
+        "delivered_tokens": 3923,
+        "candidates": 4147,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-d618d7ae4fec",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 32,
+        "delivered_tokens": 2655,
+        "recall": 0.0,
+        "missing_facts": [
+          "tests/cache/tests.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 204,
+        "delivered_tokens": 2652,
+        "candidates": 4139,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": -1.0
+    },
+    {
+      "case_id": "pr-a2faa8e89592",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 32,
+        "delivered_tokens": 2655,
+        "recall": 0.0,
+        "missing_facts": [
+          "tests/cache/tests.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 204,
+        "delivered_tokens": 2652,
+        "candidates": 4139,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": -1.0
+    },
+    {
+      "case_id": "pr-42aa0b3364d3",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 71,
+        "delivered_tokens": 5252,
+        "recall": 0.0,
+        "missing_facts": [
+          "tests/cache/tests.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 395,
+        "delivered_tokens": 5252,
+        "candidates": 4145,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": -1.0
+    },
+    {
+      "case_id": "pr-3328078a01f5",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 63,
+        "delivered_tokens": 4268,
+        "recall": 0.0,
+        "missing_facts": [
+          "tests/signed_cookies_tests/tests.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 326,
+        "delivered_tokens": 4268,
+        "candidates": 4170,
+        "budget_constrained": true,
+        "recall": 0.0,
+        "missing_facts": [
+          "tests/signed_cookies_tests/tests.py"
+        ]
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-4bbc27c8686f",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 424,
+        "delivered_tokens": 33057,
+        "recall": 0.0,
+        "missing_facts": [
+          "tests/lookup/tests.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 2231,
+        "delivered_tokens": 33057,
+        "candidates": 4226,
+        "budget_constrained": true,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": -1.0
+    }
+  ]
+}
