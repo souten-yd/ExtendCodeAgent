@@ -874,7 +874,7 @@ class ProjectIntelligenceApplication:
                     token_budget,
                     min(self.max_items, 32),
                     scope=EvidenceScope(scope) if scope is not None else None,
-                    required_refs=self._obligation_refs(snapshot, target_refs),
+                    required_refs=self._obligation_refs(snapshot, target_refs, objective),
                     prior_evidence_ids=prior_evidence_ids,
                     unresolved_gaps=unresolved_gaps,
                 ),
@@ -899,7 +899,7 @@ class ProjectIntelligenceApplication:
         )
 
     def _obligation_refs(
-        self, snapshot: GraphSnapshot, target_refs: tuple[str, ...]
+        self, snapshot: GraphSnapshot, target_refs: tuple[str, ...], objective: str = ""
     ) -> tuple[CanonicalRef, ...]:
         """Refs the envelope must carry, taken from the capabilities that already derive them.
 
@@ -931,6 +931,20 @@ class ProjectIntelligenceApplication:
             report = None
         if report is not None:
             refs.extend(item.canonical_ref for item in report.recommended_tests)
+        # A test can guard a target it never names: `test_capability_depth.py` asserts the
+        # confidence floor that `_edge_meets_confidence` consumes four modules away, so no
+        # call edge joins them. `pi_tests` already recovers that by matching the objective
+        # against test intent, and the envelope reuses the same projection rather than
+        # accepting the gap.
+        intent_paths = objective_test_paths(snapshot, objective)
+        # One ref per path, not every symbol sharing it: a test file holds ~20 nodes, and
+        # naming the path would admit all of them as required, crowding out the precise
+        # obligations behind the seed bound.
+        refs.extend(
+            node.canonical_ref.value
+            for node in snapshot.nodes
+            if node.node_type == "file" and node.source_ref in intent_paths
+        )
         return tuple(CanonicalRef(value) for value in dict.fromkeys(refs))
 
     def create_blueprint(

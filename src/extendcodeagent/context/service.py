@@ -283,9 +283,17 @@ def _reduced_candidates(
                 score = (2_000 if exact_name else 500) + sum(len(value) for value in matching)
         if score:
             seed_scores[ref] = (score, reason)
-    search_truncated = len(seed_scores) > _PROTOCOL_MAX_SEEDS
-    seed_scores = dict(
-        sorted(seed_scores.items(), key=lambda item: (-item[1][0], item[0]))[:_PROTOCOL_MAX_SEEDS]
+    # Required truth is never dropped for a bound, so only inferred seeds are capped.
+    protected_seeds = {
+        ref: value for ref, value in seed_scores.items() if value[1] in _PROTECTED_REASONS
+    }
+    inferred_seeds = {
+        ref: value for ref, value in seed_scores.items() if ref not in protected_seeds
+    }
+    remaining = max(0, _PROTOCOL_MAX_SEEDS - len(protected_seeds))
+    search_truncated = len(inferred_seeds) > remaining
+    seed_scores = protected_seeds | dict(
+        sorted(inferred_seeds.items(), key=lambda item: (-item[1][0], item[0]))[:remaining]
     )
 
     adjacency: dict[str, set[str]] = defaultdict(set)

@@ -196,3 +196,23 @@ def test_evidence_items_carry_the_source_path_an_answer_has_to_name() -> None:
     assert package.items
     assert all(item.source_ref == "module.py" for item in package.items)
     assert "path" in stable_evidence_envelope()["evidence_item_fields"]
+
+
+def test_a_seed_bound_never_evicts_required_evidence() -> None:
+    """Capping seeds must bite the inferred ones; required truth is not rankable."""
+
+    snapshot = _snapshot(size=200)
+    required = tuple(CanonicalRef(f"py://module#function_{index}") for index in range(80))
+
+    package = build_weak_local_evidence(
+        snapshot,
+        WeakLocalEvidenceRequest(
+            "carry every obligation past the seed bound",
+            token_budget=8_192,
+            max_items=8,
+            required_refs=required,
+        ),
+    )
+
+    delivered = {item.canonical_ref.value for item in package.items}
+    assert {ref.value for ref in required} <= delivered
