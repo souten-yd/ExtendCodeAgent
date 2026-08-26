@@ -315,12 +315,68 @@ Consequences:
 - Progressive expansion's economics remain unproven and now look worse: each expansion is another
   tool round trip whose prefill is a full re-send of the accumulated conversation.
 
-### 4b.3 NOT MEASURABLE TODAY — weak-model protocol compliance
+### 4b.2b SETTLED — `stable_prefix_id` is a reporting label on both routes
 
-The configured `local-practical` route at `127.0.0.1:8090` is not listening, and repository policy
-confines model-bearing work to that route, so this was not measured and no substitute model was used.
+§4b.2 showed the stable envelope cannot be a wire-level prefix through OpenCode, where PI arrives as a
+tool result. Checking ECA's own direct route shows the same thing for a different reason.
 
-It remains the single largest unquantified risk on the critical path. The envelope instructs the model
+`core/model_routing/adapters.py::OpenAICompatibleAdapter.complete` sends
+
+```python
+"messages": [{"role": "user", "content": request.prompt}]
+```
+
+— a single user message, with no separation between task-invariant protocol text and task-varying
+evidence. `core/model_routing/router.py:101` copies `stable_prefix_id` onto the response and does
+nothing else with it. **Nothing on either route arranges the payload so the stable block occupies a
+literal token prefix.**
+
+The consequence matters for how results are read: `RoutedResponse.cache_reuse_ratio` is computed from
+whatever `usage.prompt_tokens_details.cached_tokens` the provider reports, so it measures **ambient
+provider caching**, not the designed stable envelope. Reporting it as evidence that the stable-prefix
+design works would be a misattribution. Either the adapter gains a real prefix/suffix split — a system
+or prefix message emitted identically across tasks — or the honest move is to shrink the stable block
+and stop claiming it amortises.
+
+### 4b.3 MEASURABLE — the route exists; a key and a loaded model do not
+
+Superseding the earlier "not measurable" note. The `local-practical` port-8090 route is not listening,
+but ControlDeck exposes an OpenAI-compatible LLM gateway that ECA can use with **no new code**:
+
+```
+base_url : http://127.0.0.1:8765/api/v1/llm/v1
+auth     : Authorization: Bearer <gateway api key>
+model    : "auto" routes to a currently running llama instance, without waking a stopped one
+transport: transparent proxy to llama.cpp with ControlDeck admission control
+```
+
+OpenCode reaches it through ControlDeck's `integrations/opencode/provider.py::autoconfigure`, which
+issues the gateway key if absent, sets `base_url` and `use_gateway`, and writes the credential into
+OpenCode's auth store so the user never types it.
+
+ECA's `OpenAICompatibleAdapter(base_url, api_key, model_id)` is a drop-in for the same endpoint, and it
+already parses `usage.prompt_tokens_details.cached_tokens` into `ModelResponse.cache_read_tokens` and
+sets `cache_metrics_observed`. Prefix-cache measurement therefore needs no new instrument — only a key
+and a loaded model. Caveat: the gateway proxies llama.cpp transparently, so whether
+`prompt_tokens_details` is present at all depends on the llama.cpp build; if it is absent,
+`cache_metrics_observed` will be `False` and that itself is the finding.
+
+Two blockers remain, both operational rather than architectural:
+
+1. **The gateway API key.** It is stored encrypted and issued through
+   `GET /api/v1/models/llm-gateway` behind a `workflows.edit` session. Automated extraction of the
+   credential was refused, correctly, and was not worked around.
+2. **No model is loaded.** No `llama-server` / `vllm` / `ollama` process is running, so `"auto"` has
+   nothing to route to.
+
+**Route policy.** The ControlDeck gateway is a different route from the sealed `local-practical`
+port-8090 Qwen arm in `b0a-quality-target-v2.json`. Anything measured through it is **diagnostic**, is
+labelled as such, and is not recorded in `docs/evidence/final/` or counted in any B0b/C2 arm without an
+explicit route/provenance decision.
+
+### 4b.4 Weak-model protocol compliance — still unmeasured
+
+Not measured: no model is loaded on either route, and no substitute model was used. It remains the single largest unquantified risk on the critical path. The envelope instructs the model
 to cite evidence IDs, to treat omission as non-negative evidence, and to expand only for a named gap.
 Whether a Qwen3-27B-class local model honours that is unknown; if it does not, it searches the
 repository anyway and the system pays for both the envelope and the search. Every bounded-context
