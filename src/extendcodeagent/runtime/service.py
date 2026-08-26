@@ -247,6 +247,8 @@ def covering_tests(
     observations: Iterable[RuntimeObservation],
     refs: Iterable[CanonicalRef],
     is_test: Callable[[CanonicalRef], bool],
+    *,
+    fallback_refs: Iterable[CanonicalRef] = (),
 ) -> tuple[CanonicalRef, ...]:
     """Tests that a usable observation recorded reaching the refs asked about.
 
@@ -260,16 +262,37 @@ def covering_tests(
     seventeen changes to this repository, doing so dropped test recall from 0.86 to 0.38.
 
     An unavailable observation names nothing that ran, so it is not evidence of anything.
+
+    `fallback_refs` is asked only when the symbols answer nothing, and exists because of a
+    measured miss: a change that adds a function has no symbol at the base revision for
+    coverage to have reached, so the symbol question returns an empty set and the test that
+    detects the change is lost. Across 23 httpx changes that was the single failure, and
+    asking the containing file instead recovers it. It is a fallback and not a default
+    because the file question is much wider — on those changes 269 tests execute the file
+    against 160 that execute the changed symbols.
     """
 
-    asked = {ref.value for ref in refs}
-    return tuple(
-        dict.fromkeys(
-            ref
-            for item in observations
-            if item.kind is ObservationKind.TEST
-            and item.status is not ObservationStatus.UNAVAILABLE
-            for ref in item.observed_refs
-            if ref.value not in asked and is_test(ref)
+    usable = [
+        item
+        for item in observations
+        if item.kind is ObservationKind.TEST and item.status is not ObservationStatus.UNAVAILABLE
+    ]
+
+    def reached(asked_refs: Iterable[CanonicalRef]) -> tuple[CanonicalRef, ...]:
+        asked = {ref.value for ref in asked_refs}
+        if not asked:
+            return ()
+        return tuple(
+            dict.fromkeys(
+                ref
+                # A run that did not touch what was asked about is not evidence about it.
+                # Without this the question is never actually put, and every test that ever
+                # ran comes back -- which also means the fallback below could never fire.
+                for item in usable
+                if any(ref.value in asked for ref in item.observed_refs)
+                for ref in item.observed_refs
+                if ref.value not in asked and is_test(ref)
+            )
         )
-    )
+
+    return reached(refs) or reached(fallback_refs)
