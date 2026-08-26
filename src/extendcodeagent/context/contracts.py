@@ -105,6 +105,9 @@ class WeakLocalEvidenceItem:
     provenance_id: str
     status: str
     token_estimate: int
+    start_line: int | None = None
+    end_line: int | None = None
+    excerpt: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

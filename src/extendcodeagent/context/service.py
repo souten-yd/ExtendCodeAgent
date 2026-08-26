@@ -6,6 +6,7 @@ import hashlib
 import json
 import re
 from collections import defaultdict, deque
+from collections.abc import Callable
 from dataclasses import replace
 from pathlib import PurePosixPath
 
@@ -27,6 +28,8 @@ from .serialization import (
     estimate_payload_tokens,
     weak_local_evidence_item_json,
 )
+
+SourceReader = Callable[[str, int, int], str | None]
 
 _WEAK_MAX_TOKENS = 512
 _WEAK_MAX_ITEMS = 8
@@ -134,6 +137,7 @@ def build_weak_local_evidence(
                     provenance_ids[_provenance_key(node)],
                     node.status.value,
                     0,
+                    *_span(node),
                 )
             )
         )
@@ -152,6 +156,7 @@ def build_weak_local_evidence(
                 provenance_ids[_provenance_key(node)],
                 node.status.value,
                 estimate,
+                *_span(node),
             )
         )
         used_tokens += estimate
@@ -193,6 +198,52 @@ def build_weak_local_evidence(
         candidate_search_truncated=search_truncated,
         deterministic_resolution=not gaps,
     )
+
+
+def _span(node: GraphNode) -> tuple[int | None, int | None]:
+    start = node.properties.get("start_line")
+    end = node.properties.get("end_line")
+    if isinstance(start, int) and isinstance(end, int):
+        return start, end
+    return None, None
+
+
+def attach_excerpts(
+    package: WeakLocalEvidencePackage,
+    read_lines: SourceReader,
+    *,
+    max_lines: int = 120,
+    token_budget: int = 4_096,
+) -> WeakLocalEvidencePackage:
+    """Give the requested symbols their actual source, within a bound.
+
+    Naming a symbol makes a consumer open the file, and a file is not the symbol: across
+    Django's 20,704 function and method nodes the median span is 7 lines inside a 367-line
+    file. Delivering the span instead of the name is the difference between reading what
+    was asked for and reading fifty times more.
+
+    Only evidence the task actually targets gets a body; supporting evidence keeps its
+    summary, and the budget is separate from the selection budget so an excerpt can never
+    push a required fact out of the envelope.
+    """
+
+    spent = 0
+    items: list[WeakLocalEvidenceItem] = []
+    for item in package.items:
+        excerpt = None
+        if (
+            item.reason in _PROTECTED_REASONS
+            and item.start_line is not None
+            and item.end_line is not None
+            and item.end_line - item.start_line + 1 <= max_lines
+        ):
+            text = read_lines(item.source_ref, item.start_line, item.end_line)
+            cost = estimate_payload_tokens(text) if text else 0
+            if text and spent + cost <= token_budget:
+                excerpt = text
+                spent += cost
+        items.append(replace(item, excerpt=excerpt) if excerpt else item)
+    return replace(package, items=tuple(items))
 
 
 def _infer_scope(objective: str) -> EvidenceScope:

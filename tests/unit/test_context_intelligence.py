@@ -5,12 +5,14 @@ from extendcodeagent.context import (
     ContextRequest,
     EvidenceScope,
     WeakLocalEvidenceRequest,
+    attach_excerpts,
     build_context,
     build_weak_local_evidence,
     context_item_json,
     estimate_payload_tokens,
     stable_evidence_envelope,
 )
+from extendcodeagent.context.serialization import weak_local_evidence_item_json
 from extendcodeagent.core.contracts import (
     CanonicalRef,
     Confidence,
@@ -216,3 +218,74 @@ def test_a_seed_bound_never_evicts_required_evidence() -> None:
 
     delivered = {item.canonical_ref.value for item in package.items}
     assert {ref.value for ref in required} <= delivered
+
+
+def test_targeted_evidence_carries_the_symbol_body_not_just_its_name() -> None:
+    """Naming a symbol makes a consumer open the file, and a file is not the symbol."""
+
+    node = GraphNode(
+        "node-x",
+        CanonicalRef("py://module#target"),
+        "function",
+        "module.py",
+        PROVENANCE,
+        Confidence(1.0),
+        FactStatus.DECLARED,
+        REVISION,
+        {"name": "target", "start_line": 2, "end_line": 3},
+    )
+    snapshot = GraphSnapshot(PROJECT, None, (node,))
+    package = build_weak_local_evidence(
+        snapshot,
+        WeakLocalEvidenceRequest(
+            "edit target", (CanonicalRef("py://module#target"),), token_budget=4_096
+        ),
+    )
+
+    def read(source_ref: str, start: int, end: int) -> str | None:
+        assert (source_ref, start, end) == ("module.py", 2, 3)
+        return "def target():\n    return 1"
+
+    with_source = attach_excerpts(package, read)
+    item = with_source.items[0]
+
+    assert (item.start_line, item.end_line) == (2, 3)
+    assert item.excerpt == "def target():\n    return 1"
+    assert "source" in weak_local_evidence_item_json(item)
+
+
+def test_a_symbol_too_large_to_be_an_excerpt_is_refused() -> None:
+    """A body is delivered because it is smaller than the file, not regardless of size."""
+
+    node = GraphNode(
+        "node-a",
+        CanonicalRef("py://module#target"),
+        "function",
+        "module.py",
+        PROVENANCE,
+        Confidence(1.0),
+        FactStatus.DECLARED,
+        REVISION,
+        {"name": "target", "start_line": 1, "end_line": 500},
+    )
+    package = build_weak_local_evidence(
+        GraphSnapshot(PROJECT, None, (node,)),
+        WeakLocalEvidenceRequest(
+            "edit target", (CanonicalRef("py://module#target"),), token_budget=4_096
+        ),
+    )
+
+    with_source = attach_excerpts(package, lambda *_: "body", max_lines=120)
+
+    assert with_source.items[0].excerpt is None
+
+
+def test_an_excerpt_budget_stops_bodies_from_crowding_the_envelope() -> None:
+    package = build_weak_local_evidence(
+        _snapshot(),
+        WeakLocalEvidenceRequest("locate function_1", token_budget=4_096),
+    )
+
+    with_source = attach_excerpts(package, lambda *_: "x" * 4_000, token_budget=1)
+
+    assert all(item.excerpt is None for item in with_source.items)

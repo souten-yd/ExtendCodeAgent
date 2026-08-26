@@ -10,13 +10,19 @@ from .contracts import (
     WeakLocalEvidencePackage,
     WeakLocalEvidenceRequest,
 )
+from .obligations import obligation_refs
 from .serialization import (
     context_item_json,
     context_package_json,
     estimate_payload_tokens,
     weak_local_evidence_json,
 )
-from .service import build_context, build_weak_local_evidence, stable_evidence_envelope
+from .service import (
+    attach_excerpts,
+    build_context,
+    build_weak_local_evidence,
+    stable_evidence_envelope,
+)
 
 __all__ = [
     "ContextItem",
@@ -27,11 +33,13 @@ __all__ = [
     "WeakLocalEvidenceItem",
     "WeakLocalEvidencePackage",
     "WeakLocalEvidenceRequest",
+    "attach_excerpts",
     "build_context",
     "build_weak_local_evidence",
     "context_item_json",
     "context_package_json",
     "estimate_payload_tokens",
+    "obligation_refs",
     "stable_evidence_envelope",
     "weak_local_evidence_json",
 ]
