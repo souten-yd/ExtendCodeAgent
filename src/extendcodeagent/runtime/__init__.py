@@ -23,8 +23,10 @@ from .service import (
     summarize_observations,
     unavailable_observation,
 )
+from .triggers import ImprovementTrigger, TriggerKind, detect_triggers
 
 __all__ = [
+    "ImprovementTrigger",
     "ObservationKind",
     "ObservationRollup",
     "ObservationStatus",
@@ -39,7 +41,9 @@ __all__ = [
     "RuntimeSignalKind",
     "RuntimeSignalSnapshot",
     "TaskSignalCollector",
+    "TriggerKind",
     "covering_tests",
+    "detect_triggers",
     "observation_from_coverage",
     "symbols_touched",
     "reconcile_observations",
