@@ -173,6 +173,35 @@ curve cannot repair a 5.3x representation handicap over a 0.5% candidate pool. I
 place it must deliver what search cannot produce — relations, obligations, staleness, contradiction —
 and be measured on classes where those are the answer.
 
+### 4.2c Why context is large, classified against measurement
+
+The Django result above measured **localization** — which file holds the answer — and that is the one
+class where plain search is optimal by construction. Reporting it as a verdict on PI targeted the
+wrong surface. Classifying the actual causes changes what is worth building.
+
+| # | cause | measured | does search suffice? | countermeasure |
+|---|---|---|---|---|
+| 1 | where to look | grep recall 0.96 at 7,840 tokens | **yes** | PI should not compete here |
+| 2 | the code being edited | median symbol 7 lines in a 367-line file — **52x waste** | no | **precise extraction; unbuilt** |
+| 3 | blast radius | `impact.affected_symbols: 0` for a `file://` target | partly | accept file refs; measure on symbol refs |
+| 4 | what to verify | `coverage_complete: False`, `fallback: full_suite` | no | depends on 3 |
+| 5 | session accumulation | PI is 21% of the prompt; 79% is the agent loop | — | fewer round trips, which needs 2 and 3 |
+| 6 | output starvation | zero answer at 512 and 1,024 output tokens | — | reserve headroom first (done) |
+
+**Cause 2 is the largest measured waste and is entirely unbuilt.** Django's Twin holds 20,704
+function and method nodes carrying `start_line` and `end_line`; the envelope emits a `summary` — the
+symbol's name — and never the body. An agent that cannot be handed the symbol reads the file, and the
+median file is fifty-two times the median symbol.
+
+**Cause 3 is broken for how developers work.** Impact answers "I changed this symbol"; a developer
+changes a file. With a `file://` target, `affected_symbols`, `focused_tests` and `candidate_tests` are
+all empty, so the Django comparison ran with PI's main impact mechanism contributing nothing.
+
+Consequence for §4.3: measure PI on causes 2 and 3, not on cause 1. A recall metric over path lists
+also rewards shotgunning — grep delivered 562 paths to hit 1.5 required facts, precision 0.0029
+against PI's 0.0076 — so precision and F1 must be reported alongside recall, and neither arm is
+usable at those precisions.
+
 ### 4.3 Paired effect measurement: PI envelope versus plain search
 
 The first measurement in this programme that can say "PI is useful".
