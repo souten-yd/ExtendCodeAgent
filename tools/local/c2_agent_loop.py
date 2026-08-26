@@ -144,6 +144,7 @@ def run_loop(
     max_turns: int,
     max_output: int,
     absences: tuple[str, ...] = (),
+    until_complete: bool = False,
 ) -> dict[str, Any]:
     opening = PROTOCOL
     if envelope is not None:
@@ -165,6 +166,7 @@ def run_loop(
     actions: list[str] = []
     trace: list[dict[str, Any]] = []
     answer: tuple[str, ...] = ()
+    attempts = 0
 
     per_turn: list[int] = []
     for _ in range(max_turns):
@@ -177,7 +179,22 @@ def run_loop(
         if line.upper().startswith("ANSWER") or "{" in line:
             actions.append("answer")
             answer = answered_paths(text)
-            break
+            if not until_complete or set(case.required_facts) <= set(answer):
+                break
+            # The arm that has not finished keeps going, which is the only way this harness
+            # ever accumulates: an arm that answers in one turn has no history to carry, so
+            # comparing arms that reached different outcomes measured cost, not context.
+            #
+            # The signal deliberately does not say what is missing. Naming it would hand
+            # over the oracle; a real agent learns only that its verification did not pass.
+            attempts += 1
+            body = (
+                "That selection is incomplete. Keep looking, then answer again."
+                if answer
+                else "No answer given. Continue."
+            )
+            messages.append({"role": "user", "content": body})
+            continue
         if line.upper().startswith("GREP"):
             actions.append("grep")
             argument = line[4:].strip()
@@ -203,6 +220,7 @@ def run_loop(
 
     need = set(case.required_facts)
     hit = need & set(answer)
+
     return {
         "turns": len(actions),
         "prompt_tokens": prompt_tokens,
@@ -211,6 +229,11 @@ def run_loop(
         "reads": actions.count("read"),
         "malformed": actions.count("malformed"),
         "answered": bool(answer),
+        # Everything the task cost to reach this outcome, which is the comparable number
+        # once both arms are required to reach the same one.
+        "cost_to_outcome": prompt_tokens,
+        "complete": bool(answer) and need <= set(answer),
+        "reanswers": attempts,
         "trace": trace,
         # Each turn re-sends everything before it, so this curve is the cost of holding a
         # task's own history in the conversation rather than beside it.
@@ -248,6 +271,14 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=8)
     parser.add_argument("--max-turns", type=int, default=8)
     parser.add_argument("--max-output", type=int, default=2_048)
+    parser.add_argument(
+        "--until-complete",
+        action="store_true",
+        help=(
+            "keep a task running until its answer is complete, so both arms are "
+            "compared at the same outcome and an arm that struggles accumulates"
+        ),
+    )
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
@@ -267,11 +298,14 @@ def main() -> None:
                 envelope=envelope,
                 max_turns=args.max_turns,
                 max_output=args.max_output,
+                until_complete=args.until_complete,
             )
         print(
             f"  {case.case_id:20} PI {row['pi']['turns']}t/{row['pi']['prompt_tokens']:>6}tok"
-            f" r={row['pi']['recall']:.2f}  |  base {row['baseline']['turns']}t/"
-            f"{row['baseline']['prompt_tokens']:>6}tok r={row['baseline']['recall']:.2f}",
+            f" r={row['pi']['recall']:.2f} {'ok' if row['pi']['complete'] else '--'}"
+            f"  |  base {row['baseline']['turns']}t/"
+            f"{row['baseline']['prompt_tokens']:>6}tok r={row['baseline']['recall']:.2f}"
+            f" {'ok' if row['baseline']['complete'] else '--'}",
             flush=True,
         )
         rows.append(row)
@@ -289,6 +323,7 @@ def main() -> None:
         "repository": str(repository),
         "model": args.model,
         "max_turns": args.max_turns,
+        "until_complete": args.until_complete,
         "cases": len(rows),
         "summary": {
             arm: {
@@ -300,6 +335,22 @@ def main() -> None:
                 "recall": mean(arm, "recall"),
                 "precision": mean(arm, "precision"),
                 "answered": sum(1 for item in rows if item[arm]["answered"]),
+                "complete": sum(1 for item in rows if item[arm]["complete"]),
+                "reanswers": mean(arm, "reanswers"),
+                # Total spend to reach the stated outcome. Only comparable between arms
+                # that reached the same one, which is what --until-complete enforces.
+                "cost_to_outcome_total": sum(item[arm]["cost_to_outcome"] for item in rows),
+                # What a task cost only where it actually finished; an arm that gives up
+                # cheaply otherwise looks efficient.
+                "cost_per_completed_task": (
+                    round(
+                        sum(item[arm]["cost_to_outcome"] for item in rows if item[arm]["complete"])
+                        / completed,
+                        1,
+                    )
+                    if (completed := sum(1 for item in rows if item[arm]["complete"]))
+                    else None
+                ),
             }
             for arm in ("pi", "baseline")
         },
