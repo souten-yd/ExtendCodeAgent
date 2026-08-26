@@ -123,8 +123,15 @@ Follow the promotion checks already written in `docs/evaluation/github-corpus-ca
 support, reproduce setup in an isolated checkout, classify network/credential dependencies, measure
 full-suite wall time, and reserve a held-out split before any tuning.
 
-Start with **one** Python repository of moderate size. Breadth is worthless until one repository works
-end to end.
+**Corpus admission criterion, learned the hard way.** The first attempt used `psf/requests`, which
+has 96 files and 8 test files. A search baseline listed every candidate it found — 60 of 60 — for
+about 700 tokens and scored 0.96 without ever being budget-constrained. **A selection mechanism cannot
+be shown to help where nothing has to be selected.** Before a corpus is admitted, the search arm must
+be budget-constrained on most cases; `tools/local/c2_baseline_compare.py` now reports
+`discriminating_cases` and returns `NOT_DISCRIMINATING` when it is zero.
+
+In practice that means thousands of files, not hundreds — which is the product's premise anyway. Start
+with **one** repository large enough to discriminate. Breadth is worthless until one works end to end.
 
 Exit: a sealed corpus file with at least 30 cases across the high-value classes, held-out split
 reserved.
