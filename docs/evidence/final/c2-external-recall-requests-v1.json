@@ -1,0 +1,574 @@
+{
+  "schema": 2,
+  "classification": "C2_CRITICAL_EVIDENCE_RECALL_CURVE",
+  "captured_at": "2026-08-26T04:14:33.954797+00:00",
+  "repository": "/tmp/claude-1000/-home-souten-ExtendCodeAgent/834e8784-5cdd-4621-acbc-e318c839c3cd/scratchpad/corpus-requests",
+  "source_revision": "1e5fad7433772b648fcbc921e2a79de5c4c6be8b",
+  "execution_scope": "local-only",
+  "model_execution": "NOT_RUN_DETERMINISTIC_MEASUREMENT",
+  "twin": {
+    "nodes": 802,
+    "edges": 3872,
+    "source_directories": [
+      ".",
+      ".coveragerc",
+      ".github",
+      ".gitignore",
+      "AUTHORS.rst",
+      "HISTORY.md",
+      "LICENSE",
+      "MANIFEST.in",
+      "Makefile",
+      "NOTICE",
+      "README.md",
+      "docs"
+    ]
+  },
+  "budgets": [
+    8192
+  ],
+  "results": [
+    {
+      "case_id": "pr-6fbfca90b602",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "tests/test_lowlevel.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 2390,
+          "estimated_evidence_tokens": 2050,
+          "unused_budget_tokens": 6142,
+          "selected_count": 32,
+          "candidate_count": 256,
+          "excluded_count": 224,
+          "required_fact_count": 1,
+          "raw_recall": 0.0,
+          "normalized_recall": 0.0,
+          "projection_burden": 0.0,
+          "missing_facts": [
+            "tests/test_lowlevel.py"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "pr-4ab2550d6676",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "tests/test_lowlevel.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 2390,
+          "estimated_evidence_tokens": 2050,
+          "unused_budget_tokens": 6142,
+          "selected_count": 32,
+          "candidate_count": 256,
+          "excluded_count": 224,
+          "required_fact_count": 1,
+          "raw_recall": 0.0,
+          "normalized_recall": 0.0,
+          "projection_burden": 0.0,
+          "missing_facts": [
+            "tests/test_lowlevel.py"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "pr-99b3b492418d",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "tests/test_requests.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 5184,
+          "estimated_evidence_tokens": 4623,
+          "unused_budget_tokens": 3569,
+          "selected_count": 80,
+          "candidate_count": 256,
+          "excluded_count": 176,
+          "required_fact_count": 1,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        }
+      ]
+    },
+    {
+      "case_id": "pr-2d2447e210cf",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "tests/test_utils.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 3059,
+          "estimated_evidence_tokens": 2669,
+          "unused_budget_tokens": 5523,
+          "selected_count": 47,
+          "candidate_count": 256,
+          "excluded_count": 209,
+          "required_fact_count": 1,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        }
+      ]
+    },
+    {
+      "case_id": "pr-658c10e84a46",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "tests/test_requests.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 3624,
+          "estimated_evidence_tokens": 3191,
+          "unused_budget_tokens": 5001,
+          "selected_count": 54,
+          "candidate_count": 256,
+          "excluded_count": 202,
+          "required_fact_count": 1,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        }
+      ]
+    },
+    {
+      "case_id": "pr-ef59aa0227bf",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "tests/test_utils.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 3059,
+          "estimated_evidence_tokens": 2669,
+          "unused_budget_tokens": 5523,
+          "selected_count": 47,
+          "candidate_count": 256,
+          "excluded_count": 209,
+          "required_fact_count": 1,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        }
+      ]
+    },
+    {
+      "case_id": "pr-38f3f8ecb93c",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "tests/test_utils.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 3059,
+          "estimated_evidence_tokens": 2669,
+          "unused_budget_tokens": 5523,
+          "selected_count": 47,
+          "candidate_count": 256,
+          "excluded_count": 209,
+          "required_fact_count": 1,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        }
+      ]
+    },
+    {
+      "case_id": "pr-fa1b0a367abc",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "tests/test_requests.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 2249,
+          "estimated_evidence_tokens": 1913,
+          "unused_budget_tokens": 6279,
+          "selected_count": 32,
+          "candidate_count": 256,
+          "excluded_count": 224,
+          "required_fact_count": 1,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        }
+      ]
+    },
+    {
+      "case_id": "pr-95f456733656",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "tests/test_requests.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 3624,
+          "estimated_evidence_tokens": 3191,
+          "unused_budget_tokens": 5001,
+          "selected_count": 54,
+          "candidate_count": 256,
+          "excluded_count": 202,
+          "required_fact_count": 1,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        }
+      ]
+    },
+    {
+      "case_id": "pr-79c4a017fe34",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "tests/test_requests.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 2340,
+          "estimated_evidence_tokens": 2013,
+          "unused_budget_tokens": 6179,
+          "selected_count": 34,
+          "candidate_count": 256,
+          "excluded_count": 222,
+          "required_fact_count": 1,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        }
+      ]
+    },
+    {
+      "case_id": "pr-8bce583b9547",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "tests/test_requests.py",
+        "tests/test_utils.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 11397,
+          "estimated_evidence_tokens": 10293,
+          "unused_budget_tokens": -2101,
+          "selected_count": 178,
+          "candidate_count": 256,
+          "excluded_count": 78,
+          "required_fact_count": 2,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        }
+      ]
+    },
+    {
+      "case_id": "pr-2d5517682b3b",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "tests/test_lowlevel.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 3624,
+          "estimated_evidence_tokens": 3191,
+          "unused_budget_tokens": 5001,
+          "selected_count": 54,
+          "candidate_count": 256,
+          "excluded_count": 202,
+          "required_fact_count": 1,
+          "raw_recall": 0.0,
+          "normalized_recall": 0.0,
+          "projection_burden": 0.0,
+          "missing_facts": [
+            "tests/test_lowlevel.py"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "pr-2a6f290bc093",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "tests/test_help.py",
+        "tests/test_hooks.py",
+        "tests/test_lowlevel.py",
+        "tests/test_requests.py",
+        "tests/test_structures.py",
+        "tests/test_testserver.py",
+        "tests/test_utils.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 21720,
+          "estimated_evidence_tokens": 19812,
+          "unused_budget_tokens": -11620,
+          "selected_count": 341,
+          "candidate_count": 341,
+          "excluded_count": 0,
+          "required_fact_count": 7,
+          "raw_recall": 0.714286,
+          "normalized_recall": 0.714286,
+          "projection_burden": 0.0,
+          "missing_facts": [
+            "tests/test_lowlevel.py",
+            "tests/test_testserver.py"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "pr-210095fd08f7",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "tests/test_utils.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 3059,
+          "estimated_evidence_tokens": 2669,
+          "unused_budget_tokens": 5523,
+          "selected_count": 47,
+          "candidate_count": 256,
+          "excluded_count": 209,
+          "required_fact_count": 1,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        }
+      ]
+    },
+    {
+      "case_id": "pr-e36f34597ca9",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "tests/test_requests.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 3324,
+          "estimated_evidence_tokens": 2915,
+          "unused_budget_tokens": 5277,
+          "selected_count": 51,
+          "candidate_count": 256,
+          "excluded_count": 205,
+          "required_fact_count": 1,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        }
+      ]
+    },
+    {
+      "case_id": "pr-7f694b79e114",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "tests/test_requests.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 3324,
+          "estimated_evidence_tokens": 2915,
+          "unused_budget_tokens": 5277,
+          "selected_count": 51,
+          "candidate_count": 256,
+          "excluded_count": 205,
+          "required_fact_count": 1,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        }
+      ]
+    },
+    {
+      "case_id": "pr-74ea7cf7a6a2",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "tests/test_requests.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 2340,
+          "estimated_evidence_tokens": 2013,
+          "unused_budget_tokens": 6179,
+          "selected_count": 34,
+          "candidate_count": 256,
+          "excluded_count": 222,
+          "required_fact_count": 1,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        }
+      ]
+    },
+    {
+      "case_id": "pr-6e5b15d542a4",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "tests/test_requests.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 2340,
+          "estimated_evidence_tokens": 2013,
+          "unused_budget_tokens": 6179,
+          "selected_count": 34,
+          "candidate_count": 256,
+          "excluded_count": 222,
+          "required_fact_count": 1,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        }
+      ]
+    },
+    {
+      "case_id": "pr-8112fcc7beb1",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "tests/test_requests.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 11565,
+          "estimated_evidence_tokens": 10483,
+          "unused_budget_tokens": -2291,
+          "selected_count": 180,
+          "candidate_count": 256,
+          "excluded_count": 76,
+          "required_fact_count": 1,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        }
+      ]
+    },
+    {
+      "case_id": "pr-f8bec2f7ca9d",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "tests/test_lowlevel.py",
+        "tests/test_requests.py",
+        "tests/test_testserver.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 2296,
+          "estimated_evidence_tokens": 1956,
+          "unused_budget_tokens": 6236,
+          "selected_count": 32,
+          "candidate_count": 256,
+          "excluded_count": 224,
+          "required_fact_count": 3,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        }
+      ]
+    }
+  ],
+  "by_pi_value_class": {
+    "high": {
+      "cases": 20,
+      "task_classes": [
+        "test_selection"
+      ],
+      "best_normalized_recall_mean": 0.835714,
+      "best_raw_recall_mean": 0.835714,
+      "cases_fully_recovered": 16,
+      "max_delivered_evidence_tokens": 21720
+    }
+  },
+  "pooling_note": "Classes are reported separately on purpose. Pooling tasks PI can move with tasks it cannot is what made the B0b effect undetectable.",
+  "efficiency": {
+    "llm_calls_requested": 0,
+    "llm_calls_executed": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "model_wall_time_ms": 0
+  },
+  "seal": {
+    "algorithm": "sha256",
+    "canonical_payload": "ec91d5921176440f31492ea967dbf0ae00adfefb58d9583c9aa5851cb4f89efb"
+  }
+}

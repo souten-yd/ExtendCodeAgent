@@ -936,7 +936,15 @@ class ProjectIntelligenceApplication:
         # call edge joins them. `pi_tests` already recovers that by matching the objective
         # against test intent, and the envelope reuses the same projection rather than
         # accepting the gap.
-        intent_paths = objective_test_paths(snapshot, objective)
+        # Two independent signals, because each fails where the other works. Objective
+        # matching needs the objective to name something distinctive; stem correspondence
+        # (`utils.py` -> `test_utils.py`) needs only the changed file. On a flat test tree
+        # objective matching collapses to one path per obligation class, and this repository
+        # happens to have three such directories while most projects have one.
+        all_tests = sorted({node.source_ref for node in snapshot.nodes if node.node_type == "test"})
+        intent_paths = set(objective_test_paths(snapshot, objective))
+        nodes_by_ref = {node.canonical_ref.value: node for node in snapshot.nodes}
+        intent_paths.update(focused_test_paths(tuple(equivalent), nodes_by_ref, all_tests))
         # One ref per path, not every symbol sharing it: a test file holds ~20 nodes, and
         # naming the path would admit all of them as required, crowding out the precise
         # obligations behind the seed bound.
