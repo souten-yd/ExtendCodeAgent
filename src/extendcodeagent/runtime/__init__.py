@@ -15,6 +15,7 @@ from .contracts import (
     RuntimeSignalKind,
     RuntimeSignalSnapshot,
 )
+from .coverage import observation_from_coverage, symbols_touched
 from .service import (
     TaskSignalCollector,
     covering_tests,
@@ -39,6 +40,8 @@ __all__ = [
     "RuntimeSignalSnapshot",
     "TaskSignalCollector",
     "covering_tests",
+    "observation_from_coverage",
+    "symbols_touched",
     "reconcile_observations",
     "summarize_observations",
     "unavailable_observation",
