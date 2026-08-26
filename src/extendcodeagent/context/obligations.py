@@ -56,17 +56,19 @@ def obligation_refs(
     if not target_refs:
         return ()
 
-    refs: list[str] = []
+    targets: list[str] = []
     for ref in target_refs:
-        refs.append(ref)
-        refs.extend(equivalents(ref))
-    equivalent = set(refs)
+        targets.append(ref)
+        targets.extend(equivalents(ref))
+    equivalent = set(targets)
 
-    for edge in snapshot.edges:
-        if edge.target.value in equivalent and edge.edge_type in _CONSUMER_EDGES:
-            refs.append(edge.source.value)
+    consumers = [
+        edge.source.value
+        for edge in snapshot.edges
+        if edge.target.value in equivalent and edge.edge_type in _CONSUMER_EDGES
+    ]
 
-    refs.extend(recommended_tests(SCOPE_IMPACT_DEPTH.get(scope, 2)))
+    tests = list(recommended_tests(SCOPE_IMPACT_DEPTH.get(scope, 2)))
 
     # Two independent test signals, because each fails where the other works. Objective
     # matching needs the objective to name something distinctive; stem correspondence
@@ -76,16 +78,46 @@ def obligation_refs(
     nodes_by_ref = {node.canonical_ref.value: node for node in snapshot.nodes}
     intent_paths = set(objective_test_paths(snapshot, objective))
     intent_paths.update(focused_test_paths(tuple(equivalent), nodes_by_ref, all_tests))
-
     # One ref per path, not every symbol sharing it: a test file holds many nodes, and
     # naming the path would admit all of them, crowding out the precise obligations.
-    refs.extend(
+    tests.extend(
         node.canonical_ref.value
         for node in snapshot.nodes
         if node.node_type == "file" and node.source_ref in intent_paths
     )
-    # Insertion order is the priority order: the targets themselves, then what they
-    # equivalate to, then their consumers, then the tests Impact recommends, then the
-    # tests matched by intent. Truncation therefore drops the weakest claims first.
-    ordered = list(dict.fromkeys(refs))
-    return tuple(CanonicalRef(value) for value in ordered[:max_obligations])
+
+    return tuple(
+        CanonicalRef(value)
+        for value in _by_role_budget((targets, tests, consumers), max_obligations)
+    )
+
+
+def _by_role_budget(roles: tuple[list[str], ...], budget: int) -> list[str]:
+    """Give every role a floor, then spend what is left in priority order.
+
+    First-come allocation starves whichever role sorts last. On
+    django/db/models/sql/query.py a file target expands to 117 symbols with 107 consumers,
+    so a flat budget of 64 was spent before the 21 tests Impact had already found were
+    reached — the envelope answered "which tests?" without a single test in it.
+    """
+
+    populated = [role for role in roles if role]
+    if not populated:
+        return []
+    floor = max(1, budget // len(populated))
+
+    taken: list[str] = []
+    seen: set[str] = set()
+    for role in populated:
+        for value in role[:floor]:
+            if value not in seen:
+                seen.add(value)
+                taken.append(value)
+    for role in populated:
+        for value in role:
+            if len(taken) >= budget:
+                return taken[:budget]
+            if value not in seen:
+                seen.add(value)
+                taken.append(value)
+    return taken[:budget]

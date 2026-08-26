@@ -239,6 +239,30 @@ that.** It is a legitimate outcome and it invalidates §4.4.
 
 ---
 
+## 4d. Narrow first, widen on failure — and where that rule stops
+
+Adopted after measurement: Impact's recommended tests reach precision 0.068 at depth 1, peak at 0.112
+at depth 2, and by depth 6 buy recall 0.47 at precision 0.104. The full closure is the worst case paid
+on every request — for `django/db/models/sql/query.py` it is 24,428 symbols while the change needed
+one test. The ladder therefore starts at the narrowest rung the objective justifies and widens when a
+caller asks, because the narrow answer did not hold.
+
+**This rule governs the edit loop, not the completion gate.** "I changed something, ran the nearby
+tests, and they pass" does not mean the change is safe: a break outside the narrow scope is undetected
+precisely because those tests were never run. Treating a narrow pass as completion is the
+`false_sufficient` failure named in `C2_EVIDENCE_DELIVERY_DECISION.md`, and it is why AGENTS.md keeps
+the full suite available for release, high-uncertainty and calibration runs.
+
+Two questions, two mechanisms:
+
+| question | mechanism | may start narrow? |
+|---|---|---|
+| did my change work? | scope ladder, widen on failure | **yes** |
+| is this change safe to complete? | required verification set | **no** — coverage is required, not sampled |
+
+An implementation that answers the second with the first has not saved context; it has moved a risk
+somewhere it will not be seen.
+
 ## 5. Standing constraints
 
 - Every C2 mechanism declares its `CapabilityName`, its `D0..D4` depth and its ablation arm before
