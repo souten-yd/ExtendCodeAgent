@@ -374,6 +374,65 @@ port-8090 Qwen arm in `b0a-quality-target-v2.json`. Anything measured through it
 labelled as such, and is not recorded in `docs/evidence/final/` or counted in any B0b/C2 arm without an
 explicit route/provenance decision.
 
+### 4b.5 MEASURED — prefix caching works, and the stable envelope captures none of it
+
+Run through the ControlDeck gateway against `Qwen3.8-27B` (llama.cpp reports
+`prompt_tokens_details`, so `cache_metrics_observed` is `true`). Diagnostic, not sealed evidence.
+
+| condition | prompt tokens | cached | reuse |
+|---|---|---|---|
+| cold, first sighting | 2,365 | 42 | 0.02 (chat-template baseline) |
+| identical prompt, repeated | 2,365 | 2,361 | **0.998** |
+| shared 10,117-char head, divergent tail | 2,373 | 1,849 | **0.779** |
+| append-only growth after that | 2,381 | 1,857 | **0.780** |
+| two real task envelopes, shared 1,349-char head | 2,900 | 42 | ~0.00 |
+
+**This corrects §4b.2, which was too pessimistic.** Prefix caching on this backend is strong and it
+does *not* require the whole prompt to repeat: a shared head with a divergent tail still recovers 78%,
+and append-only growth — the multi-turn tool-result pattern OpenCode produces — recovers the same. The
+7.9x amplification seen in B0b is consistent with that.
+
+What §4b.2 got right is the consequence: **the design captures none of this.** The two real task
+envelopes shared only a 1,349-char head and reused nothing beyond the 42-token template baseline. The
+stable envelope is roughly 750 characters, and on both routes it sits after task-varying content.
+
+The finding therefore flips from "the stable prefix cannot work" to a sized engineering opportunity:
+
+- the mechanism is real and the ceiling is high (0.78–0.998 measured);
+- the shared head must be **large enough and first**. At ~1.3k chars the reuse was nil; at ~10k chars
+  it was 78%;
+- so §3.11 becomes: place the task-invariant block ahead of all task-varying content, and only then
+  report `cache_reuse_ratio` as evidence about the design rather than about ambient caching;
+- progressive expansion is **cheaper than §4b.2 implied**, because append-only growth reuses the
+  prefix. Its cost argument is not refuted; it is simply still unmeasured on real envelopes.
+
+### 4b.6 MEASURED — a reasoning model on a small output budget returns nothing, silently
+
+`Qwen3.8-27B` through the gateway with `max_tokens=16`:
+
+```
+finish_reason        : "length"
+message.content      : ""            (0 chars)
+message.reasoning_content : 69 chars
+completion_tokens    : 16            (the entire budget)
+```
+
+At `max_tokens=2048` the same prompt returns `content = "ready"`. So the model spends the budget in
+`reasoning_content` and emits no `content` at all when the budget is small.
+
+`OpenAICompatibleAdapter` read `message["content"]` and never looked at `finish_reason`, so it returned
+`ModelResponse(text="")` and reported success. **A truncation was indistinguishable from a model that
+had nothing to say** — and C2 pushes output budgets *down*, so this sits directly on the stage's path.
+
+Fixed: the adapter now raises `ModelUnavailable` when content is empty and `finish_reason` is
+`length`, and leaves a legitimately empty answer that finished normally alone. Two regression tests
+pin both halves.
+
+This also sets a constraint C2 must respect: **with a reasoning model, the output budget cannot be
+squeezed the way the input envelope can.** Any bounded-context profile has to reserve real output
+headroom, which is exactly what `large-project-bounded-context-target-v1.json` means by "total context
+including reserved output headroom".
+
 ### 4b.4 Weak-model protocol compliance — still unmeasured
 
 Not measured: no model is loaded on either route, and no substitute model was used. It remains the single largest unquantified risk on the critical path. The envelope instructs the model

@@ -47,8 +47,18 @@ class OpenAICompatibleAdapter:
             usage = cast("JsonObject", raw.get("usage", {}))
             prompt_details = cast("JsonObject", usage.get("prompt_tokens_details", {}))
             completion_details = cast("JsonObject", usage.get("completion_tokens_details", {}))
+            text = str(message["content"] or "")
+            finish_reason = str(choices[0].get("finish_reason") or "")
+            if not text.strip() and finish_reason == "length":
+                # A reasoning model can spend the whole output budget in `reasoning_content`
+                # and return empty `content`. Reporting that as a successful empty answer
+                # would let a truncation masquerade as a model that had nothing to say.
+                raise ModelUnavailable(
+                    "output budget exhausted before any content was produced; "
+                    "raise max_output_tokens for this reasoning model"
+                )
             return ModelResponse(
-                text=str(message["content"]),
+                text=text,
                 input_tokens=int(cast("int", usage.get("prompt_tokens", 0))),
                 output_tokens=int(cast("int", usage.get("completion_tokens", 0))),
                 cache_read_tokens=int(cast("int", prompt_details.get("cached_tokens", 0))),
