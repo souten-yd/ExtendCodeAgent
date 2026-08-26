@@ -16,6 +16,7 @@ from extendcodeagent.analysis import (
     JavaScriptTypeScriptCanonicalReferenceResolver,
     PathQuery,
     PythonCanonicalReferenceResolver,
+    SourceFileReferenceResolver,
 )
 from extendcodeagent.blueprint import (
     BlueprintElement,
@@ -1320,7 +1321,8 @@ class ProjectIntelligenceApplication:
         return self._twin
 
     def _reference_resolver(self) -> CompositeCanonicalReferenceResolver:
-        resolvers: list[CanonicalReferenceResolver] = []
+        # Language-neutral: a file reference resolves through source_ref, whatever wrote it.
+        resolvers: list[CanonicalReferenceResolver] = [SourceFileReferenceResolver()]
         if "python" in self.analyzers:
             resolvers.append(PythonCanonicalReferenceResolver())
         if "javascript_typescript" in self.analyzers:

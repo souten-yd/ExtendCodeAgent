@@ -20,6 +20,12 @@ from extendcodeagent.testing import focused_test_paths, objective_test_paths
 
 _CONSUMER_EDGES = frozenset({"calls", "may_call", "references", "imports"})
 
+# "Never rank away required truth" holds for a handful of obligations. A file-level target
+# in a large project reaches thousands, and an envelope of thousands answers nothing: on
+# django/db/models/sql/query.py the closure is 24,428 symbols. Past this bound obligations
+# are ranked like anything else, and the envelope reports that it had to.
+DEFAULT_MAX_OBLIGATIONS = 64
+
 Equivalents = Callable[[str], Iterable[str]]
 RecommendedTests = Callable[[], Iterable[str]]
 
@@ -31,6 +37,7 @@ def obligation_refs(
     *,
     equivalents: Equivalents,
     recommended_tests: RecommendedTests,
+    max_obligations: int = DEFAULT_MAX_OBLIGATIONS,
 ) -> tuple[CanonicalRef, ...]:
     if not target_refs:
         return ()
@@ -63,4 +70,8 @@ def obligation_refs(
         for node in snapshot.nodes
         if node.node_type == "file" and node.source_ref in intent_paths
     )
-    return tuple(CanonicalRef(value) for value in dict.fromkeys(refs))
+    # Insertion order is the priority order: the targets themselves, then what they
+    # equivalate to, then their consumers, then the tests Impact recommends, then the
+    # tests matched by intent. Truncation therefore drops the weakest claims first.
+    ordered = list(dict.fromkeys(refs))
+    return tuple(CanonicalRef(value) for value in ordered[:max_obligations])

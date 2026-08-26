@@ -14,6 +14,7 @@ from .resolver import (
     IdentityReferenceResolver,
     JavaScriptTypeScriptCanonicalReferenceResolver,
     PythonCanonicalReferenceResolver,
+    SourceFileReferenceResolver,
 )
 from .service import GraphAnalysisService
 
@@ -23,6 +24,7 @@ __all__ = [
     "GraphAnalysisService",
     "GraphPath",
     "IdentityReferenceResolver",
+    "SourceFileReferenceResolver",
     "ImpactItem",
     "ImpactQuery",
     "ImpactReport",

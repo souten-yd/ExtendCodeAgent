@@ -31,6 +31,37 @@ class CompositeCanonicalReferenceResolver:
         return tuple(sorted(values))
 
 
+class SourceFileReferenceResolver:
+    """A file reference stands for the symbols that file defines.
+
+    Developers change files; the graph relates symbols. Without this bridge a `file://`
+    reference reaches nothing, because a file node carries containment edges rather than
+    call or reference edges, so Impact and every consumer of equivalence answered a
+    file-level question with silence.
+
+    The expansion is bounded and deterministic: a very large file would otherwise seed a
+    traversal with hundreds of roots, and truncating without order would make the answer
+    depend on graph iteration.
+    """
+
+    def __init__(self, *, max_symbols: int = 200) -> None:
+        if max_symbols <= 0:
+            raise ValueError("max_symbols must be positive")
+        self.max_symbols = max_symbols
+
+    def equivalents(self, canonical_ref: str, snapshot: GraphSnapshot) -> tuple[str, ...]:
+        if not canonical_ref.startswith("file://"):
+            return ()
+        source_ref = canonical_ref.removeprefix("file://")
+        defined = sorted(
+            node.canonical_ref.value
+            for node in snapshot.nodes
+            if node.source_ref == source_ref
+            and node.node_type not in {"file", "directory", "repository"}
+        )
+        return tuple(defined[: self.max_symbols])
+
+
 class JavaScriptTypeScriptCanonicalReferenceResolver:
     """Bridge file-qualified JS/TS symbols and explicit name-only ambiguity nodes."""
 
