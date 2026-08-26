@@ -12,6 +12,7 @@ from .contracts import (
     WeakLocalEvidencePackage,
     WeakLocalEvidenceRequest,
 )
+from .envelope import build_answer_envelope
 from .obligations import obligation_refs
 from .serialization import (
     context_item_json,
@@ -39,6 +40,7 @@ __all__ = [
     "WeakLocalEvidencePackage",
     "WeakLocalEvidenceRequest",
     "attach_excerpts",
+    "build_answer_envelope",
     "build_context",
     "build_weak_local_evidence",
     "context_item_json",

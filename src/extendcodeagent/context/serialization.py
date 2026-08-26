@@ -56,7 +56,25 @@ def context_package_json(package: ContextPackage) -> dict[str, Any]:
     }
 
 
+#: What each role has to carry. A test answers with a path, so a path is what it needs;
+#: identity, confidence and provenance buy trust that a path list does not spend tokens on.
+#: Measured across flask and httpx, the full shape cost 81 tokens per test item.
+_ROLE_FIELDS = {
+    "test": ("id", "path"),
+    "supporting": ("id", "path", "kind", "summary"),
+    "consumer": ("id", "path", "kind", "summary", "reason"),
+}
+
+
 def weak_local_evidence_item_json(item: Any) -> dict[str, Any]:
+    full = _full_item_json(item)
+    fields = _ROLE_FIELDS.get(str(item.role))
+    if fields is None:
+        return full
+    return {key: value for key, value in full.items() if key in fields}
+
+
+def _full_item_json(item: Any) -> dict[str, Any]:
     return {
         "id": item.evidence_id,
         "ref": item.canonical_ref.value,

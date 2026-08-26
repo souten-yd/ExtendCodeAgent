@@ -7,6 +7,7 @@ from extendcodeagent.context import (
     ContextRequest,
     EvidenceRole,
     RequiredRef,
+    WeakLocalEvidenceItem,
     WeakLocalEvidenceRequest,
     attach_excerpts,
     build_context,
@@ -264,7 +265,7 @@ def test_targeted_evidence_carries_the_symbol_body_not_just_its_name() -> None:
         assert (source_ref, start, end) == ("module.py", 2, 3)
         return "def target():\n    return 1"
 
-    with_source = attach_excerpts(package, read)
+    with_source = attach_excerpts(package, read, named_refs=frozenset({"py://module#target"}))
     item = with_source.items[0]
 
     assert (item.start_line, item.end_line) == (2, 3)
@@ -293,7 +294,12 @@ def test_a_symbol_too_large_to_be_an_excerpt_is_refused() -> None:
         ),
     )
 
-    with_source = attach_excerpts(package, lambda *_: "body", max_lines=120)
+    with_source = attach_excerpts(
+        package,
+        lambda *_: "body",
+        named_refs=frozenset({"py://module#target"}),
+        max_lines=120,
+    )
 
     assert with_source.items[0].excerpt is None
 
@@ -304,7 +310,12 @@ def test_an_excerpt_budget_stops_bodies_from_crowding_the_envelope() -> None:
         WeakLocalEvidenceRequest("locate function_1", token_budget=4_096),
     )
 
-    with_source = attach_excerpts(package, lambda *_: "x" * 4_000, token_budget=1)
+    with_source = attach_excerpts(
+        package,
+        lambda *_: "x" * 4_000,
+        named_refs=frozenset({"py://module#function_1"}),
+        token_budget=1,
+    )
 
     assert all(item.excerpt is None for item in with_source.items)
 
@@ -388,3 +399,40 @@ def test_only_a_test_observation_that_ran_counts_as_coverage() -> None:
     )
 
     assert [ref.value for ref in found] == ["py://tests#covers"]
+
+
+def test_naming_a_file_does_not_ask_for_every_body_inside_it() -> None:
+    """`file://app.py` asks which file, not for twenty-five function bodies."""
+
+    nodes = tuple(_snapshot(3).nodes)
+    package = build_weak_local_evidence(
+        GraphSnapshot(PROJECT, None, nodes),
+        WeakLocalEvidenceRequest("edit module.py", (CanonicalRef("file://module.py"),)),
+    )
+
+    with_source = attach_excerpts(
+        package, lambda *_: "body", named_refs=frozenset({"file://module.py"})
+    )
+
+    assert with_source.items, "the file's symbols are still delivered"
+    assert all(item.excerpt is None for item in with_source.items)
+
+
+def test_a_test_item_carries_the_path_and_not_the_apparatus() -> None:
+    """A test answers with a path; identity and confidence buy trust it does not need."""
+
+    item = WeakLocalEvidenceItem(
+        "e-1",
+        CanonicalRef("py://tests.test_x#test_y"),
+        "tests/test_x.py",
+        "test",
+        "test_y",
+        "required:test",
+        1.0,
+        "p1",
+        "declared",
+        12,
+        EvidenceRole.TEST,
+    )
+
+    assert weak_local_evidence_item_json(item) == {"id": "e-1", "path": "tests/test_x.py"}

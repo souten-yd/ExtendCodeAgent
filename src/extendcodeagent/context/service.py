@@ -230,6 +230,7 @@ def attach_excerpts(
     package: WeakLocalEvidencePackage,
     read_lines: SourceReader,
     *,
+    named_refs: frozenset[str] = frozenset(),
     max_lines: int = 120,
     token_budget: int = 4_096,
 ) -> WeakLocalEvidencePackage:
@@ -240,9 +241,11 @@ def attach_excerpts(
     file. Delivering the span instead of the name is the difference between reading what
     was asked for and reading fifty times more.
 
-    Only evidence the task actually targets gets a body; supporting evidence keeps its
-    summary, and the budget is separate from the selection budget so an excerpt can never
-    push a required fact out of the envelope.
+    Only a symbol the caller named gets one. Naming `file://app.py` asks which file, not
+    for the body of all twenty-five functions inside it — measured across flask and httpx,
+    that expansion was 49% of the whole envelope while answering a question about tests.
+    Supporting evidence keeps its summary, and the excerpt budget is separate from the
+    selection budget so a body can never push a required fact out.
     """
 
     spent = 0
@@ -250,7 +253,7 @@ def attach_excerpts(
     for item in package.items:
         excerpt = None
         if (
-            _is_protected(item.reason)
+            item.canonical_ref.value in named_refs
             and item.start_line is not None
             and item.end_line is not None
             and item.end_line - item.start_line + 1 <= max_lines

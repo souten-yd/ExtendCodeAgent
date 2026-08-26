@@ -28,16 +28,9 @@ from extendcodeagent.blueprint.storage import SqliteBlueprintRepository
 from extendcodeagent.context import (
     ContextProfile,
     ContextRequest,
-    EvidenceScope,
-    WeakLocalEvidenceRequest,
-    attach_excerpts,
+    build_answer_envelope,
     build_context,
-    build_weak_local_evidence,
     context_package_json,
-    infer_evidence_scope,
-    obligation_refs,
-    stable_evidence_envelope,
-    weak_local_evidence_json,
 )
 from extendcodeagent.convergence import (
     ActualSnapshot,
@@ -872,38 +865,22 @@ class ProjectIntelligenceApplication:
     ) -> dict[str, Any]:
         snapshot = self._explicit_snapshot(CapabilityName.CONTEXT)
         if view == "envelope":
-            # The ladder starts narrow; an explicit scope is a caller widening it because a
-            # narrower answer did not hold.
-            resolved_scope = (
-                EvidenceScope(scope) if scope is not None else infer_evidence_scope(objective)
-            )
-            weak_package = build_weak_local_evidence(
+            return build_answer_envelope(
                 snapshot,
-                WeakLocalEvidenceRequest(
-                    objective,
-                    tuple(CanonicalRef(item) for item in target_refs),
-                    token_budget,
-                    min(self.max_items, 32),
-                    scope=resolved_scope,
-                    required_refs=obligation_refs(
-                        snapshot,
-                        target_refs,
-                        objective,
-                        equivalents=lambda ref: self._reference_resolver().equivalents(
-                            ref, snapshot
-                        ),
-                        scope=resolved_scope.value,
-                        recommended_tests=lambda depth: self._recommended_test_refs(
-                            snapshot, target_refs, depth
-                        ),
-                        observed_tests=self._observed_test_refs,
-                    ),
-                    prior_evidence_ids=prior_evidence_ids,
-                    unresolved_gaps=unresolved_gaps,
+                objective,
+                target_refs,
+                equivalents=lambda ref: self._reference_resolver().equivalents(ref, snapshot),
+                recommended_tests=lambda depth: self._recommended_test_refs(
+                    snapshot, target_refs, depth
                 ),
+                observed_tests=self._observed_test_refs,
+                read_source_span=self._read_source_span,
+                token_budget=token_budget,
+                max_items=min(self.max_items, 32),
+                scope=scope,
+                prior_evidence_ids=prior_evidence_ids,
+                unresolved_gaps=unresolved_gaps,
             )
-            weak_package = attach_excerpts(weak_package, self._read_source_span)
-            return weak_local_evidence_json(weak_package, stable_evidence_envelope())
         if view != "detail":
             raise ValueError("view must be detail or envelope")
         context_package = build_context(
