@@ -17,6 +17,7 @@ from .contracts import (
     RuntimeSignalSnapshot,
 )
 from .coverage import observation_from_coverage, symbols_touched
+from .receipt import EditReceipt, completed_paths, receipt_json
 from .service import (
     TaskSignalCollector,
     covering_tests,
@@ -27,6 +28,7 @@ from .service import (
 from .triggers import ImprovementTrigger, TriggerKind, detect_triggers
 
 __all__ = [
+    "EditReceipt",
     "ImprovementTrigger",
     "ObservedAbsence",
     "ObservationKind",
@@ -44,8 +46,10 @@ __all__ = [
     "RuntimeSignalSnapshot",
     "TaskSignalCollector",
     "TriggerKind",
+    "completed_paths",
     "covering_tests",
     "established_absences",
+    "receipt_json",
     "detect_triggers",
     "observation_from_coverage",
     "symbols_touched",
