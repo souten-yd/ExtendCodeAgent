@@ -21,6 +21,21 @@ Do not schedule work from the legacy identifiers (`RV-x`, `TA-x`, `AL-x`, `CV-x`
 
 **Phase 2 — C2 Weak-local evidence protocol (conditional entry satisfied).**
 
+**Order and exit criterion revised 2026-08-26.** The C2 work packages stand; their sequence and exit
+do not — see `C2_PLAN_REVISION_AND_ADOPTION_DECISIONS.md`, which supersedes them on measured grounds.
+
+Two defects had made C2 measurement meaningless: the Twin of this repository contained none of this
+repository, and the context token budget was enforced against a payload the consumer never receives.
+Both are repaired (`C2_TRUTH_SCOPE_AND_COST_FIDELITY_CORRECTIVE_DESIGN.md`). The repaired instrument
+`tools/local/c2_evidence_recall.py` then reversed the stage's premise: at the 32k profile the envelope
+leaves 30,417 of 32,768 tokens unused because the 32-item cap binds first, recall is flat from 4k to
+32k, and mean normalized recall is 0.244 against mean raw recall 0.056.
+
+**Context size is not the binding constraint. Selection recall and projection encoding are.** Start at
+`C2-0b` (seal the recall baseline on the repaired Twin), then `C2-C'` deterministic exact projection —
+not `C2-A`. Exit is recall >= 0.90 inside the 8k envelope, not a task-success delta that B0b already
+showed this corpus cannot detect.
+
 C1 is complete at implementation revision `aa446d1` with sealed deterministic evidence in
 `docs/evidence/final/c1-shadow-planner-result-v1.json`. All 13 existing manual-reviewed plans were
 reused: 9 tuning and 4 repository-held-out. Intent and capability selection precision/recall are 1.0

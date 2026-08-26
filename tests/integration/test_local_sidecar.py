@@ -171,6 +171,28 @@ def test_sidecar_context_runtime_ingest_and_evidence_round_trip(tmp_path: Path) 
                 "params": {"refs": ["py://service#leaf"]},
             },
         )
+        compact_evidence = _request(
+            server,
+            "secret",
+            {
+                "interface": INTERFACE_VERSION,
+                "operation": "runtime_evidence",
+                "params": {"refs": ["py://service#leaf"], "view": "compact"},
+            },
+        )
+        envelope = _request(
+            server,
+            "secret",
+            {
+                "interface": INTERFACE_VERSION,
+                "operation": "context",
+                "params": {
+                    "objective": "inspect leaf",
+                    "target_refs": ["py://service#leaf"],
+                    "view": "envelope",
+                },
+            },
+        )
     finally:
         server.shutdown()
         server.server_close()
@@ -178,6 +200,12 @@ def test_sidecar_context_runtime_ingest_and_evidence_round_trip(tmp_path: Path) 
     assert context["result"]["items"][0]["why_included"] == "target_ref"
     assert ingest["result"]["accepted"] is True
     assert evidence["result"]["items"][0]["status"] == "observed"
+    assert compact_evidence["result"]["selected_evidence_ids"] == ["tool-call-1"]
+    assert "started_at" not in compact_evidence["result"]["items"][0]
+    assert envelope["result"]["stable_envelope"]["protocol"] == (
+        "extendcodeagent.weak-local-evidence.v1"
+    )
+    assert envelope["result"]["task_evidence"]["selected_evidence_ids"]
 
 
 def test_sidecar_runtime_contract_negotiates_and_collects_host_neutral_signals(

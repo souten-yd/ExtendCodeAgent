@@ -50,6 +50,7 @@ class ModelRequest:
     minimum_reasoning_strength: int = 0
     requested_endpoint: str | None = None
     adaptive_signals: AdaptiveSignals | None = None
+    stable_prefix_id: str | None = None
 
     def __post_init__(self) -> None:
         if not self.prompt.strip():
@@ -60,6 +61,8 @@ class ModelRequest:
             raise ValueError("max_output_tokens must be positive")
         if self.minimum_reasoning_strength < 0:
             raise ValueError("minimum_reasoning_strength must not be negative")
+        if self.stable_prefix_id is not None and not self.stable_prefix_id.strip():
+            raise ValueError("stable_prefix_id must not be empty")
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,6 +75,7 @@ class ModelResponse:
     cache_read_tokens: int = 0
     cache_write_tokens: int = 0
     reasoning_tokens: int = 0
+    cache_metrics_observed: bool = False
 
     def __post_init__(self) -> None:
         token_counts = (
@@ -106,6 +110,9 @@ class RoutedResponse:
     wall_time_ms: float = 0.0
     escalation_count: int = 0
     selected_locality: str | None = None
+    stable_prefix_id: str | None = None
+    cache_metrics_observed: bool = False
+    cache_reuse_ratio: float | None = None
 
 
 class ModelAdapter(Protocol):

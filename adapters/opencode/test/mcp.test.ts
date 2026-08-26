@@ -73,6 +73,20 @@ test("MCP stdio handshake lists and calls the shared tools", async () => {
     for (const capability of ["blueprint", "convergence", "traceability", "strategy"]) {
       assert.equal(modes.get(capability), "active")
     }
+    const contextResponse = (await client.callTool({
+      name: "pi_context",
+      arguments: { objective: "locate leaf", target_refs: ["py://service#leaf"] },
+    })) as { content: Array<{ type: string; text?: string }> }
+    const contextContent = contextResponse.content[0]
+    if (contextContent?.type !== "text" || !contextContent.text) {
+      throw new Error("expected context text content")
+    }
+    const context = JSON.parse(contextContent.text) as {
+      stable_envelope: { protocol: string }
+      task_evidence: { selected_evidence_ids: string[] }
+    }
+    assert.equal(context.stable_envelope.protocol, "extendcodeagent.weak-local-evidence.v1")
+    assert.ok(context.task_evidence.selected_evidence_ids.length > 0)
     const planResponse = (await client.callTool({
       name: "pi_research_plan",
       arguments: { query: "SQLite durability", depth: "micro", facets: ["official docs"] },

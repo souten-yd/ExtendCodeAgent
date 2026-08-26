@@ -158,7 +158,7 @@ def _dispatch(
     application: ProjectIntelligenceApplication, operation: str, params: dict[str, Any]
 ) -> dict[str, Any]:
     if operation == "status":
-        return application.status()
+        return application.status(view=_optional_string(params.get("view"), "view") or "detail")
     if operation == "event":
         return application.process_event(
             _string_tuple(params.get("paths", []), "paths"),
@@ -207,9 +207,18 @@ def _dispatch(
             _string_tuple(params.get("target_refs", []), "target_refs"),
             profile=_optional_string(params.get("profile"), "profile") or "standard",
             token_budget=_integer(params.get("token_budget", 2_000), "token_budget"),
+            view=_optional_string(params.get("view"), "view") or "detail",
+            scope=_optional_string(params.get("scope"), "scope"),
+            prior_evidence_ids=_string_tuple(
+                params.get("prior_evidence_ids", []), "prior_evidence_ids"
+            ),
+            unresolved_gaps=_string_tuple(params.get("unresolved_gaps", []), "unresolved_gaps"),
         )
     if operation == "runtime_evidence":
-        return application.runtime_evidence(_string_tuple(params.get("refs", []), "refs"))
+        return application.runtime_evidence(
+            _string_tuple(params.get("refs", []), "refs"),
+            view=_optional_string(params.get("view"), "view") or "detail",
+        )
     if operation == "runtime_connect":
         return application.connect_runtime(
             runtime_name=_required_string(params, "runtime_name"),

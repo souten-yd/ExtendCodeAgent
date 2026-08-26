@@ -89,6 +89,11 @@ non-goals remain binding).
 | `CODEX_IMPLEMENTATION_GUIDE.md`, `CODEX_PRODUCTIZATION_EXECUTION_GUIDE.md` | Agent working rules. Their read orders and first-task sections are replaced by §8 and `handoff/NEXT_TASK.md`. |
 | `CURRENT_STATUS.md` | Program state and evidence ledger only. No sequencing. |
 | `handoff/*` | Rolling state. `NEXT_TASK.md` points at this document. |
+| `handoff/C2_EVIDENCE_DELIVERY_DECISION.md` | **Canonical C2 evidence-delivery contract.** EvidenceAtom, protected evidence, coverage optimizer, Sufficiency Gate, AnswerIR/ChangeIR, shadow reservoir, ranker policy. Its work packages stand; their order is superseded by the plan revision below. |
+| `handoff/C2_TRUTH_SCOPE_AND_COST_FIDELITY_CORRECTIVE_DESIGN.md` | **Canonical C2-0 corrective contract.** Project scope, truncation severity, payload/cost co-ownership, facade boundary (C-1..C-4) and open gaps G-1..G-6. |
+| `handoff/C2_PLAN_REVISION_AND_ADOPTION_DECISIONS.md` | **Canonical C2 work order and exit criterion**, and the adoption ruling on every mechanism proposed for context virtualization. Supersedes the C2 implementation order in `C2_EVIDENCE_DELIVERY_DECISION.md`. |
+| `audit/C2_CONTEXT_VIRTUALIZATION_INDEPENDENT_AUDIT.md` | Independent audit of PR #102 (`NARROW_AND_RETEST`) with the concept classification and the reduced architecture. Evidence, not sequencing. |
+| `audit/EXTERNAL_AI_C2_CORRECTIVE_AUDIT_REQUEST.md` | Ready-to-use second-reviewer request covering both the design and the corrective implementation. |
 | `evaluation/b0a-quality-target-v1.json` | Sealed B0a execution contract for the user-requested Qwen/Copilot Sonnet/Copilot Codex quality routes and 162-cell baseline. It narrows the historical matrix without changing task/oracle semantics. |
 | `evaluation/b0a-quality-target-v2.json` | **Active model-execution policy exception.** Narrows execution to the existing port-8090 `local-practical` Qwen route without changing the matrix, task suite, oracle, thresholds, corpus, capabilities, stages or their order. V1 and prior Copilot evidence remain immutable history. |
 | `evaluation/b0a-checkpoint-compatibility-v2.json` | Sealed Bridge/migration contract for promoting only compatible `local-practical` results from the existing 54/54 Qwen checkpoint into the active v2 denominator. |
@@ -228,6 +233,28 @@ These apply to every stage and are not restated per stage.
   boundary failures satisfy X0 entry. Conditional B1 is skipped because no ECA product lifecycle,
   configuration, version or provider blocker remains after the evaluation-only workspace cleanup
   repair. B2 is the next stage.
+
+- **C0 and C1 are complete; C2 is active.** The 2026-08-26 C2-0 corrective slice repaired two defects
+  that made C2 measurement meaningless. The Twin of this repository contained none of this repository:
+  `SourceSnapshotter` walked the filesystem with a hand-maintained ignore set omitting `.evaluation/`,
+  which holds 207,037 of 207,308 scannable files and sorts before `src/`, so the 10,000-file cap was
+  exhausted before any project source was reached — 75,712 Twin nodes, zero from `src/`. Separately the
+  context token budget was enforced against a payload the consumer never receives, a 5.1x under-count.
+  Every self-measurement taken before this slice is withdrawn; B0b's 93,189-token figure is unaffected
+  because the evaluation runner uses separate workspaces. See
+  `handoff/C2_TRUTH_SCOPE_AND_COST_FIDELITY_CORRECTIVE_DESIGN.md`.
+- **The repaired instrument reversed C2's premise.** `tools/local/c2_evidence_recall.py` computes
+  critical-evidence recall from the sealed oracle with no model call. At the 32k profile the envelope
+  spends about 7% of its budget and leaves 30,417 tokens unused, because the 32-item cap binds long
+  before the token budget; recall does not improve from 4k to 32k. Mean normalized recall is 0.244 and
+  mean raw recall 0.056 — three quarters of the facts PI does deliver arrive as `py://` canonical refs
+  while the answer requires source paths. **Context size is not the binding constraint; selection
+  recall and projection encoding are.** This is a three-task, single-repository measurement and a lower
+  bound, not a programme-level figure.
+- This also reframes B0b's `NO_CONFIRMED_CAUSAL_EFFECT` finding for Graph, Twin, Semantic and Test
+  Selection. A channel delivering a quarter of the required facts in an unusable encoding should not
+  move task success, so the null result is more likely a delivery defect than a capability verdict.
+  It remains a null result until the repaired channel is re-measured.
 
 ## 6. Capability inventory and gating status
 
@@ -719,7 +746,30 @@ Entry: B0/C1 show weak-local failures that bounded evidence can address. Scope: 
 separated from task/revision evidence, deterministic candidate reduction, bounded ID/enum/schema
 decisions, progressive expansion, compressed tool/runtime evidence, strict output budgets, cache-reuse
 metrics where observable. Implemented inside existing context/routing code, not as a new package.
-Exit: repeated `local-low` and `local-practical` distributions showing task-success or cost improvement.
+
+**Exit criterion revised 2026-08-26 on measured grounds.** The former exit — "repeated `local-low` and
+`local-practical` distributions showing task-success or cost improvement" — is not decidable on this
+corpus: B0b already showed zero PASS delta between forced-PI and off arms, so task success cannot
+detect a delivery improvement. It is replaced by a deterministic criterion the repaired instrument can
+decide at zero model cost:
+
+> C2 exits when normalized and raw critical-evidence recall both reach >= 0.90 on the sealed tuning
+> tasks with the delivered envelope inside the 8k initial evidence target, and held-out tasks are
+> non-inferior. Task-success comparison remains a gate, not the primary signal.
+
+The work packages in `handoff/C2_EVIDENCE_DELIVERY_DECISION.md` stand; their **order** is superseded by
+`handoff/C2_PLAN_REVISION_AND_ADOPTION_DECISIONS.md` §4, because measurement showed the binding
+constraints are selection recall and projection encoding rather than context size:
+
+`C2-0` truth scope + cost fidelity (done) → `C2-0b` recall instrument + baseline seal →
+`C2-C'` deterministic exact projection → `C2-1` make the budget bind →
+`C2-E'` obligation providers as protected evidence → `C2-A` attribution telemetry →
+`C2-D` sufficiency gate → `C2-X` graph-only ablation arm → `C2-G` compression curve + prefix cache →
+`C2-I` adoption + causal rerun.
+
+Deferred out of C2 by that ruling: semantic contract extraction, semantic ABI fingerprinting, durable
+task state, project memory and an HTML/`ui_graph` analyzer. Every C2 mechanism must declare its
+`CapabilityName`, its `D0..D4` depth and its ablation arm before implementation, per invariant 6.
 
 **C3 — Advisory automatic selection and adaptive depth** (was `TA-1` + `AL-3`)
 Scope: the planner selects capabilities *and* depth inside configured bounds; advisory only; progressive
@@ -1052,20 +1102,25 @@ Per-PR evidence directories (`docs/evidence/pr-*`) are historical and are not re
 
 ## 14. Immediate next action
 
-Phase 0 and B0 are complete. Conditional B1 is `SKIP_NO_ENTRY_CONDITION`; next is B2.
+Phase 0, B0 and B2 are complete, C0 and C1 are complete, and C2 is active. The C2-0 corrective slice
+and the recall instrument are on `agent/weak-local-evidence-protocol`.
+
+Next is **C2-0b**: seal the recall baseline on the repaired Twin, then **C2-C'** deterministic exact
+projection.
 
 ```bash
 cd /home/souten/ExtendCodeAgent
-git switch main
-git pull --ff-only origin main
+git switch agent/weak-local-evidence-protocol
 git status --short
 tools/local/all-fast
 tools/local/test-integration
-tools/local/build
-git switch -c agent/b2-omo-coexistence
+python tools/local/c2_evidence_recall.py     # seals docs/evidence/final/c2-evidence-recall-curve-v1.json
+python tools/local/c2_evidence_protocol.py   # re-seal against the repaired Twin
 ```
 
-B2 uses the recorded OpenCode/OMO/ECA version tuple, Team Mode off and both meaningful plugin load
-orders. Execute the existing startup/tool/session/basic-coding/verification compatibility contract,
-classify conflicts under C0-C6, and keep P4 comparative scoring out of this stage. Model-bearing work
-uses only the configured port-8090 local-practical Qwen route.
+Any preflight artifact produced before the C2-0 slice is withdrawn rather than compared against: it was
+measured on a Twin that contained evaluation corpora and no project source. C2-C' binds already-known
+paths, symbols, canonical refs, tests and requirements directly to evidence IDs instead of requiring
+the model to translate `py://` refs into source paths; its gate is raw recall rising to meet normalized
+recall on the sealed curve. Model-bearing work uses only the configured port-8090 local-practical Qwen
+route.

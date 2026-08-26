@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import re
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -24,7 +23,17 @@ from extendcodeagent.blueprint import (
     BlueprintView,
 )
 from extendcodeagent.blueprint.storage import SqliteBlueprintRepository
-from extendcodeagent.context import ContextProfile, ContextRequest, build_context
+from extendcodeagent.context import (
+    ContextProfile,
+    ContextRequest,
+    EvidenceScope,
+    WeakLocalEvidenceRequest,
+    build_context,
+    build_weak_local_evidence,
+    context_package_json,
+    stable_evidence_envelope,
+    weak_local_evidence_json,
+)
 from extendcodeagent.convergence import (
     ActualSnapshot,
     ConvergenceRecommendation,
@@ -80,7 +89,18 @@ from extendcodeagent.strategy import (
     StrategySignals,
     build_strategy,
 )
-from extendcodeagent.testing import TestHealthSignals, evaluate_test_health, select_tests
+from extendcodeagent.testing import (
+    TestHealthSignals,
+    direct_use_count,
+    evaluate_test_health,
+    focused_test_paths,
+    intent_architecture_test_paths,
+    objective_test_paths,
+    select_tests,
+    structural_test_paths,
+    test_obligation,
+    uncovered_obligations,
+)
 from extendcodeagent.traceability import (
     ProjectRequirementReport,
     Requirement,
@@ -188,10 +208,12 @@ class ProjectIntelligenceApplication:
         if self._request_timing is not None:
             self._request_timing[name] = self._request_timing.get(name, 0.0) + elapsed
 
-    def status(self) -> dict[str, Any]:
+    def status(self, *, view: str = "detail") -> dict[str, Any]:
+        if view not in {"compact", "detail"}:
+            raise ValueError("view must be compact or detail")
         mode = self.policy.mode(CapabilityName.GRAPH)
         if mode is RolloutMode.OFF:
-            return {
+            result = {
                 "interface": INTERFACE_VERSION,
                 "depth": None,
                 "readiness": "disabled",
@@ -201,8 +223,9 @@ class ProjectIntelligenceApplication:
                 "edges": 0,
                 "capabilities": self._capability_status(),
             }
+            return self._compact_status(result) if view == "compact" else result
         snapshot = self._load_snapshot(self._ensure_twin())
-        return {
+        result = {
             "interface": INTERFACE_VERSION,
             "depth": None,
             "readiness": "ready" if snapshot.revision else "absent",
@@ -211,6 +234,37 @@ class ProjectIntelligenceApplication:
             "nodes": len(snapshot.nodes),
             "edges": len(snapshot.edges),
             "capabilities": self._capability_status(),
+        }
+        if view == "compact":
+            return self._compact_status(result)
+        if view != "detail":
+            raise ValueError("view must be compact or detail")
+        return result
+
+    def _compact_status(self, result: dict[str, Any]) -> dict[str, Any]:
+        capabilities = result["capabilities"]
+        assert isinstance(capabilities, list)
+        configured = [
+            {
+                "name": item["name"],
+                "mode": item["mode"],
+                "depth": item["depth"],
+                "implementation": item["implementation"],
+            }
+            for item in capabilities
+            if item["implementation"] == "implemented" and item["name"] != "call_graph"
+        ]
+        return {
+            "interface": result["interface"],
+            "readiness": result["readiness"],
+            "mode": result["mode"],
+            "revision_id": result["revision_id"],
+            "nodes": result["nodes"],
+            "edges": result["edges"],
+            "capabilities": configured,
+            "omitted_unimplemented_capabilities": sum(
+                item["implementation"] != "implemented" for item in capabilities
+            ),
         }
 
     def _capability_status(self) -> list[dict[str, Any]]:
@@ -418,26 +472,21 @@ class ProjectIntelligenceApplication:
         )
         if view == "compact":
             nodes = {node.canonical_ref.value: node for node in snapshot.nodes}
-            intent_architecture = _intent_architecture_test_paths(changed_refs, nodes)
+            intent_architecture = intent_architecture_test_paths(changed_refs, nodes)
             selected_candidates = [
                 item
                 for item in candidates
                 if "architecture" not in Path(item.source_ref).parts
                 or item.source_ref in intent_architecture
             ]
-            objective_paths = _objective_test_paths(snapshot, objective)
+            objective_paths = objective_test_paths(snapshot, objective)
             selected_paths = sorted(
                 {item.source_ref for item in selected_candidates} | objective_paths
             )
             candidate_refs = {item.canonical_ref.value for item in selected_candidates}
-            covered_obligations = sorted({_test_obligation(path) for path in selected_paths})
-            required_obligations = {
-                "architecture_boundary",
-                "integration_boundary",
-                "unit_behavior",
-            }
-            uncovered_obligations = sorted(required_obligations - set(covered_obligations))
-            coverage_complete = not uncovered_obligations
+            covered_obligations = sorted({test_obligation(path) for path in selected_paths})
+            uncovered = uncovered_obligations(selected_paths)
+            coverage_complete = not uncovered
             return _result(
                 snapshot,
                 depth=self.policy.depth(CapabilityName.TEST_SELECTION),
@@ -446,7 +495,7 @@ class ProjectIntelligenceApplication:
                 candidate_refs=sorted(candidate_refs),
                 covered_obligations=covered_obligations,
                 coverage_complete=coverage_complete,
-                uncovered_obligations=uncovered_obligations,
+                uncovered_obligations=uncovered,
                 fallback_search_required=not coverage_complete,
                 fallback=(
                     None
@@ -479,12 +528,14 @@ class ProjectIntelligenceApplication:
         )
 
     def _compact_symbol(self, snapshot: GraphSnapshot, matches: list[Any]) -> dict[str, Any]:
+        compact_limit = min(self.max_items, 24)
         definitions = [
             node
             for node in matches
             if node.node_type
             not in {"repository", "directory", "file", "module", "package", "dependency", "test"}
         ] or matches
+        definitions = definitions[:compact_limit]
         refs = tuple(node.canonical_ref.value for node in definitions)
         analysis = self._analysis_service(snapshot)
         report = (
@@ -521,23 +572,30 @@ class ProjectIntelligenceApplication:
             {item.source_ref for item in report.recommended_tests} if report is not None else set()
         )
         nodes = {node.canonical_ref.value: node for node in snapshot.nodes}
-        intent_architecture = _intent_architecture_test_paths(refs, nodes)
+        intent_architecture = intent_architecture_test_paths(refs, nodes)
         tests = sorted(
             path
             for path in candidate_tests
             if "architecture" not in Path(path).parts or path in intent_architecture
         )
+        fields = {
+            "symbols": sorted(refs),
+            "definition": sorted({node.source_ref for node in definitions}),
+            "exports": exports,
+            "production_callers": production_callers,
+            "tests": tests,
+        }
+        bounded = {name: values[:compact_limit] for name, values in fields.items()}
+        excluded = {name: len(values) - len(bounded[name]) for name, values in fields.items()}
         return _result(
             snapshot,
             depth=self.policy.depth(CapabilityName.SEMANTIC),
             view="compact",
-            symbols=list(refs),
-            definition=sorted({node.source_ref for node in definitions}),
-            exports=exports,
-            production_callers=production_callers,
-            tests=tests,
+            **bounded,
             coverage_complete=False,
             unresolved=["structural/architecture tests may not be represented by call relations"],
+            projection_truncated=any(excluded.values()),
+            excluded_counts=excluded,
         )
 
     def _compact_impact(
@@ -549,14 +607,14 @@ class ProjectIntelligenceApplication:
             for item in report.direct_impacts
             if item.item_type in {"function", "method", "api_route", "handler"}
         )
-        intent_tests = _intent_architecture_test_paths(changed_refs, nodes)
+        intent_tests = intent_architecture_test_paths(changed_refs, nodes)
         candidate_tests = sorted(
             {item.source_ref for item in report.recommended_tests} | intent_tests
         )
         candidate_refs = {item.canonical_ref for item in report.recommended_tests}
-        structural_tests = _structural_test_paths(snapshot, candidate_refs) & intent_tests
+        structural_tests = structural_test_paths(snapshot, candidate_refs) & intent_tests
         focused_tests = sorted(
-            set(_focused_test_paths(changed_refs, nodes, candidate_tests))
+            set(focused_test_paths(changed_refs, nodes, candidate_tests))
             | structural_tests
             | intent_tests
         )
@@ -576,7 +634,7 @@ class ProjectIntelligenceApplication:
                     if item.canonical_ref in nodes
                 }
             ),
-            direct_use_count=_direct_use_count(
+            direct_use_count=direct_use_count(
                 snapshot,
                 counted_refs,
                 {item.canonical_ref for item in production},
@@ -753,7 +811,9 @@ class ProjectIntelligenceApplication:
         if signals is not None:
             self._shadow_plan = create_shadow_plan(signals, self.policy)
 
-    def runtime_evidence(self, refs: tuple[str, ...] = ()) -> dict[str, Any]:
+    def runtime_evidence(
+        self, refs: tuple[str, ...] = (), *, view: str = "detail"
+    ) -> dict[str, Any]:
         if not self.policy.allows_explicit_use(CapabilityName.RUNTIME):
             raise CapabilityUnavailable("runtime is not available for explicit use")
         snapshot = self._snapshot(open_if_missing=True)
@@ -762,6 +822,30 @@ class ProjectIntelligenceApplication:
             refs=tuple(CanonicalRef(item) for item in refs),
             limit=self.max_items,
         )
+        if view == "compact":
+            revision = snapshot.revision.source_revision.value if snapshot.revision else None
+            return {
+                "interface": INTERFACE_VERSION,
+                "source_revision": revision,
+                "depth": self.policy.depth(CapabilityName.RUNTIME).value,
+                "items": [
+                    {
+                        "id": item.observation_id,
+                        "kind": item.kind.value,
+                        "status": item.status.value,
+                        "refs": [ref.value for ref in item.observed_refs],
+                        "tool": item.tool,
+                        "summary": item.summary[:256],
+                    }
+                    for item in observations
+                ],
+                "selected_evidence_ids": [item.observation_id for item in observations],
+                "unresolved_evidence_gaps": (
+                    [] if observations else ["no_matching_runtime_evidence"]
+                ),
+            }
+        if view != "detail":
+            raise ValueError("view must be compact or detail")
         return _result(
             snapshot,
             depth=self.policy.depth(CapabilityName.RUNTIME),
@@ -775,9 +859,29 @@ class ProjectIntelligenceApplication:
         *,
         profile: str = "standard",
         token_budget: int = 2_000,
+        view: str = "detail",
+        scope: str | None = None,
+        prior_evidence_ids: tuple[str, ...] = (),
+        unresolved_gaps: tuple[str, ...] = (),
     ) -> dict[str, Any]:
         snapshot = self._explicit_snapshot(CapabilityName.CONTEXT)
-        package = build_context(
+        if view == "envelope":
+            weak_package = build_weak_local_evidence(
+                snapshot,
+                WeakLocalEvidenceRequest(
+                    objective,
+                    tuple(CanonicalRef(item) for item in target_refs),
+                    token_budget,
+                    min(self.max_items, 32),
+                    scope=EvidenceScope(scope) if scope is not None else None,
+                    prior_evidence_ids=prior_evidence_ids,
+                    unresolved_gaps=unresolved_gaps,
+                ),
+            )
+            return weak_local_evidence_json(weak_package, stable_evidence_envelope())
+        if view != "detail":
+            raise ValueError("view must be detail or envelope")
+        context_package = build_context(
             snapshot,
             ContextRequest(
                 objective,
@@ -790,11 +894,7 @@ class ProjectIntelligenceApplication:
         return _result(
             snapshot,
             depth=self.policy.depth(CapabilityName.CONTEXT),
-            items=[_context_json(item) for item in package.items],
-            used_tokens=package.used_tokens,
-            token_budget=package.token_budget,
-            truncated=package.truncated,
-            excluded_count=package.excluded_count,
+            **context_package_json(context_package),
         )
 
     def create_blueprint(
@@ -1298,145 +1398,6 @@ def _path_json(item: Any) -> dict[str, Any]:
     }
 
 
-def _focused_test_paths(
-    changed_refs: tuple[str, ...], nodes: dict[str, Any], candidate_tests: list[str]
-) -> list[str]:
-    generic = {"src", "lib", "app", "service", "index", "main", "py", "extendcodeagent"}
-    source_tokens = {
-        token
-        for ref in changed_refs
-        if ref in nodes
-        for part in Path(nodes[ref].source_ref).parts
-        for token in Path(part).stem.casefold().split("_")
-        if token and token not in generic
-    }
-    focused = [
-        path
-        for path in candidate_tests
-        if source_tokens
-        & {
-            token
-            for part in Path(path).parts
-            for token in Path(part).stem.casefold().split("_")
-            if token
-        }
-    ]
-    return focused or candidate_tests
-
-
-def _objective_test_paths(snapshot: GraphSnapshot, objective: str) -> set[str]:
-    if not objective.strip():
-        return set()
-    ignored = {
-        "and",
-        "covers",
-        "existing",
-        "for",
-        "its",
-        "set",
-        "smallest",
-        "test",
-        "tests",
-        "the",
-    }
-    objective_tokens = {
-        token
-        for token in re.findall(r"[a-z0-9]+", objective.casefold().replace("_", " "))
-        if token not in ignored and len(token) > 2
-    }
-    by_path: dict[str, set[str]] = {}
-    for node in snapshot.nodes:
-        if node.node_type != "test":
-            continue
-        tokens = by_path.setdefault(node.source_ref, set())
-        intent_tokens = node.properties.get("intent_tokens", ())
-        if isinstance(intent_tokens, list | tuple | set):
-            tokens.update(str(item).casefold() for item in intent_tokens)
-        tokens.update(
-            token
-            for part in Path(node.source_ref).parts
-            for token in re.findall(r"[a-z0-9]+", part.casefold().replace("_", " "))
-        )
-    selected: set[str] = set()
-    for obligation in ("unit_behavior", "integration_boundary", "architecture_boundary"):
-        ranked = sorted(
-            (
-                (len(objective_tokens & tokens), path)
-                for path, tokens in by_path.items()
-                if _test_obligation(path) == obligation
-            ),
-            key=lambda item: (-item[0], item[1]),
-        )
-        if ranked and ranked[0][0] > 0:
-            selected.add(ranked[0][1])
-    return selected
-
-
-def _structural_test_paths(snapshot: GraphSnapshot, candidate_refs: set[str]) -> set[str]:
-    return {
-        edge.source_ref
-        for edge in snapshot.edges
-        if edge.edge_type == "structurally_covers" and edge.source.value in candidate_refs
-    }
-
-
-def _intent_architecture_test_paths(
-    changed_refs: tuple[str, ...], nodes: dict[str, Any]
-) -> set[str]:
-    changed_tokens = {
-        token
-        for ref in changed_refs
-        for value in (
-            ref.rsplit("#", 1)[-1],
-            nodes[ref].source_ref if ref in nodes else "",
-        )
-        for part in Path(value).parts
-        for token in Path(part).stem.casefold().split("_")
-        if len(token) >= 4 and token not in {"meets", "service", "source", "extendcodeagent"}
-    }
-    return {
-        node.source_ref
-        for node in nodes.values()
-        if node.node_type == "test"
-        and "architecture" in Path(node.source_ref).parts
-        and changed_tokens
-        & (
-            set(node.properties.get("intent_tokens", ()))
-            | set(Path(node.source_ref).stem.casefold().split("_"))
-        )
-    }
-
-
-def _direct_use_count(
-    snapshot: GraphSnapshot, changed_refs: set[str], production_refs: set[str]
-) -> int:
-    short_names = {ref.rsplit("#", 1)[-1].rsplit(".", 1)[-1] for ref in changed_refs}
-    return sum(
-        _edge_occurrences(edge)
-        for edge in snapshot.edges
-        if edge.source.value in production_refs
-        and edge.edge_type in {"calls", "may_call", "references"}
-        and (
-            edge.target.value in changed_refs
-            or edge.target.value.rsplit("#", 1)[-1].rsplit("/", 1)[-1] in short_names
-        )
-    )
-
-
-def _edge_occurrences(edge: Any) -> int:
-    value = edge.properties.get("occurrences", 1)
-    return value if isinstance(value, int) else 1
-
-
-def _test_obligation(path: str) -> str:
-    parts = set(Path(path).parts)
-    if "architecture" in parts:
-        return "architecture_boundary"
-    if "integration" in parts:
-        return "integration_boundary"
-    return "unit_behavior"
-
-
 def _health_json(item: Any) -> dict[str, Any]:
     return {
         "canonical_ref": item.test_ref.value,
@@ -1569,22 +1530,4 @@ def _plan_outcome_json(item: PlanOutcome | None) -> dict[str, Any] | None:
         "actual_evidence_ids": list(item.actual_evidence_ids),
         "expansion_count": item.expansion_count,
         "fallback_reason": item.fallback_reason,
-    }
-
-
-def _context_json(item: Any) -> dict[str, Any]:
-    return {
-        "canonical_ref": item.canonical_ref.value,
-        "kind": item.kind,
-        "summary": item.summary,
-        "why_included": item.why_included,
-        "confidence": item.confidence,
-        "revision": item.revision.value,
-        "provenance": {
-            "source": item.provenance.source,
-            "producer": item.provenance.producer,
-            "producer_version": item.provenance.producer_version,
-        },
-        "token_estimate": item.token_estimate,
-        "status": item.status,
     }

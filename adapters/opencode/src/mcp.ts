@@ -32,8 +32,8 @@ function result(value: unknown) {
 
 server.registerTool(
   "pi_status",
-  { description: "Show Project Intelligence status, revision, and capability states." },
-  async () => result(await client.request("status")),
+  { description: "Show compact Project Intelligence readiness and configured bounds." },
+  async () => result(await client.request("status", { view: "compact" })),
 )
 server.registerTool(
   "pi_symbol",
@@ -95,15 +95,21 @@ server.registerTool(
 server.registerTool(
   "pi_context",
   {
-    description: "Build bounded revision-aware Project Intelligence context.",
+    description:
+      "Build a minimum task-relevant evidence envelope and expand only for an explicit gap.",
     inputSchema: {
       objective: z.string().min(1),
       target_refs: z.array(z.string()).optional(),
       profile: z.enum(["standard", "weak"]).optional(),
       token_budget: z.number().int().positive().optional(),
+      scope: z
+        .enum(["symbol", "neighborhood", "impact", "verification", "subsystem"])
+        .optional(),
+      prior_evidence_ids: z.array(z.string()).optional(),
+      unresolved_gaps: z.array(z.string()).optional(),
     },
   },
-  async (args) => result(await client.request("context", args)),
+  async (args) => result(await client.request("context", { ...args, view: "envelope" })),
 )
 server.registerTool(
   "pi_runtime_evidence",
@@ -111,7 +117,7 @@ server.registerTool(
     description: "Show bounded revision-aware runtime evidence.",
     inputSchema: { refs: z.array(z.string()).optional() },
   },
-  async (args) => result(await client.request("runtime_evidence", args)),
+  async (args) => result(await client.request("runtime_evidence", { ...args, view: "compact" })),
 )
 server.registerTool(
   "pi_research_plan",

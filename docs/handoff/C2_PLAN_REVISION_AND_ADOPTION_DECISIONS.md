@@ -1,0 +1,532 @@
+# C2 Plan Revision and Adoption Decisions
+
+Status: **stage-local plan revision for C2, derived from measurement taken 2026-08-26.**
+
+`docs/PI_MASTER_EXECUTION_PLAN.md` remains the canonical backlog and is not reordered by this
+document. `docs/handoff/C2_EVIDENCE_DELIVERY_DECISION.md` remains the C2 evidence-delivery contract;
+this document changes the **order and the exit criterion** of its work packages on measured grounds,
+and rules on the mechanisms proposed in PR #102.
+
+Inputs: `docs/audit/C2_CONTEXT_VIRTUALIZATION_INDEPENDENT_AUDIT.md`,
+`docs/handoff/C2_TRUTH_SCOPE_AND_COST_FIDELITY_CORRECTIVE_DESIGN.md`,
+and the new deterministic instrument `tools/local/c2_evidence_recall.py`.
+
+---
+
+## 1. The measurement that changes the plan
+
+Once the Twin contained the project and the estimator matched the payload, C2's central assumption
+became testable without a model. The sealed task oracle already states the facts a correct answer must
+contain, so critical-evidence recall is computable at every budget on the compression curve.
+
+Measured on `eca-symbol-001`, `eca-impact-001`, `eca-tests-001` at HEAD, zero model calls:
+
+| Budget | delivered tokens | selected | normalized recall (mean) |
+|---|---|---|---|
+| 1,024 | ~1,250 | 12 | 0.18 |
+| 2,048 | ~2,350 | 25 | 0.18 |
+| 4,096 | ~2,800 | 32 | 0.24 |
+| 8,192 | ~2,800 | 32 | 0.24 |
+| 16,384 | ~2,800 | 32 | 0.24 |
+| 32,768 | ~2,800 | 32 | 0.24 |
+
+```
+best normalized recall (mean over tasks) : 0.244
+best raw recall        (mean over tasks) : 0.056
+recall at 32,768 vs at 4,096             : unchanged
+maximum unused budget                    : 30,417 tokens of 32,768
+```
+
+Three conclusions follow, and each contradicts a premise the C2 plan was built on.
+
+**1.1 Context size is not the binding constraint.** At the 32k profile the envelope spends about 7%
+of its budget and leaves 30,417 tokens unused. It stops because `_PROTOCOL_MAX_ITEMS = 32` binds long
+before the token budget does — 46 candidates are excluded with 5,640 tokens still free at 8k. A
+mechanism that cannot spend 8k cannot be tuned for 32k or 64k. **Compression is optimising a
+constraint that is not active.**
+
+**1.2 Selection recall is the binding constraint.** 0.244 of the facts a correct answer needs are
+recoverable from the delivered envelope. `eca-tests-001` scores 0.00 — the required verification tests
+are absent entirely, although `derive_required_verification_set` exists and could name them.
+
+**1.3 The envelope encodes facts in the wrong shape.** Raw recall is 0.056 against normalized 0.244:
+the envelope emits `py://src.extendcodeagent.testing.service#select_tests` while the answer requires
+`src/extendcodeagent/testing/service.py`. The Graph holds both. PI makes the model perform a
+deterministic translation it could perform itself — which is exactly the 20 measured
+`PROJECTION_SCHEMA_ERROR` cells, now reproduced without a model.
+
+### 1.4 Consequence for B0b's null result
+
+B0b found Graph, Twin, Semantic and Test Selection `NO_CONFIRMED_CAUSAL_EFFECT`. That is consistent
+with these numbers rather than surprising against them: a channel delivering a quarter of the required
+facts, in the wrong encoding, should not move task success. **The null result is more likely a
+delivery defect than a capability verdict**, which is a materially better position than the programme
+believed it was in — but only if the plan targets delivery next.
+
+---
+
+## 2. Revised goal decomposition
+
+The 32k/64k target was treated as one problem. It is three, and they are strictly ordered:
+
+| | Question | Current | Binding? |
+|---|---|---|---|
+| **S — Sufficiency** | does the envelope contain what the answer needs? | 0.244 | **yes** |
+| **E — Encoding** | is it in the shape the answer needs? | 0.056 raw | **yes** |
+| **C — Compression** | does it fit the profile? | 2.8k of 32k used | no |
+
+C cannot become binding until S approaches 1.0, because raising S will raise delivered tokens. The
+entire value of the compression work is therefore **contingent on first solving S and E**, and every
+compression mechanism proposed for C2 should be re-sequenced behind them.
+
+**Revised C2 exit criterion.** Replace "showing task-success or cost improvement" — which B0b already
+showed is not detectable on this corpus — with a criterion the instrument can decide:
+
+> C2 exits when normalized critical-evidence recall is >= 0.90 and raw recall >= 0.90 on the sealed
+> tuning tasks, with the delivered envelope inside the 8k initial evidence target, and held-out
+> tasks non-inferior. Task-success comparison remains a gate, not the primary signal.
+
+This is falsifiable, deterministic, costs no model budget, and can be run on every commit.
+
+---
+
+## 3. Adoption decisions
+
+Each mechanism is ruled on value, cost and the evidence that supports it. `ADOPT` means it enters the
+C2 work order; `NARROW` means adopt with a stated bound; `DEFER` means it needs entry evidence;
+`REJECT` means it leaves C2 scope.
+
+### 3.1 ADOPT — Critical-Evidence-Recall@Budget as C2's primary instrument
+
+Implemented as `tools/local/c2_evidence_recall.py`.
+
+The highest value-to-cost item in this review. It converts C2's central question into a deterministic
+measurement with no model calls and **no new labelling** — the sealed oracle already carries the
+required facts. It separates "PI delivered the truth" from "the model used the truth", which is the
+attribution the merged decision document asks for and never had an instrument for. It also produces
+the compression curve directly.
+
+*Value: very high. Cost: one 250-line tool, already built. Risk: the oracle's answer fields are a
+proxy for required evidence, not a complete labelling — treat recall as a lower bound.*
+
+### 3.2 ADOPT and promote to first — deterministic exact projection (AnswerIR)
+
+Raw recall 0.056 versus normalized 0.244 quantifies the burden precisely: **77% of the facts PI does
+deliver arrive in an encoding the answer cannot use directly.** This is the only C2 failure class with
+independent measured evidence behind it (20 B0b `PROJECTION_SCHEMA_ERROR` cells) and it is cheap: the
+ref→path→qualname expansion already exists in the Graph and is computed in twelve lines by the recall
+harness.
+
+Promote `C2-C` ahead of `C2-A`. Attribution telemetry is valuable, but there is no point instrumenting
+a channel whose top defect is already identified and mechanically fixable.
+
+*Value: very high. Cost: low. Evidence: direct.*
+
+### 3.3 ADOPT — make the budget actually bind
+
+`_PROTOCOL_MAX_ITEMS = 32` and `_PROTOCOL_MAX_TOKENS = 8_192` are fixed constants that override the
+caller's request, so the envelope cannot use a larger profile even when correctness requires it. This
+is a two-line change and it is a **product behaviour change**, so it does not belong in the corrective
+slice: it lands as the first C2-1 item, with a before/after recall curve as its evidence.
+
+Note the asymmetry: raising the item cap alone will raise recall only if the ranking is right. Run the
+curve first; if recall at 64 items is no better than at 32, the defect is ranking, not the cap, and
+the coverage optimiser (§3.4) is the answer instead.
+
+*Value: high. Cost: trivial. Must be measured, not assumed.*
+
+### 3.4 NARROW — Semantic Working Set / Coverage Optimiser
+
+Adopt, bounded to one justification: **raise S**. Not "minimum sufficient context", not a compiler
+pipeline, not the seven-module split in PR #102 §13.1. The optimiser is admitted only after §3.3
+shows the cap is not the whole story, and it is accepted only if it moves normalized recall.
+
+Concretely, obligations already exist — `derive_required_verification_set` produces
+`VerificationObligation`s with criticality and provider IDs. `eca-tests-001` scoring 0.00 while the
+required set is derivable is the clearest single opportunity in the codebase: **make obligation
+providers protected evidence and they enter the envelope by construction.**
+
+*Value: high, but contingent. Cost: moderate. Gate: normalized recall delta.*
+
+### 3.5 DEFER — Semantic Contract extraction
+
+Near-greenfield (5 of 16 fields derivable; the analyzers emit no parameters, annotations, return
+types, visibility, raises or effects). Before spending that effort, §3.2–3.4 should be measured: if
+recall reaches 0.9 without contract facts, contract extraction is not a C2 concern at all. Entry
+evidence: a recall ceiling that contract facts demonstrably lift.
+
+It also belongs to `side_effects` / `state_event` / `api_schema_db`, not to `context`, and must
+declare its `CapabilityName`, `D0..D4` depth and ablation arm before implementation.
+
+### 3.6 REJECT for C2 — Semantic ABI / contract fingerprint
+
+A fingerprint over "declared inputs, declared output, effect classes, schema bindings" computed on
+analyzers that emit none of those hashes a near-constant `unknown` vector. It would report "boundary
+unchanged" for real boundary changes, silently truncating the Impact closure and the required
+verification set — a false negative landing directly on the one thing declared a hard gate.
+
+Re-propose only with: a published contract-field coverage rate per entity, a labelled corpus, and
+`false_stop_rate = 0` on public boundaries in shadow. Not a C2 mechanism.
+
+### 3.7 REJECT for C2 — TaskExecutionState / durable task engine
+
+No measured consumer exists. `PlanOutcome` + `convergence` + `blueprint` already cover plan, progress
+and target-versus-actual, and C1 ran with zero repository I/O. Re-propose with a measurement showing
+session history is required to recover execution progress.
+
+### 3.8 DEFER — Project Memory
+
+The audit's finding stands: structural memory regenerated from Graph/Twin is a cache and should be
+named one; decision memory is the only class with long-horizon value and is exactly the class whose
+invalidation cannot be derived from a file change. `CapabilityName.MEMORY` already exists and is
+forced `off`; the SQLite owner is already bitemporal. Nothing needs building until an invalidation
+protocol for reviewed decisions exists.
+
+### 3.9 ADOPT as secondary — Context Debt
+
+Keep it as a diagnostic, as PR #102 proposes, and do **not** promote it. Context Debt measures waste;
+waste is not the active constraint while 93% of the budget is unspent. It becomes useful the moment S
+approaches 1.0 and delivered tokens start to grow — schedule it to arrive with the compression work,
+not before.
+
+### 3.10 ADOPT as an experiment arm — "deliver only what local search cannot find"
+
+**The most substantive new idea in this review, and it is a criticism of the product's premise.**
+
+B0b's PI-off arms passed equally often as PI-on arms. One explanation deserves testing: much of what
+PI delivers — a symbol's definition path, its name, its file — is what a coding agent finds with one
+`grep`. PI's irreducible value is the part local search cannot produce: reverse dependencies,
+transitive impact, verification obligations, staleness, contradiction, requirement mapping.
+
+The experiment is cheap. Classify each delivered evidence item as *locally discoverable* (findable by
+searching the objective's literal terms) or *graph-only* (requires traversal). Then measure recall and
+task outcome for a graph-only envelope.
+
+Two outcomes, both valuable:
+
+- if a graph-only envelope preserves task outcome, context drops sharply **and** PI's effect is
+  isolated for the first time — one experiment serves both programme goals;
+- if it degrades outcome, the locally-discoverable payload is doing real work, which is itself the
+  first positive causal evidence for the delivery channel.
+
+*Value: very high — it addresses the programme's central unanswered question. Cost: low. Add as an
+ablation arm, not as default behaviour.*
+
+### 3.11 ADOPT — measure prefix-cache reuse for real
+
+`stable_evidence_envelope()` and `stable_prefix_id` are exactly the right design: a task-invariant
+prefix that a provider can cache. But the metric is the placeholder string
+`"cache_observation": "model_response_metrics"`.
+
+Progressive expansion's entire cost argument depends on this. If the stable prefix is not actually
+cache-hit, then two bounded calls cost more prefill than one larger call, and the scope ladder is a
+net loss disguised as a saving. Promote prefix-cache hit rate from placeholder to a required C2
+measurement, or state plainly that expansion's economics are unverified.
+
+### 3.12 ADOPT — structural enforcement of the facade boundary
+
+The line budget added during the audit (1,600) is arbitrary and only works if someone lowers it.
+A stronger invariant is already satisfied and should be pinned instead: **no module-level function in
+`service/application.py` may traverse `snapshot.nodes` or `snapshot.edges`.** That is a precise
+statement of "the facade serializes, the domain computes", and it cannot be satisfied by shuffling
+lines. Keep the budget as a coarse backstop; add the structural rule as the real gate.
+
+---
+
+## 4. Revised C2 work order
+
+Supersedes the ordering in `C2_EVIDENCE_DELIVERY_DECISION.md` §"C2 implementation order". The work
+packages are unchanged; the sequence and the exit criterion are.
+
+| # | Package | Why here | Gate |
+|---|---|---|---|
+| **C2-0** | Truth scope + cost fidelity | done; nothing below is interpretable without it | Twin covers the project; estimator within 10% |
+| **C2-0b** | Recall instrument + baseline seal | makes every later gate decidable at zero model cost | sealed curve at HEAD |
+| **C2-C′** | Deterministic exact projection (AnswerIR) | raw 0.056 vs normalized 0.244 — largest measured single defect | raw recall → normalized recall |
+| **C2-1** | Budget actually binds (item cap) | envelope leaves 93% of a 32k profile unused | recall delta at 64 vs 32 items |
+| **C2-E′** | Obligation providers as protected evidence | `eca-tests-001` is 0.00 while the required set is derivable | normalized recall on verification tasks |
+| **C2-A** | Attribution telemetry | now instruments a channel whose top defects are fixed | attribution on residual failures |
+| **C2-D** | Sufficiency gate | meaningful once recall is high enough to have a true `SUFFICIENT` | false-sufficient rate |
+| **C2-X** | Graph-only ablation arm (§3.10) | isolates PI effect; can run alongside | outcome delta vs full envelope |
+| **C2-G** | Compression curve + prefix-cache | first point at which compression is the active constraint | p50/p95 total context; cache hit rate |
+| **C2-I** | Adoption + causal rerun | unchanged | sealed comparison |
+
+Deferred out of C2: contract extraction, ABI fingerprint, task state, memory, HTML analyzer.
+
+---
+
+## 4b. Verification of the three remaining unmeasured assumptions
+
+Checked 2026-08-26 against sealed B0b evidence and the adapter source. Two are now settled; one
+cannot be measured until the local route is running.
+
+### 4b.1 SETTLED — the PI envelope is a minority of what the model reads
+
+From `docs/evidence/final/b0b-confirmation-result-v1.json` over 57 held-out cells:
+
+```
+model requests            538      ->  9.4 per cell
+PI tool calls             240      ->  4.2 per cell
+fresh input tokens        2,392,101  (~9,568,404 chars)
+PI tool output            2,043,852 chars
+PI share of fresh prompt  21.4%
+context_token_sum/input   7.9x     (cache-read amplification within a session)
+```
+
+**Bounding the PI envelope to zero would remove at most about a fifth of the fresh prompt.** The other
+79% is the task instruction, the agent loop, native tool output and the model's own prior turns, all
+host-owned. A context target expressed only over the PI payload therefore cannot deliver a bounded
+session on its own, and `large-project-bounded-context-target-v1.json`'s "total primary-model context"
+definition is the right one to hold the programme to.
+
+The lever ECA does own is **turn count**: 9.4 model requests per cell, of which 4.2 are PI calls, each
+re-sending the accumulated conversation. High recall is what collapses repeated narrowing calls into
+one sufficient envelope, so recall acts on the session total and not only on the payload. This is an
+argument for §3.1–§3.4 and against treating payload compression as the lever.
+
+One reduction is already banked: `pi_context` averaged 39,065 chars (~9,766 tokens) per call in B0b on
+the legacy detail path; the envelope view measured today is ~2,860 tokens for a comparable task.
+
+### 4b.2 SETTLED — the stable prefix cannot be a prefix as delivered
+
+`stable_evidence_envelope()` and `stable_prefix_id` are designed as a task-invariant cacheable prefix.
+They cannot function as one.
+
+`adapters/opencode/src/plugin.ts` exposes PI only through `createTools(...)` and the MCP surface;
+its `chat.message` hook is observe-only and emits signals, with **no prompt-injection path**. PI
+therefore reaches the model exclusively as a **tool result**, which lands mid-conversation after the
+system prompt, the user objective and every prior turn.
+
+Prefix caching operates on a literal prefix of the token sequence: a stable block at position N only
+reduces prefill if positions 0..N-1 are identical too, and across tasks they never are, because each
+objective precedes the first tool call. Within one conversation the append-growth pattern does hit
+cache — that is the observed 7.9x amplification — but that is ordinary conversation caching and owes
+nothing to the designed stable envelope.
+
+Consequences:
+
+- **Cross-task prefix reuse is currently zero by construction.** Any claim that the stable envelope
+  amortises protocol overhead across tasks is unsupported.
+- §3.11 is upgraded from "measure the hit rate" to a design question: to be a real prefix the stable
+  envelope must be emitted **once, ahead of the user turn** — as instructions or a system-prompt
+  contribution — not repeated inside every tool result. That requires a host injection path OpenCode
+  may not offer, in which case the honest move is to shrink the stable block rather than claim it is
+  cached.
+- Progressive expansion's economics remain unproven and now look worse: each expansion is another
+  tool round trip whose prefill is a full re-send of the accumulated conversation.
+
+### 4b.2b SETTLED — `stable_prefix_id` is a reporting label on both routes
+
+§4b.2 showed the stable envelope cannot be a wire-level prefix through OpenCode, where PI arrives as a
+tool result. Checking ECA's own direct route shows the same thing for a different reason.
+
+`core/model_routing/adapters.py::OpenAICompatibleAdapter.complete` sends
+
+```python
+"messages": [{"role": "user", "content": request.prompt}]
+```
+
+— a single user message, with no separation between task-invariant protocol text and task-varying
+evidence. `core/model_routing/router.py:101` copies `stable_prefix_id` onto the response and does
+nothing else with it. **Nothing on either route arranges the payload so the stable block occupies a
+literal token prefix.**
+
+The consequence matters for how results are read: `RoutedResponse.cache_reuse_ratio` is computed from
+whatever `usage.prompt_tokens_details.cached_tokens` the provider reports, so it measures **ambient
+provider caching**, not the designed stable envelope. Reporting it as evidence that the stable-prefix
+design works would be a misattribution. Either the adapter gains a real prefix/suffix split — a system
+or prefix message emitted identically across tasks — or the honest move is to shrink the stable block
+and stop claiming it amortises.
+
+### 4b.3 MEASURABLE — the route exists; a key and a loaded model do not
+
+Superseding the earlier "not measurable" note. The `local-practical` port-8090 route is not listening,
+but ControlDeck exposes an OpenAI-compatible LLM gateway that ECA can use with **no new code**:
+
+```
+base_url : http://127.0.0.1:8765/api/v1/llm/v1
+auth     : Authorization: Bearer <gateway api key>
+model    : "auto" routes to a currently running llama instance, without waking a stopped one
+transport: transparent proxy to llama.cpp with ControlDeck admission control
+```
+
+OpenCode reaches it through ControlDeck's `integrations/opencode/provider.py::autoconfigure`, which
+issues the gateway key if absent, sets `base_url` and `use_gateway`, and writes the credential into
+OpenCode's auth store so the user never types it.
+
+ECA's `OpenAICompatibleAdapter(base_url, api_key, model_id)` is a drop-in for the same endpoint, and it
+already parses `usage.prompt_tokens_details.cached_tokens` into `ModelResponse.cache_read_tokens` and
+sets `cache_metrics_observed`. Prefix-cache measurement therefore needs no new instrument — only a key
+and a loaded model. Caveat: the gateway proxies llama.cpp transparently, so whether
+`prompt_tokens_details` is present at all depends on the llama.cpp build; if it is absent,
+`cache_metrics_observed` will be `False` and that itself is the finding.
+
+Two blockers remain, both operational rather than architectural:
+
+1. **The gateway API key.** It is stored encrypted and issued through
+   `GET /api/v1/models/llm-gateway` behind a `workflows.edit` session. Automated extraction of the
+   credential was refused, correctly, and was not worked around.
+2. **No model is loaded.** No `llama-server` / `vllm` / `ollama` process is running, so `"auto"` has
+   nothing to route to.
+
+**Route policy.** The ControlDeck gateway is a different route from the sealed `local-practical`
+port-8090 Qwen arm in `b0a-quality-target-v2.json`. Anything measured through it is **diagnostic**, is
+labelled as such, and is not recorded in `docs/evidence/final/` or counted in any B0b/C2 arm without an
+explicit route/provenance decision.
+
+### 4b.5 MEASURED — prefix caching works, and the stable envelope captures none of it
+
+Run through the ControlDeck gateway against `Qwen3.8-27B` (llama.cpp reports
+`prompt_tokens_details`, so `cache_metrics_observed` is `true`). Diagnostic, not sealed evidence.
+
+| condition | prompt tokens | cached | reuse |
+|---|---|---|---|
+| cold, first sighting | 2,365 | 42 | 0.02 (chat-template baseline) |
+| identical prompt, repeated | 2,365 | 2,361 | **0.998** |
+| shared 10,117-char head, divergent tail | 2,373 | 1,849 | **0.779** |
+| append-only growth after that | 2,381 | 1,857 | **0.780** |
+| two real task envelopes, shared 1,349-char head | 2,900 | 42 | ~0.00 |
+
+**This corrects §4b.2, which was too pessimistic.** Prefix caching on this backend is strong and it
+does *not* require the whole prompt to repeat: a shared head with a divergent tail still recovers 78%,
+and append-only growth — the multi-turn tool-result pattern OpenCode produces — recovers the same. The
+7.9x amplification seen in B0b is consistent with that.
+
+What §4b.2 got right is the consequence: **the design captures none of this.** The two real task
+envelopes shared only a 1,349-char head and reused nothing beyond the 42-token template baseline. The
+stable envelope is roughly 750 characters, and on both routes it sits after task-varying content.
+
+The finding therefore flips from "the stable prefix cannot work" to a sized engineering opportunity:
+
+- the mechanism is real and the ceiling is high (0.78–0.998 measured);
+- the shared head must be **large enough and first**. At ~1.3k chars the reuse was nil; at ~10k chars
+  it was 78%;
+- so §3.11 becomes: place the task-invariant block ahead of all task-varying content, and only then
+  report `cache_reuse_ratio` as evidence about the design rather than about ambient caching;
+- progressive expansion is **cheaper than §4b.2 implied**, because append-only growth reuses the
+  prefix. Its cost argument is not refuted; it is simply still unmeasured on real envelopes.
+
+### 4b.6 MEASURED — a reasoning model on a small output budget returns nothing, silently
+
+`Qwen3.8-27B` through the gateway with `max_tokens=16`:
+
+```
+finish_reason        : "length"
+message.content      : ""            (0 chars)
+message.reasoning_content : 69 chars
+completion_tokens    : 16            (the entire budget)
+```
+
+At `max_tokens=2048` the same prompt returns `content = "ready"`. So the model spends the budget in
+`reasoning_content` and emits no `content` at all when the budget is small.
+
+`OpenAICompatibleAdapter` read `message["content"]` and never looked at `finish_reason`, so it returned
+`ModelResponse(text="")` and reported success. **A truncation was indistinguishable from a model that
+had nothing to say** — and C2 pushes output budgets *down*, so this sits directly on the stage's path.
+
+Fixed: the adapter now raises `ModelUnavailable` when content is empty and `finish_reason` is
+`length`, and leaves a legitimately empty answer that finished normally alone. Two regression tests
+pin both halves.
+
+This also sets a constraint C2 must respect: **with a reasoning model, the output budget cannot be
+squeezed the way the input envelope can.** Any bounded-context profile has to reserve real output
+headroom, which is exactly what `large-project-bounded-context-target-v1.json` means by "total context
+including reserved output headroom".
+
+### 4b.4 Weak-model protocol compliance — still unmeasured
+
+Not measured: no model is loaded on either route, and no substitute model was used. It remains the single largest unquantified risk on the critical path. The envelope instructs the model
+to cite evidence IDs, to treat omission as non-negative evidence, and to expand only for a named gap.
+Whether a Qwen3-27B-class local model honours that is unknown; if it does not, it searches the
+repository anyway and the system pays for both the envelope and the search. Every bounded-context
+claim assumes compliance that has never been tested.
+
+Add this as an explicit C2 entry gate: before `C2-D` (sufficiency gate) is accepted, measure on the
+local route how often the model (a) cites delivered evidence IDs rather than restating content,
+(b) requests expansion only for a named gap, and (c) refrains from redundant native search when the
+envelope is in fact sufficient. A sufficiency gate the model ignores is not a gate.
+
+### 4b.7 MEASURED — the output budget is a cliff, and ECA's default is below it
+
+Real 15,556-character envelope (protocol + 32 evidence items + task), `Qwen3.8-27B`:
+
+| `max_output_tokens` | finish | reasoning | answer | verdict |
+|---|---|---|---|---|
+| **512** (ECA default) | `length` | 2,673 chars | **0 chars** | whole budget wasted |
+| 1,024 | `length` | 5,102 chars | **0 chars** | whole budget wasted |
+| 2,048 | `length` | 5,034 chars | **1,898 chars** | first usable answer |
+
+This answers the question directly: **bounding the output budget does lose required information, and
+it loses it discontinuously.** A reasoning model emits `reasoning_content` first, so below the floor
+the result is not a shortened answer — it is *no answer*, at full token cost. Input truncation
+degrades gracefully (omitted evidence stays addressable and can be paged in at 78% cache discount);
+output truncation destroys the work outright.
+
+`ModelRequest.max_output_tokens` defaults to **512**, which is four times below the measured floor for
+this model class on a real envelope.
+
+**Design gap: ECA has no output-headroom accounting at all.** `context_budget_tokens` bounds input
+evidence; `max_output_tokens` is an unrelated per-request number; nothing anywhere computes
+`total = prompt + reserved output`. `large-project-bounded-context-target-v1.json` defines a 64k claim
+as *total* including reserved output headroom, so **that claim currently cannot be computed by the
+code that would have to honour it.**
+
+Corrected principle for C2: **output headroom is a floor reserved first, not a remainder.** Evidence
+gets what is left. Never trade output headroom for more evidence — the trade returns zero.
+
+### 4b.8 MEASURED — cache reuse has a fixed ~520-token overhead, and the stable block is inside it
+
+Shared-head sweep, identical head with a divergent tail:
+
+| shared head | prompt tokens | cached | **uncached** | reuse |
+|---|---|---|---|---|
+| 781 chars | 206 | 42 | 164 | 0.20 |
+| 1,562 chars | 349 | 42 | 307 | 0.12 |
+| 3,053 chars | 622 | 102 | **520** | 0.16 |
+| 6,035 chars | 1,168 | 648 | **520** | 0.55 |
+| 12,070 chars | 2,273 | 1,753 | **520** | 0.77 |
+
+The uncached remainder is **constant at ~520 tokens** once the head is large enough. The backend is not
+applying a threshold; it reuses everything except a fixed block-quantised remainder. So:
+
+> reuse ≈ (prompt_tokens − 520) / prompt_tokens
+
+ECA's stable envelope plus rules is 1,312 characters ≈ **330 tokens — entirely inside the 520-token
+uncached remainder.** It can never be cached, at any position. Making it *first* is necessary but not
+sufficient; it must also exceed ~520 tokens (~2,000+ characters) before a single token of it is reused.
+
+That is a usable design rule, and it is not an argument for padding. There is real protocol content
+that belongs in a task-invariant head — the gap taxonomy, the scope ladder, the AnswerIR/ChangeIR
+schema, the citation contract — currently scattered or absent. Consolidating it into one 2–4k-character
+block that is emitted first would be worth doing on clarity grounds alone, and would then also be ~78%
+free after the first call.
+
+### 4b.9 Concurrency interacts with prefix cache — 4 slots, not one
+
+The host runs llama.cpp with **4 parallel slots**. This explains the erratic readings in §4b.5, where
+two real task envelopes sharing a 1,349-character head reused nothing beyond the 42-token baseline:
+with `-np 4` the KV cache is partitioned, and a request that lands in a different slot finds no prefix
+to reuse.
+
+Consequence for the architecture, and it is not obvious: **a shared prefix is only free if it is
+resident in the slot that serves the request.** With four workstreams either the prefix occupies all
+four slots — four times the KV cost, competing with the very context budget C2 is trying to protect —
+or reuse becomes probabilistic. `large-project-bounded-context-target-v1.json` asks for four
+independent workstreams *and* bounded context; this is the first measured place where those two goals
+trade against each other, and neither the target nor PR #102 accounts for it.
+
+Do not resolve this by building a scheduler. ControlDeck already owns admission control, which is where
+the target says the decision belongs. Record it as a measured constraint on the concurrency claim and
+measure aggregate KV requirement before asserting four-way capability.
+
+## 5. What this revision does not claim
+
+- 0.244 is measured on **three tuning tasks in one Python repository**. It is a strong signal about the
+  delivery channel and not a general recall figure. The instrument must be extended to all 13 sealed
+  tasks and to the JS/TS corpus before any programme-level conclusion.
+- Recall computed from oracle answer fields is a **lower bound** on required evidence: facts needed for
+  reasoning but not present in the final answer are not counted.
+- Nothing here promotes a capability, changes a threshold, or claims a 32k/64k capability. The targets
+  in `large-project-bounded-context-target-v1.json` are unchanged and remain engineering targets.
+- The graph-only experiment (§3.10) is proposed as an **arm**, not a default. If it wins, that is a
+  finding; adopting it before measurement would repeat the mistake this revision is correcting.

@@ -1,5 +1,51 @@
 # Known Issues
 
+## Repaired 2026-08-26: Project Truth scope and context cost fidelity
+
+Both were found during the independent audit of PR #102 and are fixed on
+`agent/weak-local-evidence-protocol`. See
+`docs/handoff/C2_TRUTH_SCOPE_AND_COST_FIDELITY_CORRECTIVE_DESIGN.md`.
+
+- **The Twin of this repository contained none of this repository.** `SourceSnapshotter` walked the
+  filesystem with a hand-maintained `IGNORED_NAMES` set that omitted `.evaluation/`, which
+  `.gitignore` does list. `.evaluation/` holds 207,037 of 207,308 scannable files and sorts before
+  `src/`, so the 10,000-file cap was exhausted at index 10,000 while the first `src/` file sits at
+  index 207,147. The Twin held 75,712 nodes, 75,709 of them from evaluation corpora and **zero from
+  `src/`**. Truncation was reported only at `INFO`, so it degraded silently. Scope now comes from
+  `git ls-files --exclude-standard`, and truncation is an `ERROR`.
+  - **Any self-measurement taken on `main` or the C2 branch before this fix is invalid**, including
+    any sealed artifact from `tools/local/c2_evidence_protocol.py`. Re-run and re-seal before citing.
+  - The evaluation runner copies corpora into separate workspaces, so B0b's 93,189-token context and
+    the 20 `PROJECTION_SCHEMA_ERROR` cells are **not** attributed to this defect.
+- **The context token budget was enforced against a payload the consumer never received.**
+  `ContextItem.token_estimate` counted three short strings while the delivered item also carries
+  revision, provenance, confidence and status — a 5.1x under-count. No 32k/64k claim made before this
+  fix is supported by measurement. `context/serialization.py` now owns the emitted payload and its
+  estimate together; envelope metrics report `delivered_evidence_tokens`.
+
+## Open after the 2026-08-26 audit
+
+- `AnalysisBudgets` is 7/8 dead config: only `max_depth` has a consumer. `max_files`,
+  `max_file_bytes`, `max_graph_nodes`, `max_graph_edges`, `incremental_batch_ms`,
+  `background_workers` and `memory_budget_mb` are configurable and inert — configuring `max_files`
+  does not reach `SourceSnapshotter`. Wire the first two, delete the rest.
+- `context._infer_scope` is degenerate: all three C2 tasks classify as `verification` because the
+  heuristic matches `test`/`verification`/`requirement`/`evidence`, which occur in nearly every
+  objective in this repository. The scope ladder never starts narrow. Derive scope from
+  `IntelligencePlan.context_scope` instead.
+- Two scope ladders exist — `context.EvidenceScope` and `orchestration.ContextScope` — overlapping on
+  three values. C2 must not add a third; exactly one mapping is permitted, in the context domain.
+- Objective anchor gaps admit sentence noise (`objective_anchor_missing:plus`, `:order.`,
+  `:boundary.`): trailing punctuation is not stripped and the stop list is incomplete.
+- The analyzers carry no contract surface. Node properties are `name`, `qualname`, `start_line`,
+  `end_line`, `intent_tokens`, `scope`, `bound_name`; there are no parameters, annotations, return
+  types, visibility, raised exceptions or effects. Of the 16 contract fields in PR #102 §6.1, 5 are
+  derivable today. Any Semantic Contract or ABI-fingerprint work is near-greenfield and belongs to
+  the already-declared `side_effects` / `state_event` / `api_schema_db` capabilities.
+- No proposed C2 mechanism declares an owning `CapabilityName`, a `D0..D4` depth or an ablation arm.
+  PR #102's three documents contain zero occurrences of `CapabilityName`, `CapabilityPolicy` or
+  `ablation`, against Master Plan invariant 6.
+
 ## C1 selection evidence does not prove task outcome or broad-language generalization
 
 - C1 exactly matches all 13 sealed expected plans, including the four repository-held-out tasks, but

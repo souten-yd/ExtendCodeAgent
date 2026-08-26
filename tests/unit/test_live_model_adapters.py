@@ -45,6 +45,7 @@ def test_openai_compatible_adapter_uses_bounded_chat_completion_contract() -> No
     assert response.text == '{"answer":"ok"}'
     assert (response.input_tokens, response.output_tokens) == (12, 4)
     assert (response.cache_read_tokens, response.reasoning_tokens) == (2, 1)
+    assert response.cache_metrics_observed is True
 
 
 def test_opencode_host_adapter_uses_stable_session_model_contract() -> None:
@@ -86,6 +87,7 @@ def test_opencode_host_adapter_uses_stable_session_model_contract() -> None:
     assert response.cost == 0.012
     assert (response.cache_read_tokens, response.cache_write_tokens) == (20, 4)
     assert response.reasoning_tokens == 2
+    assert response.cache_metrics_observed is True
     assert calls[-1][:2] == ("DELETE", "/session/session-1")
 
 
@@ -104,3 +106,50 @@ def test_opencode_host_adapter_rejects_provider_failure_and_cleans_up() -> None:
     with pytest.raises(ModelUnavailable, match="ProviderAuthError"):
         adapter.complete(ModelRequest(ModelRole.STRATEGY_REASONER, "plan"))
     assert calls[-1][:2] == ("DELETE", "/session/failed-session")
+
+
+def test_reasoning_model_that_spends_the_whole_budget_thinking_is_unavailable() -> None:
+    """An empty answer must not look like a model that had nothing to say.
+
+    Observed against Qwen3.8-27B through the ControlDeck gateway: with a small output
+    budget the model emits only `reasoning_content`, returns empty `content` and finishes
+    with `length`. Reporting that as success would let truncation pass as an answer.
+    """
+
+    def transport(
+        url: str, payload: dict[str, object], headers: dict[str, str]
+    ) -> dict[str, object]:
+        return {
+            "choices": [
+                {
+                    "message": {"content": "", "reasoning_content": "The user is asking me to"},
+                    "finish_reason": "length",
+                }
+            ],
+            "usage": {"prompt_tokens": 59, "completion_tokens": 16},
+        }
+
+    adapter = OpenAICompatibleAdapter("http://127.0.0.1:8765/v1", "qwen", transport=transport)
+
+    with pytest.raises(ModelUnavailable, match="output budget exhausted"):
+        adapter.complete(
+            ModelRequest(ModelRole.CODE_REASONER, "answer briefly", max_output_tokens=16)
+        )
+
+
+def test_empty_answer_that_finished_normally_is_still_a_response() -> None:
+    """Only truncation is an error; a model that legitimately returns nothing is not."""
+
+    def transport(
+        url: str, payload: dict[str, object], headers: dict[str, str]
+    ) -> dict[str, object]:
+        return {
+            "choices": [{"message": {"content": ""}, "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 10, "completion_tokens": 0},
+        }
+
+    adapter = OpenAICompatibleAdapter("http://127.0.0.1:8765/v1", "qwen", transport=transport)
+    response = adapter.complete(ModelRequest(ModelRole.CODE_REASONER, "answer briefly"))
+
+    assert response.text == ""
+    assert response.cache_metrics_observed is False

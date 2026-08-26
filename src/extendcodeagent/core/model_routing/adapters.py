@@ -47,12 +47,23 @@ class OpenAICompatibleAdapter:
             usage = cast("JsonObject", raw.get("usage", {}))
             prompt_details = cast("JsonObject", usage.get("prompt_tokens_details", {}))
             completion_details = cast("JsonObject", usage.get("completion_tokens_details", {}))
+            text = str(message["content"] or "")
+            finish_reason = str(choices[0].get("finish_reason") or "")
+            if not text.strip() and finish_reason == "length":
+                # A reasoning model can spend the whole output budget in `reasoning_content`
+                # and return empty `content`. Reporting that as a successful empty answer
+                # would let a truncation masquerade as a model that had nothing to say.
+                raise ModelUnavailable(
+                    "output budget exhausted before any content was produced; "
+                    "raise max_output_tokens for this reasoning model"
+                )
             return ModelResponse(
-                text=str(message["content"]),
+                text=text,
                 input_tokens=int(cast("int", usage.get("prompt_tokens", 0))),
                 output_tokens=int(cast("int", usage.get("completion_tokens", 0))),
                 cache_read_tokens=int(cast("int", prompt_details.get("cached_tokens", 0))),
                 reasoning_tokens=int(cast("int", completion_details.get("reasoning_tokens", 0))),
+                cache_metrics_observed="prompt_tokens_details" in usage,
             )
         except (KeyError, IndexError, TypeError, ValueError) as error:
             raise ModelUnavailable("invalid OpenAI-compatible response") from error
@@ -135,6 +146,9 @@ class OpenCodeHostAdapter:
                 reasoning_tokens=sum(
                     _message_token_count(item, "reasoning") for item in assistant_messages
                 ),
+                cache_metrics_observed=any(
+                    _message_has_cache_metrics(item) for item in assistant_messages
+                ),
             )
             return response
         except (KeyError, TypeError, ValueError) as error:
@@ -203,6 +217,12 @@ def _message_cache_count(message: JsonObject, kind: str) -> int:
     tokens = cast("JsonObject", info.get("tokens", {}))
     cache = cast("JsonObject", tokens.get("cache", {}))
     return int(cast("int", cache.get(kind, 0)))
+
+
+def _message_has_cache_metrics(message: JsonObject) -> bool:
+    info = cast("JsonObject", message["info"])
+    tokens = info.get("tokens")
+    return isinstance(tokens, dict) and isinstance(tokens.get("cache"), dict)
 
 
 def _message_cost(message: JsonObject) -> float:
