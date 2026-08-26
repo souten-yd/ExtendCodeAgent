@@ -1,0 +1,262 @@
+{
+  "classification": "C2_AGENT_LOOP_DIAGNOSTIC",
+  "note": "Diagnostic. The sealed local-practical arm is port-8090; this endpoint is a different route and is not recorded as B0b/C2 evidence.",
+  "captured_at": "2026-08-26T11:35:24.840683+00:00",
+  "repository": "/tmp/claude-1000/-home-souten-ExtendCodeAgent/834e8784-5cdd-4621-acbc-e318c839c3cd/scratchpad/corpus-httpx",
+  "model": "Qwen3.6-35B-A3B",
+  "max_turns": 8,
+  "cases": 8,
+  "summary": {
+    "pi": {
+      "turns": 1,
+      "prompt_tokens": 6643.25,
+      "read_bytes": 0,
+      "greps": 0,
+      "reads": 0,
+      "recall": 0.89,
+      "precision": 0.39,
+      "answered": 8
+    },
+    "baseline": {
+      "turns": 6.12,
+      "prompt_tokens": 3747.88,
+      "read_bytes": 6232,
+      "greps": 3.62,
+      "reads": 1.75,
+      "recall": 0.62,
+      "precision": 0.62,
+      "answered": 5
+    }
+  },
+  "results": [
+    {
+      "case_id": "pr-85c5898d8e48",
+      "required": [
+        "tests/models/test_responses.py",
+        "tests/test_decoders.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 10465,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "recall": 0.5,
+        "precision": 0.5
+      },
+      "baseline": {
+        "turns": 8,
+        "prompt_tokens": 9288,
+        "read_bytes": 10276,
+        "greps": 7,
+        "reads": 1,
+        "malformed": 0,
+        "answered": false,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    },
+    {
+      "case_id": "pr-f1157dbc4102",
+      "required": [
+        "tests/test_utils.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 9354,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "recall": 1.0,
+        "precision": 0.125
+      },
+      "baseline": {
+        "turns": 8,
+        "prompt_tokens": 1811,
+        "read_bytes": 0,
+        "greps": 6,
+        "reads": 1,
+        "malformed": 1,
+        "answered": false,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    },
+    {
+      "case_id": "pr-daec2bdcdb96",
+      "required": [
+        "tests/client/test_async_client.py",
+        "tests/models/test_requests.py",
+        "tests/models/test_responses.py",
+        "tests/test_exceptions.py",
+        "tests/test_wsgi.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 8980,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "recall": 0.6,
+        "precision": 0.142857
+      },
+      "baseline": {
+        "turns": 8,
+        "prompt_tokens": 1626,
+        "read_bytes": 0,
+        "greps": 6,
+        "reads": 2,
+        "malformed": 0,
+        "answered": false,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    },
+    {
+      "case_id": "pr-15d09a3bbc20",
+      "required": [
+        "tests/test_utils.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 9282,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "recall": 1.0,
+        "precision": 0.333333
+      },
+      "baseline": {
+        "turns": 4,
+        "prompt_tokens": 4607,
+        "read_bytes": 10821,
+        "greps": 1,
+        "reads": 2,
+        "malformed": 0,
+        "answered": true,
+        "recall": 1.0,
+        "precision": 1.0
+      }
+    },
+    {
+      "case_id": "pr-9ae170a936df",
+      "required": [
+        "tests/test_urlparse.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 4027,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "recall": 1.0,
+        "precision": 0.5
+      },
+      "baseline": {
+        "turns": 5,
+        "prompt_tokens": 2647,
+        "read_bytes": 6349,
+        "greps": 2,
+        "reads": 2,
+        "malformed": 0,
+        "answered": true,
+        "recall": 1.0,
+        "precision": 1.0
+      }
+    },
+    {
+      "case_id": "pr-26dc39213a25",
+      "required": [
+        "tests/test_urlparse.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 4027,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "recall": 1.0,
+        "precision": 0.5
+      },
+      "baseline": {
+        "turns": 5,
+        "prompt_tokens": 2647,
+        "read_bytes": 6349,
+        "greps": 2,
+        "reads": 2,
+        "malformed": 0,
+        "answered": true,
+        "recall": 1.0,
+        "precision": 1.0
+      }
+    },
+    {
+      "case_id": "pr-ee432c0d3098",
+      "required": [
+        "tests/test_urlparse.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 4027,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "recall": 1.0,
+        "precision": 0.5
+      },
+      "baseline": {
+        "turns": 5,
+        "prompt_tokens": 2647,
+        "read_bytes": 6349,
+        "greps": 2,
+        "reads": 2,
+        "malformed": 0,
+        "answered": true,
+        "recall": 1.0,
+        "precision": 1.0
+      }
+    },
+    {
+      "case_id": "pr-abb994c0c24b",
+      "required": [
+        "tests/test_wsgi.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 2984,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "recall": 1.0,
+        "precision": 0.5
+      },
+      "baseline": {
+        "turns": 6,
+        "prompt_tokens": 4710,
+        "read_bytes": 9712,
+        "greps": 3,
+        "reads": 2,
+        "malformed": 0,
+        "answered": true,
+        "recall": 1.0,
+        "precision": 1.0
+      }
+    }
+  ]
+}

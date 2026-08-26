@@ -1,0 +1,263 @@
+{
+  "classification": "C2_AGENT_LOOP_DIAGNOSTIC",
+  "note": "Diagnostic. The sealed local-practical arm is port-8090; this endpoint is a different route and is not recorded as B0b/C2 evidence.",
+  "captured_at": "2026-08-26T11:29:01.015140+00:00",
+  "repository": "/tmp/claude-1000/-home-souten-ExtendCodeAgent/834e8784-5cdd-4621-acbc-e318c839c3cd/scratchpad/corpus-flask",
+  "model": "Qwen3.6-35B-A3B",
+  "max_turns": 8,
+  "cases": 8,
+  "summary": {
+    "pi": {
+      "turns": 1,
+      "prompt_tokens": 6093.62,
+      "read_bytes": 0,
+      "greps": 0,
+      "reads": 0,
+      "recall": 0.81,
+      "precision": 0.5,
+      "answered": 8
+    },
+    "baseline": {
+      "turns": 5.38,
+      "prompt_tokens": 2973.62,
+      "read_bytes": 6340.25,
+      "greps": 2.38,
+      "reads": 1.88,
+      "recall": 0.5,
+      "precision": 0.5,
+      "answered": 5
+    }
+  },
+  "results": [
+    {
+      "case_id": "pr-d7b6c1f6703d",
+      "required": [
+        "tests/test_blueprints.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 6129,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "baseline": {
+        "turns": 4,
+        "prompt_tokens": 5837,
+        "read_bytes": 20000,
+        "greps": 2,
+        "reads": 1,
+        "malformed": 0,
+        "answered": true,
+        "recall": 1.0,
+        "precision": 1.0
+      }
+    },
+    {
+      "case_id": "pr-cabda5935322",
+      "required": [
+        "tests/test_blueprints.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 6129,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "baseline": {
+        "turns": 4,
+        "prompt_tokens": 5837,
+        "read_bytes": 20000,
+        "greps": 2,
+        "reads": 1,
+        "malformed": 0,
+        "answered": true,
+        "recall": 1.0,
+        "precision": 1.0
+      }
+    },
+    {
+      "case_id": "pr-99b34f7148b7",
+      "required": [
+        "tests/test_appctx.py",
+        "tests/test_basic.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 1594,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "recall": 0.0,
+        "precision": 0.0
+      },
+      "baseline": {
+        "turns": 8,
+        "prompt_tokens": 2189,
+        "read_bytes": 216,
+        "greps": 4,
+        "reads": 1,
+        "malformed": 2,
+        "answered": false,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    },
+    {
+      "case_id": "pr-6650764e9719",
+      "required": [
+        "tests/test_async.py",
+        "tests/test_basic.py",
+        "tests/test_blueprints.py",
+        "tests/test_helpers.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 11226,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "recall": 0.5,
+        "precision": 0.5
+      },
+      "baseline": {
+        "turns": 8,
+        "prompt_tokens": 3098,
+        "read_bytes": 1284,
+        "greps": 2,
+        "reads": 5,
+        "malformed": 1,
+        "answered": false,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    },
+    {
+      "case_id": "pr-9c02f07f9bb4",
+      "required": [
+        "tests/test_basic.py",
+        "tests/test_json_tag.py",
+        "tests/test_templating.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 4962,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "recall": 1.0,
+        "precision": 0.115385
+      },
+      "baseline": {
+        "turns": 6,
+        "prompt_tokens": 1643,
+        "read_bytes": 1284,
+        "greps": 2,
+        "reads": 3,
+        "malformed": 0,
+        "answered": true,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    },
+    {
+      "case_id": "pr-2a33c1785412",
+      "required": [
+        "tests/test_basic.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 8493,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "recall": 1.0,
+        "precision": 0.0625
+      },
+      "baseline": {
+        "turns": 8,
+        "prompt_tokens": 2108,
+        "read_bytes": 438,
+        "greps": 5,
+        "reads": 3,
+        "malformed": 0,
+        "answered": false,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    },
+    {
+      "case_id": "pr-b10b6d4af112",
+      "required": [
+        "tests/test_config.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 4087,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "recall": 1.0,
+        "precision": 0.333333
+      },
+      "baseline": {
+        "turns": 3,
+        "prompt_tokens": 2634,
+        "read_bytes": 7500,
+        "greps": 1,
+        "reads": 1,
+        "malformed": 0,
+        "answered": true,
+        "recall": 1.0,
+        "precision": 1.0
+      }
+    },
+    {
+      "case_id": "pr-b8b410014d85",
+      "required": [
+        "tests/test_blueprints.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 6129,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "baseline": {
+        "turns": 2,
+        "prompt_tokens": 443,
+        "read_bytes": 0,
+        "greps": 1,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "recall": 1.0,
+        "precision": 1.0
+      }
+    }
+  ]
+}
