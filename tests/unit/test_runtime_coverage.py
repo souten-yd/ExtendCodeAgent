@@ -89,5 +89,7 @@ def test_a_run_pairs_the_test_with_what_it_reached() -> None:
         "py://mod#late",
     ]
 
-    covering = covering_tests((observation,), (CanonicalRef("py://mod#late"),))
+    covering = covering_tests(
+        (observation,), (CanonicalRef("py://mod#late"),), lambda ref: "tests" in ref.value
+    )
     assert [ref.value for ref in covering] == ["py://tests.test_mod#test_late_path"]

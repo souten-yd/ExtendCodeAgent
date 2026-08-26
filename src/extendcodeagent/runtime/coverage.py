@@ -75,7 +75,9 @@ def observation_from_coverage(
 
     if not test_id.strip():
         raise ValueError("test_id must not be empty")
-    refs = symbols_touched(snapshot, executed)
+    # A test executes its own lines, so it appears among the symbols it reached. Naming it
+    # once is the pair; naming it twice is a duplicate key in the observation index.
+    refs = tuple(dict.fromkeys((CanonicalRef(test_id), *symbols_touched(snapshot, executed))))
     return RuntimeObservation(
         observation_id=f"coverage:{source_revision.value}:{test_id}",
         kind=ObservationKind.TEST,
@@ -90,7 +92,7 @@ def observation_from_coverage(
             producer_version=COVERAGE_PRODUCER_VERSION,
             source_revision=source_revision,
         ),
-        observed_refs=(CanonicalRef(test_id), *refs),
+        observed_refs=refs,
         command=command or "test",
-        summary=f"{test_id} reached {len(refs)} symbols",
+        summary=f"{test_id} reached {len(refs) - 1} symbols",
     )

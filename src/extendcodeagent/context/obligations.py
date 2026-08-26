@@ -76,8 +76,12 @@ def obligation_refs(
     # below it is inference. It is also the only signal that reaches a test which never
     # names its subject -- Django's tests reach theirs through the runner and the app
     # registry, so no call or import edge joins them and static analysis cannot recover it.
-    tests = list(observed_tests(equivalent) if observed_tests else ())
-    tests.extend(recommended_tests(SCOPE_IMPACT_DEPTH.get(scope, 2)))
+    observed = list(observed_tests(equivalent) if observed_tests else ())
+    inferred = [
+        ref
+        for ref in recommended_tests(SCOPE_IMPACT_DEPTH.get(scope, 2))
+        if ref not in set(observed)
+    ]
 
     # Two independent test signals, because each fails where the other works. Objective
     # matching needs the objective to name something distinctive; stem correspondence
@@ -89,7 +93,7 @@ def obligation_refs(
     intent_paths.update(focused_test_paths(tuple(equivalent), nodes_by_ref, all_tests))
     # One ref per path, not every symbol sharing it: a test file holds many nodes, and
     # naming the path would admit all of them, crowding out the precise obligations.
-    tests.extend(
+    inferred.extend(
         node.canonical_ref.value
         for node in snapshot.nodes
         if node.node_type == "file" and node.source_ref in intent_paths
@@ -98,7 +102,13 @@ def obligation_refs(
     return _by_role_budget(
         (
             (EvidenceRole.TARGET, targets),
-            (EvidenceRole.TEST, tests),
+            # Observed and inferred tests hold separate floors. Coverage is fact and ranks
+            # first, but on a project whose tests do import their subjects it is not
+            # better than the static answer, and letting it consume the whole test budget
+            # displaced correct inferences -- measured on seventeen changes here, recall
+            # 0.86 -> 0.50 while precision rose 0.18 -> 0.22.
+            (EvidenceRole.TEST, observed),
+            (EvidenceRole.TEST, inferred),
             (EvidenceRole.CONSUMER, consumers),
         ),
         max_obligations,

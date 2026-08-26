@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from datetime import UTC, datetime
 
 from extendcodeagent.core.contracts import CanonicalRef, ProjectRef, Provenance, SourceRevision
@@ -244,14 +244,22 @@ def _outcome(
 
 
 def covering_tests(
-    observations: Iterable[RuntimeObservation], refs: Iterable[CanonicalRef]
+    observations: Iterable[RuntimeObservation],
+    refs: Iterable[CanonicalRef],
+    is_test: Callable[[CanonicalRef], bool],
 ) -> tuple[CanonicalRef, ...]:
-    """Refs a usable test observation recorded alongside the ones asked about.
+    """Tests that a usable observation recorded reaching the refs asked about.
 
     Coverage is the relation a static graph cannot hold. A test reaching its subject
     through a runner, a registry or a fixture leaves no call or import edge behind, but it
-    does leave an observation naming both. An unavailable observation names nothing that
-    ran, so it is not evidence of anything.
+    does leave an observation naming both.
+
+    `is_test` is required rather than assumed: an observation names everything the run
+    touched, and a test's coverage is mostly production symbols. Returning those as if
+    they answered "what verifies this?" fills the answer with the question — measured on
+    seventeen changes to this repository, doing so dropped test recall from 0.86 to 0.38.
+
+    An unavailable observation names nothing that ran, so it is not evidence of anything.
     """
 
     asked = {ref.value for ref in refs}
@@ -262,6 +270,6 @@ def covering_tests(
             if item.kind is ObservationKind.TEST
             and item.status is not ObservationStatus.UNAVAILABLE
             for ref in item.observed_refs
-            if ref.value not in asked
+            if ref.value not in asked and is_test(ref)
         )
     )

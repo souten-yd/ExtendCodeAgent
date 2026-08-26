@@ -941,7 +941,13 @@ class ProjectIntelligenceApplication:
         if not candidates:
             return ()
         observations = self._ensure_store().observations(self.project, refs=candidates)
-        return tuple(ref.value for ref in covering_tests(observations, candidates))
+        tests = {
+            node.canonical_ref.value
+            for node in self._snapshot(open_if_missing=False).nodes
+            if node.node_type == "test"
+        }
+        covering = covering_tests(observations, candidates, lambda ref: ref.value in tests)
+        return tuple(ref.value for ref in covering)
 
     def _read_source_span(self, source_ref: str, start: int, end: int) -> str | None:
         """Read one symbol's lines, refusing anything that escapes the project root."""

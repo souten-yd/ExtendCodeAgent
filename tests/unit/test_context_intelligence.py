@@ -381,6 +381,10 @@ def test_only_a_test_observation_that_ran_counts_as_coverage() -> None:
         command="ruff",
     )
 
-    found = covering_tests((ran, skipped, lint), (CanonicalRef("py://module#target"),))
+    found = covering_tests(
+        (ran, skipped, lint),
+        (CanonicalRef("py://module#target"),),
+        lambda ref: ref.value.startswith("py://tests"),
+    )
 
     assert [ref.value for ref in found] == ["py://tests#covers"]
