@@ -64,6 +64,17 @@ class ModelRequest:
         if self.stable_prefix_id is not None and not self.stable_prefix_id.strip():
             raise ValueError("stable_prefix_id must not be empty")
 
+    @property
+    def total_context_tokens(self) -> int:
+        """Prompt plus reserved output headroom.
+
+        A model's context window holds both. Sizing evidence against the window alone
+        leaves the answer to be truncated at generation time, which costs the full prompt
+        and returns nothing usable.
+        """
+
+        return self.context_tokens + self.max_output_tokens
+
 
 @dataclass(frozen=True, slots=True)
 class ModelResponse:

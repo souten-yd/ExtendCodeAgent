@@ -303,6 +303,17 @@ class EndpointConfig:
     privacy_class: str = "standard"
     capabilities: EndpointCapabilities = field(default_factory=EndpointCapabilities)
 
+    @property
+    def evidence_budget_tokens(self) -> int:
+        """What the prompt may occupy once output headroom is reserved.
+
+        Output headroom is a floor, not a remainder: a reasoning model emits its thinking
+        first, so an output budget below its floor yields no answer at all rather than a
+        shorter one. Evidence gets what is left.
+        """
+
+        return max(0, self.context_window - self.max_output)
+
 
 @dataclass(frozen=True, slots=True)
 class ModelConfig:

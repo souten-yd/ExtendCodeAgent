@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from extendcodeagent.core.config import ConfigLayer, ConfigResolver
-from extendcodeagent.core.config.schema import ModelConfig, ModelRole
+from extendcodeagent.core.config.schema import ConfigError, ModelConfig, ModelRole
 from extendcodeagent.core.model_routing import (
     AdaptiveSignals,
     FakeModelAdapter,
@@ -36,7 +36,8 @@ def _config(
                             "local-small": {
                                 "provider_type": "fake",
                                 "locality": "local",
-                                "context_window": 100,
+                                "context_window": 1_000,
+                                "max_output": 256,
                                 "cost_class": 1,
                                 "latency_class": 1,
                                 "capabilities": {"structured_output": True},
@@ -44,14 +45,16 @@ def _config(
                             "host-default": {
                                 "provider_type": "fake",
                                 "locality": "host",
-                                "context_window": 1_000,
+                                "context_window": 10_000,
+                                "max_output": 512,
                                 "cost_class": 2,
                                 "latency_class": 2,
                             },
                             "remote-strong": {
                                 "provider_type": "fake",
                                 "locality": "remote",
-                                "context_window": 10_000,
+                                "context_window": 100_000,
+                                "max_output": 2_048,
                                 "cost_class": 3,
                                 "latency_class": 3,
                                 "capabilities": {"reasoning_strength": 5},
@@ -196,7 +199,7 @@ def test_context_and_structured_output_capabilities_filter_candidates() -> None:
         )
     )
     assert decision.selected_endpoint is None
-    assert "context_exceeds_model" in decision.rejected["local-small"]
+    assert "total_context_exceeds_model" in decision.rejected["local-small"]
     assert "structured_output_unsupported" in decision.rejected["host-default"]
 
 
@@ -274,3 +277,50 @@ def test_adaptive_privacy_never_uses_remote_to_satisfy_risk() -> None:
     )
     assert decision.selected_endpoint is None
     assert "remote_code_policy" in decision.rejected["remote-strong"]
+
+
+def test_routing_sizes_the_prompt_and_its_reserved_output_together() -> None:
+    """Fitting the input and then truncating the answer costs the whole call.
+
+    Measured on Qwen3.8-27B: at 512 and 1,024 output tokens a real envelope produced no
+    answer at all, only reasoning. Sizing evidence against the window alone routes work to
+    a model that cannot finish it.
+    """
+
+    router = PolicyModelRouter(_config("local_first"), {})
+
+    fits = router.route(
+        ModelRequest(ModelRole.CODE_REASONER, "small", context_tokens=400, max_output_tokens=256)
+    )
+    output_does_not_fit = router.route(
+        ModelRequest(ModelRole.CODE_REASONER, "small", context_tokens=400, max_output_tokens=900)
+    )
+
+    assert fits.selected_endpoint == "local-small"
+    assert "total_context_exceeds_model" in output_does_not_fit.rejected["local-small"]
+    assert output_does_not_fit.selected_endpoint == "host-default"
+
+
+def test_endpoint_reserving_its_whole_window_for_output_is_rejected_at_config_time() -> None:
+    """An endpoint with no room left for a prompt can never answer; fail closed."""
+
+    with pytest.raises(ConfigError, match="no room remains for a prompt"):
+        ConfigResolver().resolve(
+            ConfigLayer(
+                "test",
+                {
+                    "models": {
+                        "routing_mode": "local_first",
+                        "endpoints": {
+                            "broken": {
+                                "provider_type": "fake",
+                                "locality": "local",
+                                "context_window": 2_048,
+                                "max_output": 2_048,
+                            }
+                        },
+                        "roles": {"code_reasoner": ["broken"]},
+                    }
+                },
+            )
+        )

@@ -147,8 +147,10 @@ class PolicyModelRouter:
                 reasons.append("remote_escalation_disabled")
             if request.contains_source_code and not _remote_source_allowed(self.config, request):
                 reasons.append("remote_code_policy")
-        if request.context_tokens > endpoint.context_window:
-            reasons.append("context_exceeds_model")
+        if request.total_context_tokens > endpoint.context_window:
+            # Prompt plus reserved output, never the prompt alone: fitting the input and
+            # then truncating the answer costs the whole call and returns nothing.
+            reasons.append("total_context_exceeds_model")
         if request.requires_structured_output and not endpoint.capabilities.structured_output:
             reasons.append("structured_output_unsupported")
         if request.requires_tools and not endpoint.capabilities.tools:

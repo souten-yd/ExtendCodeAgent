@@ -361,14 +361,24 @@ def _endpoint(endpoint_id: str, raw: Mapping[str, Any]) -> EndpointConfig:
             capability_raw.get("code_strength", 0), "capabilities.code_strength"
         ),
     )
+    context_window = _positive_int(raw.get("context_window", 8192), "context_window")
+    max_output = _positive_int(raw.get("max_output", 2048), "max_output")
+    if max_output >= context_window:
+        # Output headroom comes out of the same window as the prompt. An endpoint that
+        # reserves all of it can never answer, so this fails closed rather than routing
+        # work to a model that will always truncate.
+        raise ConfigError(
+            f"endpoint {endpoint_id} reserves max_output={max_output} of a "
+            f"context_window={context_window}; no room remains for a prompt"
+        )
     return EndpointConfig(
         endpoint_id=endpoint_id,
         provider_type=_enum(ProviderType, raw["provider_type"], f"endpoint {endpoint_id} provider"),
         locality=_enum(EndpointLocality, raw["locality"], f"endpoint {endpoint_id} locality"),
         model_id=_optional_string(raw.get("model_id"), "model_id"),
         endpoint=_optional_string(raw.get("endpoint"), "endpoint"),
-        context_window=_positive_int(raw.get("context_window", 8192), "context_window"),
-        max_output=_positive_int(raw.get("max_output", 2048), "max_output"),
+        context_window=context_window,
+        max_output=max_output,
         timeout_seconds=_positive_number(raw.get("timeout_seconds", 30), "timeout_seconds"),
         retry=_nonnegative_int(raw.get("retry", 0), "retry"),
         cost_class=_nonnegative_int(raw.get("cost_class", 0), "cost_class"),
