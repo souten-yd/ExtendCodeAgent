@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
 from extendcodeagent.analysis import (
@@ -7,10 +8,10 @@ from extendcodeagent.analysis import (
     ImpactQuery,
     PythonCanonicalReferenceResolver,
 )
-from extendcodeagent.core.contracts import ProjectRef
+from extendcodeagent.core.contracts import DiagnosticSeverity, ProjectRef
 from extendcodeagent.graph.analyzers import PythonGraphAnalyzer
 from extendcodeagent.storage import SqliteGraphStore
-from extendcodeagent.twin import TwinReadiness, TwinService
+from extendcodeagent.twin import SourceSnapshotter, TwinReadiness, TwinService
 
 
 def _project(root: Path, workspace: str = "w1") -> ProjectRef:
@@ -176,3 +177,48 @@ def test_persisted_semantic_graph_drives_impact_and_test_candidates(tmp_path: Pa
     dynamic = next(item for item in impacted if item.canonical_ref == "py://plugin#dynamic")
     assert dynamic.status.value == "inferred"
     assert dynamic.path_confidence == 0.35
+
+
+def _git_init(root: Path) -> None:
+    for args in (
+        ("init", "-q"),
+        ("config", "user.email", "eca@example.invalid"),
+        ("config", "user.name", "eca"),
+    ):
+        subprocess.run(["git", "-C", str(root), *args], check=True, capture_output=True)
+
+
+def test_git_ignored_corpus_never_starves_the_project_source_scope(tmp_path: Path) -> None:
+    """A gitignored corpus must not consume the file budget ahead of project source.
+
+    `.evaluation/` sorts before `src/`, so a plain recursive walk with a file cap indexes
+    the corpus and silently omits the project itself.
+    """
+
+    root = tmp_path / "repo"
+    root.mkdir()
+    _git_init(root)
+    _write(root, ".gitignore", ".evaluation/\n")
+    _write(root, "src/service.py", "def caller() -> int:\n    return 1\n")
+    for index in range(40):
+        _write(root, f".evaluation/corpus/mod{index}.py", "value = 1\n")
+
+    snapshot = SourceSnapshotter(max_files=20).snapshot(_project(root))
+    paths = {item.path for item in snapshot.files}
+
+    assert "src/service.py" in paths
+    assert not any(path.startswith(".evaluation/") for path in paths)
+    assert not any(item.code == "file_limit" for item in snapshot.diagnostics)
+
+
+def test_file_limit_truncation_is_reported_as_an_error(tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    root.mkdir()
+    for index in range(10):
+        _write(root, f"mod{index}.py", "value = 1\n")
+
+    snapshot = SourceSnapshotter(max_files=3).snapshot(_project(root))
+    limit = next(item for item in snapshot.diagnostics if item.code == "file_limit")
+
+    assert len(snapshot.files) == 3
+    assert limit.severity is DiagnosticSeverity.ERROR

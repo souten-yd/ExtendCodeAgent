@@ -7,9 +7,14 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-from extendcodeagent.core.contracts import Diagnostic, ProjectRef, SourceRevision
+from extendcodeagent.core.contracts import (
+    Diagnostic,
+    DiagnosticSeverity,
+    ProjectRef,
+    SourceRevision,
+)
 
-SOURCE_SNAPSHOT_VERSION = "source_snapshot.v1"
+SOURCE_SNAPSHOT_VERSION = "source_snapshot.v2"
 IGNORED_NAMES = frozenset(
     {
         ".git",
@@ -70,7 +75,9 @@ class SourceSnapshotter:
         )
         files: list[SourceFileSnapshot] = []
         diagnostics: list[Diagnostic] = []
-        for path in sorted(root.rglob("*")):
+        candidates, scope_source = _candidate_paths(root)
+        diagnostics.append(Diagnostic("snapshot_scope", f"source scope resolved by {scope_source}"))
+        for path in candidates:
             if not path.is_file():
                 continue
             resolved = path.resolve()
@@ -85,7 +92,17 @@ class SourceSnapshotter:
             ):
                 continue
             if len(files) >= self.max_files:
-                diagnostics.append(Diagnostic("file_limit", "source file count limit reached"))
+                # Truncation silently starves whole subtrees of the Twin, so it is an error
+                # rather than a note: every downstream PI answer would be scoped to a prefix
+                # of the walk order instead of to the project.
+                diagnostics.append(
+                    Diagnostic(
+                        "file_limit",
+                        f"source file count limit reached at {self.max_files}; "
+                        "the Twin covers only part of the project",
+                        DiagnosticSeverity.ERROR,
+                    )
+                )
                 break
             size = resolved.stat().st_size
             if size > self.max_file_bytes:
@@ -143,6 +160,36 @@ def _safe_rel(root: Path, value: str) -> str:
         return candidate.relative_to(root).as_posix()
     except ValueError as exc:
         raise SourceSnapshotError(f"path escapes project root: {value}") from exc
+
+
+def _candidate_paths(root: Path) -> tuple[tuple[Path, ...], str]:
+    """Resolve the project's own source scope.
+
+    A recursive walk cannot tell project source from build output, evaluation corpora or
+    vendored checkouts, so in a Git worktree the repository's own ignore rules decide the
+    scope. Only a non-Git root falls back to the walk plus `IGNORED_NAMES`.
+    """
+
+    listed = _git_lines(root, "ls-files", "-z", "--cached", "--others", "--exclude-standard")
+    if listed is None:
+        return tuple(sorted(root.rglob("*"))), "filesystem_walk"
+    return tuple(sorted(root / item for item in listed)), "git_exclude_standard"
+
+
+def _git_lines(root: Path, *args: str) -> tuple[str, ...] | None:
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(root), *args],
+            capture_output=True,
+            timeout=30,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return None
+    listed = result.stdout.decode("utf-8", "surrogateescape").split("\0")
+    return tuple(item for item in listed if item)
 
 
 def _git(root: Path, *args: str) -> str | None:

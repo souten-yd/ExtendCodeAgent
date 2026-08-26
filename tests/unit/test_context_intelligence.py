@@ -7,6 +7,8 @@ from extendcodeagent.context import (
     WeakLocalEvidenceRequest,
     build_context,
     build_weak_local_evidence,
+    context_item_json,
+    estimate_payload_tokens,
     stable_evidence_envelope,
 )
 from extendcodeagent.core.contracts import (
@@ -147,3 +149,16 @@ def test_stable_evidence_envelope_contains_no_task_or_revision_data() -> None:
     assert "objective" not in rendered
     assert "revision" not in rendered
     assert first["protocol"] == "extendcodeagent.weak-local-evidence.v1"
+
+
+def test_context_item_cost_matches_the_delivered_payload() -> None:
+    """The legacy estimator counted three short strings and under-reported roughly fivefold."""
+
+    snapshot = _snapshot()
+    package = build_context(snapshot, ContextRequest("bound the delivered payload", ()))
+
+    for item in package.items:
+        assert item.token_estimate == estimate_payload_tokens(context_item_json(item))
+
+    delivered = estimate_payload_tokens([context_item_json(item) for item in package.items])
+    assert package.used_tokens >= delivered * 0.9

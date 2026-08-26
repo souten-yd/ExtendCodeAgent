@@ -6,7 +6,7 @@ import hashlib
 import json
 import re
 from collections import defaultdict, deque
-from math import ceil
+from dataclasses import replace
 from pathlib import PurePosixPath
 
 from extendcodeagent.core.contracts import Provenance
@@ -21,6 +21,11 @@ from .contracts import (
     WeakLocalEvidenceItem,
     WeakLocalEvidencePackage,
     WeakLocalEvidenceRequest,
+)
+from .serialization import (
+    context_item_json,
+    estimate_payload_tokens,
+    weak_local_evidence_item_json,
 )
 
 _WEAK_MAX_TOKENS = 512
@@ -112,19 +117,20 @@ def build_weak_local_evidence(
         summary = str(
             node.properties.get("name") or node.properties.get("qualname") or node.source_ref
         )
-        compact = {
-            "id": evidence_id,
-            "ref": node.canonical_ref.value,
-            "kind": node.node_type,
-            "summary": summary,
-            "reason": reason,
-            "confidence": node.confidence.value,
-            "provenance_id": provenance_ids[_provenance_key(node)],
-            "status": node.status.value,
-        }
-        estimate = max(
-            1,
-            ceil(len(json.dumps(compact, ensure_ascii=False, separators=(",", ":"))) / 4),
+        estimate = estimate_payload_tokens(
+            weak_local_evidence_item_json(
+                WeakLocalEvidenceItem(
+                    evidence_id,
+                    node.canonical_ref,
+                    node.node_type,
+                    summary,
+                    reason,
+                    node.confidence.value,
+                    provenance_ids[_provenance_key(node)],
+                    node.status.value,
+                    0,
+                )
+            )
         )
         if len(items) >= max_items or used_tokens + estimate > token_budget:
             continue
@@ -434,11 +440,7 @@ def build_context(snapshot: GraphSnapshot, request: ContextRequest) -> ContextPa
 def _context_item(node: GraphNode, *, is_target: bool) -> ContextItem:
     why = "target_ref" if is_target else "high-confidence project fact"
     summary = str(node.properties.get("name") or node.canonical_ref.value)
-    token_estimate = max(
-        1,
-        ceil((len(node.canonical_ref.value) + len(summary) + len(why)) / 4),
-    )
-    return ContextItem(
+    item = ContextItem(
         node.canonical_ref,
         node.node_type,
         summary,
@@ -446,6 +448,15 @@ def _context_item(node: GraphNode, *, is_target: bool) -> ContextItem:
         node.confidence.value,
         node.revision,
         node.provenance,
-        token_estimate,
+        0,
         node.status.value,
     )
+    # Estimating from three short strings under-counted the delivered payload roughly
+    # fivefold, which made the token budget unenforceable. Measure the emitted shape
+    # instead, and settle the self-reference: the estimate is itself part of the payload.
+    for _ in range(3):
+        estimate = estimate_payload_tokens(context_item_json(item))
+        if estimate == item.token_estimate:
+            break
+        item = replace(item, token_estimate=estimate)
+    return item

@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import json
-import re
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -29,11 +27,12 @@ from extendcodeagent.context import (
     ContextProfile,
     ContextRequest,
     EvidenceScope,
-    WeakLocalEvidencePackage,
     WeakLocalEvidenceRequest,
     build_context,
     build_weak_local_evidence,
+    context_package_json,
     stable_evidence_envelope,
+    weak_local_evidence_json,
 )
 from extendcodeagent.convergence import (
     ActualSnapshot,
@@ -90,7 +89,18 @@ from extendcodeagent.strategy import (
     StrategySignals,
     build_strategy,
 )
-from extendcodeagent.testing import TestHealthSignals, evaluate_test_health, select_tests
+from extendcodeagent.testing import (
+    TestHealthSignals,
+    direct_use_count,
+    evaluate_test_health,
+    focused_test_paths,
+    intent_architecture_test_paths,
+    objective_test_paths,
+    select_tests,
+    structural_test_paths,
+    test_obligation,
+    uncovered_obligations,
+)
 from extendcodeagent.traceability import (
     ProjectRequirementReport,
     Requirement,
@@ -462,26 +472,21 @@ class ProjectIntelligenceApplication:
         )
         if view == "compact":
             nodes = {node.canonical_ref.value: node for node in snapshot.nodes}
-            intent_architecture = _intent_architecture_test_paths(changed_refs, nodes)
+            intent_architecture = intent_architecture_test_paths(changed_refs, nodes)
             selected_candidates = [
                 item
                 for item in candidates
                 if "architecture" not in Path(item.source_ref).parts
                 or item.source_ref in intent_architecture
             ]
-            objective_paths = _objective_test_paths(snapshot, objective)
+            objective_paths = objective_test_paths(snapshot, objective)
             selected_paths = sorted(
                 {item.source_ref for item in selected_candidates} | objective_paths
             )
             candidate_refs = {item.canonical_ref.value for item in selected_candidates}
-            covered_obligations = sorted({_test_obligation(path) for path in selected_paths})
-            required_obligations = {
-                "architecture_boundary",
-                "integration_boundary",
-                "unit_behavior",
-            }
-            uncovered_obligations = sorted(required_obligations - set(covered_obligations))
-            coverage_complete = not uncovered_obligations
+            covered_obligations = sorted({test_obligation(path) for path in selected_paths})
+            uncovered = uncovered_obligations(selected_paths)
+            coverage_complete = not uncovered
             return _result(
                 snapshot,
                 depth=self.policy.depth(CapabilityName.TEST_SELECTION),
@@ -490,7 +495,7 @@ class ProjectIntelligenceApplication:
                 candidate_refs=sorted(candidate_refs),
                 covered_obligations=covered_obligations,
                 coverage_complete=coverage_complete,
-                uncovered_obligations=uncovered_obligations,
+                uncovered_obligations=uncovered,
                 fallback_search_required=not coverage_complete,
                 fallback=(
                     None
@@ -567,7 +572,7 @@ class ProjectIntelligenceApplication:
             {item.source_ref for item in report.recommended_tests} if report is not None else set()
         )
         nodes = {node.canonical_ref.value: node for node in snapshot.nodes}
-        intent_architecture = _intent_architecture_test_paths(refs, nodes)
+        intent_architecture = intent_architecture_test_paths(refs, nodes)
         tests = sorted(
             path
             for path in candidate_tests
@@ -602,14 +607,14 @@ class ProjectIntelligenceApplication:
             for item in report.direct_impacts
             if item.item_type in {"function", "method", "api_route", "handler"}
         )
-        intent_tests = _intent_architecture_test_paths(changed_refs, nodes)
+        intent_tests = intent_architecture_test_paths(changed_refs, nodes)
         candidate_tests = sorted(
             {item.source_ref for item in report.recommended_tests} | intent_tests
         )
         candidate_refs = {item.canonical_ref for item in report.recommended_tests}
-        structural_tests = _structural_test_paths(snapshot, candidate_refs) & intent_tests
+        structural_tests = structural_test_paths(snapshot, candidate_refs) & intent_tests
         focused_tests = sorted(
-            set(_focused_test_paths(changed_refs, nodes, candidate_tests))
+            set(focused_test_paths(changed_refs, nodes, candidate_tests))
             | structural_tests
             | intent_tests
         )
@@ -629,7 +634,7 @@ class ProjectIntelligenceApplication:
                     if item.canonical_ref in nodes
                 }
             ),
-            direct_use_count=_direct_use_count(
+            direct_use_count=direct_use_count(
                 snapshot,
                 counted_refs,
                 {item.canonical_ref for item in production},
@@ -873,7 +878,7 @@ class ProjectIntelligenceApplication:
                     unresolved_gaps=unresolved_gaps,
                 ),
             )
-            return _weak_local_evidence_json(weak_package)
+            return weak_local_evidence_json(weak_package, stable_evidence_envelope())
         if view != "detail":
             raise ValueError("view must be detail or envelope")
         context_package = build_context(
@@ -889,11 +894,7 @@ class ProjectIntelligenceApplication:
         return _result(
             snapshot,
             depth=self.policy.depth(CapabilityName.CONTEXT),
-            items=[_context_json(item) for item in context_package.items],
-            used_tokens=context_package.used_tokens,
-            token_budget=context_package.token_budget,
-            truncated=context_package.truncated,
-            excluded_count=context_package.excluded_count,
+            **context_package_json(context_package),
         )
 
     def create_blueprint(
@@ -1397,145 +1398,6 @@ def _path_json(item: Any) -> dict[str, Any]:
     }
 
 
-def _focused_test_paths(
-    changed_refs: tuple[str, ...], nodes: dict[str, Any], candidate_tests: list[str]
-) -> list[str]:
-    generic = {"src", "lib", "app", "service", "index", "main", "py", "extendcodeagent"}
-    source_tokens = {
-        token
-        for ref in changed_refs
-        if ref in nodes
-        for part in Path(nodes[ref].source_ref).parts
-        for token in Path(part).stem.casefold().split("_")
-        if token and token not in generic
-    }
-    focused = [
-        path
-        for path in candidate_tests
-        if source_tokens
-        & {
-            token
-            for part in Path(path).parts
-            for token in Path(part).stem.casefold().split("_")
-            if token
-        }
-    ]
-    return focused or candidate_tests
-
-
-def _objective_test_paths(snapshot: GraphSnapshot, objective: str) -> set[str]:
-    if not objective.strip():
-        return set()
-    ignored = {
-        "and",
-        "covers",
-        "existing",
-        "for",
-        "its",
-        "set",
-        "smallest",
-        "test",
-        "tests",
-        "the",
-    }
-    objective_tokens = {
-        token
-        for token in re.findall(r"[a-z0-9]+", objective.casefold().replace("_", " "))
-        if token not in ignored and len(token) > 2
-    }
-    by_path: dict[str, set[str]] = {}
-    for node in snapshot.nodes:
-        if node.node_type != "test":
-            continue
-        tokens = by_path.setdefault(node.source_ref, set())
-        intent_tokens = node.properties.get("intent_tokens", ())
-        if isinstance(intent_tokens, list | tuple | set):
-            tokens.update(str(item).casefold() for item in intent_tokens)
-        tokens.update(
-            token
-            for part in Path(node.source_ref).parts
-            for token in re.findall(r"[a-z0-9]+", part.casefold().replace("_", " "))
-        )
-    selected: set[str] = set()
-    for obligation in ("unit_behavior", "integration_boundary", "architecture_boundary"):
-        ranked = sorted(
-            (
-                (len(objective_tokens & tokens), path)
-                for path, tokens in by_path.items()
-                if _test_obligation(path) == obligation
-            ),
-            key=lambda item: (-item[0], item[1]),
-        )
-        if ranked and ranked[0][0] > 0:
-            selected.add(ranked[0][1])
-    return selected
-
-
-def _structural_test_paths(snapshot: GraphSnapshot, candidate_refs: set[str]) -> set[str]:
-    return {
-        edge.source_ref
-        for edge in snapshot.edges
-        if edge.edge_type == "structurally_covers" and edge.source.value in candidate_refs
-    }
-
-
-def _intent_architecture_test_paths(
-    changed_refs: tuple[str, ...], nodes: dict[str, Any]
-) -> set[str]:
-    changed_tokens = {
-        token
-        for ref in changed_refs
-        for value in (
-            ref.rsplit("#", 1)[-1],
-            nodes[ref].source_ref if ref in nodes else "",
-        )
-        for part in Path(value).parts
-        for token in Path(part).stem.casefold().split("_")
-        if len(token) >= 4 and token not in {"meets", "service", "source", "extendcodeagent"}
-    }
-    return {
-        node.source_ref
-        for node in nodes.values()
-        if node.node_type == "test"
-        and "architecture" in Path(node.source_ref).parts
-        and changed_tokens
-        & (
-            set(node.properties.get("intent_tokens", ()))
-            | set(Path(node.source_ref).stem.casefold().split("_"))
-        )
-    }
-
-
-def _direct_use_count(
-    snapshot: GraphSnapshot, changed_refs: set[str], production_refs: set[str]
-) -> int:
-    short_names = {ref.rsplit("#", 1)[-1].rsplit(".", 1)[-1] for ref in changed_refs}
-    return sum(
-        _edge_occurrences(edge)
-        for edge in snapshot.edges
-        if edge.source.value in production_refs
-        and edge.edge_type in {"calls", "may_call", "references"}
-        and (
-            edge.target.value in changed_refs
-            or edge.target.value.rsplit("#", 1)[-1].rsplit("/", 1)[-1] in short_names
-        )
-    )
-
-
-def _edge_occurrences(edge: Any) -> int:
-    value = edge.properties.get("occurrences", 1)
-    return value if isinstance(value, int) else 1
-
-
-def _test_obligation(path: str) -> str:
-    parts = set(Path(path).parts)
-    if "architecture" in parts:
-        return "architecture_boundary"
-    if "integration" in parts:
-        return "integration_boundary"
-    return "unit_behavior"
-
-
 def _health_json(item: Any) -> dict[str, Any]:
     return {
         "canonical_ref": item.test_ref.value,
@@ -1668,85 +1530,4 @@ def _plan_outcome_json(item: PlanOutcome | None) -> dict[str, Any] | None:
         "actual_evidence_ids": list(item.actual_evidence_ids),
         "expansion_count": item.expansion_count,
         "fallback_reason": item.fallback_reason,
-    }
-
-
-def _context_json(item: Any) -> dict[str, Any]:
-    return {
-        "canonical_ref": item.canonical_ref.value,
-        "kind": item.kind,
-        "summary": item.summary,
-        "why_included": item.why_included,
-        "confidence": item.confidence,
-        "revision": item.revision.value,
-        "provenance": {
-            "source": item.provenance.source,
-            "producer": item.provenance.producer,
-            "producer_version": item.provenance.producer_version,
-        },
-        "token_estimate": item.token_estimate,
-        "status": item.status,
-    }
-
-
-def _weak_local_evidence_json(package: WeakLocalEvidencePackage) -> dict[str, Any]:
-    stable = stable_evidence_envelope()
-    stable_payload = json.dumps(
-        stable, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-    ).encode()
-    stable_with_id = {
-        **stable,
-        "stable_prefix_id": hashlib.sha256(stable_payload).hexdigest()[:24],
-    }
-    task_evidence = {
-        "revision_id": package.revision_id,
-        "source_revision": package.source_revision.value if package.source_revision else None,
-        "objective_fingerprint": package.objective_fingerprint,
-        "scope": package.scope.value,
-        "provenance": [
-            {
-                "id": identifier,
-                "source": item.source,
-                "producer": item.producer,
-                "producer_version": item.producer_version,
-            }
-            for identifier, item in package.provenance
-        ],
-        "items": [
-            {
-                "id": item.evidence_id,
-                "ref": item.canonical_ref.value,
-                "kind": item.kind,
-                "summary": item.summary,
-                "reason": item.reason,
-                "confidence": item.confidence,
-                "provenance_id": item.provenance_id,
-                "status": item.status,
-            }
-            for item in package.items
-        ],
-        "selected_evidence_ids": list(package.selected_evidence_ids),
-        "prior_evidence_ids": list(package.prior_evidence_ids),
-        "unresolved_evidence_gaps": list(package.unresolved_gaps),
-        "request_next_scope": package.next_scope.value if package.next_scope else "none",
-    }
-    task_payload = json.dumps(
-        task_evidence, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-    ).encode()
-    return {
-        "stable_envelope": stable_with_id,
-        "task_evidence": task_evidence,
-        "metrics": {
-            "stable_prefix_canonical_bytes": len(stable_payload),
-            "task_evidence_canonical_bytes": len(task_payload),
-            "candidate_count": package.candidate_count,
-            "selected_count": len(package.items),
-            "excluded_count": package.excluded_count,
-            "estimated_evidence_tokens": package.used_tokens,
-            "token_budget": package.token_budget,
-            "truncated": package.truncated,
-            "candidate_search_truncated": package.candidate_search_truncated,
-            "deterministic_resolution": package.deterministic_resolution,
-            "cache_observation": "model_response_metrics",
-        },
     }
