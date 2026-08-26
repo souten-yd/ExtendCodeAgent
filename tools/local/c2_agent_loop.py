@@ -30,6 +30,7 @@ import re
 import statistics
 import subprocess
 import tempfile
+import time
 import urllib.error
 import urllib.request
 from datetime import UTC, datetime
@@ -54,7 +55,10 @@ Each reply must be exactly one line, one of:
   READ <path>             read a file
   ANSWER {"tests": [...]} the repository-relative paths of every test that must run
 
-Reply with the line only. No explanation, no code fences. Answer as soon as you can.
+Reply with the line only. No explanation, no code fences.
+
+Answer when you have evidence for it. If what you have is not enough, search first --
+an incomplete answer costs more than another step.
 """
 
 
@@ -91,9 +95,17 @@ def complete(endpoint: str, model: str, messages: list[dict[str, str]], max_toke
     except (urllib.error.URLError, TimeoutError) as error:
         raise LoopError(f"model endpoint failed: {error}") from error
     choice = raw["choices"][0]
+    usage = raw.get("usage", {})
+    prompt = usage.get("prompt_tokens", 0)
+    # A stable prefix is not paid for twice. Measured on this endpoint, re-sending an
+    # identical 13,099-token prefix reports cached_tokens 13,095 -- 99.97% of it. Counting
+    # prompt_tokens as cost charges an envelope again on every turn it was not reprocessed
+    # for, which is what made a one-shot envelope look ruinous across twelve turns.
+    cached = (usage.get("prompt_tokens_details") or {}).get("cached_tokens", 0)
     return (
         str(choice.get("message", {}).get("content") or ""),
-        raw.get("usage", {}).get("prompt_tokens", 0),
+        prompt,
+        max(prompt - cached, 0),
     )
 
 
@@ -168,11 +180,21 @@ def run_loop(
     answer: tuple[str, ...] = ()
     attempts = 0
 
+    uncached_tokens = 0
     per_turn: list[int] = []
+    uncached_per_turn: list[int] = []
+    # Wall time is the axis tokens hide. A large envelope is re-sent every turn, so its
+    # prefill is paid again every turn, and the arm with the smaller prompt can afford
+    # more of them in the same wall clock.
+    seconds_per_turn: list[float] = []
     for _ in range(max_turns):
-        text, used = complete(endpoint, model, messages, max_output)
+        started = time.monotonic()
+        text, used, fresh = complete(endpoint, model, messages, max_output)
+        seconds_per_turn.append(round(time.monotonic() - started, 3))
         prompt_tokens += used
+        uncached_tokens += fresh
         per_turn.append(used)
+        uncached_per_turn.append(fresh)
         line = next((item.strip() for item in text.splitlines() if item.strip()), "")
         messages.append({"role": "assistant", "content": line or text[:200]})
 
@@ -231,13 +253,19 @@ def run_loop(
         "answered": bool(answer),
         # Everything the task cost to reach this outcome, which is the comparable number
         # once both arms are required to reach the same one.
-        "cost_to_outcome": prompt_tokens,
+        "cost_to_outcome": uncached_tokens,
+        "billed_prompt_tokens": prompt_tokens,
         "complete": bool(answer) and need <= set(answer),
         "reanswers": attempts,
         "trace": trace,
         # Each turn re-sends everything before it, so this curve is the cost of holding a
         # task's own history in the conversation rather than beside it.
         "prompt_tokens_per_turn": per_turn,
+        # What the model actually had to process, which is the honest cost of a turn.
+        "uncached_prompt_tokens": uncached_tokens,
+        "uncached_per_turn": uncached_per_turn,
+        "seconds_per_turn": seconds_per_turn,
+        "seconds": round(sum(seconds_per_turn), 2),
         # Work spent rediscovering that something is not there, or is where it already was.
         "empty_searches": sum(1 for item in trace if item["kind"] == "grep" and not item["hits"]),
         "repeated_actions": len(trace) - len({(item["kind"], item["arg"]) for item in trace}),
@@ -305,7 +333,8 @@ def main() -> None:
             f" r={row['pi']['recall']:.2f} {'ok' if row['pi']['complete'] else '--'}"
             f"  |  base {row['baseline']['turns']}t/"
             f"{row['baseline']['prompt_tokens']:>6}tok r={row['baseline']['recall']:.2f}"
-            f" {'ok' if row['baseline']['complete'] else '--'}",
+            f" {'ok' if row['baseline']['complete'] else '--'}"
+            f"  [{row['pi']['seconds']:.0f}s vs {row['baseline']['seconds']:.0f}s]",
             flush=True,
         )
         rows.append(row)
@@ -329,6 +358,7 @@ def main() -> None:
             arm: {
                 "turns": mean(arm, "turns"),
                 "prompt_tokens": mean(arm, "prompt_tokens"),
+                "uncached_prompt_tokens": mean(arm, "uncached_prompt_tokens"),
                 "read_bytes": mean(arm, "read_bytes"),
                 "greps": mean(arm, "greps"),
                 "reads": mean(arm, "reads"),
@@ -337,6 +367,21 @@ def main() -> None:
                 "answered": sum(1 for item in rows if item[arm]["answered"]),
                 "complete": sum(1 for item in rows if item[arm]["complete"]),
                 "reanswers": mean(arm, "reanswers"),
+                "seconds": mean(arm, "seconds"),
+                "seconds_per_turn": round(
+                    sum(item[arm]["seconds"] for item in rows)
+                    / sum(item[arm]["turns"] for item in rows),
+                    2,
+                ),
+                "seconds_per_completed_task": (
+                    round(
+                        sum(item[arm]["seconds"] for item in rows if item[arm]["complete"])
+                        / finished,
+                        1,
+                    )
+                    if (finished := sum(1 for item in rows if item[arm]["complete"]))
+                    else None
+                ),
                 # Total spend to reach the stated outcome. Only comparable between arms
                 # that reached the same one, which is what --until-complete enforces.
                 "cost_to_outcome_total": sum(item[arm]["cost_to_outcome"] for item in rows),
