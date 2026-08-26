@@ -21,6 +21,7 @@ from .service import (
     attach_excerpts,
     build_context,
     build_weak_local_evidence,
+    infer_evidence_scope,
     stable_evidence_envelope,
 )
 
@@ -39,6 +40,7 @@ __all__ = [
     "context_item_json",
     "context_package_json",
     "estimate_payload_tokens",
+    "infer_evidence_scope",
     "obligation_refs",
     "stable_evidence_envelope",
     "weak_local_evidence_json",

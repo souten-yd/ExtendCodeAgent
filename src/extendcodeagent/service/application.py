@@ -33,6 +33,7 @@ from extendcodeagent.context import (
     build_context,
     build_weak_local_evidence,
     context_package_json,
+    infer_evidence_scope,
     obligation_refs,
     stable_evidence_envelope,
     weak_local_evidence_json,
@@ -869,6 +870,11 @@ class ProjectIntelligenceApplication:
     ) -> dict[str, Any]:
         snapshot = self._explicit_snapshot(CapabilityName.CONTEXT)
         if view == "envelope":
+            # The ladder starts narrow; an explicit scope is a caller widening it because a
+            # narrower answer did not hold.
+            resolved_scope = (
+                EvidenceScope(scope) if scope is not None else infer_evidence_scope(objective)
+            )
             weak_package = build_weak_local_evidence(
                 snapshot,
                 WeakLocalEvidenceRequest(
@@ -876,7 +882,7 @@ class ProjectIntelligenceApplication:
                     tuple(CanonicalRef(item) for item in target_refs),
                     token_budget,
                     min(self.max_items, 32),
-                    scope=EvidenceScope(scope) if scope is not None else None,
+                    scope=resolved_scope,
                     required_refs=obligation_refs(
                         snapshot,
                         target_refs,
@@ -884,8 +890,9 @@ class ProjectIntelligenceApplication:
                         equivalents=lambda ref: self._reference_resolver().equivalents(
                             ref, snapshot
                         ),
-                        recommended_tests=lambda: self._recommended_test_refs(
-                            snapshot, target_refs
+                        scope=resolved_scope.value,
+                        recommended_tests=lambda depth: self._recommended_test_refs(
+                            snapshot, target_refs, depth
                         ),
                     ),
                     prior_evidence_ids=prior_evidence_ids,
@@ -913,10 +920,15 @@ class ProjectIntelligenceApplication:
         )
 
     def _recommended_test_refs(
-        self, snapshot: GraphSnapshot, target_refs: tuple[str, ...]
+        self, snapshot: GraphSnapshot, target_refs: tuple[str, ...], max_depth: int
     ) -> tuple[str, ...]:
         try:
-            report = self._impact_report(snapshot, target_refs, capability=CapabilityName.IMPACT)
+            report = self._impact_report(
+                snapshot,
+                target_refs,
+                capability=CapabilityName.IMPACT,
+                max_depth=max_depth,
+            )
         except CapabilityUnavailable:
             return ()
         return tuple(item.canonical_ref for item in report.recommended_tests)

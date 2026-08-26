@@ -26,8 +26,21 @@ _CONSUMER_EDGES = frozenset({"calls", "may_call", "references", "imports"})
 # are ranked like anything else, and the envelope reports that it had to.
 DEFAULT_MAX_OBLIGATIONS = 64
 
+# How far Impact may walk for each rung of the evidence ladder. Measured on thirty Django
+# changes, the recommended-test precision is 0.068 at depth 1, peaks at 0.112 at depth 2 and
+# falls to 0.104 at depth 6 while recall climbs 0.19 -> 0.47. Starting wide therefore pays
+# the worst case every time; starting narrow and widening only when the narrow answer did
+# not hold pays it when it is actually earned.
+SCOPE_IMPACT_DEPTH = {
+    "symbol": 1,
+    "neighborhood": 1,
+    "impact": 2,
+    "verification": 3,
+    "subsystem": 6,
+}
+
 Equivalents = Callable[[str], Iterable[str]]
-RecommendedTests = Callable[[], Iterable[str]]
+RecommendedTests = Callable[[int], Iterable[str]]
 
 
 def obligation_refs(
@@ -35,6 +48,7 @@ def obligation_refs(
     target_refs: tuple[str, ...],
     objective: str,
     *,
+    scope: str = "impact",
     equivalents: Equivalents,
     recommended_tests: RecommendedTests,
     max_obligations: int = DEFAULT_MAX_OBLIGATIONS,
@@ -52,7 +66,7 @@ def obligation_refs(
         if edge.target.value in equivalent and edge.edge_type in _CONSUMER_EDGES:
             refs.append(edge.source.value)
 
-    refs.extend(recommended_tests())
+    refs.extend(recommended_tests(SCOPE_IMPACT_DEPTH.get(scope, 2)))
 
     # Two independent test signals, because each fails where the other works. Objective
     # matching needs the objective to name something distinctive; stem correspondence

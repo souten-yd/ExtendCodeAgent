@@ -103,7 +103,7 @@ def build_weak_local_evidence(
 ) -> WeakLocalEvidencePackage:
     """Select the minimum task-relevant graph projection before model reasoning."""
 
-    scope = request.scope or _infer_scope(request.objective)
+    scope = request.scope or infer_evidence_scope(request.objective)
     token_budget = min(request.token_budget, _PROTOCOL_MAX_TOKENS)
     max_items = min(request.max_items, _PROTOCOL_MAX_ITEMS)
     candidates, search_truncated = _reduced_candidates(snapshot, request, scope)
@@ -246,16 +246,22 @@ def attach_excerpts(
     return replace(package, items=tuple(items))
 
 
-def _infer_scope(objective: str) -> EvidenceScope:
+def infer_evidence_scope(objective: str) -> EvidenceScope:
+    """Pick the narrowest rung the objective justifies.
+
+    The previous rule matched the words `test`, `verification`, `requirement` and
+    `evidence`, which appear in nearly every objective a project-intelligence tool is
+    given: every measured task inferred `verification`, so the ladder never started
+    narrow and the widest evidence was paid for on every request. Widening is now something
+    a caller asks for after a narrow answer did not hold.
+    """
+
     text = " ".join(objective.casefold().split())
-    if any(value in text for value in ("test", "verification", "requirement", "evidence")):
-        return EvidenceScope.VERIFICATION
-    if any(
-        value in text
-        for value in ("impact", "causal flow", "runtime", "caller", "http", "tmux", "xterm")
-    ):
+    if any(value in text for value in ("subsystem", "architecture", "across the project")):
+        return EvidenceScope.SUBSYSTEM
+    if any(value in text for value in ("impact", "causal flow", "consumers", "blast radius")):
         return EvidenceScope.IMPACT
-    if any(value in text for value in ("refactor", "neighborhood", "related")):
+    if any(value in text for value in ("refactor", "neighborhood", "related", "caller")):
         return EvidenceScope.NEIGHBORHOOD
     return EvidenceScope.SYMBOL
 
