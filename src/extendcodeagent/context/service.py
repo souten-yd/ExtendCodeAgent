@@ -269,6 +269,53 @@ def attach_excerpts(
     return replace(package, items=tuple(items))
 
 
+def attach_exemplar(
+    package: WeakLocalEvidencePackage,
+    read_lines: SourceReader,
+    *,
+    role: str = "test",
+    max_lines: int = 40,
+    token_budget: int = 400,
+) -> WeakLocalEvidencePackage:
+    """Give one item of a role its body, as the project's own example of how this is done.
+
+    A convention cannot be stated from outside the project, because projects disagree:
+    measured across five repositories, test style and assertion style are followed 89% to
+    100% of the time, and Django's 99.9% is `self.assert*` where everyone else's 100% is a
+    bare `assert`. A rule written into the runtime would be wrong for one of them.
+
+    But a norm that consistent needs no rule. One real example carries it, and a second adds
+    nothing — which is why exactly one is sent. It costs 74 to 117 tokens at the median,
+    against the 367-line file an agent opens to find the same thing.
+
+    Below roughly 90% consistency there is no convention to show, only a habit; this does
+    not try to detect that, because sending one real example is honest either way.
+    """
+
+    chosen: int | None = None
+    for index, item in enumerate(package.items):
+        if (
+            str(item.role) == role
+            and item.excerpt is None
+            and item.start_line is not None
+            and item.end_line is not None
+            and item.end_line - item.start_line + 1 <= max_lines
+        ):
+            chosen = index
+            break
+    if chosen is None:
+        return package
+
+    item = package.items[chosen]
+    assert item.start_line is not None and item.end_line is not None
+    text = read_lines(item.source_ref, item.start_line, item.end_line)
+    if not text or estimate_payload_tokens(text) > token_budget:
+        return package
+    items = list(package.items)
+    items[chosen] = replace(item, excerpt=text)
+    return replace(package, items=tuple(items))
+
+
 def infer_evidence_scope(objective: str) -> EvidenceScope:
     """Pick the narrowest rung the objective justifies.
 

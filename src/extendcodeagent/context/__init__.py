@@ -22,6 +22,7 @@ from .serialization import (
 )
 from .service import (
     attach_excerpts,
+    attach_exemplar,
     build_context,
     build_weak_local_evidence,
     infer_evidence_scope,
@@ -40,6 +41,7 @@ __all__ = [
     "WeakLocalEvidencePackage",
     "WeakLocalEvidenceRequest",
     "attach_excerpts",
+    "attach_exemplar",
     "build_answer_envelope",
     "build_context",
     "build_weak_local_evidence",

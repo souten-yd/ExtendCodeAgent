@@ -17,13 +17,13 @@ from .contracts import (
     RuntimeSignalSnapshot,
 )
 from .coverage import observation_from_coverage, symbols_touched
+from .execution_discovery import declared_profile, discover_from_root
 from .execution_profile import (
     ExecutionCommand,
     ExecutionProfile,
     KnowledgeSource,
     profile_json,
 )
-from .execution_discovery import declared_profile, discover_from_root
 from .receipt import EditReceipt, completed_paths, receipt_json
 from .service import (
     TaskSignalCollector,
