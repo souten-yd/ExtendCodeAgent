@@ -6,7 +6,7 @@ import hashlib
 import json
 import re
 from collections import defaultdict
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import replace
 
 from extendcodeagent.core.contracts import Provenance
@@ -51,8 +51,25 @@ def _is_protected(reason: str) -> bool:
 
 
 _TERM_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9_.:/#-]{2,}")
+# Tests as the requested output. "do not edit tests" mentions them; it does not ask.
+_ASKS_FOR_TESTS = re.compile(
+    r"\b(which|what) tests?\b"
+    r"|\btests? (?:that )?(?:must|should|need to) run\b"
+    r"|\btests? to run\b"
+    r"|\b(?:select|choose|identify|find|list)\b[^.]{0,40}\btests?\b"
+    r"|\btest selection\b"
+    r"|\bverif(?:y|ication)\b[^.]{0,30}\bchange\b"
+)
+# An anchor is a name the project could hold. Ordinary English cannot be missing from a
+# graph, so reporting it as a gap teaches a consumer that gaps are noise -- Django's
+# envelopes reported `objective_anchor_missing:must` and `:source.` on every case.
 _STOP_TERMS = {
+    "add",
+    "all",
     "and",
+    "any",
+    "change",
+    "changed",
     "complete",
     "completed",
     "existing",
@@ -60,8 +77,19 @@ _STOP_TERMS = {
     "file",
     "from",
     "into",
+    "edit",
+    "every",
+    "for",
+    "given",
+    "must",
+    "need",
+    "not",
     "only",
     "repository",
+    "run",
+    "select",
+    "should",
+    "source",
     "status",
     "test",
     "tests",
@@ -182,6 +210,7 @@ def build_weak_local_evidence(
         gaps.append(f"objective_anchor_missing:{term}")
     if not candidates:
         gaps.append("no_task_relevant_evidence")
+    gaps.extend(_unanswered_scope(scope, items))
     if excluded_count:
         gaps.append("candidate_or_token_bound_reached")
     if search_truncated:
@@ -316,14 +345,44 @@ def attach_exemplar(
     return replace(package, items=tuple(items))
 
 
+#: What a scope exists to deliver. A scope that delivers none of it has not answered the
+#: question it was chosen for, whatever else it managed to put in the envelope.
+_SCOPE_ANSWERS = {
+    EvidenceScope.VERIFICATION: EvidenceRole.TEST,
+    EvidenceScope.IMPACT: EvidenceRole.CONSUMER,
+}
+
+
+def _unanswered_scope(
+    scope: EvidenceScope, items: Sequence[WeakLocalEvidenceItem]
+) -> tuple[str, ...]:
+    """Whether the envelope has nothing of the kind it was asked for.
+
+    Every other gap here reports a resource running out — the candidate bound, the token
+    budget, a truncated search. None of them fires when selection simply had no answer, so
+    an envelope that returns zero tests to "which tests must run?" reported itself complete.
+    Measured on eight Django changes, that is what the consumer saw before it stopped
+    searching: not a wrong answer it could argue with, but a confident empty one.
+    """
+
+    expected = _SCOPE_ANSWERS.get(scope)
+    if expected is None or any(item.role is expected for item in items):
+        return ()
+    return (f"no_{expected.value}_evidence",)
+
+
 def infer_evidence_scope(objective: str) -> EvidenceScope:
     """Pick the narrowest rung the objective justifies.
 
-    The previous rule matched the words `test`, `verification`, `requirement` and
-    `evidence`, which appear in nearly every objective a project-intelligence tool is
-    given: every measured task inferred `verification`, so the ladder never started
-    narrow and the widest evidence was paid for on every request. Widening is now something
-    a caller asks for after a narrow answer did not hold.
+    Matching the bare words `test`, `verification`, `requirement` and `evidence` put every
+    measured task on the widest rung, because those words appear in nearly every objective a
+    project-intelligence tool is given. Removing them entirely overshot: `Select the existing
+    tests that must run for a change to X` then inferred `symbol`, and eight Django cases
+    were answered by a rung that does not exist to answer them.
+
+    So the test is whether tests are what is being *asked for*, not whether the word occurs.
+    Widening beyond that is still something a caller asks for after a narrow answer did not
+    hold.
     """
 
     text = " ".join(objective.casefold().split())
@@ -333,6 +392,8 @@ def infer_evidence_scope(objective: str) -> EvidenceScope:
         return EvidenceScope.IMPACT
     if any(value in text for value in ("refactor", "neighborhood", "related", "caller")):
         return EvidenceScope.NEIGHBORHOOD
+    if _ASKS_FOR_TESTS.search(text):
+        return EvidenceScope.VERIFICATION
     return EvidenceScope.SYMBOL
 
 
@@ -340,9 +401,12 @@ def _objective_terms(objective: str) -> tuple[str, ...]:
     return tuple(
         sorted(
             {
-                value.casefold()
+                stripped
                 for value in _TERM_PATTERN.findall(objective)
-                if value.casefold() not in _STOP_TERMS
+                # Trailing punctuation travels with a term because paths and refs contain
+                # it; a sentence-final full stop is not part of the name.
+                if (stripped := value.casefold().strip("._:/#-")) not in _STOP_TERMS
+                and len(stripped) > 2
             }
         )
     )
