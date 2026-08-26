@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import time
+from collections.abc import Iterable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -85,6 +86,7 @@ from extendcodeagent.runtime import (
     RuntimeSignal,
     RuntimeSignalKind,
     TaskSignalCollector,
+    covering_tests,
 )
 from extendcodeagent.storage import SqliteGraphStore
 from extendcodeagent.strategy import (
@@ -894,6 +896,7 @@ class ProjectIntelligenceApplication:
                         recommended_tests=lambda depth: self._recommended_test_refs(
                             snapshot, target_refs, depth
                         ),
+                        observed_tests=self._observed_test_refs,
                     ),
                     prior_evidence_ids=prior_evidence_ids,
                     unresolved_gaps=unresolved_gaps,
@@ -932,6 +935,13 @@ class ProjectIntelligenceApplication:
         except CapabilityUnavailable:
             return ()
         return tuple(item.canonical_ref for item in report.recommended_tests)
+
+    def _observed_test_refs(self, refs: Iterable[str]) -> tuple[str, ...]:
+        candidates = tuple(CanonicalRef(value) for value in dict.fromkeys(refs))
+        if not candidates:
+            return ()
+        observations = self._ensure_store().observations(self.project, refs=candidates)
+        return tuple(ref.value for ref in covering_tests(observations, candidates))
 
     def _read_source_span(self, source_ref: str, start: int, end: int) -> str | None:
         """Read one symbol's lines, refusing anything that escapes the project root."""

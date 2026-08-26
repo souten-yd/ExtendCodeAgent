@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from extendcodeagent.context import (
     ContextProfile,
     ContextRequest,
@@ -13,6 +15,7 @@ from extendcodeagent.context import (
     estimate_payload_tokens,
     stable_evidence_envelope,
 )
+from extendcodeagent.context.obligations import obligation_refs
 from extendcodeagent.context.serialization import weak_local_evidence_item_json
 from extendcodeagent.core.contracts import (
     CanonicalRef,
@@ -22,10 +25,17 @@ from extendcodeagent.core.contracts import (
     SourceRevision,
 )
 from extendcodeagent.graph import FactStatus, GraphNode, GraphSnapshot
+from extendcodeagent.runtime import (
+    ObservationKind,
+    ObservationStatus,
+    RuntimeObservation,
+    covering_tests,
+)
 
 PROJECT = ProjectRef("project", "workspace", "file:///repo")
 REVISION = SourceRevision("rev-1")
 PROVENANCE = Provenance("source", "python-ast", "1", REVISION)
+_AT = datetime(2026, 8, 26, tzinfo=UTC)
 
 
 def _snapshot(size: int = 30) -> GraphSnapshot:
@@ -297,3 +307,80 @@ def test_an_excerpt_budget_stops_bodies_from_crowding_the_envelope() -> None:
     with_source = attach_excerpts(package, lambda *_: "x" * 4_000, token_budget=1)
 
     assert all(item.excerpt is None for item in with_source.items)
+
+
+def test_an_observed_test_becomes_an_obligation_the_graph_cannot_supply() -> None:
+    """Coverage reaches a test that never names its subject.
+
+    Django's tests reach theirs through the runner and the app registry, so no call or
+    import edge joins them and no amount of traversal recovers the pair. An observation
+    naming both is the only evidence there is.
+    """
+
+    target = CanonicalRef("py://module#target")
+    hidden = CanonicalRef("py://tests.test_via_runner#test_target")
+    snapshot = GraphSnapshot(PROJECT, None, _snapshot(1).nodes)
+
+    without = obligation_refs(
+        snapshot,
+        (target.value,),
+        "verify target",
+        equivalents=lambda _: (),
+        recommended_tests=lambda _: (),
+    )
+    with_coverage = obligation_refs(
+        snapshot,
+        (target.value,),
+        "verify target",
+        equivalents=lambda _: (),
+        recommended_tests=lambda _: (),
+        observed_tests=lambda refs: (hidden.value,) if target.value in set(refs) else (),
+    )
+
+    assert hidden.value not in {item.canonical_ref.value for item in without}
+    observed = next(item for item in with_coverage if item.canonical_ref.value == hidden.value)
+    assert observed.role is EvidenceRole.TEST
+
+
+def test_only_a_test_observation_that_ran_counts_as_coverage() -> None:
+    """An unavailable observation names nothing that executed."""
+
+    ran = RuntimeObservation(
+        "obs-1",
+        ObservationKind.TEST,
+        PROJECT,
+        REVISION,
+        ObservationStatus.PASSED,
+        _AT,
+        _AT,
+        PROVENANCE,
+        observed_refs=(CanonicalRef("py://module#target"), CanonicalRef("py://tests#covers")),
+        command="pytest",
+    )
+    skipped = RuntimeObservation(
+        "obs-2",
+        ObservationKind.TEST,
+        PROJECT,
+        REVISION,
+        ObservationStatus.UNAVAILABLE,
+        _AT,
+        _AT,
+        PROVENANCE,
+        observed_refs=(CanonicalRef("py://module#target"), CanonicalRef("py://tests#never_ran")),
+    )
+    lint = RuntimeObservation(
+        "obs-3",
+        ObservationKind.LINT,
+        PROJECT,
+        REVISION,
+        ObservationStatus.PASSED,
+        _AT,
+        _AT,
+        PROVENANCE,
+        observed_refs=(CanonicalRef("py://module#target"), CanonicalRef("py://tools#ruff")),
+        command="ruff",
+    )
+
+    found = covering_tests((ran, skipped, lint), (CanonicalRef("py://module#target"),))
+
+    assert [ref.value for ref in found] == ["py://tests#covers"]

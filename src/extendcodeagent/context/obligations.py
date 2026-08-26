@@ -43,6 +43,7 @@ SCOPE_IMPACT_DEPTH = {
 
 Equivalents = Callable[[str], Iterable[str]]
 RecommendedTests = Callable[[int], Iterable[str]]
+ObservedTests = Callable[[Iterable[str]], Iterable[str]]
 
 
 def obligation_refs(
@@ -53,6 +54,7 @@ def obligation_refs(
     scope: str = "impact",
     equivalents: Equivalents,
     recommended_tests: RecommendedTests,
+    observed_tests: ObservedTests | None = None,
     max_obligations: int = DEFAULT_MAX_OBLIGATIONS,
 ) -> tuple[RequiredRef, ...]:
     if not target_refs:
@@ -70,7 +72,12 @@ def obligation_refs(
         if edge.target.value in equivalent and edge.edge_type in _CONSUMER_EDGES
     ]
 
-    tests = list(recommended_tests(SCOPE_IMPACT_DEPTH.get(scope, 2)))
+    # Observed first: a test that was seen touching this ref is fact, while everything
+    # below it is inference. It is also the only signal that reaches a test which never
+    # names its subject -- Django's tests reach theirs through the runner and the app
+    # registry, so no call or import edge joins them and static analysis cannot recover it.
+    tests = list(observed_tests(equivalent) if observed_tests else ())
+    tests.extend(recommended_tests(SCOPE_IMPACT_DEPTH.get(scope, 2)))
 
     # Two independent test signals, because each fails where the other works. Objective
     # matching needs the objective to name something distinctive; stem correspondence

@@ -241,3 +241,27 @@ def _outcome(
         tuple(item.observation_id for item in observations),
         (diagnostic,),
     )
+
+
+def covering_tests(
+    observations: Iterable[RuntimeObservation], refs: Iterable[CanonicalRef]
+) -> tuple[CanonicalRef, ...]:
+    """Refs a usable test observation recorded alongside the ones asked about.
+
+    Coverage is the relation a static graph cannot hold. A test reaching its subject
+    through a runner, a registry or a fixture leaves no call or import edge behind, but it
+    does leave an observation naming both. An unavailable observation names nothing that
+    ran, so it is not evidence of anything.
+    """
+
+    asked = {ref.value for ref in refs}
+    return tuple(
+        dict.fromkeys(
+            ref
+            for item in observations
+            if item.kind is ObservationKind.TEST
+            and item.status is not ObservationStatus.UNAVAILABLE
+            for ref in item.observed_refs
+            if ref.value not in asked
+        )
+    )

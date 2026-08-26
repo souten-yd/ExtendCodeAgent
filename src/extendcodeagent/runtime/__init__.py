@@ -17,6 +17,7 @@ from .contracts import (
 )
 from .service import (
     TaskSignalCollector,
+    covering_tests,
     reconcile_observations,
     summarize_observations,
     unavailable_observation,
@@ -37,6 +38,7 @@ __all__ = [
     "RuntimeSignalKind",
     "RuntimeSignalSnapshot",
     "TaskSignalCollector",
+    "covering_tests",
     "reconcile_observations",
     "summarize_observations",
     "unavailable_observation",
