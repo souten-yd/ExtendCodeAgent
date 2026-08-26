@@ -63,11 +63,19 @@ _ROLE_FIELDS = {
     "test": ("id", "path"),
     "supporting": ("id", "path", "kind", "summary"),
     "consumer": ("id", "path", "kind", "summary", "reason"),
+    # A target the caller did not name is one of the symbols inside a file they did. It is
+    # context for the change, not the thing being changed, so it does not carry the full
+    # apparatus: measured across four repositories, those expansions were 24 items at 71
+    # tokens each -- 57% of the whole envelope.
+    "target": ("id", "ref", "path", "kind", "summary", "reason"),
 }
 
 
 def weak_local_evidence_item_json(item: Any) -> dict[str, Any]:
     full = _full_item_json(item)
+    # Everything a named symbol carries: identity, trust and, where it was read, the body.
+    if item.excerpt is not None:
+        return full
     fields = _ROLE_FIELDS.get(str(item.role))
     if fields is None:
         return full
