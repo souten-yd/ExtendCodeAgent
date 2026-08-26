@@ -152,3 +152,8 @@ class WeakLocalEvidencePackage:
     truncated: bool
     candidate_search_truncated: bool
     deterministic_resolution: bool
+    #: Questions already settled as "nothing there", at exactly this revision. An agent
+    #: that is not told searches for it again: traced over six Django changes, seventeen
+    #: of twenty-two baseline actions returned nothing and five repeated a search that
+    #: already had.
+    established_absences: tuple[str, ...] = ()

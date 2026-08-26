@@ -137,6 +137,8 @@ def weak_local_evidence_json(
         "selected_evidence_ids": list(package.selected_evidence_ids),
         "prior_evidence_ids": list(package.prior_evidence_ids),
         "unresolved_evidence_gaps": list(package.unresolved_gaps),
+        # What has been ruled out, so it is not ruled out again.
+        "established_absences": list(package.established_absences),
         "request_next_scope": package.next_scope.value if package.next_scope else "none",
     }
     task_payload = canonical_bytes(task_evidence)

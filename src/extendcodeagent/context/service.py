@@ -95,6 +95,7 @@ def stable_evidence_envelope() -> dict[str, object]:
         "decision_contract": {
             "selected_evidence_ids": "array[evidence_id]",
             "unresolved_evidence_gaps": "array[string]",
+            "established_absences": "array[string]",
             "request_next_scope": ["none", *[scope.value for scope in _SCOPE_ORDER[1:]]],
         },
         "rules": [
@@ -102,6 +103,7 @@ def stable_evidence_envelope() -> dict[str, object]:
             "use evidence ids instead of restating evidence",
             "expand only for an unresolved evidence gap",
             "unknown or omitted evidence is not negative evidence",
+            "an established absence is negative evidence; do not search for it again",
         ],
     }
 

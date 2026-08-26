@@ -1,5 +1,6 @@
 """Revision-aware runtime and verification intelligence."""
 
+from .absence import ObservedAbsence, established_absences
 from .contracts import (
     ObservationKind,
     ObservationRollup,
@@ -27,6 +28,7 @@ from .triggers import ImprovementTrigger, TriggerKind, detect_triggers
 
 __all__ = [
     "ImprovementTrigger",
+    "ObservedAbsence",
     "ObservationKind",
     "ObservationRollup",
     "ObservationStatus",
@@ -43,6 +45,7 @@ __all__ = [
     "TaskSignalCollector",
     "TriggerKind",
     "covering_tests",
+    "established_absences",
     "detect_triggers",
     "observation_from_coverage",
     "symbols_touched",

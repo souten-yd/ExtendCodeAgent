@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime
 
 from extendcodeagent.context import (
@@ -17,7 +18,10 @@ from extendcodeagent.context import (
     stable_evidence_envelope,
 )
 from extendcodeagent.context.obligations import obligation_refs
-from extendcodeagent.context.serialization import weak_local_evidence_item_json
+from extendcodeagent.context.serialization import (
+    weak_local_evidence_item_json,
+    weak_local_evidence_json,
+)
 from extendcodeagent.core.contracts import (
     CanonicalRef,
     Confidence,
@@ -436,3 +440,26 @@ def test_a_test_item_carries_the_path_and_not_the_apparatus() -> None:
     )
 
     assert weak_local_evidence_item_json(item) == {"id": "e-1", "path": "tests/test_x.py"}
+
+
+def test_the_envelope_states_what_has_been_ruled_out() -> None:
+    """An agent not told a thing is absent searches for it again."""
+
+    package = build_weak_local_evidence(
+        _snapshot(),
+        WeakLocalEvidenceRequest(
+            "locate function_1",
+            (CanonicalRef("py://module#function_1"),),
+            token_budget=4_096,
+        ),
+    )
+    settled = replace(
+        package,
+        established_absences=("no test imports py://module",),
+    )
+
+    payload = weak_local_evidence_json(settled, stable_evidence_envelope())
+
+    assert payload["task_evidence"]["established_absences"] == ["no test imports py://module"]
+    rules = stable_evidence_envelope()["rules"]
+    assert any("do not search for it again" in rule for rule in rules)
