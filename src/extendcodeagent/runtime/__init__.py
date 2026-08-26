@@ -25,9 +25,19 @@ from .service import (
     summarize_observations,
     unavailable_observation,
 )
+from .task_state import (
+    Attempt,
+    AttemptOutcome,
+    TaskExecutionState,
+    advance,
+    remaining_after,
+    task_state_json,
+)
 from .triggers import ImprovementTrigger, TriggerKind, detect_triggers
 
 __all__ = [
+    "Attempt",
+    "AttemptOutcome",
     "EditReceipt",
     "ImprovementTrigger",
     "ObservedAbsence",
@@ -45,11 +55,15 @@ __all__ = [
     "RuntimeSignalKind",
     "RuntimeSignalSnapshot",
     "TaskSignalCollector",
+    "TaskExecutionState",
     "TriggerKind",
+    "advance",
     "completed_paths",
     "covering_tests",
     "established_absences",
     "receipt_json",
+    "remaining_after",
+    "task_state_json",
     "detect_triggers",
     "observation_from_coverage",
     "symbols_touched",

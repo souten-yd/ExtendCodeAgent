@@ -1,0 +1,344 @@
+{
+  "classification": "C2_AGENT_LOOP_DIAGNOSTIC",
+  "note": "Diagnostic. The sealed local-practical arm is port-8090; this endpoint is a different route and is not recorded as B0b/C2 evidence.",
+  "captured_at": "2026-08-26T13:24:09.859168+00:00",
+  "repository": "/tmp/claude-1000/-home-souten-ExtendCodeAgent/834e8784-5cdd-4621-acbc-e318c839c3cd/scratchpad/corpus-django",
+  "model": "Qwen3.6-35B-A3B",
+  "max_turns": 8,
+  "cases": 6,
+  "summary": {
+    "pi": {
+      "turns": 1,
+      "prompt_tokens": 7376.5,
+      "read_bytes": 0,
+      "greps": 0,
+      "reads": 0,
+      "recall": 0.37,
+      "precision": 0.32,
+      "answered": 6
+    },
+    "baseline": {
+      "turns": 2.67,
+      "prompt_tokens": 818,
+      "read_bytes": 0,
+      "greps": 1.33,
+      "reads": 0.17,
+      "recall": 0.17,
+      "precision": 0.17,
+      "answered": 5
+    }
+  },
+  "results": [
+    {
+      "case_id": "pr-0f581cd29d42",
+      "required": [
+        "tests/admin_views/test_actions.py",
+        "tests/admin_views/tests.py",
+        "tests/auth_tests/test_forms.py",
+        "tests/auth_tests/test_models.py",
+        "tests/auth_tests/test_views.py",
+        "tests/logging_tests/tests.py",
+        "tests/mail/test_backends.py",
+        "tests/mail/test_deprecated.py",
+        "tests/mail/test_sendtestemail.py",
+        "tests/mail/tests.py",
+        "tests/middleware/tests.py",
+        "tests/project_template/test_settings.py",
+        "tests/test_client/tests.py",
+        "tests/test_utils/tests.py",
+        "tests/view_tests/tests/test_debug.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 8578,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "prompt_tokens_per_turn": [
+          8578
+        ],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 0.2,
+        "precision": 0.75
+      },
+      "baseline": {
+        "turns": 1,
+        "prompt_tokens": 145,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "prompt_tokens_per_turn": [
+          145
+        ],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    },
+    {
+      "case_id": "pr-25cf1cbb1cb9",
+      "required": [
+        "tests/mail/test_backends.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 5827,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "prompt_tokens_per_turn": [
+          5827
+        ],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "baseline": {
+        "turns": 1,
+        "prompt_tokens": 132,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "prompt_tokens_per_turn": [
+          132
+        ],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    },
+    {
+      "case_id": "pr-da6567da7ea0",
+      "required": [
+        "tests/generic_views/test_base.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 7206,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "prompt_tokens_per_turn": [
+          7206
+        ],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 0.0,
+        "precision": 0.0
+      },
+      "baseline": {
+        "turns": 1,
+        "prompt_tokens": 130,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "prompt_tokens_per_turn": [
+          130
+        ],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 1.0,
+        "precision": 1.0
+      }
+    },
+    {
+      "case_id": "pr-0e1d950fbb44",
+      "required": [
+        "tests/queries/test_qs_combinators.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 7511,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "prompt_tokens_per_turn": [
+          7511
+        ],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 0.0,
+        "precision": 0.0
+      },
+      "baseline": {
+        "turns": 8,
+        "prompt_tokens": 1773,
+        "read_bytes": 0,
+        "greps": 5,
+        "reads": 1,
+        "malformed": 2,
+        "answered": false,
+        "trace": [
+          {
+            "kind": "grep",
+            "arg": "-r \"from django.db.models.sql.query import\" tests/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "-r \"sql.query\" tests/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "\"django.db.models.sql.query\" tests/",
+            "hits": 0
+          },
+          {
+            "kind": "read",
+            "arg": "tests/query_tests/__init__.py",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "-r \"sql.query\" tests/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "-r \"sql.query\" tests/",
+            "hits": 0
+          }
+        ],
+        "prompt_tokens_per_turn": [
+          130,
+          158,
+          181,
+          205,
+          234,
+          264,
+          287,
+          314
+        ],
+        "empty_searches": 5,
+        "repeated_actions": 2,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    },
+    {
+      "case_id": "pr-6bbe2656e1e8",
+      "required": [
+        "tests/queries/test_qs_combinators.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 7611,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "prompt_tokens_per_turn": [
+          7611
+        ],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 0.0,
+        "precision": 0.0
+      },
+      "baseline": {
+        "turns": 4,
+        "prompt_tokens": 2594,
+        "read_bytes": 0,
+        "greps": 3,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [
+          {
+            "kind": "grep",
+            "arg": "compiler",
+            "hits": 40
+          },
+          {
+            "kind": "grep",
+            "arg": "compiler",
+            "hits": 40
+          },
+          {
+            "kind": "grep",
+            "arg": "SQLCompiler",
+            "hits": 16
+          }
+        ],
+        "prompt_tokens_per_turn": [
+          130,
+          517,
+          904,
+          1043
+        ],
+        "empty_searches": 0,
+        "repeated_actions": 1,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    },
+    {
+      "case_id": "pr-3e4e0db66961",
+      "required": [
+        "tests/view_tests/tests/test_csrf.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 7526,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "prompt_tokens_per_turn": [
+          7526
+        ],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 1.0,
+        "precision": 0.142857
+      },
+      "baseline": {
+        "turns": 1,
+        "prompt_tokens": 134,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "prompt_tokens_per_turn": [
+          134
+        ],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    }
+  ]
+}

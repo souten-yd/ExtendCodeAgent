@@ -166,9 +166,11 @@ def run_loop(
     trace: list[dict[str, Any]] = []
     answer: tuple[str, ...] = ()
 
+    per_turn: list[int] = []
     for _ in range(max_turns):
         text, used = complete(endpoint, model, messages, max_output)
         prompt_tokens += used
+        per_turn.append(used)
         line = next((item.strip() for item in text.splitlines() if item.strip()), "")
         messages.append({"role": "assistant", "content": line or text[:200]})
 
@@ -210,6 +212,9 @@ def run_loop(
         "malformed": actions.count("malformed"),
         "answered": bool(answer),
         "trace": trace,
+        # Each turn re-sends everything before it, so this curve is the cost of holding a
+        # task's own history in the conversation rather than beside it.
+        "prompt_tokens_per_turn": per_turn,
         # Work spent rediscovering that something is not there, or is where it already was.
         "empty_searches": sum(1 for item in trace if item["kind"] == "grep" and not item["hits"]),
         "repeated_actions": len(trace) - len({(item["kind"], item["arg"]) for item in trace}),
