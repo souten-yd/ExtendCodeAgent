@@ -162,3 +162,37 @@ def test_context_item_cost_matches_the_delivered_payload() -> None:
 
     delivered = estimate_payload_tokens([context_item_json(item) for item in package.items])
     assert package.used_tokens >= delivered * 0.9
+
+
+def test_required_evidence_survives_the_item_cap_and_reports_the_overflow() -> None:
+    """An obligation's evidence is never ranked away, but exceeding the bound is visible."""
+
+    snapshot = _snapshot(size=60)
+    required = tuple(CanonicalRef(f"py://module#function_{index}") for index in range(40))
+
+    package = build_weak_local_evidence(
+        snapshot,
+        WeakLocalEvidenceRequest(
+            "carry every obligation",
+            token_budget=8_192,
+            max_items=8,
+            required_refs=required,
+        ),
+    )
+
+    delivered = {item.canonical_ref.value for item in package.items}
+    assert {ref.value for ref in required} <= delivered
+    assert len(package.items) > 8
+    assert "protected_evidence_exceeds_budget" in package.unresolved_gaps
+
+
+def test_evidence_items_carry_the_source_path_an_answer_has_to_name() -> None:
+    """Emitting only `py://a.b.c#d` made the model derive `a/b/c.py` itself."""
+
+    package = build_weak_local_evidence(
+        _snapshot(), WeakLocalEvidenceRequest("locate function_1", token_budget=4_096)
+    )
+
+    assert package.items
+    assert all(item.source_ref == "module.py" for item in package.items)
+    assert "path" in stable_evidence_envelope()["evidence_item_fields"]

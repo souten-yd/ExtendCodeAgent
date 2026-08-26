@@ -60,6 +60,10 @@ def weak_local_evidence_item_json(item: Any) -> dict[str, Any]:
     return {
         "id": item.evidence_id,
         "ref": item.canonical_ref.value,
+        # The canonical ref is ECA's identity; `path` is what an answer has to name. Emitting
+        # only the ref made the model translate `py://a.b.c#d` into `a/b/c.py` itself, which
+        # is the measured PROJECTION_SCHEMA_ERROR class.
+        "path": item.source_ref,
         "kind": item.kind,
         "summary": item.summary,
         "reason": item.reason,

@@ -874,6 +874,7 @@ class ProjectIntelligenceApplication:
                     token_budget,
                     min(self.max_items, 32),
                     scope=EvidenceScope(scope) if scope is not None else None,
+                    required_refs=self._obligation_refs(snapshot, target_refs),
                     prior_evidence_ids=prior_evidence_ids,
                     unresolved_gaps=unresolved_gaps,
                 ),
@@ -896,6 +897,41 @@ class ProjectIntelligenceApplication:
             depth=self.policy.depth(CapabilityName.CONTEXT),
             **context_package_json(context_package),
         )
+
+    def _obligation_refs(
+        self, snapshot: GraphSnapshot, target_refs: tuple[str, ...]
+    ) -> tuple[CanonicalRef, ...]:
+        """Refs the envelope must carry, taken from the capabilities that already derive them.
+
+        A generic term-and-neighbourhood search cannot reach a caller that reaches the target
+        through a re-export, and it has no reason to prefer the recommended tests over any
+        other neighbour. Both are already computed by the reference resolver and Impact, so
+        the envelope reuses those answers instead of re-deriving them worse.
+        """
+
+        if not target_refs:
+            return ()
+        resolver = self._reference_resolver()
+        refs: list[str] = []
+        for ref in target_refs:
+            refs.append(ref)
+            refs.extend(resolver.equivalents(ref, snapshot))
+        equivalent = set(refs)
+        for edge in snapshot.edges:
+            if edge.target.value in equivalent and edge.edge_type in {
+                "calls",
+                "may_call",
+                "references",
+                "imports",
+            }:
+                refs.append(edge.source.value)
+        try:
+            report = self._impact_report(snapshot, target_refs, capability=CapabilityName.IMPACT)
+        except CapabilityUnavailable:
+            report = None
+        if report is not None:
+            refs.extend(item.canonical_ref for item in report.recommended_tests)
+        return tuple(CanonicalRef(value) for value in dict.fromkeys(refs))
 
     def create_blueprint(
         self,

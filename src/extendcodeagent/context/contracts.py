@@ -74,6 +74,7 @@ class WeakLocalEvidenceRequest:
     max_items: int = 12
     min_confidence: float = 0.0
     scope: EvidenceScope | None = None
+    required_refs: tuple[CanonicalRef, ...] = ()
     prior_evidence_ids: tuple[str, ...] = ()
     unresolved_gaps: tuple[str, ...] = ()
 
@@ -96,6 +97,7 @@ class WeakLocalEvidenceRequest:
 class WeakLocalEvidenceItem:
     evidence_id: str
     canonical_ref: CanonicalRef
+    source_ref: str
     kind: str
     summary: str
     reason: str

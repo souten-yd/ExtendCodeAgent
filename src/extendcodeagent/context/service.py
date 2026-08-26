@@ -36,6 +36,9 @@ _MAX_ANCHOR_MATCHES = 64
 _PROTOCOL_MAX_SEEDS = 64
 _PROTOCOL_MAX_CANDIDATES = 256
 _SCOPE_ORDER = tuple(EvidenceScope)
+# Evidence an obligation requires is never ranked away for cost; see
+# docs/handoff/C2_EVIDENCE_DELIVERY_DECISION.md "Never rank away required truth".
+_PROTECTED_REASONS = frozenset({"target_ref", "required_obligation"})
 _TERM_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9_.:/#-]{2,}")
 _STOP_TERMS = {
     "and",
@@ -70,6 +73,7 @@ def stable_evidence_envelope() -> dict[str, object]:
         "evidence_item_fields": [
             "id",
             "ref",
+            "path",
             "kind",
             "summary",
             "reason",
@@ -115,13 +119,14 @@ def build_weak_local_evidence(
     for node, reason, _ in candidates:
         evidence_id = _evidence_id(node)
         summary = str(
-            node.properties.get("name") or node.properties.get("qualname") or node.source_ref
+            node.properties.get("qualname") or node.properties.get("name") or node.source_ref
         )
         estimate = estimate_payload_tokens(
             weak_local_evidence_item_json(
                 WeakLocalEvidenceItem(
                     evidence_id,
                     node.canonical_ref,
+                    node.source_ref,
                     node.node_type,
                     summary,
                     reason,
@@ -132,12 +137,14 @@ def build_weak_local_evidence(
                 )
             )
         )
-        if len(items) >= max_items or used_tokens + estimate > token_budget:
+        protected = reason in _PROTECTED_REASONS
+        if not protected and (len(items) >= max_items or used_tokens + estimate > token_budget):
             continue
         items.append(
             WeakLocalEvidenceItem(
                 evidence_id,
                 node.canonical_ref,
+                node.source_ref,
                 node.node_type,
                 summary,
                 reason,
@@ -162,6 +169,10 @@ def build_weak_local_evidence(
         gaps.append("candidate_or_token_bound_reached")
     if search_truncated:
         gaps.append("candidate_search_bound_reached")
+    if used_tokens > token_budget or len(items) > max_items:
+        # Protected evidence is never dropped for cost, so the envelope can exceed its
+        # bounds. That is a reportable overflow, not a silent one.
+        gaps.append("protected_evidence_exceeds_budget")
     next_scope = _next_scope(scope) if gaps and scope is not EvidenceScope.SUBSYSTEM else None
     return WeakLocalEvidencePackage(
         scope=scope,
@@ -232,6 +243,7 @@ def _reduced_candidates(
         if node.confidence.value >= request.min_confidence
     }
     targets = {value.value.casefold() for value in request.target_refs}
+    required = {value.value.casefold() for value in request.required_refs}
     terms = _objective_terms(request.objective)
     gap_terms = {
         value.partition(":")[2].casefold()
@@ -260,6 +272,8 @@ def _reduced_candidates(
         reason = "objective_term"
         if canonical in targets or source in targets or f"file://{source}" in targets:
             score, reason = 10_000, "target_ref"
+        elif canonical in required or source in required:
+            score, reason = 9_500, "required_obligation"
         elif ref in gap_seed_refs:
             score, reason = 9_000, "unresolved_objective_anchor"
         elif not targets:
