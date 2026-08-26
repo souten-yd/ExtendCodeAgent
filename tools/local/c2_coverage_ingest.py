@@ -51,8 +51,14 @@ class CoverageIngestError(RuntimeError):
     """The suite did not produce usable per-test coverage."""
 
 
-def run_suite(repository: Path, data_file: Path, pytest_args: tuple[str, ...]) -> int:
-    """Run the suite under coverage, tagging every line with the test that reached it."""
+def run_suite(repository: Path, data_file: Path, runner: tuple[str, ...]) -> int:
+    """Run the suite under coverage, tagging every line with the test that reached it.
+
+    The runner is configurable because most projects do not invoke pytest directly:
+    Django has `tests/runtests.py`, and a `manage.py test` or `tox` entry point is just as
+    common. `dynamic_context = test_function` keys on the executing function's name, so it
+    works for any framework whose tests are named `test_*`.
+    """
 
     # `dynamic_context` has no command-line form, so the setting travels in an rcfile.
     rcfile = data_file.with_suffix(".rc")
@@ -64,10 +70,7 @@ def run_suite(repository: Path, data_file: Path, pytest_args: tuple[str, ...]) -
         "run",
         f"--rcfile={rcfile}",
         f"--data-file={data_file}",
-        "-m",
-        "pytest",
-        "-q",
-        *pytest_args,
+        *runner,
     )
     result = subprocess.run(command, cwd=repository, capture_output=True, text=True, check=False)
     if result.returncode not in (0, 1):  # 1 is "tests failed", still usable coverage
@@ -175,7 +178,7 @@ def ingest(repository: Path, database: Path, executed: dict[str, dict[str, set[i
                 status=ObservationStatus.PASSED,
                 started_at=now,
                 finished_at=now,
-                command="pytest --context=test",
+                command="test suite under coverage",
             )
             # The test's own ref is always there; one ref alone means it reached nothing
             # the Twin models, which is worth counting rather than storing.
@@ -202,14 +205,20 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("repository", type=Path)
     parser.add_argument("--database", type=Path, required=True, help="graph store to ingest into")
-    parser.add_argument("--pytest-arg", action="append", default=[], dest="pytest_args")
+    parser.add_argument(
+        "--runner",
+        nargs=argparse.REMAINDER,
+        default=None,
+        help="what to run under coverage, after `coverage run` (default: -m pytest -q)",
+    )
     parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
 
     repository = args.repository.expanduser().resolve()
     with tempfile.TemporaryDirectory(prefix="eca-coverage-") as temp:
         data_file = Path(temp) / "coverage.data"
-        exit_code = run_suite(repository, data_file, tuple(args.pytest_args))
+        runner = tuple(args.runner) if args.runner else ("-m", "pytest", "-q")
+        exit_code = run_suite(repository, data_file, runner)
         executed = executed_by_test(repository, data_file)
     summary = {
         "classification": "C2_COVERAGE_INGEST",
