@@ -1,6 +1,31 @@
 # Next Task
 
-Updated: 2026-08-17 (Asia/Tokyo)
+Updated: 2026-08-27 (Asia/Tokyo)
+
+## The goal, and the phase it belongs to
+
+**The data a change needs at code-generation time is present in the initial context.**
+
+Everything below is measured against that sentence. The mapping exists because work drifted
+away from it once already, and the drift was hard to see: every corpus objective reads
+`Select the existing tests that must run… Do not edit source.` — the benchmark forbids code
+generation, so optimising against it feels like progress and is not.
+
+| phase | does grep already suffice? | does the goal depend on it? |
+|---|---|---|
+| investigation | **yes** — grep recall 0.96 at 7,840 tokens against PI 0.428 at 7,842 | **no.** PI withdrew; do not compete here |
+| design | partly | thinly — only 1.7–6.0% of commits state a constraint lost from the code |
+| **implementation / code generation** | **no** | **yes — this is the target, and it has never been measured** |
+| verification | no | yes, as the signal that a generated change is correct |
+
+Before starting a measurement, state which phase it tests. If the answer is investigation,
+it cannot move the goal however interesting the number.
+
+The scorer for the missing measurement already exists. `tools/local/c2_revert_oracle.py`
+reverts a commit's production half, leaves its tests, and records which tests detect the
+change: a broken state, a known pass/fail oracle, and a task that genuinely takes several
+turns — the only shape in which the cumulative axis means anything. 42 usable cases across
+flask and httpx.
 
 ## Canonical plan
 
