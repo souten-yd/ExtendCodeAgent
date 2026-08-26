@@ -255,6 +255,82 @@ Deferred out of C2: contract extraction, ABI fingerprint, task state, memory, HT
 
 ---
 
+## 4b. Verification of the three remaining unmeasured assumptions
+
+Checked 2026-08-26 against sealed B0b evidence and the adapter source. Two are now settled; one
+cannot be measured until the local route is running.
+
+### 4b.1 SETTLED — the PI envelope is a minority of what the model reads
+
+From `docs/evidence/final/b0b-confirmation-result-v1.json` over 57 held-out cells:
+
+```
+model requests            538      ->  9.4 per cell
+PI tool calls             240      ->  4.2 per cell
+fresh input tokens        2,392,101  (~9,568,404 chars)
+PI tool output            2,043,852 chars
+PI share of fresh prompt  21.4%
+context_token_sum/input   7.9x     (cache-read amplification within a session)
+```
+
+**Bounding the PI envelope to zero would remove at most about a fifth of the fresh prompt.** The other
+79% is the task instruction, the agent loop, native tool output and the model's own prior turns, all
+host-owned. A context target expressed only over the PI payload therefore cannot deliver a bounded
+session on its own, and `large-project-bounded-context-target-v1.json`'s "total primary-model context"
+definition is the right one to hold the programme to.
+
+The lever ECA does own is **turn count**: 9.4 model requests per cell, of which 4.2 are PI calls, each
+re-sending the accumulated conversation. High recall is what collapses repeated narrowing calls into
+one sufficient envelope, so recall acts on the session total and not only on the payload. This is an
+argument for §3.1–§3.4 and against treating payload compression as the lever.
+
+One reduction is already banked: `pi_context` averaged 39,065 chars (~9,766 tokens) per call in B0b on
+the legacy detail path; the envelope view measured today is ~2,860 tokens for a comparable task.
+
+### 4b.2 SETTLED — the stable prefix cannot be a prefix as delivered
+
+`stable_evidence_envelope()` and `stable_prefix_id` are designed as a task-invariant cacheable prefix.
+They cannot function as one.
+
+`adapters/opencode/src/plugin.ts` exposes PI only through `createTools(...)` and the MCP surface;
+its `chat.message` hook is observe-only and emits signals, with **no prompt-injection path**. PI
+therefore reaches the model exclusively as a **tool result**, which lands mid-conversation after the
+system prompt, the user objective and every prior turn.
+
+Prefix caching operates on a literal prefix of the token sequence: a stable block at position N only
+reduces prefill if positions 0..N-1 are identical too, and across tasks they never are, because each
+objective precedes the first tool call. Within one conversation the append-growth pattern does hit
+cache — that is the observed 7.9x amplification — but that is ordinary conversation caching and owes
+nothing to the designed stable envelope.
+
+Consequences:
+
+- **Cross-task prefix reuse is currently zero by construction.** Any claim that the stable envelope
+  amortises protocol overhead across tasks is unsupported.
+- §3.11 is upgraded from "measure the hit rate" to a design question: to be a real prefix the stable
+  envelope must be emitted **once, ahead of the user turn** — as instructions or a system-prompt
+  contribution — not repeated inside every tool result. That requires a host injection path OpenCode
+  may not offer, in which case the honest move is to shrink the stable block rather than claim it is
+  cached.
+- Progressive expansion's economics remain unproven and now look worse: each expansion is another
+  tool round trip whose prefill is a full re-send of the accumulated conversation.
+
+### 4b.3 NOT MEASURABLE TODAY — weak-model protocol compliance
+
+The configured `local-practical` route at `127.0.0.1:8090` is not listening, and repository policy
+confines model-bearing work to that route, so this was not measured and no substitute model was used.
+
+It remains the single largest unquantified risk on the critical path. The envelope instructs the model
+to cite evidence IDs, to treat omission as non-negative evidence, and to expand only for a named gap.
+Whether a Qwen3-27B-class local model honours that is unknown; if it does not, it searches the
+repository anyway and the system pays for both the envelope and the search. Every bounded-context
+claim assumes compliance that has never been tested.
+
+Add this as an explicit C2 entry gate: before `C2-D` (sufficiency gate) is accepted, measure on the
+local route how often the model (a) cites delivered evidence IDs rather than restating content,
+(b) requests expansion only for a named gap, and (c) refrains from redundant native search when the
+envelope is in fact sufficient. A sufficiency gate the model ignores is not a gate.
+
 ## 5. What this revision does not claim
 
 - 0.244 is measured on **three tuning tasks in one Python repository**. It is a strong signal about the
