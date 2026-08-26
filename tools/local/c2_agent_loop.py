@@ -143,10 +143,20 @@ def run_loop(
     envelope: str | None,
     max_turns: int,
     max_output: int,
+    absences: tuple[str, ...] = (),
 ) -> dict[str, Any]:
     opening = PROTOCOL
     if envelope is not None:
         opening += f"\n### PROJECT INTELLIGENCE\n{envelope}\n"
+    if absences:
+        # Established at this revision: searched for, and not there. Without it the same
+        # ground gets covered again -- traced on Django, seventeen of twenty-two baseline
+        # actions returned nothing and five repeated one that already had.
+        listed = "\n".join(f"  {item}" for item in absences)
+        opening += (
+            "\n### ALREADY RULED OUT (searched at this revision, nothing found)\n"
+            f"{listed}\nDo not search for these again.\n"
+        )
     opening += f"\n### TASK\n{case.objective}\n"
 
     messages = [{"role": "user", "content": opening}]

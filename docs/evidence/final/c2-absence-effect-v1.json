@@ -1,0 +1,278 @@
+{
+  "classification": "C2_ABSENCE_EFFECT_DIAGNOSTIC",
+  "cases": 6,
+  "summary": {
+    "plain": {
+      "turns": 2.83,
+      "prompt_tokens": 530,
+      "empty_searches": 1,
+      "repeated": 0.17,
+      "recall": 0.167,
+      "answered": 5
+    },
+    "told": {
+      "turns": 1,
+      "prompt_tokens": 156,
+      "empty_searches": 0,
+      "repeated": 0,
+      "recall": 0.167,
+      "answered": 6
+    }
+  },
+  "results": [
+    {
+      "case": "pr-0f581cd29d42",
+      "absences_given": 0,
+      "plain": {
+        "turns": 1,
+        "prompt_tokens": 145,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 0.0,
+        "precision": 0.0
+      },
+      "told": {
+        "turns": 1,
+        "prompt_tokens": 145,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    },
+    {
+      "case": "pr-25cf1cbb1cb9",
+      "absences_given": 0,
+      "plain": {
+        "turns": 1,
+        "prompt_tokens": 132,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 0.0,
+        "precision": 0.0
+      },
+      "told": {
+        "turns": 1,
+        "prompt_tokens": 132,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    },
+    {
+      "case": "pr-da6567da7ea0",
+      "absences_given": 0,
+      "plain": {
+        "turns": 1,
+        "prompt_tokens": 130,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "told": {
+        "turns": 1,
+        "prompt_tokens": 130,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 1.0,
+        "precision": 1.0
+      }
+    },
+    {
+      "case": "pr-0e1d950fbb44",
+      "absences_given": 2,
+      "plain": {
+        "turns": 5,
+        "prompt_tokens": 965,
+        "read_bytes": 0,
+        "greps": 4,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [
+          {
+            "kind": "grep",
+            "arg": "from django.db.models.sql import query",
+            "hits": 1
+          },
+          {
+            "kind": "grep",
+            "arg": "from django.db.models.sql.query import tests/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "class.*Query.*Test",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "from django.db.models.sql.query import",
+            "hits": 10
+          }
+        ],
+        "empty_searches": 2,
+        "repeated_actions": 0,
+        "recall": 0.0,
+        "precision": 0.0
+      },
+      "told": {
+        "turns": 1,
+        "prompt_tokens": 183,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    },
+    {
+      "case": "pr-6bbe2656e1e8",
+      "absences_given": 4,
+      "plain": {
+        "turns": 8,
+        "prompt_tokens": 1673,
+        "read_bytes": 20000,
+        "greps": 4,
+        "reads": 4,
+        "malformed": 0,
+        "answered": false,
+        "trace": [
+          {
+            "kind": "read",
+            "arg": "tests/sql_compiler/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "-r \"SQLCompiler\" tests/",
+            "hits": 0
+          },
+          {
+            "kind": "read",
+            "arg": "tests/sql/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "-r \"compiler\" tests/",
+            "hits": 0
+          },
+          {
+            "kind": "read",
+            "arg": "tests/test_sql_compiler.py",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "-r \"compiler\" .",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "-r \"compiler\" .",
+            "hits": 0
+          },
+          {
+            "kind": "read",
+            "arg": "django/db/models/sql/compiler.py",
+            "hits": 1
+          }
+        ],
+        "empty_searches": 4,
+        "repeated_actions": 1,
+        "recall": 0.0,
+        "precision": 0.0
+      },
+      "told": {
+        "turns": 1,
+        "prompt_tokens": 210,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    },
+    {
+      "case": "pr-3e4e0db66961",
+      "absences_given": 0,
+      "plain": {
+        "turns": 1,
+        "prompt_tokens": 134,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 0.0,
+        "precision": 0.0
+      },
+      "told": {
+        "turns": 1,
+        "prompt_tokens": 134,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    }
+  ]
+}
