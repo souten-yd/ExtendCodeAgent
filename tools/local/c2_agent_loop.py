@@ -153,6 +153,7 @@ def run_loop(
     prompt_tokens = 0
     read_bytes = 0
     actions: list[str] = []
+    trace: list[dict[str, Any]] = []
     answer: tuple[str, ...] = ()
 
     for _ in range(max_turns):
@@ -167,11 +168,21 @@ def run_loop(
             break
         if line.upper().startswith("GREP"):
             actions.append("grep")
-            body, size = run_grep(repository, line[4:].strip())
+            argument = line[4:].strip()
+            body, size = run_grep(repository, argument)
+            trace.append(
+                {
+                    "kind": "grep",
+                    "arg": argument,
+                    "hits": 0 if body == "(no match)" else len(body.splitlines()),
+                }
+            )
         elif line.upper().startswith("READ"):
             actions.append("read")
-            body, size = run_read(repository, line[4:].strip())
+            argument = line[4:].strip()
+            body, size = run_read(repository, argument)
             read_bytes += size
+            trace.append({"kind": "read", "arg": argument, "hits": 1 if size else 0})
         else:
             actions.append("malformed")
             body = "Reply with exactly one line: GREP, READ or ANSWER."
@@ -188,6 +199,10 @@ def run_loop(
         "reads": actions.count("read"),
         "malformed": actions.count("malformed"),
         "answered": bool(answer),
+        "trace": trace,
+        # Work spent rediscovering that something is not there, or is where it already was.
+        "empty_searches": sum(1 for item in trace if item["kind"] == "grep" and not item["hits"]),
+        "repeated_actions": len(trace) - len({(item["kind"], item["arg"]) for item in trace}),
         "recall": round(len(hit) / len(need), 6),
         "precision": round(len(hit) / len(answer), 6) if answer else 0.0,
     }
