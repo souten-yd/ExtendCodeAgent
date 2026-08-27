@@ -32,6 +32,9 @@ from typing import Any
 #: excluded by construction rather than by a stop-list that has to grow.
 _MARKED = re.compile(r"`([A-Za-z_][\w.]*)`|\b([A-Z][A-Z_]{3,})\b")
 
+#: Any word that could be an identifier, for grounding against what the project declares.
+_WORD = re.compile(r"\b([a-z][a-z_]{3,})\b")
+
 #: More than this and the description is not pointing anywhere in particular. Measured on
 #: fifteen flask changes: at 8 the bound refused two locatable ones for a candidate set that
 #: was only slightly wider, and at 16 every changed file is found in 10 of 15 while the
@@ -100,6 +103,17 @@ def files_naming(snapshot: Any, root: Path) -> FileSearch:
     return search
 
 
+def declares_in(snapshot: Any) -> Callable[[str], bool]:
+    """Whether the project declares something by exactly this name."""
+
+    declared = {
+        str(node.properties.get("name", ""))
+        for node in snapshot.nodes
+        if not _is_test_path(node.source_ref)
+    }
+    return lambda name: name in declared
+
+
 _TEST_PATH = re.compile(r"(^|/)(tests?|testing)/|(^|/)test_[^/]*\.py$|_test\.py$")
 
 
@@ -115,10 +129,31 @@ def _family(name: str) -> str:
     return stem if len(stem) >= _MIN_STEM else name
 
 
+def grounded_names(description: str, declares: Callable[[str], bool]) -> tuple[str, ...]:
+    """Ordinary words in the description that the project declares as symbols.
+
+    Some descriptions mark nothing out: "the session is marked as accessed for operations
+    that only access the keys" names `session` and `accessed` in prose, and both are symbols
+    here. Five of fifteen flask changes are described that way, and matching only what the
+    author chose to quote left the envelope empty for all five.
+
+    The project decides, not a word list: a word counts when something is declared with
+    exactly that name, so prose stays prose unless the code says otherwise.
+
+    What the project declares is functions, classes and methods. `session` and `accessed`
+    are an attribute and a class variable, so neither is grounded and that description still
+    locates nothing. Recovering those means indexing attributes, which is a change to the
+    graph rather than to this.
+    """
+
+    return tuple(sorted({word for word in _WORD.findall(description) if declares(word)}))
+
+
 def files_for(
     description: str,
     search: FileSearch,
     *,
+    declares: Callable[[str], bool] | None = None,
     max_files: int = DEFAULT_MAX_FILES,
 ) -> tuple[str, ...]:
     """Files a described change is likely to touch, or nothing when it cannot tell.
@@ -129,6 +164,8 @@ def files_for(
     """
 
     names = described_names(description)
+    if declares is not None:
+        names = tuple(dict.fromkeys((*names, *grounded_names(description, declares))))
     if not names:
         return ()
     found: set[str] = set()

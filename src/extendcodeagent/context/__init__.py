@@ -13,7 +13,7 @@ from .contracts import (
     WeakLocalEvidenceRequest,
 )
 from .envelope import build_answer_envelope
-from .locate import files_for, files_naming
+from .locate import declares_in, files_for, files_naming
 from .obligations import DEFAULT_MAX_OBLIGATIONS, obligation_refs
 from .serialization import (
     context_item_json,
@@ -45,6 +45,7 @@ __all__ = [
     "attach_exemplar",
     "DEFAULT_MAX_OBLIGATIONS",
     "build_answer_envelope",
+    "declares_in",
     "files_for",
     "files_naming",
     "build_context",

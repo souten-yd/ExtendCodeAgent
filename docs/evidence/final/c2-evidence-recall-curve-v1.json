@@ -1,14 +1,14 @@
 {
   "schema": 2,
   "classification": "C2_CRITICAL_EVIDENCE_RECALL_CURVE",
-  "captured_at": "2026-08-27T12:25:31.884681+00:00",
+  "captured_at": "2026-08-27T12:49:27.801422+00:00",
   "repository": "/home/souten/ExtendCodeAgent",
-  "source_revision": "fbdf3d9c78ea95880a86d7ce296cb109ef60af10",
+  "source_revision": "5568e5625a1a5ec79d3e7ffbc502fe13701f9286",
   "execution_scope": "local-only",
   "model_execution": "NOT_RUN_DETERMINISTIC_MEASUREMENT",
   "twin": {
-    "nodes": 2346,
-    "edges": 16917,
+    "nodes": 2357,
+    "edges": 16984,
     "source_directories": [
       ".",
       ".gitignore",
@@ -356,6 +356,6 @@
   },
   "seal": {
     "algorithm": "sha256",
-    "canonical_payload": "efcd2d17a30b3a9eb0e54b26fd664fca30c57e7ae65a5f1a65a7c140212594ec"
+    "canonical_payload": "237bb41beb3395b3cfb6aef1e9ed6d2cf730b544195655889fdc92348142bb75"
   }
 }
