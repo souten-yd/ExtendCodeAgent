@@ -164,7 +164,11 @@ def main() -> int:
                 elif span > EXCERPT_LINE_LIMIT:
                     reasons[name] = f"{span} lines, over the {EXCERPT_LINE_LIMIT}-line limit"
                 elif name not in named:
-                    reasons[name] = "not selected into the envelope"
+                    # A change envelope drops a member that earned no body, so absent from
+                    # the payload does not mean absent from selection. Saying "not selected"
+                    # sent me looking at the obligation budget, which had admitted 47 of the
+                    # file's members; 25 of them were dropped for want of an excerpt.
+                    reasons[name] = "selected, no body, dropped from a change envelope"
                 else:
                     reasons[name] = "selected, and the excerpt allowance ran out"
             # What the envelope can check about itself, with no knowledge of the answer:
