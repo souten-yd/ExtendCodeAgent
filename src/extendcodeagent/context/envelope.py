@@ -16,7 +16,7 @@ from extendcodeagent.graph import GraphSnapshot
 
 from .contracts import EvidenceScope, WeakLocalEvidenceRequest
 from .obligations import Equivalents, ObservedTests, RecommendedTests, obligation_refs
-from .serialization import weak_local_evidence_json
+from .serialization import estimate_payload_tokens, weak_local_evidence_json
 from .service import (
     SourceReader,
     attach_excerpts,
@@ -75,15 +75,29 @@ def build_answer_envelope(
     # A change names files; a question names symbols. Handing a change the file's symbol
     # names and no source leaves it nothing to write from — measured on flask, 64 names and
     # zero lines. Handing a question every body in the file was 49% of a retrieval envelope.
-    package = attach_excerpts(
-        package,
-        read_source_span,
-        named_refs=frozenset(target_refs),
-        expand_files=changing,
-    )
     if changing:
+        # The exemplar goes first so it is inside the allowance rather than added after it.
+        # Applied last it spent its own 400 tokens on top of a full envelope, which is how a
+        # payload declared at 8,192 came to 8,496.
+        #
         # One real test, because a convention cannot be stated from outside the project:
         # measured across five repositories, test and assertion style are 89% to 100%
         # consistent and disagree between projects.
         package = attach_exemplar(package, read_source_span)
+
+    # Bodies are carved out of the stated budget, not added to it. Held separately they
+    # composed into 8,208 tokens against a declared 8,192 the moment selection was allowed
+    # its full ceiling — a budget that two mechanisms each spend in full is not a budget.
+    #
+    # What is left is measured on the payload rather than on `used_tokens`, which counts the
+    # items and not the frame around them. Subtracting the items alone left room for 1,495
+    # tokens that were already spoken for.
+    frame = estimate_payload_tokens(weak_local_evidence_json(package, stable_evidence_envelope()))
+    package = attach_excerpts(
+        package,
+        read_source_span,
+        named_refs=frozenset(target_refs),
+        token_budget=max(0, token_budget - frame),
+        expand_files=changing,
+    )
     return weak_local_evidence_json(package, stable_evidence_envelope())

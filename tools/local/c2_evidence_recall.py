@@ -345,6 +345,17 @@ def evaluate(cases: tuple[Case, ...], repository: Path, budgets: tuple[int, ...]
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument(
+        "--max-items",
+        type=int,
+        default=None,
+        help=(
+            "override the protocol item ceiling for this run. The envelope declares at "
+            "most 32 items while obligations may produce 64 and a protected ref is never "
+            "dropped, so the two cannot both hold; this measures which number the facts "
+            "actually need before the constant is changed"
+        ),
+    )
     parser.add_argument("--budgets", type=int, nargs="+", default=list(BUDGETS))
     parser.add_argument(
         "--corpus",
@@ -354,6 +365,12 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    if args.max_items is not None:
+        # Set for the measurement only. Raising the constant in the product is the
+        # decision this curve exists to inform, so it is not taken here.
+        from extendcodeagent.context import service as _context_service
+
+        _context_service._PROTOCOL_MAX_ITEMS = args.max_items
     if args.corpus is None:
         repository, cases = ROOT, sealed_cases()
     else:

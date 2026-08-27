@@ -34,7 +34,13 @@ SourceReader = Callable[[str, int, int], str | None]
 _WEAK_MAX_TOKENS = 512
 _WEAK_MAX_ITEMS = 8
 _PROTOCOL_MAX_TOKENS = 8_192
-_PROTOCOL_MAX_ITEMS = 32
+# The envelope may not promise a bound it cannot keep. Obligations produce up to 64 refs
+# and a protected ref is never dropped, so a ceiling of 32 was broken on every retrieval
+# case and reported as an overflow each time. Measured on fresh flask and django corpora,
+# raising it to 64 lifts recall 0.361 -> 0.521 and 0.483 -> 0.621 for 45% more tokens,
+# still a third of the token budget; 128 adds nothing, because the obligation budget binds
+# from there. So the defect was the cap, not the ranking.
+_PROTOCOL_MAX_ITEMS = 64
 _MAX_ANCHOR_MATCHES = 64
 _SCOPE_ORDER = tuple(EvidenceScope)
 
@@ -323,7 +329,16 @@ def attach_excerpts(
             and item.end_line - item.start_line + 1 <= max_lines
         ):
             text = read_lines(item.source_ref, item.start_line, item.end_line)
-            cost = estimate_payload_tokens(text) if text else 0
+            # What it costs to send, not what the text weighs. An item carrying source is
+            # emitted in full where one without it is trimmed to its role's fields, so the
+            # identity and provenance come back with the body; counting the text alone put a
+            # payload declared at 8,192 tokens at 8,496.
+            cost = (
+                estimate_payload_tokens(weak_local_evidence_item_json(replace(item, excerpt=text)))
+                - estimate_payload_tokens(weak_local_evidence_item_json(item))
+                if text
+                else 0
+            )
             if text and spent + cost <= token_budget:
                 excerpt = text
                 spent += cost
