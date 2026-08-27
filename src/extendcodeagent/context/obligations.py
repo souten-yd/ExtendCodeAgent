@@ -13,6 +13,7 @@ The lookups are supplied by the caller so this stays a pure function over a snap
 from __future__ import annotations
 
 from collections import Counter
+from itertools import zip_longest
 from collections.abc import Callable, Iterable
 
 from extendcodeagent.core.contracts import CanonicalRef
@@ -67,11 +68,19 @@ def obligation_refs(
     # A ref standing for the symbols in a file: they answer the question, but the obligation
     # was to the file, not to everything that happens to live inside it.
     from_expansion: set[str] = set()
+    per_file: list[list[str]] = []
     for ref in target_refs:
         targets.append(ref)
         expanded = [item for item in equivalents(ref) if item != ref]
         from_expansion.update(expanded)
-        targets.extend(expanded)
+        per_file.append(expanded)
+    # Round-robin across the named files rather than one file at a time. Concatenated, a
+    # change touching four production files spent the whole obligation budget inside the
+    # first of them, and every symbol the other three changed went unselected — all four
+    # such misses on flask came from two- and four-file commits.
+    targets.extend(
+        ref for group in zip_longest(*per_file, fillvalue=None) for ref in group if ref is not None
+    )
     equivalent = set(targets)
 
     consumers = [
