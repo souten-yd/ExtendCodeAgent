@@ -1,14 +1,14 @@
 {
   "schema": 2,
   "classification": "C2_CRITICAL_EVIDENCE_RECALL_CURVE",
-  "captured_at": "2026-08-27T09:17:24.840390+00:00",
+  "captured_at": "2026-08-27T09:30:22.149514+00:00",
   "repository": "/home/souten/ExtendCodeAgent",
-  "source_revision": "f10c67a6dcfac17d8f0165760e354da096047a26",
+  "source_revision": "5175912818d9846cb5635c78eb6f83cb982be4f5",
   "execution_scope": "local-only",
   "model_execution": "NOT_RUN_DETERMINISTIC_MEASUREMENT",
   "twin": {
     "nodes": 2316,
-    "edges": 16735,
+    "edges": 16737,
     "source_directories": [
       ".",
       ".gitignore",
@@ -47,7 +47,7 @@
       "curve": [
         {
           "token_budget": 1024,
-          "delivered_evidence_tokens": 1906,
+          "delivered_evidence_tokens": 1606,
           "estimated_evidence_tokens": 1142,
           "unused_budget_tokens": -118,
           "selected_count": 56,
@@ -64,7 +64,7 @@
         },
         {
           "token_budget": 2048,
-          "delivered_evidence_tokens": 2079,
+          "delivered_evidence_tokens": 1757,
           "estimated_evidence_tokens": 1291,
           "unused_budget_tokens": 757,
           "selected_count": 60,
@@ -78,7 +78,7 @@
         },
         {
           "token_budget": 4096,
-          "delivered_evidence_tokens": 2344,
+          "delivered_evidence_tokens": 2023,
           "estimated_evidence_tokens": 1291,
           "unused_budget_tokens": 2805,
           "selected_count": 60,
@@ -92,7 +92,7 @@
         },
         {
           "token_budget": 8192,
-          "delivered_evidence_tokens": 2344,
+          "delivered_evidence_tokens": 2023,
           "estimated_evidence_tokens": 1291,
           "unused_budget_tokens": 6901,
           "selected_count": 60,
@@ -106,7 +106,7 @@
         },
         {
           "token_budget": 16384,
-          "delivered_evidence_tokens": 2344,
+          "delivered_evidence_tokens": 2023,
           "estimated_evidence_tokens": 1291,
           "unused_budget_tokens": 15093,
           "selected_count": 60,
@@ -120,7 +120,7 @@
         },
         {
           "token_budget": 32768,
-          "delivered_evidence_tokens": 2344,
+          "delivered_evidence_tokens": 2023,
           "estimated_evidence_tokens": 1291,
           "unused_budget_tokens": 31477,
           "selected_count": 60,
@@ -150,7 +150,7 @@
       "curve": [
         {
           "token_budget": 1024,
-          "delivered_evidence_tokens": 821,
+          "delivered_evidence_tokens": 710,
           "estimated_evidence_tokens": 479,
           "unused_budget_tokens": 545,
           "selected_count": 20,
@@ -164,7 +164,7 @@
         },
         {
           "token_budget": 2048,
-          "delivered_evidence_tokens": 956,
+          "delivered_evidence_tokens": 845,
           "estimated_evidence_tokens": 479,
           "unused_budget_tokens": 1569,
           "selected_count": 20,
@@ -178,7 +178,7 @@
         },
         {
           "token_budget": 4096,
-          "delivered_evidence_tokens": 956,
+          "delivered_evidence_tokens": 845,
           "estimated_evidence_tokens": 479,
           "unused_budget_tokens": 3617,
           "selected_count": 20,
@@ -192,7 +192,7 @@
         },
         {
           "token_budget": 8192,
-          "delivered_evidence_tokens": 956,
+          "delivered_evidence_tokens": 845,
           "estimated_evidence_tokens": 479,
           "unused_budget_tokens": 7713,
           "selected_count": 20,
@@ -206,7 +206,7 @@
         },
         {
           "token_budget": 16384,
-          "delivered_evidence_tokens": 956,
+          "delivered_evidence_tokens": 845,
           "estimated_evidence_tokens": 479,
           "unused_budget_tokens": 15905,
           "selected_count": 20,
@@ -220,7 +220,7 @@
         },
         {
           "token_budget": 32768,
-          "delivered_evidence_tokens": 956,
+          "delivered_evidence_tokens": 845,
           "estimated_evidence_tokens": 479,
           "unused_budget_tokens": 32289,
           "selected_count": 20,
@@ -247,7 +247,7 @@
       "curve": [
         {
           "token_budget": 1024,
-          "delivered_evidence_tokens": 914,
+          "delivered_evidence_tokens": 792,
           "estimated_evidence_tokens": 559,
           "unused_budget_tokens": 465,
           "selected_count": 22,
@@ -261,7 +261,7 @@
         },
         {
           "token_budget": 2048,
-          "delivered_evidence_tokens": 914,
+          "delivered_evidence_tokens": 792,
           "estimated_evidence_tokens": 559,
           "unused_budget_tokens": 1489,
           "selected_count": 22,
@@ -275,7 +275,7 @@
         },
         {
           "token_budget": 4096,
-          "delivered_evidence_tokens": 2004,
+          "delivered_evidence_tokens": 1882,
           "estimated_evidence_tokens": 559,
           "unused_budget_tokens": 3537,
           "selected_count": 22,
@@ -289,7 +289,7 @@
         },
         {
           "token_budget": 8192,
-          "delivered_evidence_tokens": 2004,
+          "delivered_evidence_tokens": 1882,
           "estimated_evidence_tokens": 559,
           "unused_budget_tokens": 7633,
           "selected_count": 22,
@@ -303,7 +303,7 @@
         },
         {
           "token_budget": 16384,
-          "delivered_evidence_tokens": 2004,
+          "delivered_evidence_tokens": 1882,
           "estimated_evidence_tokens": 559,
           "unused_budget_tokens": 15825,
           "selected_count": 22,
@@ -317,7 +317,7 @@
         },
         {
           "token_budget": 32768,
-          "delivered_evidence_tokens": 2004,
+          "delivered_evidence_tokens": 1882,
           "estimated_evidence_tokens": 559,
           "unused_budget_tokens": 32209,
           "selected_count": 22,
@@ -343,7 +343,7 @@
       "best_normalized_recall_mean": 1.0,
       "best_raw_recall_mean": 1.0,
       "cases_fully_recovered": 3,
-      "max_delivered_evidence_tokens": 2079
+      "max_delivered_evidence_tokens": 1757
     }
   },
   "pooling_note": "Classes are reported separately on purpose. Pooling tasks PI can move with tasks it cannot is what made the B0b effect undetectable.",
@@ -356,6 +356,6 @@
   },
   "seal": {
     "algorithm": "sha256",
-    "canonical_payload": "5a3f294243b9c9cf93c711a0858623186a07c59b6976543c8dc9d23f97ef5735"
+    "canonical_payload": "fe2a56932dbf856f0e2010b3451176bc3e051f0203532134a44cdc48c5daa07d"
   }
 }

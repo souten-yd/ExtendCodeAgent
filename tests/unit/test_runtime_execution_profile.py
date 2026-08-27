@@ -110,7 +110,9 @@ def test_the_emitted_shape_stays_small_and_omits_what_is_empty() -> None:
     assert payload == {"test": {"command": "uv run pytest", "cwd": ".", "source": "observed"}}
 
 
-def test_prerequisites_are_carried_because_a_command_that_needs_a_service_fails_without_it() -> None:
+def test_prerequisites_are_carried_because_a_command_that_needs_a_service_fails_without_it() -> (
+    None
+):
     command = ExecutionCommand(
         purpose="test",
         command="pytest",

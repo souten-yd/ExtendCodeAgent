@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from extendcodeagent.context.contracts import EvidenceRole, EvidenceScope
 from extendcodeagent.context.service import _unanswered_scope
-
 from tests.unit.test_context_exemplar import item
 
 

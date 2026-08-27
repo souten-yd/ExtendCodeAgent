@@ -135,7 +135,10 @@ def weak_local_evidence_json(
             for role in ("target", "consumer", "test")
             if any(str(item.role) == role for item in package.items)
         },
-        "selected_evidence_ids": list(package.selected_evidence_ids),
+        # Not emitted. Every item already carries its `id`, including the role-shaped
+        # ones, so re-listing them cost 337 tokens of a flask change envelope - 4.2% -
+        # to say what the reader is already holding. A consumer that needs the list for
+        # a follow-up request builds it from the items.
         "prior_evidence_ids": list(package.prior_evidence_ids),
         "unresolved_evidence_gaps": list(package.unresolved_gaps),
         # What has been ruled out, so it is not ruled out again.

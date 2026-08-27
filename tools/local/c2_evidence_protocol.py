@@ -160,7 +160,11 @@ def evaluate() -> dict[str, Any]:
                         token_budget=8_192,
                         view="envelope",
                         scope=str(evidence["request_next_scope"]),
-                        prior_evidence_ids=tuple(evidence["selected_evidence_ids"]),
+                        # Built from the items, which is where the ids live; the envelope no longer
+                        # repeats them as a list of its own.
+                        prior_evidence_ids=tuple(
+                            str(item["id"]) for item in evidence.get("items", ())
+                        ),
                         unresolved_gaps=tuple(evidence["unresolved_evidence_gaps"]),
                     )
                     expansion = {
