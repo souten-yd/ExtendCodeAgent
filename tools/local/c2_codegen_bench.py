@@ -35,6 +35,7 @@ import tempfile
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -311,6 +312,8 @@ _WRITE = re.compile(r"^\s*(?:REPLACE|WRITE)\s+(\S+?)::(\S+?)\s*$", re.M)
 # the IPv6 fix needs `from urllib.parse import urlsplit` added at the top of the file, and
 # a vocabulary that only replaces function bodies cannot say that. Scoring an agent on a
 # change it has no way to express measures the protocol.
+ReissueEnvelope = Callable[[str], str | None]
+
 _EDIT = re.compile(r"^\s*EDIT\s+(\S+)\s*$", re.M)
 
 
@@ -323,6 +326,7 @@ def run_arm(
     model: str,
     *,
     envelope: str | None,
+    reissue: ReissueEnvelope | None,
     max_turns: int,
     max_output: int,
     test_timeout: int,
@@ -365,6 +369,13 @@ def run_arm(
                 if passed:
                     break
                 note = f"tests still fail:\n{output}"
+                # A test failure is the most informative thing this loop produces, and the
+                # envelope was written before it existed. Re-issued here, the allowance moves
+                # from naming the file to the code the failure points at.
+                if reissue is not None:
+                    fresh = reissue(output)
+                    if fresh:
+                        note += f"\n\n### PROJECT INTELLIGENCE (updated)\n{fresh}\n"
             messages.append({"role": "user", "content": note[:MAX_READ]})
             continue
 
@@ -382,6 +393,10 @@ def run_arm(
                 if passed:
                     break
                 note = f"tests still fail:\n{output}"
+                if reissue is not None:
+                    fresh = reissue(output)
+                    if fresh:
+                        note += f"\n\n### PROJECT INTELLIGENCE (updated)\n{fresh}\n"
             messages.append({"role": "user", "content": note[:MAX_READ]})
             continue
 
@@ -491,6 +506,36 @@ def _symbols_from(repo: Path, coverage_data: Path, tests: tuple[str, ...]) -> tu
         return tuple(ref.value for ref in symbols_touched(snapshot, executed))
 
 
+_TRACEBACK_FRAME = re.compile(r"^\s*([\w./-]+\.py):(\d+): in (\w+)", re.M)
+
+
+def refs_from_failure(repo: Path, output: str) -> tuple[str, ...]:
+    """Canonical refs the failure names, read out of the traceback.
+
+    The first envelope is written before any test has run, so it can only guess which of a
+    file's members matter. A failure is not a guess: it names the file, the line and the
+    frame, and re-issuing against that moves the allowance onto the code the failure points
+    at rather than the code the file happens to define first.
+    """
+
+    frames = _TRACEBACK_FRAME.findall(output)
+    if not frames:
+        return ()
+    executed: dict[str, set[int]] = {}
+    for path, line, _ in frames:
+        if is_test_path(path):
+            continue
+        executed.setdefault(path, set()).add(int(line))
+    if not executed:
+        return ()
+    with (
+        tempfile.TemporaryDirectory(prefix="eca-fail-") as temp,
+        ProjectIntelligenceApplication(repo, Path(temp) / "graph.db", _policy()) as application,
+    ):
+        snapshot = application._snapshot(open_if_missing=True)
+        return tuple(ref.value for ref in symbols_touched(snapshot, executed))
+
+
 def build_envelope(
     repo: Path,
     case: Case,
@@ -534,6 +579,15 @@ def main() -> int:
         default=None,
         help="a coverage database with dynamic_context=test_function, to rank bodies",
     )
+    parser.add_argument(
+        "--arms",
+        choices=("both", "pi", "baseline"),
+        default="both",
+        help=(
+            "run one arm alone, to ask whether it converges given more budget rather "
+            "than whether it is faster than the other"
+        ),
+    )
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
@@ -555,8 +609,19 @@ def main() -> int:
                 continue
             envelope = build_envelope(args.repo, case, reverted, executed)
 
+            def reissue(
+                output: str, _case: Case = case, _rev: tuple[str, ...] = reverted
+            ) -> str | None:
+                named = refs_from_failure(args.repo, output)
+                if not named:
+                    return None
+                return build_envelope(args.repo, _case, _rev, named)
+
             row: dict[str, Any] = {"case_id": case.case_id, "subject": case.subject}
-            for arm, given in (("pi", envelope), ("baseline", None)):
+            arms = (("pi", envelope), ("baseline", None))
+            if args.arms != "both":
+                arms = tuple(item for item in arms if item[0] == args.arms)
+            for arm, given in arms:
                 break_repository(args.repo, case)
                 row[arm] = run_arm(
                     args.repo,
@@ -566,11 +631,23 @@ def main() -> int:
                     args.endpoint,
                     args.model,
                     envelope=given,
+                    # Only the arm that was given one gets a fresh one.
+                    reissue=reissue if given is not None else None,
                     max_turns=args.max_turns,
                     max_output=args.max_output,
                     test_timeout=args.test_timeout,
                 )
             rows.append(row)
+            if args.arms != "both":
+                item = row[args.arms]
+                print(
+                    f"  {case.case_id:18} {args.arms} "
+                    f"{'PASS' if item['passed'] else 'fail'} {item['turns']}t/"
+                    f"{item['uncached_prompt_tokens']:>6}tok/{item['seconds']:.0f}s",
+                    flush=True,
+                )
+                rows.append(row)
+                continue
             print(
                 f"  {case.case_id:18} PI {'PASS' if row['pi']['passed'] else 'fail'}"
                 f" {row['pi']['turns']}t/{row['pi']['uncached_prompt_tokens']:>6}tok"
@@ -620,7 +697,10 @@ def main() -> int:
         "repository": str(args.repo),
         "model": args.model,
         "max_turns": args.max_turns,
-        "summary": {arm: summary(arm) for arm in ("pi", "baseline")},
+        "summary": {
+            arm: summary(arm)
+            for arm in (("pi", "baseline") if args.arms == "both" else (args.arms,))
+        },
         "results": rows,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
