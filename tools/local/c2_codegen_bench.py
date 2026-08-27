@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import os
 import re
 import subprocess
 import sys
@@ -46,6 +47,9 @@ from extendcodeagent.core.config import ConfigLayer, ConfigResolver  # noqa: E40
 from extendcodeagent.core.config.schema import CONFIGURABLE_CAPABILITIES  # noqa: E402
 from extendcodeagent.core.policy import CapabilityPolicy  # noqa: E402
 from extendcodeagent.service.application import ProjectIntelligenceApplication  # noqa: E402
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from c2_revert_oracle import is_test_path  # noqa: E402
 
 
 def _policy() -> CapabilityPolicy:
@@ -136,7 +140,10 @@ def break_repository(repo: Path, case: Case) -> tuple[str, ...]:
     changed = [
         path
         for path in _git(repo, "show", "--name-only", "--format=", case.commit).split()
-        if path.endswith(".py") and "test" not in path
+        # The oracle's own rule, not a substring check: `src/flask/testing.py` is production
+        # and was being taken for a test file, which silently dropped two of seventeen cases
+        # and left the repository unbroken for them.
+        if path.endswith(".py") and not is_test_path(path)
     ]
     reverted = []
     for path in changed:
@@ -221,6 +228,23 @@ def replace_function(repo: Path, path: str, name: str, source: str) -> str:
     return "applied"
 
 
+def _api_key() -> str | None:
+    """The gateway key, from the environment or from a file named by it.
+
+    A file, because a shell export does not survive between processes and a key on a command
+    line reaches the process table and the logs. Whatever supplies it, the value is read here
+    and nowhere else.
+    """
+
+    direct = os.environ.get("ECA_LLM_API_KEY")
+    if direct:
+        return direct.strip()
+    path = os.environ.get("ECA_LLM_API_KEY_FILE")
+    if path and Path(path).is_file():
+        return Path(path).read_text().strip() or None
+    return None
+
+
 def apply_edit(repo: Path, path: str, body: str) -> str:
     """Replace one exact passage. Returns a message for the model, never a silent failure."""
 
@@ -252,12 +276,19 @@ def apply_edit(repo: Path, path: str, body: str) -> str:
 
 
 def complete(endpoint: str, model: str, messages: list[dict[str, str]], max_tokens: int) -> Any:
+    # The key is read from the environment so it never travels through a prompt, a log or
+    # a command line. A gateway that wants none is unaffected.
+    headers = {"Content-Type": "application/json"}
+    key = _api_key()
+    if key:
+        headers["Authorization"] = f"Bearer {key}"
+        headers["X-API-Key"] = key
     request = urllib.request.Request(
         f"{endpoint.rstrip('/')}/chat/completions",
         data=json.dumps(
             {"model": model, "messages": messages, "max_tokens": max_tokens, "temperature": 0}
         ).encode(),
-        headers={"Content-Type": "application/json"},
+        headers=headers,
         method="POST",
     )
     try:
@@ -401,6 +432,10 @@ def build_envelope(repo: Path, case: Case, reverted: tuple[str, ...]) -> str:
             [f"file://{path}" for path in reverted],
             token_budget=8_192,
             view="envelope",
+            # Declared, because this benchmark exists to ask for a change. Omitting it left
+            # the arm with names and no source, which is the state the whole preflight was
+            # built to catch — and the preflight was wired while this caller was not.
+            changing=True,
         )
     return json.dumps(payload["task_evidence"], ensure_ascii=False, indent=2)
 
@@ -425,6 +460,7 @@ def main() -> int:
         for case in cases_from(args.findings, args.limit):
             reverted = break_repository(args.repo, case)
             if not reverted:
+                print(f"  {case.case_id} skipped: nothing production to revert", flush=True)
                 continue
             broken, _ = run_tests(args.repo, args.python, case.detecting[:8], args.test_timeout)
             if broken:
