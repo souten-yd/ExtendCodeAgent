@@ -21,6 +21,12 @@ generation, so optimising against it feels like progress and is not.
 Before starting a measurement, state which phase it tests. If the answer is investigation,
 it cannot move the goal however interesting the number.
 
+State as of 2026-08-27: `C2_ENVELOPE_AND_TASK_DESIGN_STATE.md` separates what is
+established deterministically from what is not. The envelope now carries the source a
+change needs in 12 of 16 flask changes, locates files from a description alone in 10 of
+15, and is scored by behaviour rather than by the author's tests. Whether it helps an
+agent is still unmeasured.
+
 The scorer for the missing measurement already exists. `tools/local/c2_revert_oracle.py`
 reverts a commit's production half, leaves its tests, and records which tests detect the
 change: a broken state, a known pass/fail oracle, and a task that genuinely takes several
