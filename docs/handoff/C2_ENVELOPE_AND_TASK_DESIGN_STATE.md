@@ -54,6 +54,32 @@ the three runs that got somewhere.
 
 Diagnostic route, not sealed evidence: `docs/evidence/c2-envelope-causality-diagnostic.json`.
 
+## How much of a successful envelope was working
+
+The three runs that passed had their envelopes halved and repeated, and halved again while
+they kept passing. A pass at a smaller size was confirmed twice before the search committed
+to it.
+
+| change | sent | needed | cut |
+|---|---|---|---|
+| `provide_automatic_options` | 8,010 tok / 27 items | **2,765 / 6** | 65% |
+| IPv6 session transactions | 5,857 / 17 | **3,393 / 8** | 42% |
+| `app.query` route decorator | 8,005 / 27 | **8,005 / 27** | none — half already failed |
+
+Two thirds of one envelope was being carried rather than working. The third could not be cut
+at all, and it is the one that adds a method rather than changing one: the pattern its
+siblings set is the evidence, so there is no small subset of them.
+
+That splits the question by task rather than answering it. Changing an existing function
+needs six to eight items; adding one needs the family, and the family is not small.
+
+Three bounds on this. Items are cut from the end, so "six is enough" means those six in that
+order and not that six is the number. Three successes, one model, one repository. And the
+search only ever goes down, so `app.query` is known to fail at 13 items and unmeasured
+between 14 and 27.
+
+Diagnostic route: `docs/evidence/c2-minimum-working-set-diagnostic.json`.
+
 ## Still not established
 
 Three of ten is where the local model gets to. Whether a stronger one, or a better envelope,
