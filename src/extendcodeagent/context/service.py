@@ -8,6 +8,7 @@ import re
 from collections import defaultdict
 from collections.abc import Callable, Sequence
 from dataclasses import replace
+from itertools import zip_longest
 
 from extendcodeagent.core.contracts import Provenance
 from extendcodeagent.graph import GraphNode, GraphSnapshot
@@ -286,6 +287,10 @@ def attach_excerpts(
     *,
     named_refs: frozenset[str] = frozenset(),
     first: frozenset[str] = frozenset(),
+    #: Refs that are only sent if they receive a body. Their whole cost belongs to the body,
+    #: because without one they are not in the payload at all — charging only the difference
+    #: left their base cost out of the frame and put an envelope declared at 8,192 at 9,393.
+    only_with_source: frozenset[str] = frozenset(),
     # A second guard on top of the budget, and it was cutting real work: `Flask.url_for` is
     # 124 lines and `create_url_adapter` 122, both just past a limit that exists to stop one
     # body from eating the allowance. Now that a body is costed at what it takes to send,
@@ -339,8 +344,20 @@ def attach_excerpts(
     # fixed revision maps to line numbers the broken one does not have. The parameter stays
     # because the ordering it expresses is right; supplying it correctly means collecting
     # coverage per case, before the change is taken away.
+    # `first` ahead of everything, then round-robin across the files. Handing bodies out in
+    # selection order spends the allowance inside whichever file the items happen to start
+    # in, which is the same starvation the obligation budget had across a multi-file change.
+    by_file: dict[str, list[int]] = {}
+    for index, item in enumerate(package.items):
+        by_file.setdefault(item.source_ref, []).append(index)
+    interleaved = [
+        index
+        for group in zip_longest(*by_file.values(), fillvalue=None)
+        for index in group
+        if index is not None
+    ]
     order = sorted(
-        range(len(package.items)),
+        interleaved,
         key=lambda index: package.items[index].canonical_ref.value not in first,
     )
 
@@ -359,12 +376,17 @@ def attach_excerpts(
             # emitted in full where one without it is trimmed to its role's fields, so the
             # identity and provenance come back with the body; counting the text alone put a
             # payload declared at 8,192 tokens at 8,496.
-            cost = (
-                estimate_payload_tokens(weak_local_evidence_item_json(replace(item, excerpt=text)))
-                - estimate_payload_tokens(weak_local_evidence_item_json(item))
-                if text
-                else 0
-            )
+            if not text:
+                cost = 0
+            else:
+                with_body = estimate_payload_tokens(
+                    weak_local_evidence_item_json(replace(item, excerpt=text))
+                )
+                cost = (
+                    with_body
+                    if item.canonical_ref.value in only_with_source
+                    else with_body - estimate_payload_tokens(weak_local_evidence_item_json(item))
+                )
             if text and spent + cost <= token_budget:
                 excerpts[index] = text
                 spent += cost

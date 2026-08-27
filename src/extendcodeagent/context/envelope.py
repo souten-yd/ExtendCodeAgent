@@ -9,12 +9,13 @@ them from somewhere else.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any
 
 from extendcodeagent.core.contracts import CanonicalRef
 from extendcodeagent.graph import GraphSnapshot
 
-from .contracts import EvidenceScope, WeakLocalEvidenceRequest
+from .contracts import EvidenceScope, WeakLocalEvidenceItem, WeakLocalEvidenceRequest
 from .obligations import Equivalents, ObservedTests, RecommendedTests, obligation_refs
 from .serialization import estimate_payload_tokens, weak_local_evidence_json
 from .service import (
@@ -95,7 +96,20 @@ def build_answer_envelope(
     # What is left is measured on the payload rather than on `used_tokens`, which counts the
     # items and not the frame around them. Subtracting the items alone left room for 1,495
     # tokens that were already spoken for.
-    frame = estimate_payload_tokens(weak_local_evidence_json(package, stable_evidence_envelope()))
+    # For a change, a file member with no body is close to worthless: the agent has the file
+    # and can read the names out of it. Measured on one flask change, 44 such items cost
+    # 2,836 tokens - 36% of the envelope - while 20 bodies fit in 5,013. So they are left out
+    # of the frame the allowance is computed against, and dropped afterwards if they did not
+    # earn a body. Obligations and the targets themselves are never dropped this way.
+    def is_bare_member(item: WeakLocalEvidenceItem) -> bool:
+        return changing and item.reason.startswith("in_file:") and item.excerpt is None
+
+    frame = estimate_payload_tokens(
+        weak_local_evidence_json(
+            replace(package, items=tuple(i for i in package.items if not is_bare_member(i))),
+            stable_evidence_envelope(),
+        )
+    )
     package = attach_excerpts(
         package,
         read_source_span,
@@ -105,7 +119,12 @@ def build_answer_envelope(
         # changes thirteen of the twenty-four missing bodies had been selected and then run
         # out of room.
         first=executed_by_failing_tests,
+        only_with_source=frozenset(
+            item.canonical_ref.value for item in package.items if is_bare_member(item)
+        ),
         token_budget=max(0, token_budget - frame),
         expand_files=changing,
     )
+    if changing:
+        package = replace(package, items=tuple(i for i in package.items if not is_bare_member(i)))
     return weak_local_evidence_json(package, stable_evidence_envelope())

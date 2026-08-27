@@ -13,8 +13,8 @@ The lookups are supplied by the caller so this stays a pure function over a snap
 from __future__ import annotations
 
 from collections import Counter
-from itertools import zip_longest
 from collections.abc import Callable, Iterable
+from itertools import zip_longest
 
 from extendcodeagent.core.contracts import CanonicalRef
 from extendcodeagent.graph import GraphSnapshot
