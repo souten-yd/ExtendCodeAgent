@@ -1,14 +1,14 @@
 {
   "schema": 2,
   "classification": "C2_CRITICAL_EVIDENCE_RECALL_CURVE",
-  "captured_at": "2026-08-27T08:34:09.090616+00:00",
+  "captured_at": "2026-08-27T09:15:55.026227+00:00",
   "repository": "/home/souten/ExtendCodeAgent",
-  "source_revision": "b56a461986c403e3e7a2f5d6a1505c5f1a3d679c",
+  "source_revision": "328be67588573903f38d46c35b96602458106468",
   "execution_scope": "local-only",
   "model_execution": "NOT_RUN_DETERMINISTIC_MEASUREMENT",
   "twin": {
-    "nodes": 2313,
-    "edges": 16687,
+    "nodes": 2315,
+    "edges": 16732,
     "source_directories": [
       ".",
       ".gitignore",
@@ -78,7 +78,7 @@
         },
         {
           "token_budget": 4096,
-          "delivered_evidence_tokens": 2334,
+          "delivered_evidence_tokens": 2344,
           "estimated_evidence_tokens": 1291,
           "unused_budget_tokens": 2805,
           "selected_count": 60,
@@ -92,7 +92,7 @@
         },
         {
           "token_budget": 8192,
-          "delivered_evidence_tokens": 2334,
+          "delivered_evidence_tokens": 2344,
           "estimated_evidence_tokens": 1291,
           "unused_budget_tokens": 6901,
           "selected_count": 60,
@@ -106,7 +106,7 @@
         },
         {
           "token_budget": 16384,
-          "delivered_evidence_tokens": 2334,
+          "delivered_evidence_tokens": 2344,
           "estimated_evidence_tokens": 1291,
           "unused_budget_tokens": 15093,
           "selected_count": 60,
@@ -120,7 +120,7 @@
         },
         {
           "token_budget": 32768,
-          "delivered_evidence_tokens": 2334,
+          "delivered_evidence_tokens": 2344,
           "estimated_evidence_tokens": 1291,
           "unused_budget_tokens": 31477,
           "selected_count": 60,
@@ -164,7 +164,7 @@
         },
         {
           "token_budget": 2048,
-          "delivered_evidence_tokens": 946,
+          "delivered_evidence_tokens": 956,
           "estimated_evidence_tokens": 479,
           "unused_budget_tokens": 1569,
           "selected_count": 20,
@@ -178,7 +178,7 @@
         },
         {
           "token_budget": 4096,
-          "delivered_evidence_tokens": 946,
+          "delivered_evidence_tokens": 956,
           "estimated_evidence_tokens": 479,
           "unused_budget_tokens": 3617,
           "selected_count": 20,
@@ -192,7 +192,7 @@
         },
         {
           "token_budget": 8192,
-          "delivered_evidence_tokens": 946,
+          "delivered_evidence_tokens": 956,
           "estimated_evidence_tokens": 479,
           "unused_budget_tokens": 7713,
           "selected_count": 20,
@@ -206,7 +206,7 @@
         },
         {
           "token_budget": 16384,
-          "delivered_evidence_tokens": 946,
+          "delivered_evidence_tokens": 956,
           "estimated_evidence_tokens": 479,
           "unused_budget_tokens": 15905,
           "selected_count": 20,
@@ -220,7 +220,7 @@
         },
         {
           "token_budget": 32768,
-          "delivered_evidence_tokens": 946,
+          "delivered_evidence_tokens": 956,
           "estimated_evidence_tokens": 479,
           "unused_budget_tokens": 32289,
           "selected_count": 20,
@@ -275,7 +275,7 @@
         },
         {
           "token_budget": 4096,
-          "delivered_evidence_tokens": 1993,
+          "delivered_evidence_tokens": 2004,
           "estimated_evidence_tokens": 559,
           "unused_budget_tokens": 3537,
           "selected_count": 22,
@@ -289,7 +289,7 @@
         },
         {
           "token_budget": 8192,
-          "delivered_evidence_tokens": 1993,
+          "delivered_evidence_tokens": 2004,
           "estimated_evidence_tokens": 559,
           "unused_budget_tokens": 7633,
           "selected_count": 22,
@@ -303,7 +303,7 @@
         },
         {
           "token_budget": 16384,
-          "delivered_evidence_tokens": 1993,
+          "delivered_evidence_tokens": 2004,
           "estimated_evidence_tokens": 559,
           "unused_budget_tokens": 15825,
           "selected_count": 22,
@@ -317,7 +317,7 @@
         },
         {
           "token_budget": 32768,
-          "delivered_evidence_tokens": 1993,
+          "delivered_evidence_tokens": 2004,
           "estimated_evidence_tokens": 559,
           "unused_budget_tokens": 32209,
           "selected_count": 22,
@@ -356,6 +356,6 @@
   },
   "seal": {
     "algorithm": "sha256",
-    "canonical_payload": "8942da7f459cd5e9832139889402c8bbeb450a00966569faec4dca95c5007cd7"
+    "canonical_payload": "4c83f3b0b2499835de61e38cc877bc7919e3ea5ac57a9d69cc52d545cc6142a3"
   }
 }

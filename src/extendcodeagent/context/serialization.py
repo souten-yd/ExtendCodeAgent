@@ -101,6 +101,7 @@ def _full_item_json(item: Any) -> dict[str, Any]:
         # three hundred and sixty-seven the file happens to contain.
         **({"lines": [item.start_line, item.end_line]} if item.start_line else {}),
         **({"source": item.excerpt} if item.excerpt else {}),
+        **({"why": item.chosen_because} if item.chosen_because else {}),
     }
 
 

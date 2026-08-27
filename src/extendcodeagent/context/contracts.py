@@ -144,6 +144,10 @@ class WeakLocalEvidenceItem:
     start_line: int | None = None
     end_line: int | None = None
     excerpt: str | None = None
+    #: Why this one, in the consumer's terms. A body arrives with no account of why it
+    #: was picked over the others in its file, and the reader spends turns working that
+    #: out — two of four, in one traced attempt.
+    chosen_because: str = ""
 
 
 @dataclass(frozen=True, slots=True)

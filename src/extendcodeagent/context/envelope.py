@@ -42,6 +42,8 @@ def build_answer_envelope(
     scope: str | None = None,
     changing: bool = False,
     executed_by_failing_tests: frozenset[str] = frozenset(),
+    #: Refs the consumer named, from its own search. Admitted rather than merely ranked.
+    requested_refs: frozenset[str] = frozenset(),
     prior_evidence_ids: tuple[str, ...] = (),
     unresolved_gaps: tuple[str, ...] = (),
 ) -> dict[str, Any]:
@@ -67,6 +69,7 @@ def build_answer_envelope(
                 scope=resolved.value,
                 changing=changing,
                 executed_refs=executed_by_failing_tests,
+                requested_refs=requested_refs,
                 equivalents=equivalents,
                 recommended_tests=recommended_tests,
                 observed_tests=observed_tests,
@@ -118,7 +121,7 @@ def build_answer_envelope(
         # allowance went to whatever the file defined first, and across seventeen flask
         # changes thirteen of the twenty-four missing bodies had been selected and then run
         # out of room.
-        first=executed_by_failing_tests,
+        first=executed_by_failing_tests | requested_refs,
         only_with_source=frozenset(
             item.canonical_ref.value for item in package.items if is_bare_member(item)
         ),

@@ -863,6 +863,7 @@ class ProjectIntelligenceApplication:
         scope: str | None = None,
         changing: bool = False,
         executed_by_failing_tests: tuple[str, ...] = (),
+        requested_refs: tuple[str, ...] = (),
         prior_evidence_ids: tuple[str, ...] = (),
         unresolved_gaps: tuple[str, ...] = (),
     ) -> dict[str, Any]:
@@ -888,6 +889,7 @@ class ProjectIntelligenceApplication:
                 scope=scope,
                 changing=changing,
                 executed_by_failing_tests=frozenset(executed_by_failing_tests),
+                requested_refs=frozenset(requested_refs),
                 prior_evidence_ids=prior_evidence_ids,
                 unresolved_gaps=unresolved_gaps,
             )

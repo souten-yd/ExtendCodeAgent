@@ -59,6 +59,7 @@ def obligation_refs(
     observed_tests: ObservedTests | None = None,
     changing: bool = False,
     executed_refs: frozenset[str] = frozenset(),
+    requested_refs: frozenset[str] = frozenset(),
     max_obligations: int = DEFAULT_MAX_OBLIGATIONS,
 ) -> tuple[RequiredRef, ...]:
     if not target_refs:
@@ -125,12 +126,16 @@ def obligation_refs(
         if node.node_type == "file" and node.source_ref in intent_paths
     )
 
+    # What the consumer asked for by name is admitted before the budget is divided. It is
+    # kept separate from `executed_refs` because the two differ in width: the failing tests
+    # run 103 symbols, and ranking admission by those replaced the obligation set with most
+    # of the framework, while a search names four and names them for a reason.
+    requested = tuple(ref for ref in dict.fromkeys(targets) if ref in requested_refs)[
+        :REQUESTED_LIMIT
+    ]
     return _by_role_budget(
         from_expansion,
-        # Ranked here, not downstream. A ref cut at this bound never becomes a candidate, so
-        # re-ordering candidates could not rescue `get_signing_serializer`: the budget was
-        # spent on the other members of two expanded files before it was reached.
-        executed_refs,
+        requested,
         # A change is told which tests fail; it has to be told what the code currently is.
         # Splitting the budget evenly gave 21 of 32 protected slots to tests that the task
         # statement had already named, and the source to be written was pushed out.
@@ -154,10 +159,14 @@ def obligation_refs(
 #: project's convention; small, because the failing ones are named in the task itself.
 CHANGE_TEST_LIMIT = 2
 
+#: How many named requests are honoured ahead of the budget. Bounded, because a request
+#: that admits everything is the wide-net failure again in another form.
+REQUESTED_LIMIT = 8
+
 
 def _by_role_budget(
     from_expansion: set[str],
-    executed_refs: frozenset[str],
+    requested: tuple[str, ...],
     changing: bool,
     roles: tuple[tuple[EvidenceRole, list[str]], ...],
     budget: int,
@@ -191,12 +200,16 @@ def _by_role_budget(
     taken: list[RequiredRef] = []
     seen: set[str] = set()
     per_role: Counter[EvidenceRole] = Counter()
+    role_of = {value: role for role, values in populated for value in values}
 
     def admit(value: str, role: EvidenceRole) -> None:
         seen.add(value)
         per_role[role] += 1
         taken.append(RequiredRef(CanonicalRef(value), role, value not in from_expansion))
 
+    for value in requested:
+        if value not in seen and value in role_of:
+            admit(value, role_of[value])
     for role, values in populated:
         for value in values[: cap_for(role)]:
             if value not in seen:

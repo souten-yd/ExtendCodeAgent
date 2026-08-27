@@ -393,7 +393,17 @@ def attach_excerpts(
     return replace(
         package,
         items=tuple(
-            replace(item, excerpt=excerpts[index]) if index in excerpts else item
+            replace(
+                item,
+                excerpt=excerpts[index],
+                chosen_because=(
+                    "the failing tests ran this"
+                    if item.canonical_ref.value in first
+                    else "defined in the file being changed"
+                ),
+            )
+            if index in excerpts
+            else item
             for index, item in enumerate(package.items)
         ),
     )
