@@ -281,6 +281,18 @@ def _span(node: GraphNode) -> tuple[int | None, int | None]:
     return None, None
 
 
+def _why(item: WeakLocalEvidenceItem, first: frozenset[str]) -> str:
+    """Why this body is here, in the consumer's terms.
+
+    A body arrives with no account of why it was picked over the others in its file, and
+    working that out cost two of four steps in a traced attempt.
+    """
+
+    if item.canonical_ref.value in first:
+        return "the failing tests ran this"
+    return "defined in the file being changed"
+
+
 def attach_excerpts(
     package: WeakLocalEvidencePackage,
     read_lines: SourceReader,
@@ -379,8 +391,12 @@ def attach_excerpts(
             if not text:
                 cost = 0
             else:
+                # Costed as it will be sent, `why` included. Adding that field after the
+                # accounting put an envelope declared at 8,192 tokens at 8,277.
                 with_body = estimate_payload_tokens(
-                    weak_local_evidence_item_json(replace(item, excerpt=text))
+                    weak_local_evidence_item_json(
+                        replace(item, excerpt=text, chosen_because=_why(item, first))
+                    )
                 )
                 cost = (
                     with_body
@@ -396,11 +412,7 @@ def attach_excerpts(
             replace(
                 item,
                 excerpt=excerpts[index],
-                chosen_because=(
-                    "the failing tests ran this"
-                    if item.canonical_ref.value in first
-                    else "defined in the file being changed"
-                ),
+                chosen_because=_why(item, first),
             )
             if index in excerpts
             else item
