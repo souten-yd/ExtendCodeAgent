@@ -312,7 +312,8 @@ _WRITE = re.compile(r"^\s*(?:REPLACE|WRITE)\s+(\S+?)::(\S+?)\s*$", re.M)
 # the IPv6 fix needs `from urllib.parse import urlsplit` added at the top of the file, and
 # a vocabulary that only replaces function bodies cannot say that. Scoring an agent on a
 # change it has no way to express measures the protocol.
-ReissueEnvelope = Callable[[str], str | None]
+#: (evidence, kind) -> a fresh envelope, or None when there is nothing new to say.
+ReissueEnvelope = Callable[[str, str], str | None]
 
 _EDIT = re.compile(r"^\s*EDIT\s+(\S+)\s*$", re.M)
 
@@ -373,7 +374,7 @@ def run_arm(
                 # envelope was written before it existed. Re-issued here, the allowance moves
                 # from naming the file to the code the failure points at.
                 if reissue is not None:
-                    fresh = reissue(output)
+                    fresh = reissue(output, "failure")
                     if fresh:
                         note += f"\n\n### PROJECT INTELLIGENCE (updated)\n{fresh}\n"
             messages.append({"role": "user", "content": note[:MAX_READ]})
@@ -394,7 +395,7 @@ def run_arm(
                     break
                 note = f"tests still fail:\n{output}"
                 if reissue is not None:
-                    fresh = reissue(output)
+                    fresh = reissue(output, "failure")
                     if fresh:
                         note += f"\n\n### PROJECT INTELLIGENCE (updated)\n{fresh}\n"
             messages.append({"role": "user", "content": note[:MAX_READ]})
@@ -411,6 +412,11 @@ def run_arm(
                 text=True,
             )
             body = found.stdout[:MAX_READ] or "(no match)"
+            # The search is the agent saying what it needs; the envelope answers it.
+            if reissue is not None and found.stdout:
+                fresh = reissue(found.stdout, "search")
+                if fresh:
+                    body += f"\n\n### PROJECT INTELLIGENCE (updated)\n{fresh}\n"
         elif line.upper().startswith("READ"):
             actions.append("read")
             candidate = repo / line[4:].strip()
@@ -507,6 +513,33 @@ def _symbols_from(repo: Path, coverage_data: Path, tests: tuple[str, ...]) -> tu
 
 
 _TRACEBACK_FRAME = re.compile(r"^\s*([\w./-]+\.py):(\d+): in (\w+)", re.M)
+
+
+def refs_from_search(repo: Path, pattern: str, hits: str) -> tuple[str, ...]:
+    """Canonical refs a search turned up, as the agent's own statement of what it needs.
+
+    After one search the agent knows something the envelope was written without: where it
+    thinks the answer is. Waiting for a failed edit to re-issue throws that away, and the
+    arm with no envelope was at least keeping what its searches returned.
+
+    The search argument is the request; the files and lines it matched are the answer.
+    """
+
+    executed: dict[str, set[int]] = {}
+    for line in hits.splitlines():
+        path, _, rest = line.partition(":")
+        number, _, _ = rest.partition(":")
+        if not number.isdigit() or not path.endswith(".py") or is_test_path(path):
+            continue
+        executed.setdefault(path.removeprefix("./"), set()).add(int(number))
+    if not executed:
+        return ()
+    with (
+        tempfile.TemporaryDirectory(prefix="eca-search-") as temp,
+        ProjectIntelligenceApplication(repo, Path(temp) / "graph.db", _policy()) as application,
+    ):
+        snapshot = application._snapshot(open_if_missing=True)
+        return tuple(ref.value for ref in symbols_touched(snapshot, executed))
 
 
 def refs_from_failure(repo: Path, output: str) -> tuple[str, ...]:
