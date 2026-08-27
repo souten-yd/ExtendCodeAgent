@@ -9,7 +9,6 @@ them from somewhere else.
 
 from __future__ import annotations
 
-import re
 from typing import Any
 
 from extendcodeagent.core.contracts import CanonicalRef
@@ -27,19 +26,6 @@ from .service import (
     stable_evidence_envelope,
 )
 
-# Verbs that ask for the repository to be different afterwards.
-_CHANGE_VERBS = re.compile(
-    r"\b(change|fix|implement|add|remove|rename|refactor|update|write|make|correct|"
-    r"migrate|port|support)\b",
-    re.I,
-)
-
-
-def _is_a_change(objective: str) -> bool:
-    """Whether the objective asks for the code to be different, not for a fact about it."""
-
-    return bool(_CHANGE_VERBS.search(objective))
-
 
 def build_answer_envelope(
     snapshot: GraphSnapshot,
@@ -53,12 +39,17 @@ def build_answer_envelope(
     token_budget: int,
     max_items: int,
     scope: str | None = None,
+    changing: bool = False,
     prior_evidence_ids: tuple[str, ...] = (),
     unresolved_gaps: tuple[str, ...] = (),
 ) -> dict[str, Any]:
     # The ladder starts narrow; an explicit scope is a caller widening it because a
     # narrower answer did not hold.
     resolved = EvidenceScope(scope) if scope is not None else infer_evidence_scope(objective)
+    # Whether this asks for the code to be different is declared, not inferred. Reading it
+    # out of the words classified `Assess the change impact if X changes` as a change and
+    # capped its tests at two, dropping sealed recall from 1.00 to 0.711 — a keyword cannot
+    # tell a request to change something from a question about a change.
     package = build_weak_local_evidence(
         snapshot,
         WeakLocalEvidenceRequest(
@@ -72,6 +63,7 @@ def build_answer_envelope(
                 target_refs,
                 objective,
                 scope=resolved.value,
+                changing=changing,
                 equivalents=equivalents,
                 recommended_tests=recommended_tests,
                 observed_tests=observed_tests,
@@ -83,7 +75,6 @@ def build_answer_envelope(
     # A change names files; a question names symbols. Handing a change the file's symbol
     # names and no source leaves it nothing to write from — measured on flask, 64 names and
     # zero lines. Handing a question every body in the file was 49% of a retrieval envelope.
-    changing = _is_a_change(objective)
     package = attach_excerpts(
         package,
         read_source_span,

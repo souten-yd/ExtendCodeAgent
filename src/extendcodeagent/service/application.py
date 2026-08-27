@@ -860,6 +860,7 @@ class ProjectIntelligenceApplication:
         token_budget: int = 2_000,
         view: str = "detail",
         scope: str | None = None,
+        changing: bool = False,
         prior_evidence_ids: tuple[str, ...] = (),
         unresolved_gaps: tuple[str, ...] = (),
     ) -> dict[str, Any]:
@@ -878,6 +879,7 @@ class ProjectIntelligenceApplication:
                 token_budget=token_budget,
                 max_items=min(self.max_items, 32),
                 scope=scope,
+                changing=changing,
                 prior_evidence_ids=prior_evidence_ids,
                 unresolved_gaps=unresolved_gaps,
             )

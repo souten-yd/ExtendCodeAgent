@@ -12,8 +12,7 @@ The lookups are supplied by the caller so this stays a pure function over a snap
 
 from __future__ import annotations
 
-import re
-
+from collections import Counter
 from collections.abc import Callable, Iterable
 
 from extendcodeagent.core.contracts import CanonicalRef
@@ -57,6 +56,7 @@ def obligation_refs(
     equivalents: Equivalents,
     recommended_tests: RecommendedTests,
     observed_tests: ObservedTests | None = None,
+    changing: bool = False,
     max_obligations: int = DEFAULT_MAX_OBLIGATIONS,
 ) -> tuple[RequiredRef, ...]:
     if not target_refs:
@@ -78,6 +78,15 @@ def obligation_refs(
         for edge in snapshot.edges
         if edge.target.value in equivalent and edge.edge_type in _CONSUMER_EDGES
     ]
+    # A consumer reached only through an expanded file inherits the expansion's standing.
+    # Naming a file made everything calling anything inside it required, and thirty-one
+    # protected call sites is the same dilution as twenty-nine protected members: nobody
+    # asked about them, they were reached by asking about the file.
+    from_expansion.update(
+        edge.source.value
+        for edge in snapshot.edges
+        if edge.target.value in from_expansion and edge.edge_type in _CONSUMER_EDGES
+    )
 
     # Observed first: a test that was seen touching this ref is fact, while everything
     # below it is inference. It is also the only signal that reaches a test which never
@@ -110,8 +119,8 @@ def obligation_refs(
         from_expansion,
         # A change is told which tests fail; it has to be told what the code currently is.
         # Splitting the budget evenly gave 21 of 32 protected slots to tests that the task
-        # statement already named, and the source to be written was pushed out.
-        _CHANGE_VERBS.search(objective) is not None,
+        # statement had already named, and the source to be written was pushed out.
+        changing,
         (
             (EvidenceRole.TARGET, targets),
             # Observed and inferred tests hold separate floors. Coverage is fact and ranks
@@ -127,16 +136,9 @@ def obligation_refs(
     )
 
 
-#: What a change needs to be told about tests. It is not zero, because knowing one real
-#: test carries the project's convention; it is small, because the failing ones are named
-#: in the task itself.
-CHANGE_TEST_FLOOR = 2
-
-_CHANGE_VERBS = re.compile(
-    r"\b(change|fix|implement|add|remove|rename|refactor|update|write|make|correct|"
-    r"migrate|port|support)\b",
-    re.I,
-)
+#: The most a change is told about tests. Not zero, because one real test carries the
+#: project's convention; small, because the failing ones are named in the task itself.
+CHANGE_TEST_LIMIT = 2
 
 
 def _by_role_budget(
@@ -158,23 +160,34 @@ def _by_role_budget(
         return ()
     floor = max(1, budget // len(populated))
 
-    def floor_for(role: EvidenceRole) -> int:
+    def cap_for(role: EvidenceRole) -> int:
+        # A ceiling, not a floor. Capping only the first pass left the second pass free to
+        # fill the budget with tests anyway: twenty of them, on a task whose statement had
+        # already named the ones that fail.
         if changing and role is EvidenceRole.TEST:
-            return min(floor, CHANGE_TEST_FLOOR)
+            return CHANGE_TEST_LIMIT
         return floor
 
     taken: list[RequiredRef] = []
     seen: set[str] = set()
+    per_role: Counter[EvidenceRole] = Counter()
+
+    def admit(value: str, role: EvidenceRole) -> None:
+        seen.add(value)
+        per_role[role] += 1
+        taken.append(RequiredRef(CanonicalRef(value), role, value not in from_expansion))
+
     for role, values in populated:
-        for value in values[: floor_for(role)]:
+        for value in values[: cap_for(role)]:
             if value not in seen:
-                seen.add(value)
-                taken.append(RequiredRef(CanonicalRef(value), role, value not in from_expansion))
+                admit(value, role)
     for role, values in populated:
+        capped = changing and role is EvidenceRole.TEST
         for value in values:
             if len(taken) >= budget:
                 return tuple(taken[:budget])
+            if capped and per_role[role] >= CHANGE_TEST_LIMIT:
+                break
             if value not in seen:
-                seen.add(value)
-                taken.append(RequiredRef(CanonicalRef(value), role, value not in from_expansion))
+                admit(value, role)
     return tuple(taken[:budget])

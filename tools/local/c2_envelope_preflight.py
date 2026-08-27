@@ -85,12 +85,20 @@ def check(
     ]
     checks = [
         Expectation("the envelope holds something", bool(items), f"{len(items)} items"),
+        # Two bounds, reported apart. Conflating them hid which one was actually exceeded:
+        # a verification envelope sits at a quarter of its token budget while carrying more
+        # protected obligations than the item cap can hold, and those want different fixes.
         Expectation(
-            "it fits the budget it was given",
-            tokens <= budget and "protected_evidence_exceeds_budget" not in gaps,
-            f"{tokens} of {budget} tokens"
+            "it fits its token budget",
+            tokens <= budget,
+            f"{tokens} of {budget} tokens",
+        ),
+        Expectation(
+            "it stays within its item bound",
+            "protected_evidence_exceeds_budget" not in gaps,
+            f"{len(items)} items"
             + (
-                "; protected evidence overflowed"
+                "; protected obligations exceed the cap"
                 if "protected_evidence_exceeds_budget" in gaps
                 else ""
             ),
@@ -159,6 +167,8 @@ def main() -> int:
             tuple(f"file://{path}" for path in args.target),
             token_budget=args.budget,
             view="envelope",
+            # Declared, not inferred: the caller knows whether it is asking for a change.
+            changing=args.kind == "codegen",
         )
     envelope = payload["task_evidence"]
     checks = check(envelope, kind=args.kind, target_paths=tuple(args.target), budget=args.budget)
