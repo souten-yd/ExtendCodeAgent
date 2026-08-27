@@ -1,0 +1,458 @@
+{
+  "classification": "C2_DELIVERY_BASELINE_COMPARISON",
+  "note": "Diagnostic. Delivery layer only; task outcome is not measured here.",
+  "repository": "/tmp/claude-1000/-home-souten-ExtendCodeAgent/834e8784-5cdd-4621-acbc-e318c839c3cd/scratchpad/corpus-requests",
+  "source_revision": "1e5fad7433772b648fcbc921e2a79de5c4c6be8b",
+  "token_budget": 8192,
+  "model_execution": "NOT_RUN_DETERMINISTIC_COMPARISON",
+  "by_pi_value_class": {
+    "high": {
+      "cases": 20,
+      "pi_recall_mean": 0.835714,
+      "search_recall_mean": 0.961905,
+      "mean_delta": -0.126191,
+      "pi_ahead": 2,
+      "tied": 15,
+      "search_ahead": 3,
+      "discriminating_cases": 0,
+      "verdict": "NOT_DISCRIMINATING: the search arm was never budget-constrained, so this corpus cannot separate selection from listing everything. Use a repository whose candidate set does not fit the budget."
+    }
+  },
+  "results": [
+    {
+      "case_id": "pr-6fbfca90b602",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 32,
+        "delivered_tokens": 2390,
+        "recall": 0.0,
+        "missing_facts": [
+          "tests/test_lowlevel.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 64,
+        "delivered_tokens": 687,
+        "candidates": 64,
+        "budget_constrained": false,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": -1.0
+    },
+    {
+      "case_id": "pr-4ab2550d6676",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 32,
+        "delivered_tokens": 2390,
+        "recall": 0.0,
+        "missing_facts": [
+          "tests/test_lowlevel.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 64,
+        "delivered_tokens": 687,
+        "candidates": 64,
+        "budget_constrained": false,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": -1.0
+    },
+    {
+      "case_id": "pr-99b3b492418d",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 80,
+        "delivered_tokens": 5184,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 66,
+        "delivered_tokens": 705,
+        "candidates": 66,
+        "budget_constrained": false,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-2d2447e210cf",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 47,
+        "delivered_tokens": 3059,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 66,
+        "delivered_tokens": 705,
+        "candidates": 66,
+        "budget_constrained": false,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-658c10e84a46",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 54,
+        "delivered_tokens": 3624,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 64,
+        "delivered_tokens": 687,
+        "candidates": 64,
+        "budget_constrained": false,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-ef59aa0227bf",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 47,
+        "delivered_tokens": 3059,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 66,
+        "delivered_tokens": 705,
+        "candidates": 66,
+        "budget_constrained": false,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-38f3f8ecb93c",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 47,
+        "delivered_tokens": 3059,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 66,
+        "delivered_tokens": 705,
+        "candidates": 66,
+        "budget_constrained": false,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-fa1b0a367abc",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 32,
+        "delivered_tokens": 2249,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 64,
+        "delivered_tokens": 687,
+        "candidates": 64,
+        "budget_constrained": false,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-95f456733656",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 54,
+        "delivered_tokens": 3624,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 64,
+        "delivered_tokens": 687,
+        "candidates": 64,
+        "budget_constrained": false,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-79c4a017fe34",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 34,
+        "delivered_tokens": 2340,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 64,
+        "delivered_tokens": 687,
+        "candidates": 64,
+        "budget_constrained": false,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-8bce583b9547",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 2,
+      "pi": {
+        "delivered_items": 178,
+        "delivered_tokens": 11397,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 38,
+        "delivered_tokens": 393,
+        "candidates": 38,
+        "budget_constrained": false,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-2d5517682b3b",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 54,
+        "delivered_tokens": 3624,
+        "recall": 0.0,
+        "missing_facts": [
+          "tests/test_lowlevel.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 64,
+        "delivered_tokens": 687,
+        "candidates": 64,
+        "budget_constrained": false,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": -1.0
+    },
+    {
+      "case_id": "pr-2a6f290bc093",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 7,
+      "pi": {
+        "delivered_items": 341,
+        "delivered_tokens": 21720,
+        "recall": 0.714286,
+        "missing_facts": [
+          "tests/test_lowlevel.py",
+          "tests/test_testserver.py"
+        ]
+      },
+      "search": {
+        "delivered_paths": 44,
+        "delivered_tokens": 459,
+        "candidates": 44,
+        "budget_constrained": false,
+        "recall": 0.571429,
+        "missing_facts": [
+          "tests/test_hooks.py",
+          "tests/test_structures.py",
+          "tests/test_testserver.py"
+        ]
+      },
+      "delta": 0.142857
+    },
+    {
+      "case_id": "pr-210095fd08f7",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 47,
+        "delivered_tokens": 3059,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 66,
+        "delivered_tokens": 705,
+        "candidates": 66,
+        "budget_constrained": false,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-e36f34597ca9",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 51,
+        "delivered_tokens": 3324,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 66,
+        "delivered_tokens": 705,
+        "candidates": 66,
+        "budget_constrained": false,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-7f694b79e114",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 51,
+        "delivered_tokens": 3324,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 66,
+        "delivered_tokens": 705,
+        "candidates": 66,
+        "budget_constrained": false,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-74ea7cf7a6a2",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 34,
+        "delivered_tokens": 2340,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 64,
+        "delivered_tokens": 687,
+        "candidates": 64,
+        "budget_constrained": false,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-6e5b15d542a4",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 34,
+        "delivered_tokens": 2340,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 64,
+        "delivered_tokens": 687,
+        "candidates": 64,
+        "budget_constrained": false,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-8112fcc7beb1",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 1,
+      "pi": {
+        "delivered_items": 180,
+        "delivered_tokens": 11565,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 66,
+        "delivered_tokens": 707,
+        "candidates": 66,
+        "budget_constrained": false,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "delta": 0.0
+    },
+    {
+      "case_id": "pr-f8bec2f7ca9d",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "required_fact_count": 3,
+      "pi": {
+        "delivered_items": 32,
+        "delivered_tokens": 2296,
+        "recall": 1.0,
+        "missing_facts": []
+      },
+      "search": {
+        "delivered_paths": 13,
+        "delivered_tokens": 133,
+        "candidates": 13,
+        "budget_constrained": false,
+        "recall": 0.666667,
+        "missing_facts": [
+          "tests/test_testserver.py"
+        ]
+      },
+      "delta": 0.333333
+    }
+  ]
+}

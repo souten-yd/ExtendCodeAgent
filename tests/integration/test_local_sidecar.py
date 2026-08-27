@@ -205,7 +205,8 @@ def test_sidecar_context_runtime_ingest_and_evidence_round_trip(tmp_path: Path) 
     assert envelope["result"]["stable_envelope"]["protocol"] == (
         "extendcodeagent.weak-local-evidence.v1"
     )
-    assert envelope["result"]["task_evidence"]["selected_evidence_ids"]
+    # Ids travel on the items, not as a second list beside them.
+    assert all(item["id"] for item in envelope["result"]["task_evidence"]["items"])
 
 
 def test_sidecar_runtime_contract_negotiates_and_collects_host_neutral_signals(

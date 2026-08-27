@@ -56,16 +56,52 @@ def context_package_json(package: ContextPackage) -> dict[str, Any]:
     }
 
 
+#: What each role has to carry. A test answers with a path, so a path is what it needs;
+#: identity, confidence and provenance buy trust that a path list does not spend tokens on.
+#: Measured across flask and httpx, the full shape cost 81 tokens per test item.
+_ROLE_FIELDS = {
+    "test": ("id", "path"),
+    "supporting": ("id", "path", "kind", "summary"),
+    "consumer": ("id", "path", "kind", "summary", "reason"),
+    # A target the caller did not name is one of the symbols inside a file they did. It is
+    # context for the change, not the thing being changed, so it does not carry the full
+    # apparatus: measured across four repositories, those expansions were 24 items at 71
+    # tokens each -- 57% of the whole envelope.
+    "target": ("id", "ref", "path", "kind", "summary", "reason"),
+}
+
+
 def weak_local_evidence_item_json(item: Any) -> dict[str, Any]:
+    full = _full_item_json(item)
+    # Everything a named symbol carries: identity, trust and, where it was read, the body.
+    if item.excerpt is not None:
+        return full
+    fields = _ROLE_FIELDS.get(str(item.role))
+    if fields is None:
+        return full
+    return {key: value for key, value in full.items() if key in fields}
+
+
+def _full_item_json(item: Any) -> dict[str, Any]:
     return {
         "id": item.evidence_id,
         "ref": item.canonical_ref.value,
+        # The canonical ref is ECA's identity; `path` is what an answer has to name. Emitting
+        # only the ref made the model translate `py://a.b.c#d` into `a/b/c.py` itself, which
+        # is the measured PROJECTION_SCHEMA_ERROR class.
+        "path": item.source_ref,
         "kind": item.kind,
         "summary": item.summary,
         "reason": item.reason,
         "confidence": item.confidence,
         "provenance_id": item.provenance_id,
         "status": item.status,
+        "role": str(item.role),
+        # A symbol's exact span is what lets a consumer read seven lines instead of the
+        # three hundred and sixty-seven the file happens to contain.
+        **({"lines": [item.start_line, item.end_line]} if item.start_line else {}),
+        **({"source": item.excerpt} if item.excerpt else {}),
+        **({"why": item.chosen_because} if item.chosen_because else {}),
     }
 
 
@@ -92,9 +128,21 @@ def weak_local_evidence_json(
             for identifier, item in package.provenance
         ],
         "items": [weak_local_evidence_item_json(item) for item in package.items],
-        "selected_evidence_ids": list(package.selected_evidence_ids),
+        # Grouped as well as listed: a consumer asking "which tests must run?" reads
+        # `answer.test` instead of filtering the whole envelope for them.
+        "answer": {
+            role: [item.evidence_id for item in package.items if str(item.role) == role]
+            for role in ("target", "consumer", "test")
+            if any(str(item.role) == role for item in package.items)
+        },
+        # Not emitted. Every item already carries its `id`, including the role-shaped
+        # ones, so re-listing them cost 337 tokens of a flask change envelope - 4.2% -
+        # to say what the reader is already holding. A consumer that needs the list for
+        # a follow-up request builds it from the items.
         "prior_evidence_ids": list(package.prior_evidence_ids),
         "unresolved_evidence_gaps": list(package.unresolved_gaps),
+        # What has been ruled out, so it is not ruled out again.
+        "established_absences": list(package.established_absences),
         "request_next_scope": package.next_scope.value if package.next_scope else "none",
     }
     task_payload = canonical_bytes(task_evidence)

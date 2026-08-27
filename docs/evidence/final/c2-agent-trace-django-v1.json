@@ -1,0 +1,364 @@
+{
+  "classification": "C2_AGENT_LOOP_DIAGNOSTIC",
+  "note": "Diagnostic. The sealed local-practical arm is port-8090; this endpoint is a different route and is not recorded as B0b/C2 evidence.",
+  "captured_at": "2026-08-26T12:52:58.595057+00:00",
+  "repository": "/tmp/claude-1000/-home-souten-ExtendCodeAgent/834e8784-5cdd-4621-acbc-e318c839c3cd/scratchpad/corpus-django",
+  "model": "Qwen3.6-35B-A3B",
+  "max_turns": 8,
+  "cases": 6,
+  "summary": {
+    "pi": {
+      "turns": 1,
+      "prompt_tokens": 7364.5,
+      "read_bytes": 0,
+      "greps": 0,
+      "reads": 0,
+      "recall": 0.34,
+      "precision": 0.36,
+      "answered": 6
+    },
+    "baseline": {
+      "turns": 4.33,
+      "prompt_tokens": 1777.33,
+      "read_bytes": 3333.33,
+      "greps": 3.17,
+      "reads": 0.5,
+      "recall": 0.17,
+      "precision": 0.17,
+      "answered": 4
+    }
+  },
+  "results": [
+    {
+      "case_id": "pr-0f581cd29d42",
+      "required": [
+        "tests/admin_views/test_actions.py",
+        "tests/admin_views/tests.py",
+        "tests/auth_tests/test_forms.py",
+        "tests/auth_tests/test_models.py",
+        "tests/auth_tests/test_views.py",
+        "tests/logging_tests/tests.py",
+        "tests/mail/test_backends.py",
+        "tests/mail/test_deprecated.py",
+        "tests/mail/test_sendtestemail.py",
+        "tests/mail/tests.py",
+        "tests/middleware/tests.py",
+        "tests/project_template/test_settings.py",
+        "tests/test_client/tests.py",
+        "tests/test_utils/tests.py",
+        "tests/view_tests/tests/test_debug.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 8566,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 0.066667,
+        "precision": 1.0
+      },
+      "baseline": {
+        "turns": 1,
+        "prompt_tokens": 145,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    },
+    {
+      "case_id": "pr-25cf1cbb1cb9",
+      "required": [
+        "tests/mail/test_backends.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 5815,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "baseline": {
+        "turns": 1,
+        "prompt_tokens": 132,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 1.0,
+        "precision": 1.0
+      }
+    },
+    {
+      "case_id": "pr-da6567da7ea0",
+      "required": [
+        "tests/generic_views/test_base.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 7194,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 0.0,
+        "precision": 0.0
+      },
+      "baseline": {
+        "turns": 1,
+        "prompt_tokens": 130,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    },
+    {
+      "case_id": "pr-0e1d950fbb44",
+      "required": [
+        "tests/queries/test_qs_combinators.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 7499,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 0.0,
+        "precision": 0.0
+      },
+      "baseline": {
+        "turns": 8,
+        "prompt_tokens": 1739,
+        "read_bytes": 0,
+        "greps": 7,
+        "reads": 1,
+        "malformed": 0,
+        "answered": false,
+        "trace": [
+          {
+            "kind": "grep",
+            "arg": "from django.db.models.sql.query import tests/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "\"from django.db.models.sql import query\" tests/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "\"from django.db.models.sql.query import\" tests/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "\"from django.db.models.sql.query import\" tests/",
+            "hits": 0
+          },
+          {
+            "kind": "read",
+            "arg": "tests/query/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "\"from django.db.models.sql.query import\" tests/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "\"from django.db.models.sql import query\" tests/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "\"from django.db.models.sql.query import\" tests/",
+            "hits": 0
+          }
+        ],
+        "empty_searches": 7,
+        "repeated_actions": 4,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    },
+    {
+      "case_id": "pr-6bbe2656e1e8",
+      "required": [
+        "tests/queries/test_qs_combinators.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 7599,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 0.0,
+        "precision": 0.0
+      },
+      "baseline": {
+        "turns": 7,
+        "prompt_tokens": 5552,
+        "read_bytes": 20000,
+        "greps": 5,
+        "reads": 1,
+        "malformed": 0,
+        "answered": true,
+        "trace": [
+          {
+            "kind": "grep",
+            "arg": "from django.db.models.sql.compiler import tests/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "\"from django.db.models.sql.compiler import\" tests/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "\"compiler\" tests/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "\"SQLCompiler\" tests/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "\"compiler\" .",
+            "hits": 0
+          },
+          {
+            "kind": "read",
+            "arg": "django/db/models/sql/compiler.py",
+            "hits": 1
+          }
+        ],
+        "empty_searches": 5,
+        "repeated_actions": 0,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    },
+    {
+      "case_id": "pr-3e4e0db66961",
+      "required": [
+        "tests/view_tests/tests/test_csrf.py"
+      ],
+      "pi": {
+        "turns": 1,
+        "prompt_tokens": 7514,
+        "read_bytes": 0,
+        "greps": 0,
+        "reads": 0,
+        "malformed": 0,
+        "answered": true,
+        "trace": [],
+        "empty_searches": 0,
+        "repeated_actions": 0,
+        "recall": 1.0,
+        "precision": 0.142857
+      },
+      "baseline": {
+        "turns": 8,
+        "prompt_tokens": 2966,
+        "read_bytes": 0,
+        "greps": 7,
+        "reads": 1,
+        "malformed": 0,
+        "answered": false,
+        "trace": [
+          {
+            "kind": "grep",
+            "arg": "django.views.csrf tests/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "csrf tests/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "csrf tests/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "debug tests/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "debug",
+            "hits": 40
+          },
+          {
+            "kind": "read",
+            "arg": "tests/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "csrf test/",
+            "hits": 0
+          },
+          {
+            "kind": "grep",
+            "arg": "csrf",
+            "hits": 40
+          }
+        ],
+        "empty_searches": 5,
+        "repeated_actions": 1,
+        "recall": 0.0,
+        "precision": 0.0
+      }
+    }
+  ]
+}

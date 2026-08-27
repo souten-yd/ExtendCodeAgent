@@ -23,7 +23,16 @@ from .contracts import GraphAnalysis
 if TYPE_CHECKING:
     from extendcodeagent.twin.source_snapshot import SourceSnapshot
 
-PYTHON_ANALYZER_VERSION = "python_ast.v2"
+PYTHON_ANALYZER_VERSION = "python_ast.v4"
+
+#: Directories a project may keep its importable packages under. `src/flask/app.py` is
+#: imported as `flask.app`, so without these an internal import resolves to nothing and
+#: gets recorded as a third-party dependency instead.
+PYTHON_SOURCE_ROOTS = ("src", "lib")
+
+#: Whole-file names that hold tests without matching `test_*.py`. Django gives every app a
+#: `tests.py`, and both pytest and unittest discover it.
+_TEST_FILENAMES = frozenset({"tests.py", "test.py"})
 _BUILTINS = frozenset(dir(builtins))
 
 
@@ -199,9 +208,12 @@ class PythonGraphAnalyzer:
                     target = f"dependency://{dependency}"
                     add_node(target, "dependency", module.path)
                 elif imported_name is None:
-                    target = f"module://{imported_module}"
+                    # The resolved name, not the one written in the import: a src-layout
+                    # project writes `import flask` for a module the graph knows as
+                    # `src.flask`, and an edge to the name as written points at no node.
+                    target = f"module://{target_module}"
                 else:
-                    target = f"py://{imported_module}#{imported_name}"
+                    target = f"py://{_package_of(target_module, imported_module)}#{imported_name}"
                 add_edge(
                     module_ref,
                     target,
@@ -487,10 +499,35 @@ def _imports(tree: ast.Module, dotted: str, path: str) -> dict[str, tuple[str, s
     return result
 
 
+def _package_of(resolved: str, imported: str) -> str:
+    """The resolved name of the package an import names, keeping any source-root prefix.
+
+    `_best_module` may resolve `flask` to a module nested under it, so trim back to the
+    depth the import actually names.
+    """
+
+    depth = imported.count(".") + 1
+    parts = resolved.split(".")
+    prefix = len(parts) - len(imported.split("."))
+    return ".".join(parts[: prefix + depth]) if prefix > 0 else ".".join(parts[:depth])
+
+
 def _best_module(imported: str, modules: dict[str, str]) -> str | None:
-    if imported in modules:
-        return imported
-    return next((name for name in modules if name.startswith(f"{imported}.")), None)
+    """Resolve an import against the project's own modules, source layout included.
+
+    A src-layout project imports its own package by the name under `src/`, so matching
+    only the literal dotted path classifies every internal import as third-party. Measured
+    across flask, httpx and scrapy, that left no edge at all between a test and the module
+    it exercises.
+    """
+
+    for candidate in (imported, *(f"{root}.{imported}" for root in PYTHON_SOURCE_ROOTS)):
+        if candidate in modules:
+            return candidate
+        nested = next((name for name in modules if name.startswith(f"{candidate}.")), None)
+        if nested is not None:
+            return nested
+    return None
 
 
 def _module_dotted(path: str) -> str:
@@ -511,9 +548,17 @@ def _expression_name(node: ast.AST) -> str | None:
 
 
 def _is_test(definition: _Definition) -> bool:
+    """Whether a definition is a test the project would actually run.
+
+    `tests.py` is the convention every Django application uses, and pytest and unittest
+    both discover it. Requiring `test_*.py` left 16 of 30 measured Django changes with
+    their required test absent from the graph entirely — not mis-ranked, but impossible to
+    select, because it was never a test.
+    """
+
     filename = Path(definition.path).name
     return definition.name.startswith("test_") and (
-        filename.startswith("test_") or filename.endswith("_test.py")
+        filename.startswith("test_") or filename.endswith("_test.py") or filename in _TEST_FILENAMES
     )
 
 

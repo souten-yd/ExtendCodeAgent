@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from datetime import UTC, datetime
 
 from extendcodeagent.core.contracts import CanonicalRef, ProjectRef, Provenance, SourceRevision
@@ -241,3 +241,58 @@ def _outcome(
         tuple(item.observation_id for item in observations),
         (diagnostic,),
     )
+
+
+def covering_tests(
+    observations: Iterable[RuntimeObservation],
+    refs: Iterable[CanonicalRef],
+    is_test: Callable[[CanonicalRef], bool],
+    *,
+    fallback_refs: Iterable[CanonicalRef] = (),
+) -> tuple[CanonicalRef, ...]:
+    """Tests that a usable observation recorded reaching the refs asked about.
+
+    Coverage is the relation a static graph cannot hold. A test reaching its subject
+    through a runner, a registry or a fixture leaves no call or import edge behind, but it
+    does leave an observation naming both.
+
+    `is_test` is required rather than assumed: an observation names everything the run
+    touched, and a test's coverage is mostly production symbols. Returning those as if
+    they answered "what verifies this?" fills the answer with the question — measured on
+    seventeen changes to this repository, doing so dropped test recall from 0.86 to 0.38.
+
+    An unavailable observation names nothing that ran, so it is not evidence of anything.
+
+    `fallback_refs` is asked only when the symbols answer nothing, and exists because of a
+    measured miss: a change that adds a function has no symbol at the base revision for
+    coverage to have reached, so the symbol question returns an empty set and the test that
+    detects the change is lost. Across 23 httpx changes that was the single failure, and
+    asking the containing file instead recovers it. It is a fallback and not a default
+    because the file question is much wider — on those changes 269 tests execute the file
+    against 160 that execute the changed symbols.
+    """
+
+    usable = [
+        item
+        for item in observations
+        if item.kind is ObservationKind.TEST and item.status is not ObservationStatus.UNAVAILABLE
+    ]
+
+    def reached(asked_refs: Iterable[CanonicalRef]) -> tuple[CanonicalRef, ...]:
+        asked = {ref.value for ref in asked_refs}
+        if not asked:
+            return ()
+        return tuple(
+            dict.fromkeys(
+                ref
+                # A run that did not touch what was asked about is not evidence about it.
+                # Without this the question is never actually put, and every test that ever
+                # ran comes back -- which also means the fallback below could never fire.
+                for item in usable
+                if any(ref.value in asked for ref in item.observed_refs)
+                for ref in item.observed_refs
+                if ref.value not in asked and is_test(ref)
+            )
+        )
+
+    return reached(refs) or reached(fallback_refs)

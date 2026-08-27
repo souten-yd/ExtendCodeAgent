@@ -1,6 +1,37 @@
 # Next Task
 
-Updated: 2026-08-17 (Asia/Tokyo)
+Updated: 2026-08-27 (Asia/Tokyo)
+
+## The goal, and the phase it belongs to
+
+**The data a change needs at code-generation time is present in the initial context.**
+
+Everything below is measured against that sentence. The mapping exists because work drifted
+away from it once already, and the drift was hard to see: every corpus objective reads
+`Select the existing tests that must run… Do not edit source.` — the benchmark forbids code
+generation, so optimising against it feels like progress and is not.
+
+| phase | does grep already suffice? | does the goal depend on it? |
+|---|---|---|
+| investigation | **yes** — grep recall 0.96 at 7,840 tokens against PI 0.428 at 7,842 | **no.** PI withdrew; do not compete here |
+| design | partly | thinly — only 1.7–6.0% of commits state a constraint lost from the code |
+| **implementation / code generation** | **no** | **yes — this is the target, and it has never been measured** |
+| verification | no | yes, as the signal that a generated change is correct |
+
+Before starting a measurement, state which phase it tests. If the answer is investigation,
+it cannot move the goal however interesting the number.
+
+State as of 2026-08-27: `C2_ENVELOPE_AND_TASK_DESIGN_STATE.md` separates what is
+established deterministically from what is not. The envelope now carries the source a
+change needs in 12 of 16 flask changes, locates files from a description alone in 10 of
+15, and is scored by behaviour rather than by the author's tests. Whether it helps an
+agent is still unmeasured.
+
+The scorer for the missing measurement already exists. `tools/local/c2_revert_oracle.py`
+reverts a commit's production half, leaves its tests, and records which tests detect the
+change: a broken state, a known pass/fail oracle, and a task that genuinely takes several
+turns — the only shape in which the cumulative axis means anything. 42 usable cases across
+flask and httpx.
 
 ## Canonical plan
 
@@ -30,6 +61,16 @@ Both are repaired (`C2_TRUTH_SCOPE_AND_COST_FIDELITY_CORRECTIVE_DESIGN.md`). The
 `tools/local/c2_evidence_recall.py` then reversed the stage's premise: at the 32k profile the envelope
 leaves 30,417 of 32,768 tokens unused because the 32-item cap binds first, recall is flat from 4k to
 32k, and mean normalized recall is 0.244 against mean raw recall 0.056.
+
+The corrective slice closed both: recall on the three sealed `eca-*` tuning tasks went 0.24 -> 1.00
+with 3,105-4,385 delivered tokens, by consolidating capabilities ECA already had. **That is an
+instrument reading on three cells of this program's own repository, not product evidence.**
+
+**Active work order: `C2_EXTERNAL_VALIDATION_PLAN.md`.** All 13 sealed tasks are from our own
+repositories; no public project is in the corpus. Prove effect against a plain-search baseline on
+external code before building any further mechanism. Steps: generalise the recall instrument, pin one
+public repository and derive oracles from merged pull requests, then run the paired PI-versus-baseline
+comparison reported per task class. If the high-value classes show no effect, stop and report it.
 
 **Context size is not the binding constraint. Selection recall and projection encoding are.** Start at
 `C2-0b` (seal the recall baseline on the repaired Twin), then `C2-C'` deterministic exact projection —

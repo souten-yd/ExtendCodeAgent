@@ -1,0 +1,62 @@
+{
+  "note": "Criteria written from each description alone, before any implementation was seen.",
+  "cases": [
+    {
+      "case_id": "acc-c7a53888a1a5",
+      "commit": "c7a53888a1a5",
+      "description": "`Request.max_content_length` can be customized per-request instead of only through the `MAX_CONTENT_LENGTH` config. Added `MAX_FORM_MEMORY_SIZE` and `MAX_FORM_PARTS` config.",
+      "criteria": [
+        {
+          "name": "a request can be given its own limit",
+          "check": "import flask\napp = flask.Flask(__name__)\nwith app.test_request_context('/'):\n    flask.request.max_content_length = 123\n    assert flask.request.max_content_length == 123"
+        },
+        {
+          "name": "the config is the default when nothing is set",
+          "check": "import flask\napp = flask.Flask(__name__)\napp.config['MAX_CONTENT_LENGTH'] = 456\nwith app.test_request_context('/'):\n    assert flask.request.max_content_length == 456"
+        },
+        {
+          "name": "the two new config keys exist and reach the request",
+          "check": "import flask\napp = flask.Flask(__name__)\napp.config['MAX_FORM_MEMORY_SIZE'] = 7\napp.config['MAX_FORM_PARTS'] = 8\nwith app.test_request_context('/'):\n    assert flask.request.max_form_memory_size == 7\n    assert flask.request.max_form_parts == 8"
+        }
+      ]
+    },
+    {
+      "case_id": "acc-daf1510a4bda",
+      "commit": "daf1510a4bda",
+      "description": "`template_filter`, `template_test`, and `template_global` decorators can be used without parentheses.",
+      "criteria": [
+        {
+          "name": "an app decorator works without parentheses",
+          "check": "import flask\napp = flask.Flask(__name__)\n@app.template_filter\ndef rev(s):\n    return s[::-1]\nassert app.jinja_env.filters['rev']('ab') == 'ba'"
+        },
+        {
+          "name": "it still works with parentheses and a name",
+          "check": "import flask\napp = flask.Flask(__name__)\n@app.template_filter('r2')\ndef rev(s):\n    return s[::-1]\nassert app.jinja_env.filters['r2']('ab') == 'ba'"
+        },
+        {
+          "name": "the blueprint form works without parentheses too",
+          "check": "import flask\nbp = flask.Blueprint('b', __name__)\n@bp.app_template_global\ndef nine():\n    return 9\napp = flask.Flask(__name__)\napp.register_blueprint(bp)\nassert app.jinja_env.globals['nine']() == 9"
+        }
+      ]
+    },
+    {
+      "case_id": "acc-28d5a4d71824",
+      "commit": "28d5a4d71824",
+      "description": "`Flask.open_resource`/`open_instance_resource` and `Blueprint.open_resource` take an `encoding` parameter.",
+      "criteria": [
+        {
+          "name": "an encoding can be given in text mode",
+          "check": "import flask, pathlib, tempfile\nd = tempfile.mkdtemp()\npathlib.Path(d, 'x.txt').write_text('\u706b\u817f', encoding='utf-16-le')\napp = flask.Flask(__name__, root_path=d)\nwith app.open_resource('x.txt', mode='rt', encoding='utf-16-le') as f:\n    assert f.read() == '\u706b\u817f'"
+        },
+        {
+          "name": "binary mode still works and takes no encoding",
+          "check": "import flask, pathlib, tempfile\nd = tempfile.mkdtemp()\npathlib.Path(d, 'x.bin').write_bytes(b'\\x00\\x01')\napp = flask.Flask(__name__, root_path=d)\nwith app.open_resource('x.bin') as f:\n    assert f.read() == b'\\x00\\x01'"
+        },
+        {
+          "name": "the blueprint form takes it as well",
+          "check": "import flask, pathlib, tempfile\nd = tempfile.mkdtemp()\npathlib.Path(d, 'y.txt').write_text('ok', encoding='utf-8')\nbp = flask.Blueprint('b', __name__, root_path=d)\nwith bp.open_resource('y.txt', mode='rt', encoding='utf-8') as f:\n    assert f.read() == 'ok'"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,657 @@
+{
+  "schema": 1,
+  "classification": "C2_RECALL_CORPUS",
+  "generated_at": "2026-08-26T05:27:40.079666+00:00",
+  "repository": {
+    "path": "<local checkout of django/django at the pinned commit>",
+    "commit": "05a5244b8924c47cc5b1332dd15aaa1be6abbe1e",
+    "origin": "https://github.com/django/django.git",
+    "note": "Twin is built at this base; every case is drawn from a later commit.",
+    "reproduce": "git clone https://github.com/django/django.git && git -C django checkout 05a5244b8924c47cc5b1332dd15aaa1be6abbe1e, then set repository.path to that checkout"
+  },
+  "bounds": {
+    "required_tests": "lower bound - real changes under-test",
+    "changed_sources": "upper bound - real commits bundle unrelated edits"
+  },
+  "cases": [
+    {
+      "case_id": "pr-0f581cd29d42",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/conf/__init__.py, django/conf/global_settings.py, django/core/mail/__init__.py, .... Do not edit source.",
+      "target_refs": [
+        "file://django/conf/__init__.py",
+        "file://django/conf/global_settings.py",
+        "file://django/core/mail/__init__.py",
+        "file://django/core/mail/backends/base.py",
+        "file://django/core/mail/backends/console.py",
+        "file://django/core/mail/backends/filebased.py",
+        "file://django/core/mail/backends/locmem.py",
+        "file://django/core/mail/backends/smtp.py",
+        "file://django/core/mail/message.py",
+        "file://django/middleware/common.py",
+        "file://django/utils/log.py"
+      ],
+      "required_facts": [
+        "tests/admin_views/test_actions.py",
+        "tests/admin_views/tests.py",
+        "tests/auth_tests/test_forms.py",
+        "tests/auth_tests/test_models.py",
+        "tests/auth_tests/test_views.py",
+        "tests/logging_tests/tests.py",
+        "tests/mail/test_backends.py",
+        "tests/mail/test_deprecated.py",
+        "tests/mail/test_sendtestemail.py",
+        "tests/mail/tests.py",
+        "tests/middleware/tests.py",
+        "tests/project_template/test_settings.py",
+        "tests/test_client/tests.py",
+        "tests/test_utils/tests.py",
+        "tests/view_tests/tests/test_debug.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "0f581cd29d42d1b5ed1dafb67794c2f3ce6705c9",
+        "subject": "Fixed #35514 -- Implemented dictionary-based MAILERS.",
+        "changed_source_count": 11,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-25cf1cbb1cb9",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/core/mail/backends/smtp.py. Do not edit source.",
+      "target_refs": [
+        "file://django/core/mail/backends/smtp.py"
+      ],
+      "required_facts": [
+        "tests/mail/test_backends.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "25cf1cbb1cb92c6c57b76cc43d697cfdc61f568f",
+        "subject": "Refs #36664 -- Updated SMTP EmailBackend tests for Python 3.15.",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-da6567da7ea0",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/views/generic/base.py. Do not edit source.",
+      "target_refs": [
+        "file://django/views/generic/base.py"
+      ],
+      "required_facts": [
+        "tests/generic_views/test_base.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "da6567da7ea0e844c9a880e02c7b34e1a184edf8",
+        "subject": "Fixed #37062 -- Added preserve_request support to RedirectView.",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-0e1d950fbb44",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/db/models/sql/query.py. Do not edit source.",
+      "target_refs": [
+        "file://django/db/models/sql/query.py"
+      ],
+      "required_facts": [
+        "tests/queries/test_qs_combinators.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "0e1d950fbb44878f6972a0e5730f69f98caf468e",
+        "subject": "Fixed #37097 -- Made Query.clear_ordering() clear ordering on combined queries also.",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-6bbe2656e1e8",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/db/models/sql/compiler.py. Do not edit source.",
+      "target_refs": [
+        "file://django/db/models/sql/compiler.py"
+      ],
+      "required_facts": [
+        "tests/queries/test_qs_combinators.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "6bbe2656e1e89a03d1ae8f2cea7bdd2a027f0665",
+        "subject": "Refs #36938 -- Reverted \"Refs #36938 -- Tolerated unnecessary ordering in compound queries on SQLite.\"",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-3e4e0db66961",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/views/csrf.py, django/views/debug.py. Do not edit source.",
+      "target_refs": [
+        "file://django/views/csrf.py",
+        "file://django/views/debug.py"
+      ],
+      "required_facts": [
+        "tests/view_tests/tests/test_csrf.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "3e4e0db66961a48a080ff3ff91f6c0d954261366",
+        "subject": "Fixed #36825 -- Extended admin templates so CSP nonce is included if available.",
+        "changed_source_count": 2,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-7c125f6a6660",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/contrib/admin/options.py. Do not edit source.",
+      "target_refs": [
+        "file://django/contrib/admin/options.py"
+      ],
+      "required_facts": [
+        "tests/admin_views/test_actions.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "7c125f6a6660a70a0568448b2e40db273a456479",
+        "subject": "Fixed #37105 -- Disallowed admin change form actions on different objects.",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-8fd29079ed12",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/contrib/admin/options.py. Do not edit source.",
+      "target_refs": [
+        "file://django/contrib/admin/options.py"
+      ],
+      "required_facts": [
+        "tests/admin_views/test_actions.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "8fd29079ed1253f0cd88ccf330de30271a5d15e4",
+        "subject": "Refs #12090 -- Aligned admin change form and list minimum permission to run action.",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-20960df455ff",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/db/transaction.py. Do not edit source.",
+      "target_refs": [
+        "file://django/db/transaction.py"
+      ],
+      "required_facts": [
+        "tests/transactions/tests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "20960df455fffd73d556a5ed92cdf6832c23e65f",
+        "subject": "Fixed #37045 -- Renamed savepoint() to savepoint_create().",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-e78a46a8fb29",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/contrib/auth/hashers.py. Do not edit source.",
+      "target_refs": [
+        "file://django/contrib/auth/hashers.py"
+      ],
+      "required_facts": [
+        "tests/auth_tests/test_hashers.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "e78a46a8fb291a11a31b6938b5089db1058f3925",
+        "subject": "Increased the default PBKDF2 iterations for Django 6.2.",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-bc9bed573ce3",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/forms/widgets.py. Do not edit source.",
+      "target_refs": [
+        "file://django/forms/widgets.py"
+      ],
+      "required_facts": [
+        "tests/forms_tests/tests/test_media.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "bc9bed573ce39c3b739a4a3b7848816d464b6bdc",
+        "subject": "Fixed #37088 -- Included attributes in media object equality.",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-53645750412e",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/http/response.py. Do not edit source.",
+      "target_refs": [
+        "file://django/http/response.py"
+      ],
+      "required_facts": [
+        "tests/responses/tests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "53645750412efa1e9013004040db328bd515e0f1",
+        "subject": "Fixed #37100 -- Prevented control characters in HttpResponse reason_phrase.",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-a53e02af6d7a",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/contrib/admin/options.py. Do not edit source.",
+      "target_refs": [
+        "file://django/contrib/admin/options.py"
+      ],
+      "required_facts": [
+        "tests/admin_views/tests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "a53e02af6d7a07d0367b534f7107a0e2a37e3d34",
+        "subject": "Fixed #37117 -- Used ModelAdmin.get_queryset() for change form actions.",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-7ae70e7504b9",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to scripts/do_django_release.py. Do not edit source.",
+      "target_refs": [
+        "file://scripts/do_django_release.py"
+      ],
+      "required_facts": [
+        "scripts/tests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "7ae70e7504b98553ab3537be84f930ea7e28c3c9",
+        "subject": "Refactored release script to support testing in isolation.",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-6e15ac806631",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/http/response.py. Do not edit source.",
+      "target_refs": [
+        "file://django/http/response.py"
+      ],
+      "required_facts": [
+        "tests/httpwrappers/tests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "6e15ac8066312328de279e3e072667416c205bfc",
+        "subject": "Fixed #36905 -- Deprecated the safe parameter of JSONResponse.",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-8f84f269353e",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/contrib/auth/__init__.py. Do not edit source.",
+      "target_refs": [
+        "file://django/contrib/auth/__init__.py"
+      ],
+      "required_facts": [
+        "tests/auth_tests/test_middleware.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "8f84f269353e242e72eea55aa58df92d87df0453",
+        "subject": "Fixed #37019 -- Updated login() and logout() to set request.auser.",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-2c8c0ca0a0b7",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/contrib/auth/management/commands/createsuperuser.py. Do not edit source.",
+      "target_refs": [
+        "file://django/contrib/auth/management/commands/createsuperuser.py"
+      ],
+      "required_facts": [
+        "tests/auth_tests/test_management.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "2c8c0ca0a0b73b167c29db506f810c318f915587",
+        "subject": "Fixed #36225 -- Coped with lack of get_by_natural_key() in createsuperuser.",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-ea9742c6d02e",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/core/serializers/json.py. Do not edit source.",
+      "target_refs": [
+        "file://django/core/serializers/json.py"
+      ],
+      "required_facts": [
+        "tests/serializers/test_json.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "ea9742c6d02edf64fc0969f21506f2048c976051",
+        "subject": "Fixed #37108 -- Made DjangoJSONEncoder consistently omit .000 microseconds.",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-804660d685a5",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/contrib/admindocs/utils.py, django/contrib/admindocs/views.py, django/urls/utils.py. Do not edit source.",
+      "target_refs": [
+        "file://django/contrib/admindocs/utils.py",
+        "file://django/contrib/admindocs/views.py",
+        "file://django/urls/utils.py"
+      ],
+      "required_facts": [
+        "tests/admin_docs/test_views.py",
+        "tests/urlpatterns/tests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "804660d685a5abd49fc66ba20c98d1a523f28f9f",
+        "subject": "Refs #28800 -- Lifted some url functions from admindocs into urls.utils.",
+        "changed_source_count": 3,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-22d25eff1510",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/urls/utils.py. Do not edit source.",
+      "target_refs": [
+        "file://django/urls/utils.py"
+      ],
+      "required_facts": [
+        "tests/urlpatterns/tests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "22d25eff1510eb157be3ef02984869b1309ec15d",
+        "subject": "Refs #28800 -- Handled escaped literals in simplify_regex().",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-9383fae0d55a",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/utils/termcolors.py. Do not edit source.",
+      "target_refs": [
+        "file://django/utils/termcolors.py"
+      ],
+      "required_facts": [
+        "tests/admin_scripts/tests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "9383fae0d55a553be3bda620db87fa9ee8a81478",
+        "subject": "Fixed #28800 -- Added a listurls management command.",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-ba70e1bcdd8d",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/http/request.py. Do not edit source.",
+      "target_refs": [
+        "file://django/http/request.py"
+      ],
+      "required_facts": [
+        "tests/asgi/tests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "ba70e1bcdd8dc879c7d5fc7a3d12b5831eb08540",
+        "subject": "Fixed #37103 -- Made HttpRequest.body handle malformed CONTENT_LENGTH.",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-672cfaa53c72",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to scripts/pr_quality/check_pr.py, scripts/pr_quality/errors.py. Do not edit source.",
+      "target_refs": [
+        "file://scripts/pr_quality/check_pr.py",
+        "file://scripts/pr_quality/errors.py"
+      ],
+      "required_facts": [
+        "scripts/pr_quality/tests/test_check_pr.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "672cfaa53c72dd67fb54ecbdd904ea364d2951c4",
+        "subject": "Made PR quality check require tickets for new contributors.",
+        "changed_source_count": 2,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-70d36515b9cc",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/conf/global_settings.py, django/core/signing.py, django/http/request.py, .... Do not edit source.",
+      "target_refs": [
+        "file://django/conf/global_settings.py",
+        "file://django/core/signing.py",
+        "file://django/http/request.py",
+        "file://django/http/response.py"
+      ],
+      "required_facts": [
+        "tests/signed_cookies_tests/tests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "70d36515b9cc71700105a14b275583070d48b689",
+        "subject": "Fixed CVE-2026-6873 -- Prevented signed cookie salt namespace collisions.",
+        "changed_source_count": 4,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-df887f501985",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/core/mail/backends/smtp.py. Do not edit source.",
+      "target_refs": [
+        "file://django/core/mail/backends/smtp.py"
+      ],
+      "required_facts": [
+        "tests/mail/test_backends.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "df887f50198593a0e5b4638bfddbbd43a30fd276",
+        "subject": "Fixed CVE-2026-7666 -- Delayed setting SMTP connection until fully configured.",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-d618d7ae4fec",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/middleware/cache.py. Do not edit source.",
+      "target_refs": [
+        "file://django/middleware/cache.py"
+      ],
+      "required_facts": [
+        "tests/cache/tests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "d618d7ae4fec727d5b582bd24f803c28d17bf7cd",
+        "subject": "Fixed CVE-2026-8404 -- Used Cache-Control directives case-insensitively in UpdateCacheMiddleware.",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-a2faa8e89592",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/middleware/cache.py. Do not edit source.",
+      "target_refs": [
+        "file://django/middleware/cache.py"
+      ],
+      "required_facts": [
+        "tests/cache/tests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "a2faa8e895926ac5d63f72879b5ccf671b5b4ba9",
+        "subject": "Fixed CVE-2026-35193 -- Varied on Authorization when caching non-public responses.",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-42aa0b3364d3",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/utils/cache.py. Do not edit source.",
+      "target_refs": [
+        "file://django/utils/cache.py"
+      ],
+      "required_facts": [
+        "tests/cache/tests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "42aa0b3364d312e7c6472258d8b0e9c0277fbf22",
+        "subject": "Fixed CVE-2026-48587 -- Ignored whitespace padding when checking Vary header values.",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-3328078a01f5",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/conf/__init__.py, django/conf/global_settings.py, django/core/signing.py. Do not edit source.",
+      "target_refs": [
+        "file://django/conf/__init__.py",
+        "file://django/conf/global_settings.py",
+        "file://django/core/signing.py"
+      ],
+      "required_facts": [
+        "tests/signed_cookies_tests/tests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "3328078a01f5268f9b8659f56fd28c5a2ed083dc",
+        "subject": "Refs CVE-2026-6873 -- Defaulted SIGNED_COOKIE_LEGACY_SALT_FALLBACK transitional setting to False.",
+        "changed_source_count": 3,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-4bbc27c8686f",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to django/db/backends/base/features.py, django/db/backends/base/operations.py, django/db/backends/mysql/operations.py, .... Do not edit source.",
+      "target_refs": [
+        "file://django/db/backends/base/features.py",
+        "file://django/db/backends/base/operations.py",
+        "file://django/db/backends/mysql/operations.py",
+        "file://django/db/backends/oracle/operations.py",
+        "file://django/db/backends/postgresql/features.py",
+        "file://django/db/models/lookups.py"
+      ],
+      "required_facts": [
+        "tests/lookup/tests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "4bbc27c8686f10f9556cef02dbfa9f5157fbcf56",
+        "subject": "Fixed #36492 -- Restored exact boolean lookup against literals on SQLite.",
+        "changed_source_count": 6,
+        "required_tests_are_a_lower_bound": true
+      }
+    }
+  ]
+}

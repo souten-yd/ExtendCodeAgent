@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import time
+from collections.abc import Iterable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,7 @@ from extendcodeagent.analysis import (
     JavaScriptTypeScriptCanonicalReferenceResolver,
     PathQuery,
     PythonCanonicalReferenceResolver,
+    SourceFileReferenceResolver,
 )
 from extendcodeagent.blueprint import (
     BlueprintElement,
@@ -24,15 +26,14 @@ from extendcodeagent.blueprint import (
 )
 from extendcodeagent.blueprint.storage import SqliteBlueprintRepository
 from extendcodeagent.context import (
+    DEFAULT_MAX_OBLIGATIONS,
     ContextProfile,
     ContextRequest,
-    EvidenceScope,
-    WeakLocalEvidenceRequest,
+    build_answer_envelope,
     build_context,
-    build_weak_local_evidence,
     context_package_json,
-    stable_evidence_envelope,
-    weak_local_evidence_json,
+    files_for,
+    files_naming,
 )
 from extendcodeagent.convergence import (
     ActualSnapshot,
@@ -81,6 +82,7 @@ from extendcodeagent.runtime import (
     RuntimeSignal,
     RuntimeSignalKind,
     TaskSignalCollector,
+    covering_tests,
 )
 from extendcodeagent.storage import SqliteGraphStore
 from extendcodeagent.strategy import (
@@ -861,24 +863,46 @@ class ProjectIntelligenceApplication:
         token_budget: int = 2_000,
         view: str = "detail",
         scope: str | None = None,
+        changing: bool = False,
+        executed_by_failing_tests: tuple[str, ...] = (),
+        requested_refs: tuple[str, ...] = (),
         prior_evidence_ids: tuple[str, ...] = (),
         unresolved_gaps: tuple[str, ...] = (),
     ) -> dict[str, Any]:
         snapshot = self._explicit_snapshot(CapabilityName.CONTEXT)
         if view == "envelope":
-            weak_package = build_weak_local_evidence(
+            if not target_refs:
+                # Asked without a target, the envelope used to come back empty, so a
+                # consumer holding only a description of the change had to spend a turn
+                # finding the file before it could ask anything.
+                target_refs = tuple(
+                    f"file://{path}"
+                    for path in files_for(objective, files_naming(snapshot, self.root))
+                )
+            return build_answer_envelope(
                 snapshot,
-                WeakLocalEvidenceRequest(
-                    objective,
-                    tuple(CanonicalRef(item) for item in target_refs),
-                    token_budget,
-                    min(self.max_items, 32),
-                    scope=EvidenceScope(scope) if scope is not None else None,
-                    prior_evidence_ids=prior_evidence_ids,
-                    unresolved_gaps=unresolved_gaps,
+                objective,
+                target_refs,
+                equivalents=lambda ref: self._reference_resolver().equivalents(ref, snapshot),
+                recommended_tests=lambda depth: self._recommended_test_refs(
+                    snapshot, target_refs, depth
                 ),
+                observed_tests=self._observed_test_refs,
+                read_source_span=self._read_source_span,
+                token_budget=token_budget,
+                # The two bounds have to agree. Obligations may produce 64 refs and a
+                # protected one is never dropped, so a cap of 32 was a bound the envelope
+                # could not keep and reported breaking on every retrieval case. Capping
+                # obligations at 32 instead cost sealed recall 1.00 -> 0.933: the facts
+                # are needed. The token budget is the real constraint, and it binds.
+                max_items=min(self.max_items, DEFAULT_MAX_OBLIGATIONS),
+                scope=scope,
+                changing=changing,
+                executed_by_failing_tests=frozenset(executed_by_failing_tests),
+                requested_refs=frozenset(requested_refs),
+                prior_evidence_ids=prior_evidence_ids,
+                unresolved_gaps=unresolved_gaps,
             )
-            return weak_local_evidence_json(weak_package, stable_evidence_envelope())
         if view != "detail":
             raise ValueError("view must be detail or envelope")
         context_package = build_context(
@@ -896,6 +920,45 @@ class ProjectIntelligenceApplication:
             depth=self.policy.depth(CapabilityName.CONTEXT),
             **context_package_json(context_package),
         )
+
+    def _recommended_test_refs(
+        self, snapshot: GraphSnapshot, target_refs: tuple[str, ...], max_depth: int
+    ) -> tuple[str, ...]:
+        try:
+            report = self._impact_report(
+                snapshot,
+                target_refs,
+                capability=CapabilityName.IMPACT,
+                max_depth=max_depth,
+            )
+        except CapabilityUnavailable:
+            return ()
+        return tuple(item.canonical_ref for item in report.recommended_tests)
+
+    def _observed_test_refs(self, refs: Iterable[str]) -> tuple[str, ...]:
+        candidates = tuple(CanonicalRef(value) for value in dict.fromkeys(refs))
+        if not candidates:
+            return ()
+        observations = self._ensure_store().observations(self.project, refs=candidates)
+        tests = {
+            node.canonical_ref.value
+            for node in self._snapshot(open_if_missing=False).nodes
+            if node.node_type == "test"
+        }
+        covering = covering_tests(observations, candidates, lambda ref: ref.value in tests)
+        return tuple(ref.value for ref in covering)
+
+    def _read_source_span(self, source_ref: str, start: int, end: int) -> str | None:
+        """Read one symbol's lines, refusing anything that escapes the project root."""
+
+        candidate = (self.root / source_ref).resolve()
+        if not candidate.is_relative_to(self.root) or not candidate.is_file():
+            return None
+        try:
+            lines = candidate.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            return None
+        return "\n".join(lines[max(0, start - 1) : end]) or None
 
     def create_blueprint(
         self,
@@ -1285,7 +1348,8 @@ class ProjectIntelligenceApplication:
         return self._twin
 
     def _reference_resolver(self) -> CompositeCanonicalReferenceResolver:
-        resolvers: list[CanonicalReferenceResolver] = []
+        # Language-neutral: a file reference resolves through source_ref, whatever wrote it.
+        resolvers: list[CanonicalReferenceResolver] = [SourceFileReferenceResolver()]
         if "python" in self.analyzers:
             resolvers.append(PythonCanonicalReferenceResolver())
         if "javascript_typescript" in self.analyzers:

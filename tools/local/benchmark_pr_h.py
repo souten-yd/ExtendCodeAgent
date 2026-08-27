@@ -32,9 +32,7 @@ def main(root: Path, changed_path: str) -> None:
             cold_ms = (time.perf_counter() - started) * 1000
             snapshot = twin.snapshot(project)
             tests = {
-                node.canonical_ref.value
-                for node in snapshot.nodes
-                if node.node_type == "test"
+                node.canonical_ref.value for node in snapshot.nodes if node.node_type == "test"
             }
             linked_tests = {
                 edge.source.value
@@ -81,8 +79,7 @@ def main(root: Path, changed_path: str) -> None:
                 "refresh_strategy": (
                     "full"
                     if any(
-                        item.code == "auto_full_refresh_selected"
-                        for item in refreshed.diagnostics
+                        item.code == "auto_full_refresh_selected" for item in refreshed.diagnostics
                     )
                     else "incremental"
                 ),

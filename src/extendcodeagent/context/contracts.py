@@ -64,6 +64,36 @@ class ContextPackage:
     excluded_count: int
 
 
+class EvidenceRole(StrEnum):
+    """Which part of an answer a piece of evidence belongs to.
+
+    A consumer asking "which tests must run?" should be able to read the tests without
+    filtering ninety-eight facts for them. The role travels with the ref so the delivered
+    payload can be grouped rather than flat.
+    """
+
+    TARGET = "target"
+    CONSUMER = "consumer"
+    TEST = "test"
+    SUPPORTING = "supporting"
+
+
+@dataclass(frozen=True, slots=True)
+class RequiredRef:
+    """A ref the envelope owes the caller, and whether it is owed or merely wanted.
+
+    `obligatory` is what "never rank away required truth" protects. Naming
+    `file://scaffold.py` expands to the twenty-nine symbols it defines, and marking all of
+    them required made protected evidence alone exceed the budget — at which point the mark
+    no longer says anything, because everything carries it. The file is owed; what it
+    happens to contain is a strong candidate that may be dropped for cost.
+    """
+
+    canonical_ref: CanonicalRef
+    role: EvidenceRole = EvidenceRole.SUPPORTING
+    obligatory: bool = True
+
+
 @dataclass(frozen=True, slots=True)
 class WeakLocalEvidenceRequest:
     """A bounded request for task-relevant evidence, never repository-wide by default."""
@@ -74,8 +104,14 @@ class WeakLocalEvidenceRequest:
     max_items: int = 12
     min_confidence: float = 0.0
     scope: EvidenceScope | None = None
+    required_refs: tuple[RequiredRef, ...] = ()
     prior_evidence_ids: tuple[str, ...] = ()
     unresolved_gaps: tuple[str, ...] = ()
+    #: Refs the failing tests were observed to execute. Ranked ahead of the other members of
+    #: a named file, because a symbol a test runs is the one the change is about, and
+    #: ordering the excerpts alone was not enough - a body cannot be attached to an item that
+    #: selection never admitted.
+    executed_refs: frozenset[str] = frozenset()
 
     def __post_init__(self) -> None:
         if not self.objective.strip():
@@ -96,6 +132,7 @@ class WeakLocalEvidenceRequest:
 class WeakLocalEvidenceItem:
     evidence_id: str
     canonical_ref: CanonicalRef
+    source_ref: str
     kind: str
     summary: str
     reason: str
@@ -103,6 +140,14 @@ class WeakLocalEvidenceItem:
     provenance_id: str
     status: str
     token_estimate: int
+    role: EvidenceRole = EvidenceRole.SUPPORTING
+    start_line: int | None = None
+    end_line: int | None = None
+    excerpt: str | None = None
+    #: Why this one, in the consumer's terms. A body arrives with no account of why it
+    #: was picked over the others in its file, and the reader spends turns working that
+    #: out — two of four, in one traced attempt.
+    chosen_because: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -126,3 +171,8 @@ class WeakLocalEvidencePackage:
     truncated: bool
     candidate_search_truncated: bool
     deterministic_resolution: bool
+    #: Questions already settled as "nothing there", at exactly this revision. An agent
+    #: that is not told searches for it again: traced over six Django changes, seventeen
+    #: of twenty-two baseline actions returned nothing and five repeated a search that
+    #: already had.
+    established_absences: tuple[str, ...] = ()

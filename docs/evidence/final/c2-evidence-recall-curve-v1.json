@@ -1,0 +1,361 @@
+{
+  "schema": 2,
+  "classification": "C2_CRITICAL_EVIDENCE_RECALL_CURVE",
+  "captured_at": "2026-08-27T12:49:27.801422+00:00",
+  "repository": "/home/souten/ExtendCodeAgent",
+  "source_revision": "5568e5625a1a5ec79d3e7ffbc502fe13701f9286",
+  "execution_scope": "local-only",
+  "model_execution": "NOT_RUN_DETERMINISTIC_MEASUREMENT",
+  "twin": {
+    "nodes": 2357,
+    "edges": 16984,
+    "source_directories": [
+      ".",
+      ".gitignore",
+      "AGENTS.md",
+      "LICENSE",
+      "README.md",
+      "adapters",
+      "docs",
+      "pyproject.toml",
+      "src",
+      "tests",
+      "tools"
+    ]
+  },
+  "budgets": [
+    1024,
+    2048,
+    4096,
+    8192,
+    16384,
+    32768
+  ],
+  "results": [
+    {
+      "case_id": "eca-symbol-001",
+      "task_class": "symbol_location",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "src/extendcodeagent/service/application.py",
+        "src/extendcodeagent/testing/__init__.py",
+        "src/extendcodeagent/testing/service.py",
+        "tests/unit/test_application_service.py",
+        "tests/unit/test_test_intelligence.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 1024,
+          "delivered_evidence_tokens": 1597,
+          "estimated_evidence_tokens": 1142,
+          "unused_budget_tokens": -118,
+          "selected_count": 56,
+          "candidate_count": 60,
+          "excluded_count": 4,
+          "required_fact_count": 5,
+          "raw_recall": 0.6,
+          "normalized_recall": 0.6,
+          "projection_burden": 0.0,
+          "missing_facts": [
+            "src/extendcodeagent/service/application.py",
+            "tests/unit/test_test_intelligence.py"
+          ]
+        },
+        {
+          "token_budget": 2048,
+          "delivered_evidence_tokens": 1748,
+          "estimated_evidence_tokens": 1291,
+          "unused_budget_tokens": 757,
+          "selected_count": 60,
+          "candidate_count": 60,
+          "excluded_count": 0,
+          "required_fact_count": 5,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        },
+        {
+          "token_budget": 4096,
+          "delivered_evidence_tokens": 2013,
+          "estimated_evidence_tokens": 1291,
+          "unused_budget_tokens": 2805,
+          "selected_count": 60,
+          "candidate_count": 60,
+          "excluded_count": 0,
+          "required_fact_count": 5,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        },
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 2013,
+          "estimated_evidence_tokens": 1291,
+          "unused_budget_tokens": 6901,
+          "selected_count": 60,
+          "candidate_count": 60,
+          "excluded_count": 0,
+          "required_fact_count": 5,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        },
+        {
+          "token_budget": 16384,
+          "delivered_evidence_tokens": 2013,
+          "estimated_evidence_tokens": 1291,
+          "unused_budget_tokens": 15093,
+          "selected_count": 60,
+          "candidate_count": 60,
+          "excluded_count": 0,
+          "required_fact_count": 5,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        },
+        {
+          "token_budget": 32768,
+          "delivered_evidence_tokens": 2013,
+          "estimated_evidence_tokens": 1291,
+          "unused_budget_tokens": 31477,
+          "selected_count": 60,
+          "candidate_count": 60,
+          "excluded_count": 0,
+          "required_fact_count": 5,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        }
+      ]
+    },
+    {
+      "case_id": "eca-impact-001",
+      "task_class": "change_impact",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "GraphAnalysisService._side_effects",
+        "GraphAnalysisService.assess_impact",
+        "GraphAnalysisService.trace_path",
+        "src/extendcodeagent/analysis/service.py",
+        "tests/architecture/test_capability_depth.py",
+        "tests/unit/test_graph_analysis.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 1024,
+          "delivered_evidence_tokens": 710,
+          "estimated_evidence_tokens": 479,
+          "unused_budget_tokens": 545,
+          "selected_count": 20,
+          "candidate_count": 20,
+          "excluded_count": 0,
+          "required_fact_count": 6,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        },
+        {
+          "token_budget": 2048,
+          "delivered_evidence_tokens": 845,
+          "estimated_evidence_tokens": 479,
+          "unused_budget_tokens": 1569,
+          "selected_count": 20,
+          "candidate_count": 20,
+          "excluded_count": 0,
+          "required_fact_count": 6,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        },
+        {
+          "token_budget": 4096,
+          "delivered_evidence_tokens": 845,
+          "estimated_evidence_tokens": 479,
+          "unused_budget_tokens": 3617,
+          "selected_count": 20,
+          "candidate_count": 20,
+          "excluded_count": 0,
+          "required_fact_count": 6,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        },
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 845,
+          "estimated_evidence_tokens": 479,
+          "unused_budget_tokens": 7713,
+          "selected_count": 20,
+          "candidate_count": 20,
+          "excluded_count": 0,
+          "required_fact_count": 6,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        },
+        {
+          "token_budget": 16384,
+          "delivered_evidence_tokens": 845,
+          "estimated_evidence_tokens": 479,
+          "unused_budget_tokens": 15905,
+          "selected_count": 20,
+          "candidate_count": 20,
+          "excluded_count": 0,
+          "required_fact_count": 6,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        },
+        {
+          "token_budget": 32768,
+          "delivered_evidence_tokens": 845,
+          "estimated_evidence_tokens": 479,
+          "unused_budget_tokens": 32289,
+          "selected_count": 20,
+          "candidate_count": 20,
+          "excluded_count": 0,
+          "required_fact_count": 6,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        }
+      ]
+    },
+    {
+      "case_id": "eca-tests-001",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "required_facts": [
+        "tests/architecture/test_verification_projection.py",
+        "tests/integration/test_verification_twin_projection.py",
+        "tests/unit/test_verification.py"
+      ],
+      "curve": [
+        {
+          "token_budget": 1024,
+          "delivered_evidence_tokens": 792,
+          "estimated_evidence_tokens": 559,
+          "unused_budget_tokens": 465,
+          "selected_count": 22,
+          "candidate_count": 22,
+          "excluded_count": 0,
+          "required_fact_count": 3,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        },
+        {
+          "token_budget": 2048,
+          "delivered_evidence_tokens": 792,
+          "estimated_evidence_tokens": 559,
+          "unused_budget_tokens": 1489,
+          "selected_count": 22,
+          "candidate_count": 22,
+          "excluded_count": 0,
+          "required_fact_count": 3,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        },
+        {
+          "token_budget": 4096,
+          "delivered_evidence_tokens": 1882,
+          "estimated_evidence_tokens": 559,
+          "unused_budget_tokens": 3537,
+          "selected_count": 22,
+          "candidate_count": 22,
+          "excluded_count": 0,
+          "required_fact_count": 3,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        },
+        {
+          "token_budget": 8192,
+          "delivered_evidence_tokens": 1882,
+          "estimated_evidence_tokens": 559,
+          "unused_budget_tokens": 7633,
+          "selected_count": 22,
+          "candidate_count": 22,
+          "excluded_count": 0,
+          "required_fact_count": 3,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        },
+        {
+          "token_budget": 16384,
+          "delivered_evidence_tokens": 1882,
+          "estimated_evidence_tokens": 559,
+          "unused_budget_tokens": 15825,
+          "selected_count": 22,
+          "candidate_count": 22,
+          "excluded_count": 0,
+          "required_fact_count": 3,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        },
+        {
+          "token_budget": 32768,
+          "delivered_evidence_tokens": 1882,
+          "estimated_evidence_tokens": 559,
+          "unused_budget_tokens": 32209,
+          "selected_count": 22,
+          "candidate_count": 22,
+          "excluded_count": 0,
+          "required_fact_count": 3,
+          "raw_recall": 1.0,
+          "normalized_recall": 1.0,
+          "projection_burden": 0.0,
+          "missing_facts": []
+        }
+      ]
+    }
+  ],
+  "by_pi_value_class": {
+    "high": {
+      "cases": 3,
+      "task_classes": [
+        "change_impact",
+        "symbol_location",
+        "test_selection"
+      ],
+      "best_normalized_recall_mean": 1.0,
+      "best_raw_recall_mean": 1.0,
+      "cases_fully_recovered": 3,
+      "max_delivered_evidence_tokens": 1748
+    }
+  },
+  "pooling_note": "Classes are reported separately on purpose. Pooling tasks PI can move with tasks it cannot is what made the B0b effect undetectable.",
+  "efficiency": {
+    "llm_calls_requested": 0,
+    "llm_calls_executed": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "model_wall_time_ms": 0
+  },
+  "seal": {
+    "algorithm": "sha256",
+    "canonical_payload": "237bb41beb3395b3cfb6aef1e9ed6d2cf730b544195655889fdc92348142bb75"
+  }
+}

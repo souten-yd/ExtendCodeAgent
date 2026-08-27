@@ -1,0 +1,459 @@
+{
+  "schema": 1,
+  "classification": "C2_RECALL_CORPUS",
+  "generated_at": "2026-08-26T04:13:29.527342+00:00",
+  "repository": {
+    "path": "<local checkout of psf/requests at the pinned commit>",
+    "commit": "1e5fad7433772b648fcbc921e2a79de5c4c6be8b",
+    "origin": "https://github.com/psf/requests.git",
+    "note": "Twin is built at this base; every case is drawn from a later commit.",
+    "reproduce": "git clone https://github.com/psf/requests.git && git -C requests checkout 1e5fad7433772b648fcbc921e2a79de5c4c6be8b, then set repository.path to that checkout"
+  },
+  "bounds": {
+    "required_tests": "lower bound - real changes under-test",
+    "changed_sources": "upper bound - real commits bundle unrelated edits"
+  },
+  "cases": [
+    {
+      "case_id": "pr-6fbfca90b602",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to requests/adapters.py. Do not edit source.",
+      "target_refs": [
+        "file://requests/adapters.py"
+      ],
+      "required_facts": [
+        "tests/test_lowlevel.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "6fbfca90b6029c22da90902e950edd9f6d37a838",
+        "subject": "Send only one Host header in chunked request",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-4ab2550d6676",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to requests/adapters.py. Do not edit source.",
+      "target_refs": [
+        "file://requests/adapters.py"
+      ],
+      "required_facts": [
+        "tests/test_lowlevel.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "4ab2550d667651e11229cf7e0489755fe6d998cc",
+        "subject": "Add test for default chunked Host header",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-99b3b492418d",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to requests/sessions.py, requests/utils.py. Do not edit source.",
+      "target_refs": [
+        "file://requests/sessions.py",
+        "file://requests/utils.py"
+      ],
+      "required_facts": [
+        "tests/test_requests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "99b3b492418d0751ca960178d274f89805095e4c",
+        "subject": "Refactor rebuild_proxies to allow proxy resolution (#5924)",
+        "changed_source_count": 2,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-2d2447e210cf",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to requests/utils.py. Do not edit source.",
+      "target_refs": [
+        "file://requests/utils.py"
+      ],
+      "required_facts": [
+        "tests/test_utils.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "2d2447e210cf0b9e8c7484bfc6f158de9b24c171",
+        "subject": "Catch AttributeError in utils.super_len (#5239)",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-658c10e84a46",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to requests/models.py. Do not edit source.",
+      "target_refs": [
+        "file://requests/models.py"
+      ],
+      "required_facts": [
+        "tests/test_requests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "658c10e84a461e5298199f20f17b510b90ac478a",
+        "subject": "Raise InvalidURL if hosts starts with '.' as was reported at #5367.",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-ef59aa0227bf",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to requests/utils.py. Do not edit source.",
+      "target_refs": [
+        "file://requests/utils.py"
+      ],
+      "required_facts": [
+        "tests/test_utils.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "ef59aa0227bf463f0ed3d752b26db9b3acc64afb",
+        "subject": "Move from urlparse to parse_url for prepending schemes",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-38f3f8ecb93c",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to requests/utils.py. Do not edit source.",
+      "target_refs": [
+        "file://requests/utils.py"
+      ],
+      "required_facts": [
+        "tests/test_utils.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "38f3f8ecb93cadfac03a6b7b3173018ac829d0cf",
+        "subject": "Fix auth parsing for proxies",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-fa1b0a367abc",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to requests/exceptions.py. Do not edit source.",
+      "target_refs": [
+        "file://requests/exceptions.py"
+      ],
+      "required_facts": [
+        "tests/test_requests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "fa1b0a367abc8488542f7ce7c02a3614ad8aa09d",
+        "subject": "Initialize JsonDecodeError before initializing IOError (#6036)",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-95f456733656",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to requests/models.py. Do not edit source.",
+      "target_refs": [
+        "file://requests/models.py"
+      ],
+      "required_facts": [
+        "tests/test_requests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "95f456733656ed93645ff0250bfa54f6d256f6fe",
+        "subject": "Wrap urllib3's SSLError as requests' SSLError (#6057)",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-79c4a017fe34",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to requests/sessions.py. Do not edit source.",
+      "target_refs": [
+        "file://requests/sessions.py"
+      ],
+      "required_facts": [
+        "tests/test_requests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "79c4a017fe341fb989d3a7876cf4e44b87601b58",
+        "subject": "Fix environment CA Bundle resolution",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-8bce583b9547",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to requests/_internal_utils.py, requests/adapters.py, requests/compat.py, .... Do not edit source.",
+      "target_refs": [
+        "file://requests/_internal_utils.py",
+        "file://requests/adapters.py",
+        "file://requests/compat.py",
+        "file://requests/help.py",
+        "file://requests/models.py",
+        "file://requests/sessions.py",
+        "file://requests/utils.py",
+        "file://setup.py"
+      ],
+      "required_facts": [
+        "tests/test_requests.py",
+        "tests/test_utils.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "8bce583b9547c7b82d44c8e97f37cf9a16cbe758",
+        "subject": "Farewell, sweet Concorde!",
+        "changed_source_count": 8,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-2d5517682b3b",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to requests/models.py. Do not edit source.",
+      "target_refs": [
+        "file://requests/models.py"
+      ],
+      "required_facts": [
+        "tests/test_lowlevel.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "2d5517682b3b38547634d153cea43d48fbc8cdb5",
+        "subject": "Fix inconsistent exception for JSONDecode error (#6097)",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-2a6f290bc093",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to requests/__init__.py, requests/__version__.py, requests/_internal_utils.py, .... Do not edit source.",
+      "target_refs": [
+        "file://requests/__init__.py",
+        "file://requests/__version__.py",
+        "file://requests/_internal_utils.py",
+        "file://requests/adapters.py",
+        "file://requests/api.py",
+        "file://requests/auth.py",
+        "file://requests/certs.py",
+        "file://requests/compat.py",
+        "file://requests/cookies.py",
+        "file://requests/exceptions.py",
+        "file://requests/help.py",
+        "file://requests/hooks.py",
+        "file://requests/models.py",
+        "file://requests/packages.py",
+        "file://requests/sessions.py",
+        "file://requests/status_codes.py",
+        "file://requests/structures.py",
+        "file://requests/utils.py",
+        "file://setup.py"
+      ],
+      "required_facts": [
+        "tests/test_help.py",
+        "tests/test_hooks.py",
+        "tests/test_lowlevel.py",
+        "tests/test_requests.py",
+        "tests/test_structures.py",
+        "tests/test_testserver.py",
+        "tests/test_utils.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "2a6f290bc09324406708a4d404a88a45d848ddf9",
+        "subject": "Add automatic code formatting to Requests (#6095)",
+        "changed_source_count": 19,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-210095fd08f7",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to requests/utils.py. Do not edit source.",
+      "target_refs": [
+        "file://requests/utils.py"
+      ],
+      "required_facts": [
+        "tests/test_utils.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "210095fd08f790a1ce640354a91c1a264a291360",
+        "subject": "Tolerate bad registry entries in Windows proxy settings (#6149)",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-e36f34597ca9",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to requests/_internal_utils.py, requests/utils.py. Do not edit source.",
+      "target_refs": [
+        "file://requests/_internal_utils.py",
+        "file://requests/utils.py"
+      ],
+      "required_facts": [
+        "tests/test_requests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "e36f34597ca96c40dbb81d63a8fe9ac0860b8dc3",
+        "subject": "Add valdation for header name (#6154)",
+        "changed_source_count": 2,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-7f694b79e114",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to requests/_internal_utils.py, requests/utils.py. Do not edit source.",
+      "target_refs": [
+        "file://requests/_internal_utils.py",
+        "file://requests/utils.py"
+      ],
+      "required_facts": [
+        "tests/test_requests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "7f694b79e114c06fac5ec06019cada5a61e5570f",
+        "subject": "Allow str/bytes subclasses to be used as header parts",
+        "changed_source_count": 2,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-74ea7cf7a6a2",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to requests/sessions.py. Do not edit source.",
+      "target_refs": [
+        "file://requests/sessions.py"
+      ],
+      "required_facts": [
+        "tests/test_requests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "74ea7cf7a6a27a4eeb2ae24e162bcc942a6706d5",
+        "subject": "Merge pull request from GHSA-j8r2-6x86-q33q",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-6e5b15d542a4",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to requests/sessions.py. Do not edit source.",
+      "target_refs": [
+        "file://requests/sessions.py"
+      ],
+      "required_facts": [
+        "tests/test_requests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "6e5b15d542a4e85945fd72066bb6cecbc3a82191",
+        "subject": "Fix linting issues",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-8112fcc7beb1",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to requests/adapters.py, requests/auth.py, requests/models.py, .... Do not edit source.",
+      "target_refs": [
+        "file://requests/adapters.py",
+        "file://requests/auth.py",
+        "file://requests/models.py",
+        "file://requests/sessions.py",
+        "file://requests/utils.py"
+      ],
+      "required_facts": [
+        "tests/test_requests.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "8112fcc7beb15e1cdc66180c10a3290174866828",
+        "subject": "Pre commit update (#6498)",
+        "changed_source_count": 5,
+        "required_tests_are_a_lower_bound": true
+      }
+    },
+    {
+      "case_id": "pr-f8bec2f7ca9d",
+      "task_class": "test_selection",
+      "pi_value_class": "high",
+      "split": "tuning",
+      "objective": "Select the existing tests that must run for a change to setup.py. Do not edit source.",
+      "target_refs": [
+        "file://setup.py"
+      ],
+      "required_facts": [
+        "tests/test_lowlevel.py",
+        "tests/test_requests.py",
+        "tests/test_testserver.py"
+      ],
+      "metadata": {
+        "oracle": "merged_change",
+        "commit": "f8bec2f7ca9d7c03981a12ff8866a9b3923f1699",
+        "subject": "Fix CI and build failures (#7190)",
+        "changed_source_count": 1,
+        "required_tests_are_a_lower_bound": true
+      }
+    }
+  ]
+}

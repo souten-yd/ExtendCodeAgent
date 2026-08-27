@@ -493,7 +493,9 @@ def test_weak_local_tool_views_are_compact_and_progressive(tmp_path: Path) -> No
             ("py://service#leaf",),
             view="envelope",
             scope="neighborhood",
-            prior_evidence_ids=tuple(first["task_evidence"]["selected_evidence_ids"]),
+            # Built from the items: the envelope carries each id once, on the item it
+            # belongs to, rather than again as a list of its own.
+            prior_evidence_ids=tuple(str(item["id"]) for item in first["task_evidence"]["items"]),
             unresolved_gaps=("direct caller missing",),
         )
 

@@ -1,0 +1,129 @@
+{
+  "classification": "C2_MINIMUM_WORKING_SET_DIAGNOSTIC",
+  "note": "Diagnostic. The sealed local-practical arm is port-8090; this endpoint is a different route and is not recorded as B0b/C2 evidence.",
+  "model": "Qwen3.8-27B",
+  "results": [
+    {
+      "commit": "89992954ec71",
+      "subject": "add app.query route decorator",
+      "from_items": 27,
+      "from_tokens": 8005,
+      "to_items": 27,
+      "to_tokens": 8005,
+      "steps": [
+        {
+          "items": 27,
+          "tokens": 8005,
+          "passed": true
+        },
+        {
+          "items": 13,
+          "tokens": 4807,
+          "passed": false
+        }
+      ],
+      "kept": [
+        "src/flask/sansio/scaffold.py",
+        null,
+        null,
+        "Scaffold.__init__",
+        "Scaffold.__repr__",
+        "Scaffold._check_setup_finished",
+        "Scaffold._get_exc_class_and_code",
+        "Scaffold._method_route",
+        "Scaffold.add_url_rule",
+        "Scaffold.after_request",
+        "Scaffold.before_request",
+        "Scaffold.context_processor",
+        "Scaffold.delete",
+        "Scaffold.endpoint",
+        "Scaffold.errorhandler",
+        "Scaffold.get",
+        "Scaffold.has_static_folder",
+        "Scaffold.jinja_loader",
+        "Scaffold.patch",
+        "Scaffold.post",
+        "Scaffold.register_error_handler",
+        "Scaffold.put",
+        "Scaffold.route",
+        "Scaffold.static_folder",
+        "Scaffold.static_url_path",
+        "Scaffold.teardown_request",
+        "_endpoint_from_view_func"
+      ]
+    },
+    {
+      "commit": "de8429ffda8c",
+      "subject": "Fix IPv6 session transactions",
+      "from_items": 17,
+      "from_tokens": 5857,
+      "to_items": 8,
+      "to_tokens": 3393,
+      "steps": [
+        {
+          "items": 17,
+          "tokens": 5857,
+          "passed": true
+        },
+        {
+          "items": 8,
+          "tokens": 3393,
+          "passed": true
+        },
+        {
+          "items": 4,
+          "tokens": 1389,
+          "passed": false
+        }
+      ],
+      "kept": [
+        "src/flask/testing.py",
+        null,
+        "EnvironBuilder",
+        "EnvironBuilder.__init__",
+        "FlaskClient",
+        "FlaskClient.__init__",
+        "FlaskClient._copy_environ",
+        "FlaskClient._request_from_builder_args"
+      ]
+    },
+    {
+      "commit": "e82db2ca3a22",
+      "subject": "fix provide_automatic_options override",
+      "from_items": 27,
+      "from_tokens": 8010,
+      "to_items": 6,
+      "to_tokens": 2765,
+      "steps": [
+        {
+          "items": 27,
+          "tokens": 8010,
+          "passed": true
+        },
+        {
+          "items": 13,
+          "tokens": 4333,
+          "passed": true
+        },
+        {
+          "items": 6,
+          "tokens": 2765,
+          "passed": true
+        },
+        {
+          "items": 3,
+          "tokens": 354,
+          "passed": false
+        }
+      ],
+      "kept": [
+        "src/flask/sansio/app.py",
+        null,
+        null,
+        "App._check_setup_finished",
+        "App.add_url_rule",
+        "App.__init__"
+      ]
+    }
+  ]
+}
