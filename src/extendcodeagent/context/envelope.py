@@ -65,12 +65,14 @@ def build_answer_envelope(
                 objective,
                 scope=resolved.value,
                 changing=changing,
+                executed_refs=executed_by_failing_tests,
                 equivalents=equivalents,
                 recommended_tests=recommended_tests,
                 observed_tests=observed_tests,
             ),
             prior_evidence_ids=prior_evidence_ids,
             unresolved_gaps=unresolved_gaps,
+            executed_refs=executed_by_failing_tests,
         ),
     )
     # A change names files; a question names symbols. Handing a change the file's symbol

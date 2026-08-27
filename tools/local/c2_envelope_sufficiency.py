@@ -43,35 +43,53 @@ def _git(repo: Path, *args: str) -> str:
 
 
 def _functions(source: str) -> dict[str, tuple[int, int]]:
+    """Functions at module level and inside classes, but not inside other functions.
+
+    `ast.walk` reaches nested definitions, and counting them said `generator` was missing
+    from an envelope that had already sent `stream_with_context` - the function it is written
+    inside. A body that arrives inside its enclosing one has arrived.
+    """
+
     try:
         tree = ast.parse(source)
     except SyntaxError:
         return {}
-    return {
-        node.name: (node.lineno, node.end_lineno or node.lineno)
-        for node in ast.walk(tree)
-        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
-    }
+    found: dict[str, tuple[int, int]] = {}
+
+    def visit(body: list[ast.stmt]) -> None:
+        for node in body:
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+                found[node.name] = (node.lineno, node.end_lineno or node.lineno)
+            elif isinstance(node, ast.ClassDef):
+                visit(node.body)
+
+    visit(tree.body)
+    return found
 
 
-def touched_functions(repo: Path, sha: str, path: str) -> set[str]:
-    """Functions whose body the commit changed, and whether it changed anything outside one."""
+def touched_functions(repo: Path, sha: str, path: str) -> tuple[set[str], set[str]]:
+    """Functions the commit changed, and which of those it introduced.
+
+    The two are separated because an envelope built at the base can only ever carry the
+    first: a function the commit adds is not there to be carried.
+    """
 
     try:
         after, before = _git(repo, "show", f"{sha}:{path}"), _git(repo, "show", f"{sha}~1:{path}")
     except subprocess.CalledProcessError:
-        return set()
+        return set(), set()
     now, then = _functions(after), _functions(before)
     after_lines, before_lines = after.splitlines(), before.splitlines()
-    changed = set()
+    changed, added = set(), set()
     for name, (start, end) in now.items():
         if name not in then:
             changed.add(name)
+            added.add(name)
             continue
         old_start, old_end = then[name]
         if after_lines[start - 1 : end] != before_lines[old_start - 1 : old_end]:
             changed.add(name)
-    return changed
+    return changed, added
 
 
 def _span_of(repo: Path, paths: tuple[str, ...], name: str) -> int | None:
@@ -110,11 +128,19 @@ def main() -> int:
             if not reverted:
                 continue
             wanted: set[str] = set()
+            added: set[str] = set()
             for path in reverted:
-                if not is_test_path(path):
-                    wanted |= touched_functions(args.repo, sha, path)
+                if is_test_path(path):
+                    continue
+                changed, new = touched_functions(args.repo, sha, path)
+                wanted |= changed
+                added |= new
+            # A function the commit adds does not exist at the base, so no envelope built
+            # there can carry it. Counting that as a delivery failure blamed the envelope for
+            # the shape of the task: three of the five "not found" were new functions.
+            wanted -= added
             if not wanted:
-                # Module-level only: no function body to carry, so the question does not apply.
+                # Only additions or module-level lines: nothing existed at the base to carry.
                 rows.append({"sha": sha, "subject": result["subject"], "applicable": False})
                 continue
             envelope = json.loads(build_envelope(args.repo, case, reverted, executed))

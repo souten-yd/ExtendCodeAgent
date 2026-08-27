@@ -560,11 +560,16 @@ def _answer_candidates(
         (
             item.canonical_ref.value,
             f"required:{item.role.value}" if item.obligatory else f"in_file:{item.role.value}",
-            9_500 if item.obligatory else 9_400,
+            # A ref a failing test executes outranks the other members of the file it shares.
+            # Without this `get_signing_serializer` was never admitted at all, so ordering the
+            # excerpts could not help it: two files expanded, sixty-four obligations between
+            # them, and the one the test actually runs did not make the cut.
+            (9_500 if item.obligatory else 9_400)
+            + (50 if item.canonical_ref.value in request.executed_refs else 0),
         )
         for item in request.required_refs
     )
-    for value, reason, score in ordered:
+    for value, reason, score in sorted(ordered, key=lambda entry: -entry[2]):
         for ref in resolve(value):
             if ref in seen:
                 continue

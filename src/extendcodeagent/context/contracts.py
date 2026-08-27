@@ -107,6 +107,11 @@ class WeakLocalEvidenceRequest:
     required_refs: tuple[RequiredRef, ...] = ()
     prior_evidence_ids: tuple[str, ...] = ()
     unresolved_gaps: tuple[str, ...] = ()
+    #: Refs the failing tests were observed to execute. Ranked ahead of the other members of
+    #: a named file, because a symbol a test runs is the one the change is about, and
+    #: ordering the excerpts alone was not enough - a body cannot be attached to an item that
+    #: selection never admitted.
+    executed_refs: frozenset[str] = frozenset()
 
     def __post_init__(self) -> None:
         if not self.objective.strip():

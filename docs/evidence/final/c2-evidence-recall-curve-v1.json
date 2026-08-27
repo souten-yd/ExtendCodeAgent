@@ -1,14 +1,14 @@
 {
   "schema": 2,
   "classification": "C2_CRITICAL_EVIDENCE_RECALL_CURVE",
-  "captured_at": "2026-08-27T08:08:55.762414+00:00",
+  "captured_at": "2026-08-27T08:21:42.250431+00:00",
   "repository": "/home/souten/ExtendCodeAgent",
-  "source_revision": "6870854604830a1d3e1e454b1750dccc5ba4551b",
+  "source_revision": "2d437376310d9f8c40816d9ca8c53d7481c648df",
   "execution_scope": "local-only",
   "model_execution": "NOT_RUN_DETERMINISTIC_MEASUREMENT",
   "twin": {
     "nodes": 2313,
-    "edges": 16672,
+    "edges": 16673,
     "source_directories": [
       ".",
       ".gitignore",
@@ -47,17 +47,20 @@
       "curve": [
         {
           "token_budget": 1024,
-          "delivered_evidence_tokens": 2088,
-          "estimated_evidence_tokens": 1291,
-          "unused_budget_tokens": -267,
-          "selected_count": 60,
+          "delivered_evidence_tokens": 1906,
+          "estimated_evidence_tokens": 1142,
+          "unused_budget_tokens": -118,
+          "selected_count": 56,
           "candidate_count": 60,
-          "excluded_count": 0,
+          "excluded_count": 4,
           "required_fact_count": 5,
-          "raw_recall": 1.0,
-          "normalized_recall": 1.0,
+          "raw_recall": 0.6,
+          "normalized_recall": 0.6,
           "projection_burden": 0.0,
-          "missing_facts": []
+          "missing_facts": [
+            "src/extendcodeagent/service/application.py",
+            "tests/unit/test_test_intelligence.py"
+          ]
         },
         {
           "token_budget": 2048,
@@ -340,7 +343,7 @@
       "best_normalized_recall_mean": 1.0,
       "best_raw_recall_mean": 1.0,
       "cases_fully_recovered": 3,
-      "max_delivered_evidence_tokens": 2088
+      "max_delivered_evidence_tokens": 2079
     }
   },
   "pooling_note": "Classes are reported separately on purpose. Pooling tasks PI can move with tasks it cannot is what made the B0b effect undetectable.",
@@ -353,6 +356,6 @@
   },
   "seal": {
     "algorithm": "sha256",
-    "canonical_payload": "826d582b74810b35a7f2456fd15edb4cd23db805e39cb3cc3ec58f79bd4679bc"
+    "canonical_payload": "63ff5a13e9b6a7df4ef0c0fc0022a3288c54b66c7346b3c18689a6490ac2c7b8"
   }
 }

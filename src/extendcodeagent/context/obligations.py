@@ -57,6 +57,7 @@ def obligation_refs(
     recommended_tests: RecommendedTests,
     observed_tests: ObservedTests | None = None,
     changing: bool = False,
+    executed_refs: frozenset[str] = frozenset(),
     max_obligations: int = DEFAULT_MAX_OBLIGATIONS,
 ) -> tuple[RequiredRef, ...]:
     if not target_refs:
@@ -117,6 +118,10 @@ def obligation_refs(
 
     return _by_role_budget(
         from_expansion,
+        # Ranked here, not downstream. A ref cut at this bound never becomes a candidate, so
+        # re-ordering candidates could not rescue `get_signing_serializer`: the budget was
+        # spent on the other members of two expanded files before it was reached.
+        executed_refs,
         # A change is told which tests fail; it has to be told what the code currently is.
         # Splitting the budget evenly gave 21 of 32 protected slots to tests that the task
         # statement had already named, and the source to be written was pushed out.
@@ -143,6 +148,7 @@ CHANGE_TEST_LIMIT = 2
 
 def _by_role_budget(
     from_expansion: set[str],
+    executed_refs: frozenset[str],
     changing: bool,
     roles: tuple[tuple[EvidenceRole, list[str]], ...],
     budget: int,
@@ -155,6 +161,11 @@ def _by_role_budget(
     reached — the envelope answered "which tests?" without a single test in it.
     """
 
+    # Not ranked by execution. Sorting these so executed refs come first was tried and cost
+    # a case: the failing tests run 103 symbols where the obligation budget is 64, so
+    # "executed first" replaces the obligation set with most of the framework and drops the
+    # members of the changed file that were being carried. Coverage is a useful ordering for
+    # bodies, where the set competes only with itself, and too wide a net for admission.
     populated = [(role, values) for role, values in roles if values]
     if not populated:
         return ()
