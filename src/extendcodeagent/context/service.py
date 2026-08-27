@@ -285,7 +285,11 @@ def attach_excerpts(
     read_lines: SourceReader,
     *,
     named_refs: frozenset[str] = frozenset(),
-    max_lines: int = 120,
+    # A second guard on top of the budget, and it was cutting real work: `Flask.url_for` is
+    # 124 lines and `create_url_adapter` 122, both just past a limit that exists to stop one
+    # body from eating the allowance. Now that a body is costed at what it takes to send,
+    # the budget already stops that, so this only excludes what no budget would fit.
+    max_lines: int = 400,
     token_budget: int = 4_096,
     expand_files: bool = False,
 ) -> WeakLocalEvidencePackage:
@@ -318,15 +322,27 @@ def attach_excerpts(
     def was_asked_for(item: WeakLocalEvidenceItem) -> bool:
         return item.canonical_ref.value in named_refs or item.source_ref in named_paths
 
+    def span_of(item: WeakLocalEvidenceItem) -> int:
+        if item.start_line is None or item.end_line is None:
+            return 0
+        return item.end_line - item.start_line + 1
+
+    # File order. Shortest-first was tried, on the reasoning that it carries the most bodies
+    # for the allowance; measured, it made things worse - 6 of 17 changes fully carried fell
+    # to 4, because the shortest members of a class are one-line properties and `__repr__`,
+    # and spending the allowance on them crowds out the substantial function a change
+    # actually touches.
+    order = range(len(package.items))
+
     spent = 0
-    items: list[WeakLocalEvidenceItem] = []
-    for item in package.items:
-        excerpt = None
+    excerpts: dict[int, str] = {}
+    for index in order:
+        item = package.items[index]
         if (
             was_asked_for(item)
             and item.start_line is not None
             and item.end_line is not None
-            and item.end_line - item.start_line + 1 <= max_lines
+            and span_of(item) <= max_lines
         ):
             text = read_lines(item.source_ref, item.start_line, item.end_line)
             # What it costs to send, not what the text weighs. An item carrying source is
@@ -340,10 +356,15 @@ def attach_excerpts(
                 else 0
             )
             if text and spent + cost <= token_budget:
-                excerpt = text
+                excerpts[index] = text
                 spent += cost
-        items.append(replace(item, excerpt=excerpt) if excerpt else item)
-    return replace(package, items=tuple(items))
+    return replace(
+        package,
+        items=tuple(
+            replace(item, excerpt=excerpts[index]) if index in excerpts else item
+            for index, item in enumerate(package.items)
+        ),
+    )
 
 
 def attach_exemplar(

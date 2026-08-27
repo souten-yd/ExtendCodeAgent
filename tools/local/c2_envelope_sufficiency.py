@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import inspect
 import json
 import subprocess
 import sys
@@ -25,6 +26,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from c2_codegen_bench import Case, break_repository, build_envelope  # noqa: E402
 from c2_revert_oracle import is_test_path  # noqa: E402
+
+from extendcodeagent.context import attach_excerpts  # noqa: E402
+
+# Read, not repeated: this said "over the 120-line limit" after the limit became 400.
+EXCERPT_LINE_LIMIT = inspect.signature(attach_excerpts).parameters["max_lines"].default
 
 
 def _git(repo: Path, *args: str) -> str:
@@ -63,6 +69,20 @@ def touched_functions(repo: Path, sha: str, path: str) -> set[str]:
     return changed
 
 
+def _span_of(repo: Path, paths: tuple[str, ...], name: str) -> int | None:
+    """How many lines the function occupies in the working tree, or None if it is not there."""
+
+    for path in paths:
+        try:
+            source = (repo / path).read_text(errors="replace")
+        except OSError:
+            continue
+        found = _functions(source).get(name)
+        if found:
+            return found[1] - found[0] + 1
+    return None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", type=Path, required=True)
@@ -97,6 +117,21 @@ def main() -> int:
                 if item.get("source")
             }
             named = {str(item.get("summary", "")).rsplit(".", 1)[-1] for item in items}
+            # Why each missing body is missing. `lines` is not emitted for a role-shaped
+            # item, so the span has to come from the source, not from the payload - reading
+            # it from the payload said every target had no span and sent me after the wrong
+            # cause twice.
+            reasons: dict[str, str] = {}
+            for name in sorted(wanted - with_source):
+                span = _span_of(args.repo, reverted, name)
+                if span is None:
+                    reasons[name] = "not found in the changed files"
+                elif span > EXCERPT_LINE_LIMIT:
+                    reasons[name] = f"{span} lines, over the {EXCERPT_LINE_LIMIT}-line limit"
+                elif name not in named:
+                    reasons[name] = "not selected into the envelope"
+                else:
+                    reasons[name] = "selected, and the excerpt allowance ran out"
             rows.append(
                 {
                     "sha": sha,
@@ -106,6 +141,7 @@ def main() -> int:
                     "carried_as_source": sorted(wanted & with_source),
                     "named_only": sorted((wanted & named) - with_source),
                     "absent": sorted(wanted - named),
+                    "why_missing": reasons,
                     "items": len(items),
                     "items_with_source": sum(1 for item in items if item.get("source")),
                 }
@@ -119,7 +155,7 @@ def main() -> int:
         _git(args.repo, "checkout", "-q", "--force", original)
 
     applicable = [r for r in rows if r["applicable"]]
-    complete = [r for r in applicable if not r["named_only"] and not r["absent"]]
+    complete = [r for r in applicable if not r.get("why_missing")]
     partial = [r for r in applicable if r["carried_as_source"] and r not in complete]
     result = {
         "classification": "C2_ENVELOPE_SUFFICIENCY",

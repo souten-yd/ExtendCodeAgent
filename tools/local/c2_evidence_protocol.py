@@ -25,9 +25,7 @@ DEFAULT_OUTPUT = ROOT / "docs/evidence/final/c2-weak-local-protocol-preflight-v1
 TASK_IDS = ("eca-symbol-001", "eca-impact-001", "eca-tests-001")
 TARGETS = {
     "eca-symbol-001": ("py://src.extendcodeagent.testing.service#select_tests",),
-    "eca-impact-001": (
-        "py://src.extendcodeagent.analysis.service#_edge_meets_confidence",
-    ),
+    "eca-impact-001": ("py://src.extendcodeagent.analysis.service#_edge_meets_confidence",),
     "eca-tests-001": (
         "py://src.extendcodeagent.verification.service#derive_required_verification_set",
     ),
@@ -79,9 +77,7 @@ def _policy() -> CapabilityPolicy:
             }
         },
     )
-    return CapabilityPolicy.from_config(
-        ConfigResolver().resolve(layer).project_intelligence
-    )
+    return CapabilityPolicy.from_config(ConfigResolver().resolve(layer).project_intelligence)
 
 
 def _pretty_chars(value: object) -> int:
@@ -169,9 +165,7 @@ def evaluate() -> dict[str, Any]:
                     )
                     expansion = {
                         "scope": expanded["task_evidence"]["scope"],
-                        "prior_evidence_ids": len(
-                            expanded["task_evidence"]["prior_evidence_ids"]
-                        ),
+                        "prior_evidence_ids": len(expanded["task_evidence"]["prior_evidence_ids"]),
                         "selected_count": expanded["metrics"]["selected_count"],
                         "candidate_count": expanded["metrics"]["candidate_count"],
                         "candidate_search_truncated": expanded["metrics"][
@@ -199,9 +193,7 @@ def evaluate() -> dict[str, Any]:
                         "scope": evidence["scope"],
                         "candidate_count": metrics["candidate_count"],
                         "selected_count": metrics["selected_count"],
-                        "candidate_search_truncated": metrics[
-                            "candidate_search_truncated"
-                        ],
+                        "candidate_search_truncated": metrics["candidate_search_truncated"],
                         "estimated_evidence_tokens": metrics["estimated_evidence_tokens"],
                         "token_budget": metrics["token_budget"],
                         "unresolved_evidence_gaps": evidence["unresolved_evidence_gaps"],
