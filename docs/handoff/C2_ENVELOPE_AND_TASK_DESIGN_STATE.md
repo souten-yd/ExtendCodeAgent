@@ -11,9 +11,12 @@ Every number here comes from a deterministic tool in `tools/local/` and can be r
 | | before | after |
 |---|---|---|
 | changed functions carried as source (flask, 16 applicable) | 6 of 17 | **12 of 16** |
+| the same on httpx (24 applicable) | — | **19 of 24** |
 | bodies cut for want of excerpt allowance | 13 | **0** |
 | a change envelope's composition | — | 91.4% source, 1.1% names, 7.5% frame |
-| tokens the needed bodies actually require | — | **1,932 at most**, 1,218 median, against 8,192 |
+| tokens the needed bodies actually require, flask | — | **1,932 at most**, 1,218 median |
+| the same on httpx | — | 6,748 at most, 1,371 median |
+| changes whose bodies fit in 8,192 | — | **48 of 48**, both repositories |
 | an unbounded envelope | — | 17,917 at most; 8,192 → 18,000 saturates |
 | protocol item bound | 32 | **64** (recall 0.361→0.521 flask, 0.483→0.621 django) |
 | `selected_evidence_ids` | 337 tokens | removed; ids travel on the items |
@@ -30,14 +33,32 @@ Sealed recall held at 1.00 throughout, and the preflight's six conditions pass.
   Checked both ways on three changes: the author's implementation satisfies 4 of 4, and an
   implementation written here from the description, shaped differently, satisfies the same 4.
 
-## Not established
+## The envelope is read, and the content is what does it
 
-**Whether an agent given the envelope does better than one without it.** Every comparison
-this session either measured a superseded implementation, or had one arm inert, or ran on a
-task shape that hands over the location — the part the envelope is for.
+Ten flask changes, one frozen implementation, three arms. The control is the same shape,
+built by the same path, sized within 23 tokens, and about another case.
 
-The one clean data point is a single local-model case where the envelope converted a failure
-into a pass (8 turns against 14 and no pass). One case.
+| arm | passed | turns | edits | greps |
+|---|---|---|---|---|
+| the real envelope | **3 of 10** | 11.8 | 1.1 | **3.1** |
+| no envelope | 1 of 10 | 13.9 | 1.3 | 4.4 |
+| **an envelope about something else** | **0 of 10** | 14.0 | **0.7** | 4.2 |
+
+Three beats zero at the same prompt length, so the content is what helps rather than the
+length. And the wrong envelope scores below no envelope at all: wrong evidence is worse than
+none, and its arm attempted the fewest edits, which is what being misdirected looks like.
+
+The real envelope also searched least, 3.1 against 4.4, which is the mechanism doing what it
+was built to do. It spent the most tokens - 17,262 against 12,837 - and that is the price of
+the three runs that got somewhere.
+
+Diagnostic route, not sealed evidence: `docs/evidence/c2-envelope-causality-diagnostic.json`.
+
+## Still not established
+
+Three of ten is where the local model gets to. Whether a stronger one, or a better envelope,
+moves that is open, and so is everything about the feature-task format, where no comparison
+has yet run.
 
 ## Bounds that are not defects
 
@@ -47,7 +68,9 @@ into a pass (8 turns against 14 and no pass). One case.
 - **5 of 15 descriptions locate nothing.** Two name only what the change introduces —
   `TRUSTED_HOSTS` does not exist yet — which is Blueprint's domain, not the Twin's. The other
   three name attributes and class variables, which the graph does not index.
-- **One repository.** Everything above is flask. httpx is rebuilt and unmeasured.
+- **Two repositories now.** flask and httpx agree: 75% and 79% of changes carry every
+  body, and the runtime-checkable sufficiency test agrees with the oracle 81% and 79% of
+  the time. Nothing here is flask-shaped.
 
 ## Where the disagreement was
 
@@ -59,5 +82,8 @@ else, so there was almost nothing safe to exclude.
 
 ## Next, in the order that survives being wrong
 
-1. Measure whether any of this holds on httpx. Everything rests on one repository.
-2. Only then, spend a model run — and freeze the implementation while it is in flight.
+1. Minimise the context of the three runs that succeeded, by deletion, until they stop
+   succeeding. That gives the working set a task actually needed rather than the one it was
+   given, and it is the only way to tell which of the 17,262 tokens did anything.
+2. Whether a wrong envelope hurts because of what it says or because of what it omits: a
+   control that is empty at the same length would separate those.
