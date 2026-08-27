@@ -616,7 +616,7 @@ def main() -> int:
     parser.add_argument("--budget", type=int, default=8_192)
     parser.add_argument(
         "--arms",
-        choices=("both", "pi", "baseline"),
+        choices=("both", "pi", "baseline", "wrong"),
         default="both",
         help=(
             "run one arm alone, to ask whether it converges given more budget rather "
@@ -628,6 +628,7 @@ def main() -> int:
 
     original = _git(args.repo, "rev-parse", "HEAD").strip()
     rows: list[dict[str, Any]] = []
+    previous_envelope: str | None = None
     try:
         for case in cases_from(args.findings, args.limit):
             # Coverage first: it is only meaningful while the tests still pass.
@@ -658,9 +659,21 @@ def main() -> int:
                 return build_envelope(args.repo, _case, _rev, named)
 
             row: dict[str, Any] = {"case_id": case.case_id, "subject": case.subject}
-            arms = (("pi", envelope), ("baseline", None))
+            # The control. Same shape, same construction, same size, other case's content:
+            # if it scores like the real one, the model is being helped by the length of the
+            # prompt rather than by what is in it, and none of the rest means what it looks
+            # like it means.
+            arms = (
+                ("pi", envelope),
+                ("baseline", None),
+                ("wrong", previous_envelope if args.arms in ("both", "wrong") else None),
+            )
+            previous_envelope = envelope or previous_envelope
             if args.arms != "both":
                 arms = tuple(item for item in arms if item[0] == args.arms)
+            elif previous_envelope is None:
+                # Nothing to be wrong with yet on the first case.
+                arms = tuple(item for item in arms if item[0] != "wrong")
             for arm, given in arms:
                 break_repository(args.repo, case)
                 row[arm] = run_arm(
@@ -671,8 +684,9 @@ def main() -> int:
                     args.endpoint,
                     args.model,
                     envelope=given,
-                    # Only the arm that was given one gets a fresh one.
-                    reissue=reissue if given is not None else None,
+                    # A fresh envelope only where the envelope is the real one; the
+                    # control must stay wrong for the whole run.
+                    reissue=reissue if arm == "pi" else None,
                     max_turns=args.max_turns,
                     max_output=args.max_output,
                     test_timeout=args.test_timeout,
@@ -739,7 +753,8 @@ def main() -> int:
         "max_turns": args.max_turns,
         "summary": {
             arm: summary(arm)
-            for arm in (("pi", "baseline") if args.arms == "both" else (args.arms,))
+            for arm in (("pi", "baseline", "wrong") if args.arms == "both" else (args.arms,))
+            if any(arm in item for item in rows)
         },
         "results": rows,
     }
