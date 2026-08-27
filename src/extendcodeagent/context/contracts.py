@@ -80,8 +80,18 @@ class EvidenceRole(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class RequiredRef:
+    """A ref the envelope owes the caller, and whether it is owed or merely wanted.
+
+    `obligatory` is what "never rank away required truth" protects. Naming
+    `file://scaffold.py` expands to the twenty-nine symbols it defines, and marking all of
+    them required made protected evidence alone exceed the budget — at which point the mark
+    no longer says anything, because everything carries it. The file is owed; what it
+    happens to contain is a strong candidate that may be dropped for cost.
+    """
+
     canonical_ref: CanonicalRef
     role: EvidenceRole = EvidenceRole.SUPPORTING
+    obligatory: bool = True
 
 
 @dataclass(frozen=True, slots=True)

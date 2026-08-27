@@ -1,14 +1,14 @@
 {
   "schema": 2,
   "classification": "C2_CRITICAL_EVIDENCE_RECALL_CURVE",
-  "captured_at": "2026-08-26T23:17:31.890055+00:00",
+  "captured_at": "2026-08-27T03:47:13.257076+00:00",
   "repository": "/home/souten/ExtendCodeAgent",
-  "source_revision": "9380fc411f90cb2c10612a4ddeb42107a386d1c1",
+  "source_revision": "90bc1e9cd2e13d05ac6948a6c586c2867e9feaa8",
   "execution_scope": "local-only",
   "model_execution": "NOT_RUN_DETERMINISTIC_MEASUREMENT",
   "twin": {
-    "nodes": 2272,
-    "edges": 16215,
+    "nodes": 2296,
+    "edges": 16487,
     "source_directories": [
       ".",
       ".gitignore",
@@ -47,7 +47,7 @@
       "curve": [
         {
           "token_budget": 1024,
-          "delivered_evidence_tokens": 2370,
+          "delivered_evidence_tokens": 2606,
           "estimated_evidence_tokens": 1292,
           "unused_budget_tokens": -268,
           "selected_count": 60,
@@ -61,7 +61,7 @@
         },
         {
           "token_budget": 2048,
-          "delivered_evidence_tokens": 2370,
+          "delivered_evidence_tokens": 2606,
           "estimated_evidence_tokens": 1292,
           "unused_budget_tokens": 756,
           "selected_count": 60,
@@ -75,7 +75,7 @@
         },
         {
           "token_budget": 4096,
-          "delivered_evidence_tokens": 2370,
+          "delivered_evidence_tokens": 2606,
           "estimated_evidence_tokens": 1292,
           "unused_budget_tokens": 2804,
           "selected_count": 60,
@@ -89,7 +89,7 @@
         },
         {
           "token_budget": 8192,
-          "delivered_evidence_tokens": 2370,
+          "delivered_evidence_tokens": 2606,
           "estimated_evidence_tokens": 1292,
           "unused_budget_tokens": 6900,
           "selected_count": 60,
@@ -103,7 +103,7 @@
         },
         {
           "token_budget": 16384,
-          "delivered_evidence_tokens": 2370,
+          "delivered_evidence_tokens": 2606,
           "estimated_evidence_tokens": 1292,
           "unused_budget_tokens": 15092,
           "selected_count": 60,
@@ -117,7 +117,7 @@
         },
         {
           "token_budget": 32768,
-          "delivered_evidence_tokens": 2370,
+          "delivered_evidence_tokens": 2606,
           "estimated_evidence_tokens": 1292,
           "unused_budget_tokens": 31476,
           "selected_count": 60,
@@ -244,9 +244,9 @@
       "curve": [
         {
           "token_budget": 1024,
-          "delivered_evidence_tokens": 2019,
-          "estimated_evidence_tokens": 560,
-          "unused_budget_tokens": 464,
+          "delivered_evidence_tokens": 2080,
+          "estimated_evidence_tokens": 621,
+          "unused_budget_tokens": 403,
           "selected_count": 22,
           "candidate_count": 22,
           "excluded_count": 0,
@@ -258,9 +258,9 @@
         },
         {
           "token_budget": 2048,
-          "delivered_evidence_tokens": 2019,
-          "estimated_evidence_tokens": 560,
-          "unused_budget_tokens": 1488,
+          "delivered_evidence_tokens": 2080,
+          "estimated_evidence_tokens": 621,
+          "unused_budget_tokens": 1427,
           "selected_count": 22,
           "candidate_count": 22,
           "excluded_count": 0,
@@ -272,9 +272,9 @@
         },
         {
           "token_budget": 4096,
-          "delivered_evidence_tokens": 2019,
-          "estimated_evidence_tokens": 560,
-          "unused_budget_tokens": 3536,
+          "delivered_evidence_tokens": 2080,
+          "estimated_evidence_tokens": 621,
+          "unused_budget_tokens": 3475,
           "selected_count": 22,
           "candidate_count": 22,
           "excluded_count": 0,
@@ -286,9 +286,9 @@
         },
         {
           "token_budget": 8192,
-          "delivered_evidence_tokens": 2019,
-          "estimated_evidence_tokens": 560,
-          "unused_budget_tokens": 7632,
+          "delivered_evidence_tokens": 2080,
+          "estimated_evidence_tokens": 621,
+          "unused_budget_tokens": 7571,
           "selected_count": 22,
           "candidate_count": 22,
           "excluded_count": 0,
@@ -300,9 +300,9 @@
         },
         {
           "token_budget": 16384,
-          "delivered_evidence_tokens": 2019,
-          "estimated_evidence_tokens": 560,
-          "unused_budget_tokens": 15824,
+          "delivered_evidence_tokens": 2080,
+          "estimated_evidence_tokens": 621,
+          "unused_budget_tokens": 15763,
           "selected_count": 22,
           "candidate_count": 22,
           "excluded_count": 0,
@@ -314,9 +314,9 @@
         },
         {
           "token_budget": 32768,
-          "delivered_evidence_tokens": 2019,
-          "estimated_evidence_tokens": 560,
-          "unused_budget_tokens": 32208,
+          "delivered_evidence_tokens": 2080,
+          "estimated_evidence_tokens": 621,
+          "unused_budget_tokens": 32147,
           "selected_count": 22,
           "candidate_count": 22,
           "excluded_count": 0,
@@ -340,7 +340,7 @@
       "best_normalized_recall_mean": 1.0,
       "best_raw_recall_mean": 1.0,
       "cases_fully_recovered": 3,
-      "max_delivered_evidence_tokens": 2370
+      "max_delivered_evidence_tokens": 2606
     }
   },
   "pooling_note": "Classes are reported separately on purpose. Pooling tasks PI can move with tasks it cannot is what made the B0b effect undetectable.",
@@ -353,6 +353,6 @@
   },
   "seal": {
     "algorithm": "sha256",
-    "canonical_payload": "37267583c43d672322b66ea436a38dda6dca6acaf51706c22fbb4886fa675690"
+    "canonical_payload": "372fdd0b262044ec8404be17ed55babd1cd3eb9beedd6c48a258fee4b3447a39"
   }
 }

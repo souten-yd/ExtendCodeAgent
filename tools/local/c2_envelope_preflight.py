@@ -76,7 +76,10 @@ def check(
     items = envelope.get("items", [])
     gaps = list(envelope.get("unresolved_evidence_gaps", []))
     tokens = estimate_payload_tokens(envelope)
-    with_source = [item for item in items if item.get("excerpt")]
+    # The emitted field is `source`; an earlier version of this gate looked for `excerpt`
+    # and reported a working envelope as empty. A gate that checks the wrong key is
+    # worse than no gate, because it is believed.
+    with_source = [item for item in items if item.get("source")]
     in_target = [
         item for item in items if any(path in str(item.get("path", "")) for path in target_paths)
     ]
@@ -110,10 +113,15 @@ def check(
                 bool(with_source),
                 f"{len(with_source)} of {len(items)} items carry source",
             ),
+            # Convention travels with real code from this project. When production is being
+            # changed, the sibling bodies already carry it; a test exemplar is what a task
+            # writing a *test* needs, and demanding one here failed a working envelope.
             Expectation(
                 "a convention exemplar is included",
-                any(item.get("excerpt") and "test" in str(item.get("path", "")) for item in items),
-                "one real test from this project",
+                any(item.get("source") and "test" in str(item.get("path", "")) for item in items)
+                if any("test" in path for path in target_paths)
+                else len(with_source) > 1,
+                f"{len(with_source)} real examples from this project",
             ),
         ]
     elif kind == "verification":

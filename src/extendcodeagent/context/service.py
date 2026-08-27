@@ -45,6 +45,11 @@ def _is_protected(reason: str) -> bool:
     """Evidence an obligation requires is never dropped for a bound.
 
     See docs/handoff/C2_EVIDENCE_DELIVERY_DECISION.md, "Never rank away required truth".
+
+    `in_file:` is deliberately not protected. It marks a symbol reached by expanding a named
+    file, which answers the question and keeps its role but was never owed: marking all
+    twenty-nine of `scaffold.py`'s symbols required made protected evidence alone exceed the
+    budget, and a mark everything carries says nothing.
     """
 
     return reason == "target_ref" or reason.startswith("required:")
@@ -84,7 +89,11 @@ _STOP_TERMS = {
     "must",
     "need",
     "not",
+    "failing",
     "only",
+    "pass",
+    "passes",
+    "passing",
     "repository",
     "run",
     "select",
@@ -244,8 +253,9 @@ def build_weak_local_evidence(
 def _role_of(reason: str) -> EvidenceRole:
     if reason == "target_ref":
         return EvidenceRole.TARGET
-    if reason.startswith("required:"):
-        return EvidenceRole(reason.removeprefix("required:"))
+    for prefix in ("required:", "in_file:"):
+        if reason.startswith(prefix):
+            return EvidenceRole(reason.removeprefix(prefix))
     return EvidenceRole.SUPPORTING
 
 
@@ -264,6 +274,7 @@ def attach_excerpts(
     named_refs: frozenset[str] = frozenset(),
     max_lines: int = 120,
     token_budget: int = 4_096,
+    expand_files: bool = False,
 ) -> WeakLocalEvidencePackage:
     """Give the requested symbols their actual source, within a bound.
 
@@ -272,19 +283,34 @@ def attach_excerpts(
     file. Delivering the span instead of the name is the difference between reading what
     was asked for and reading fifty times more.
 
-    Only a symbol the caller named gets one. Naming `file://app.py` asks which file, not
-    for the body of all twenty-five functions inside it — measured across flask and httpx,
-    that expansion was 49% of the whole envelope while answering a question about tests.
-    Supporting evidence keeps its summary, and the excerpt budget is separate from the
-    selection budget so a body can never push a required fact out.
+    Which refs count as named depends on what is being asked. For a question, naming
+    `file://app.py` asks which file, not for the body of all twenty-five functions inside
+    it — measured across flask and httpx, that expansion was 49% of a retrieval envelope.
+    For a change, naming a file is how a developer works, and withholding the source leaves
+    the consumer a table of contents: measured on flask, that envelope carried 64 function
+    names and zero lines of code, which was the whole of what it was supposed to deliver.
+
+    So `expand_files` decides. When it is on, an item defined in a named file is treated as
+    named itself, and bodies are handed out until the excerpt budget is spent. That budget
+    is separate from the selection budget, so a body can never push a required fact out, and
+    what does not fit is not sent rather than truncated.
     """
+
+    named_paths = (
+        frozenset(ref.removeprefix("file://") for ref in named_refs if ref.startswith("file://"))
+        if expand_files
+        else frozenset()
+    )
+
+    def was_asked_for(item: WeakLocalEvidenceItem) -> bool:
+        return item.canonical_ref.value in named_refs or item.source_ref in named_paths
 
     spent = 0
     items: list[WeakLocalEvidenceItem] = []
     for item in package.items:
         excerpt = None
         if (
-            item.canonical_ref.value in named_refs
+            was_asked_for(item)
             and item.start_line is not None
             and item.end_line is not None
             and item.end_line - item.start_line + 1 <= max_lines
@@ -460,7 +486,11 @@ def _answer_candidates(
         (target.value, "target_ref", 10_000) for target in request.target_refs
     ]
     ordered.extend(
-        (item.canonical_ref.value, f"required:{item.role.value}", 9_500)
+        (
+            item.canonical_ref.value,
+            f"required:{item.role.value}" if item.obligatory else f"in_file:{item.role.value}",
+            9_500 if item.obligatory else 9_400,
+        )
         for item in request.required_refs
     )
     for value, reason, score in ordered:

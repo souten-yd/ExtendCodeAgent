@@ -9,6 +9,7 @@ them from somewhere else.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from extendcodeagent.core.contracts import CanonicalRef
@@ -20,10 +21,24 @@ from .serialization import weak_local_evidence_json
 from .service import (
     SourceReader,
     attach_excerpts,
+    attach_exemplar,
     build_weak_local_evidence,
     infer_evidence_scope,
     stable_evidence_envelope,
 )
+
+# Verbs that ask for the repository to be different afterwards.
+_CHANGE_VERBS = re.compile(
+    r"\b(change|fix|implement|add|remove|rename|refactor|update|write|make|correct|"
+    r"migrate|port|support)\b",
+    re.I,
+)
+
+
+def _is_a_change(objective: str) -> bool:
+    """Whether the objective asks for the code to be different, not for a fact about it."""
+
+    return bool(_CHANGE_VERBS.search(objective))
 
 
 def build_answer_envelope(
@@ -65,5 +80,19 @@ def build_answer_envelope(
             unresolved_gaps=unresolved_gaps,
         ),
     )
-    package = attach_excerpts(package, read_source_span, named_refs=frozenset(target_refs))
+    # A change names files; a question names symbols. Handing a change the file's symbol
+    # names and no source leaves it nothing to write from — measured on flask, 64 names and
+    # zero lines. Handing a question every body in the file was 49% of a retrieval envelope.
+    changing = _is_a_change(objective)
+    package = attach_excerpts(
+        package,
+        read_source_span,
+        named_refs=frozenset(target_refs),
+        expand_files=changing,
+    )
+    if changing:
+        # One real test, because a convention cannot be stated from outside the project:
+        # measured across five repositories, test and assertion style are 89% to 100%
+        # consistent and disagree between projects.
+        package = attach_exemplar(package, read_source_span)
     return weak_local_evidence_json(package, stable_evidence_envelope())

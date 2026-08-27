@@ -12,6 +12,8 @@ The lookups are supplied by the caller so this stays a pure function over a snap
 
 from __future__ import annotations
 
+import re
+
 from collections.abc import Callable, Iterable
 
 from extendcodeagent.core.contracts import CanonicalRef
@@ -61,9 +63,14 @@ def obligation_refs(
         return ()
 
     targets: list[str] = []
+    # A ref standing for the symbols in a file: they answer the question, but the obligation
+    # was to the file, not to everything that happens to live inside it.
+    from_expansion: set[str] = set()
     for ref in target_refs:
         targets.append(ref)
-        targets.extend(equivalents(ref))
+        expanded = [item for item in equivalents(ref) if item != ref]
+        from_expansion.update(expanded)
+        targets.extend(expanded)
     equivalent = set(targets)
 
     consumers = [
@@ -100,6 +107,11 @@ def obligation_refs(
     )
 
     return _by_role_budget(
+        from_expansion,
+        # A change is told which tests fail; it has to be told what the code currently is.
+        # Splitting the budget evenly gave 21 of 32 protected slots to tests that the task
+        # statement already named, and the source to be written was pushed out.
+        _CHANGE_VERBS.search(objective) is not None,
         (
             (EvidenceRole.TARGET, targets),
             # Observed and inferred tests hold separate floors. Coverage is fact and ranks
@@ -115,8 +127,23 @@ def obligation_refs(
     )
 
 
+#: What a change needs to be told about tests. It is not zero, because knowing one real
+#: test carries the project's convention; it is small, because the failing ones are named
+#: in the task itself.
+CHANGE_TEST_FLOOR = 2
+
+_CHANGE_VERBS = re.compile(
+    r"\b(change|fix|implement|add|remove|rename|refactor|update|write|make|correct|"
+    r"migrate|port|support)\b",
+    re.I,
+)
+
+
 def _by_role_budget(
-    roles: tuple[tuple[EvidenceRole, list[str]], ...], budget: int
+    from_expansion: set[str],
+    changing: bool,
+    roles: tuple[tuple[EvidenceRole, list[str]], ...],
+    budget: int,
 ) -> tuple[RequiredRef, ...]:
     """Give every role a floor, then spend what is left in priority order.
 
@@ -131,18 +158,23 @@ def _by_role_budget(
         return ()
     floor = max(1, budget // len(populated))
 
+    def floor_for(role: EvidenceRole) -> int:
+        if changing and role is EvidenceRole.TEST:
+            return min(floor, CHANGE_TEST_FLOOR)
+        return floor
+
     taken: list[RequiredRef] = []
     seen: set[str] = set()
     for role, values in populated:
-        for value in values[:floor]:
+        for value in values[: floor_for(role)]:
             if value not in seen:
                 seen.add(value)
-                taken.append(RequiredRef(CanonicalRef(value), role))
+                taken.append(RequiredRef(CanonicalRef(value), role, value not in from_expansion))
     for role, values in populated:
         for value in values:
             if len(taken) >= budget:
                 return tuple(taken[:budget])
             if value not in seen:
                 seen.add(value)
-                taken.append(RequiredRef(CanonicalRef(value), role))
+                taken.append(RequiredRef(CanonicalRef(value), role, value not in from_expansion))
     return tuple(taken[:budget])
