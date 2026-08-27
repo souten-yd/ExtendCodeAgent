@@ -32,6 +32,8 @@ from extendcodeagent.context import (
     build_answer_envelope,
     build_context,
     context_package_json,
+    files_for,
+    files_naming,
 )
 from extendcodeagent.convergence import (
     ActualSnapshot,
@@ -869,6 +871,14 @@ class ProjectIntelligenceApplication:
     ) -> dict[str, Any]:
         snapshot = self._explicit_snapshot(CapabilityName.CONTEXT)
         if view == "envelope":
+            if not target_refs:
+                # Asked without a target, the envelope used to come back empty, so a
+                # consumer holding only a description of the change had to spend a turn
+                # finding the file before it could ask anything.
+                target_refs = tuple(
+                    f"file://{path}"
+                    for path in files_for(objective, files_naming(snapshot, self.root))
+                )
             return build_answer_envelope(
                 snapshot,
                 objective,
