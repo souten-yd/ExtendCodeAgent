@@ -111,6 +111,7 @@ def main() -> int:
     parser.add_argument("--repo", type=Path, required=True)
     parser.add_argument("--findings", type=Path, required=True)
     parser.add_argument("--python", type=Path, required=True)
+    parser.add_argument("--budget", type=int, default=8_192)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
@@ -143,7 +144,7 @@ def main() -> int:
                 # Only additions or module-level lines: nothing existed at the base to carry.
                 rows.append({"sha": sha, "subject": result["subject"], "applicable": False})
                 continue
-            envelope = json.loads(build_envelope(args.repo, case, reverted, executed))
+            envelope = json.loads(build_envelope(args.repo, case, reverted, executed, args.budget))
             items = envelope.get("items", [])
             with_source = {
                 str(item.get("summary", "")).rsplit(".", 1)[-1]
@@ -166,8 +167,22 @@ def main() -> int:
                     reasons[name] = "not selected into the envelope"
                 else:
                     reasons[name] = "selected, and the excerpt allowance ran out"
+            # What the envelope can check about itself, with no knowledge of the answer:
+            # every symbol the failing tests execute inside the files being changed should
+            # have its body. The oracle test needs the future commit; this one needs only a
+            # coverage run, so it can gate a request rather than score it afterwards.
+            in_target = {
+                str(item.get("summary", "")).rsplit(".", 1)[-1]
+                for item in items
+                if any(path in str(item.get("path", "")) for path in reverted)
+            }
+            executed_names = {ref.rsplit("#", 1)[-1].rsplit(".", 1)[-1] for ref in executed}
+            checkable = executed_names & in_target
+            self_sufficient = bool(checkable) and checkable <= with_source
             rows.append(
                 {
+                    "self_sufficient": self_sufficient,
+                    "checkable_symbols": len(checkable),
                     "sha": sha,
                     "subject": result["subject"][:44],
                     "applicable": True,
@@ -191,8 +206,16 @@ def main() -> int:
     applicable = [r for r in rows if r["applicable"]]
     complete = [r for r in applicable if not r.get("why_missing")]
     partial = [r for r in applicable if r["carried_as_source"] and r not in complete]
+    # Does the runtime-checkable test predict the oracle one?
+    both = [r for r in applicable if "self_sufficient" in r]
+    agree = sum(1 for r in both if r["self_sufficient"] == (not r.get("why_missing")))
+    said_yes = [r for r in both if r["self_sufficient"]]
+    correct_yes = sum(1 for r in said_yes if not r.get("why_missing"))
     result = {
         "classification": "C2_ENVELOPE_SUFFICIENCY",
+        "self_check_agrees_with_oracle": f"{agree}/{len(both)}" if both else None,
+        "self_check_said_enough": len(said_yes),
+        "and_was_right": correct_yes,
         "execution_scope": "local-only",
         "model_execution": "NOT_RUN_DETERMINISTIC_MEASUREMENT",
         "repository": str(args.repo),

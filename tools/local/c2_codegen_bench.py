@@ -294,7 +294,7 @@ def complete(endpoint: str, model: str, messages: list[dict[str, str]], max_toke
         method="POST",
     )
     try:
-        with urllib.request.urlopen(request, timeout=1800) as response:
+        with urllib.request.urlopen(request, timeout=300) as response:
             raw = json.load(response)
     except (urllib.error.URLError, TimeoutError) as error:
         raise BenchError(f"model endpoint failed: {error}") from error
@@ -541,6 +541,7 @@ def build_envelope(
     case: Case,
     reverted: tuple[str, ...],
     executed: tuple[str, ...] = (),
+    token_budget: int = 8_192,
 ) -> str:
     objective = f"Change {', '.join(reverted)} so that the failing tests pass: {case.subject}"
     with (
@@ -551,7 +552,7 @@ def build_envelope(
         payload = application.context(
             objective,
             [f"file://{path}" for path in reverted],
-            token_budget=8_192,
+            token_budget=token_budget,
             view="envelope",
             executed_by_failing_tests=executed,
             # Declared, because this benchmark exists to ask for a change. Omitting it left
@@ -579,6 +580,7 @@ def main() -> int:
         default=None,
         help="a coverage database with dynamic_context=test_function, to rank bodies",
     )
+    parser.add_argument("--budget", type=int, default=8_192)
     parser.add_argument(
         "--arms",
         choices=("both", "pi", "baseline"),
@@ -607,7 +609,12 @@ def main() -> int:
                 # Nothing to fix: the revert did not reproduce the failure here.
                 print(f"  {case.case_id} skipped: tests pass with the change removed", flush=True)
                 continue
-            envelope = build_envelope(args.repo, case, reverted, executed)
+            # Building one for a run that will not use it costs a Twin build per case.
+            envelope = (
+                build_envelope(args.repo, case, reverted, executed, args.budget)
+                if args.arms != "baseline"
+                else None
+            )
 
             def reissue(
                 output: str, _case: Case = case, _rev: tuple[str, ...] = reverted
