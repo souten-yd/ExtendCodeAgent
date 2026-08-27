@@ -55,3 +55,24 @@ def test_the_caller_sets_the_bound() -> None:
     index = {"handler": {"a.py", "b.py", "c.py"}}
     assert files_for("`handler` is renamed", search_for(index), max_files=2) == ()
     assert len(files_for("`handler` is renamed", search_for(index), max_files=3)) == 3
+
+
+def test_a_new_name_is_looked_for_where_its_siblings_live() -> None:
+    """`SESSION_COOKIE_PARTITIONED` does not exist yet; its family does."""
+
+    index = {"SESSION_COOKIE": {"src/sessions.py", "src/app.py"}}
+    found = files_for("Added `SESSION_COOKIE_PARTITIONED` config", search_for(index))
+    assert found == ("src/app.py", "src/sessions.py")
+
+
+def test_the_family_is_only_tried_when_the_name_itself_is_absent() -> None:
+    # A stem matches far more, so an exact hit is never widened.
+    index = {
+        "SESSION_COOKIE_SECURE": {"src/sessions.py"},
+        "SESSION_COOKIE": {"src/a.py", "src/b.py", "src/c.py"},
+    }
+    assert files_for("`SESSION_COOKIE_SECURE` is read", search_for(index)) == ("src/sessions.py",)
+
+
+def test_a_stem_too_short_to_mean_anything_is_not_used() -> None:
+    assert files_for("Added `X_THING` config", search_for({"X": {"a.py"}})) == ()

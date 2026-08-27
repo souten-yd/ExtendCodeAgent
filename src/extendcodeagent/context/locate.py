@@ -32,8 +32,14 @@ from typing import Any
 #: excluded by construction rather than by a stop-list that has to grow.
 _MARKED = re.compile(r"`([A-Za-z_][\w.]*)`|\b([A-Z][A-Z_]{3,})\b")
 
-#: More than this and the description is not pointing anywhere in particular.
-DEFAULT_MAX_FILES = 8
+#: More than this and the description is not pointing anywhere in particular. Measured on
+#: fifteen flask changes: at 8 the bound refused two locatable ones for a candidate set that
+#: was only slightly wider, and at 16 every changed file is found in 10 of 15 while the
+#: average candidate set is 3.9 files. Past that the set stops being a location.
+DEFAULT_MAX_FILES = 16
+
+#: A family stem shorter than this matches most of a codebase.
+_MIN_STEM = 4
 
 #: Reading a source file to look for a name. Supplied by the caller so this stays pure.
 FileSearch = Callable[[str], frozenset[str]]
@@ -61,7 +67,17 @@ def files_naming(snapshot: Any, root: Path) -> FileSearch:
     alone located every file of 5 changes in 15; with the text as well, 9.
     """
 
-    paths = tuple(dict.fromkeys(node.source_ref for node in snapshot.nodes))
+    # Tests mention the names a description marks out as much as the code does, and a
+    # change is not made in them. Counting them pushed a locatable change over the bound
+    # that says "this is not a location": `encoding` matched seven files where the source
+    # holds three.
+    paths = tuple(
+        dict.fromkeys(
+            node.source_ref
+            for node in snapshot.nodes
+            if node.source_ref.endswith(".py") and not _is_test_path(node.source_ref)
+        )
+    )
 
     def text_of(path: str) -> str:
         candidate = (root / path).resolve()
@@ -76,12 +92,27 @@ def files_naming(snapshot: Any, root: Path) -> FileSearch:
         declared = {
             node.source_ref
             for node in snapshot.nodes
-            if name in str(node.properties.get("name", ""))
+            if name in str(node.properties.get("name", "")) and not _is_test_path(node.source_ref)
         }
         mentioned = {path for path in paths if path.endswith(".py") and name in text_of(path)}
         return frozenset(declared | mentioned)
 
     return search
+
+
+_TEST_PATH = re.compile(r"(^|/)(tests?|testing)/|(^|/)test_[^/]*\.py$|_test\.py$")
+
+
+def _is_test_path(path: str) -> bool:
+    return bool(_TEST_PATH.search(path))
+
+
+def _family(name: str) -> str:
+    """The name a new sibling would join, or the name itself when it has no family."""
+
+    parts = name.split("_")
+    stem = "_".join(parts[:-1]) if len(parts) > 1 else name
+    return stem if len(stem) >= _MIN_STEM else name
 
 
 def files_for(
@@ -102,7 +133,14 @@ def files_for(
         return ()
     found: set[str] = set()
     for name in names:
-        found |= search(name)
+        hits = search(name)
+        if not hits:
+            # The name is what the change introduces, and its family is already there:
+            # `SESSION_COOKIE_PARTITIONED` joins `SESSION_COOKIE_SECURE` and the rest, so
+            # the file its siblings live in is where it goes. Tried only when the exact name
+            # finds nothing, because a stem on its own matches far more.
+            hits = search(_family(name))
+        found |= hits
     if not found or len(found) > max_files:
         return ()
     return tuple(sorted(found))
