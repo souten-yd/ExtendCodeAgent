@@ -71,9 +71,18 @@ Each reply must be exactly one action, in one of these forms:
   WRITE <path>::<function>
   <the complete source of that function, correctly indented>
   END
+  EDIT <path>
+  <<<OLD
+  <text to find, exactly as it appears, including indentation>
+  ===
+  <text to put in its place>
+  >>>NEW
 
-WRITE replaces that function, or adds it to the file if it is not there yet.
-After each WRITE the tests are run and you are told the result. Do not explain.
+WRITE replaces that function, or adds it to the file if it is not there yet. EDIT replaces
+one exact passage anywhere in the file, which is how an import, a decorator or a line
+outside any function gets changed.
+
+After each WRITE or EDIT the tests are run and you are told the result. Do not explain.
 Change production code only. The tests are correct; do not edit them.
 
 You have a limited number of steps and are told how many remain. Searching costs a step,
@@ -212,6 +221,36 @@ def replace_function(repo: Path, path: str, name: str, source: str) -> str:
     return "applied"
 
 
+def apply_edit(repo: Path, path: str, body: str) -> str:
+    """Replace one exact passage. Returns a message for the model, never a silent failure."""
+
+    target = repo / path
+    if not target.is_file():
+        return f"no such file: {path}"
+    if "<<<OLD" not in body or "===" not in body:
+        return "an EDIT needs <<<OLD, then ===, then the replacement"
+    _, _, rest = body.partition("<<<OLD")
+    old, _, new = rest.partition("===")
+    old = old.strip("\n")
+    new = new.split(">>>NEW")[0].strip("\n")
+    text = target.read_text(errors="replace")
+    if not old.strip():
+        return "the text to find was empty"
+    if old not in text:
+        # Reported rather than guessed at: a near-miss silently applied is a wrong edit the
+        # agent cannot see, and it would spend its remaining turns on the consequences.
+        return f"that exact text is not in {path}"
+    if text.count(old) > 1:
+        return f"that text appears {text.count(old)} times in {path}; include more context"
+    updated = text.replace(old, new, 1)
+    try:
+        ast.parse(updated)
+    except SyntaxError as error:
+        return f"the result would not parse: {error}"
+    target.write_text(updated)
+    return "applied"
+
+
 def complete(endpoint: str, model: str, messages: list[dict[str, str]], max_tokens: int) -> Any:
     request = urllib.request.Request(
         f"{endpoint.rstrip('/')}/chat/completions",
@@ -236,6 +275,11 @@ def complete(endpoint: str, model: str, messages: list[dict[str, str]], max_toke
 
 
 _WRITE = re.compile(r"^\s*(?:REPLACE|WRITE)\s+(\S+?)::(\S+?)\s*$", re.M)
+# Exact-passage replacement. Without it 9 of 17 flask cases could not be written at all:
+# the IPv6 fix needs `from urllib.parse import urlsplit` added at the top of the file, and
+# a vocabulary that only replaces function bodies cannot say that. Scoring an agent on a
+# change it has no way to express measures the protocol.
+_EDIT = re.compile(r"^\s*EDIT\s+(\S+)\s*$", re.M)
 
 
 def run_arm(
@@ -278,6 +322,19 @@ def run_arm(
         seconds += time.monotonic() - started
         uncached += fresh
         messages.append({"role": "assistant", "content": text[:4_000]})
+
+        edit = _EDIT.search(text)
+        if edit and "<<<OLD" in text:
+            actions.append("edit")
+            note = apply_edit(repo, edit.group(1), text[edit.end() :])
+            edits += 1
+            if note == "applied":
+                passed, output = run_tests(repo, python, case.detecting[:8], test_timeout)
+                if passed:
+                    break
+                note = f"tests still fail:\n{output}"
+            messages.append({"role": "user", "content": note[:MAX_READ]})
+            continue
 
         match = _WRITE.search(text)
         if match:
