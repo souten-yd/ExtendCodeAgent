@@ -28,7 +28,7 @@ from c2_codegen_bench import (  # noqa: E402
     Case,
     break_repository,
     build_envelope,
-    executed_by,
+    executed_at_commit,
 )
 from c2_revert_oracle import is_test_path  # noqa: E402
 
@@ -92,7 +92,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", type=Path, required=True)
     parser.add_argument("--findings", type=Path, required=True)
-    parser.add_argument("--coverage-data", type=Path, default=None)
+    parser.add_argument("--python", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
@@ -104,6 +104,8 @@ def main() -> int:
         for result in usable:
             sha = result["sha"]
             case = Case(f"s-{sha}", sha, result["subject"], (), tuple(result["detecting_tests"]))
+            _git(args.repo, "checkout", "-q", "--force", sha)
+            executed = executed_at_commit(args.repo, args.python, case, 300)
             reverted = break_repository(args.repo, case)
             if not reverted:
                 continue
@@ -115,7 +117,6 @@ def main() -> int:
                 # Module-level only: no function body to carry, so the question does not apply.
                 rows.append({"sha": sha, "subject": result["subject"], "applicable": False})
                 continue
-            executed = executed_by(args.repo, args.coverage_data, case.detecting)
             envelope = json.loads(build_envelope(args.repo, case, reverted, executed))
             items = envelope.get("items", [])
             with_source = {

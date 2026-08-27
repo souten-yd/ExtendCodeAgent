@@ -421,15 +421,51 @@ def run_arm(
     }
 
 
-def executed_by(repo: Path, coverage_data: Path | None, tests: tuple[str, ...]) -> tuple[str, ...]:
-    """Canonical refs the failing tests run, from a coverage database keyed by test function.
+def executed_at_commit(repo: Path, python: Path, case: Case, timeout: int) -> tuple[str, ...]:
+    """Canonical refs the detecting tests run *while they still pass*.
 
-    The change is in code those tests execute, so this is what an envelope should spend its
-    excerpt allowance on first. Without it the allowance goes to whatever the file defines
-    early, which is what left thirteen selected bodies unsent across seventeen flask changes.
+    Coverage has to be taken here, before the change is taken away. A failing test truncates
+    its own run - the one that proves `Flask.url_for` is broken raises at the call and never
+    enters the body - so the broken state names everything except the code in question. Line
+    numbers are the second reason: a database built at the fixed revision maps onto spans the
+    reverted file does not have.
+
+    Assumes the repository is at the commit, which is the only point where both hold.
     """
 
-    if coverage_data is None or not coverage_data.is_file():
+    with tempfile.TemporaryDirectory(prefix="eca-cov-") as temp:
+        config = Path(temp) / "coveragerc"
+        # dynamic_context has no command-line form, so the setting travels in a file.
+        config.write_text("[run]\ndynamic_context = test_function\nsource = .\n")
+        data_file = Path(temp) / "coverage.db"
+        try:
+            subprocess.run(
+                [
+                    str(python),
+                    "-m",
+                    "coverage",
+                    "run",
+                    f"--rcfile={config}",
+                    f"--data-file={data_file}",
+                    "-m",
+                    "pytest",
+                    "-q",
+                    "--no-header",
+                    "--tb=no",
+                    *case.detecting[:8],
+                ],
+                cwd=repo,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+            )
+        except (subprocess.TimeoutExpired, OSError):
+            return ()
+        return _symbols_from(repo, data_file, case.detecting)
+
+
+def _symbols_from(repo: Path, coverage_data: Path, tests: tuple[str, ...]) -> tuple[str, ...]:
+    if not coverage_data.is_file():
         return ()
     try:
         import coverage as coverage_lib
@@ -505,6 +541,9 @@ def main() -> int:
     rows: list[dict[str, Any]] = []
     try:
         for case in cases_from(args.findings, args.limit):
+            # Coverage first: it is only meaningful while the tests still pass.
+            _git(args.repo, "checkout", "-q", "--force", case.commit)
+            executed = executed_at_commit(args.repo, args.python, case, args.test_timeout)
             reverted = break_repository(args.repo, case)
             if not reverted:
                 print(f"  {case.case_id} skipped: nothing production to revert", flush=True)
@@ -514,7 +553,6 @@ def main() -> int:
                 # Nothing to fix: the revert did not reproduce the failure here.
                 print(f"  {case.case_id} skipped: tests pass with the change removed", flush=True)
                 continue
-            executed = executed_by(args.repo, args.coverage_data, case.detecting)
             envelope = build_envelope(args.repo, case, reverted, executed)
 
             row: dict[str, Any] = {"case_id": case.case_id, "subject": case.subject}
