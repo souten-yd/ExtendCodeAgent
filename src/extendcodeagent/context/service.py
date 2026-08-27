@@ -217,6 +217,13 @@ def build_weak_local_evidence(
     selected_nodes = [node for node in snapshot.nodes if node.canonical_ref.value in selected_refs]
     for term in _missing_objective_anchors(snapshot, selected_nodes, request.objective)[:8]:
         gaps.append(f"objective_anchor_missing:{term}")
+    known = {node.canonical_ref.value for node in snapshot.nodes}
+    known_paths = {node.source_ref for node in snapshot.nodes}
+    for ref in request.target_refs:
+        # Asked about a file the project does not contain, the envelope returned two
+        # unrelated test paths and no gap at all. A consumer acts on that.
+        if ref.value not in known and ref.value.removeprefix("file://") not in known_paths:
+            gaps.append(f"target_not_found:{ref.value}")
     if not candidates:
         gaps.append("no_task_relevant_evidence")
     gaps.extend(_unanswered_scope(scope, items))
@@ -423,6 +430,23 @@ def infer_evidence_scope(objective: str) -> EvidenceScope:
     return EvidenceScope.SYMBOL
 
 
+def _looks_like_a_name(value: str) -> bool:
+    """Whether a word could name something a project holds.
+
+    A gap saying `objective_anchor_missing:changes` teaches a consumer to ignore gaps, and
+    the stop-list that was suppressing those had to grow for every new sentence — `must`,
+    `source`, `pass`, then `changes` and `registration`. Ordinary English has no end, so the
+    rule is inverted: a name carries a mark that prose does not — a separator, a dot, a path,
+    or internal capitals.
+
+    The cost is a real one-word lowercase symbol never being reported as a missing anchor.
+    Gaps are advisory, so a quiet miss is cheaper than a channel nobody reads.
+    """
+
+    trimmed = value.strip("._:/#-")
+    return any(mark in trimmed for mark in "._:/#-") or not trimmed.islower()
+
+
 def _objective_terms(objective: str) -> tuple[str, ...]:
     return tuple(
         sorted(
@@ -433,6 +457,7 @@ def _objective_terms(objective: str) -> tuple[str, ...]:
                 # it; a sentence-final full stop is not part of the name.
                 if (stripped := value.casefold().strip("._:/#-")) not in _STOP_TERMS
                 and len(stripped) > 2
+                and _looks_like_a_name(value)
             }
         )
     )

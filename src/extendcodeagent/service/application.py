@@ -26,6 +26,7 @@ from extendcodeagent.blueprint import (
 )
 from extendcodeagent.blueprint.storage import SqliteBlueprintRepository
 from extendcodeagent.context import (
+    DEFAULT_MAX_OBLIGATIONS,
     ContextProfile,
     ContextRequest,
     build_answer_envelope,
@@ -877,7 +878,12 @@ class ProjectIntelligenceApplication:
                 observed_tests=self._observed_test_refs,
                 read_source_span=self._read_source_span,
                 token_budget=token_budget,
-                max_items=min(self.max_items, 32),
+                # The two bounds have to agree. Obligations may produce 64 refs and a
+                # protected one is never dropped, so a cap of 32 was a bound the envelope
+                # could not keep and reported breaking on every retrieval case. Capping
+                # obligations at 32 instead cost sealed recall 1.00 -> 0.933: the facts
+                # are needed. The token budget is the real constraint, and it binds.
+                max_items=min(self.max_items, DEFAULT_MAX_OBLIGATIONS),
                 scope=scope,
                 changing=changing,
                 prior_evidence_ids=prior_evidence_ids,
