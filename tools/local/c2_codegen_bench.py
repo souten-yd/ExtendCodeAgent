@@ -46,6 +46,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from extendcodeagent.core.config import ConfigLayer, ConfigResolver  # noqa: E402
 from extendcodeagent.core.config.schema import CONFIGURABLE_CAPABILITIES  # noqa: E402
 from extendcodeagent.core.policy import CapabilityPolicy  # noqa: E402
+from extendcodeagent.runtime import symbols_touched  # noqa: E402
 from extendcodeagent.service.application import ProjectIntelligenceApplication  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -420,7 +421,46 @@ def run_arm(
     }
 
 
-def build_envelope(repo: Path, case: Case, reverted: tuple[str, ...]) -> str:
+def executed_by(repo: Path, coverage_data: Path | None, tests: tuple[str, ...]) -> tuple[str, ...]:
+    """Canonical refs the failing tests run, from a coverage database keyed by test function.
+
+    The change is in code those tests execute, so this is what an envelope should spend its
+    excerpt allowance on first. Without it the allowance goes to whatever the file defines
+    early, which is what left thirteen selected bodies unsent across seventeen flask changes.
+    """
+
+    if coverage_data is None or not coverage_data.is_file():
+        return ()
+    try:
+        import coverage as coverage_lib
+    except ImportError:
+        return ()
+    reader = coverage_lib.Coverage(data_file=str(coverage_data))
+    reader.load()
+    data = reader.get_data()
+    names = {test.rsplit("::", 1)[-1] for test in tests}
+    executed: dict[str, set[int]] = {}
+    for measured in data.measured_files():
+        relative = measured.split(f"/{repo.name}/")[-1]
+        for line, contexts in data.contexts_by_lineno(measured).items():
+            if any(context.rsplit(".", 1)[-1] in names for context in contexts if context):
+                executed.setdefault(relative, set()).add(line)
+    if not executed:
+        return ()
+    with (
+        tempfile.TemporaryDirectory(prefix="eca-cov-") as temp,
+        ProjectIntelligenceApplication(repo, Path(temp) / "graph.db", _policy()) as application,
+    ):
+        snapshot = application._snapshot(open_if_missing=True)
+        return tuple(ref.value for ref in symbols_touched(snapshot, executed))
+
+
+def build_envelope(
+    repo: Path,
+    case: Case,
+    reverted: tuple[str, ...],
+    executed: tuple[str, ...] = (),
+) -> str:
     objective = f"Change {', '.join(reverted)} so that the failing tests pass: {case.subject}"
     with (
         tempfile.TemporaryDirectory(prefix="eca-gen-") as temp,
@@ -432,6 +472,7 @@ def build_envelope(repo: Path, case: Case, reverted: tuple[str, ...]) -> str:
             [f"file://{path}" for path in reverted],
             token_budget=8_192,
             view="envelope",
+            executed_by_failing_tests=executed,
             # Declared, because this benchmark exists to ask for a change. Omitting it left
             # the arm with names and no source, which is the state the whole preflight was
             # built to catch — and the preflight was wired while this caller was not.
@@ -451,6 +492,12 @@ def main() -> int:
     parser.add_argument("--max-turns", type=int, default=14)
     parser.add_argument("--max-output", type=int, default=1_536)
     parser.add_argument("--test-timeout", type=int, default=300)
+    parser.add_argument(
+        "--coverage-data",
+        type=Path,
+        default=None,
+        help="a coverage database with dynamic_context=test_function, to rank bodies",
+    )
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
@@ -467,7 +514,8 @@ def main() -> int:
                 # Nothing to fix: the revert did not reproduce the failure here.
                 print(f"  {case.case_id} skipped: tests pass with the change removed", flush=True)
                 continue
-            envelope = build_envelope(args.repo, case, reverted)
+            executed = executed_by(args.repo, args.coverage_data, case.detecting)
+            envelope = build_envelope(args.repo, case, reverted, executed)
 
             row: dict[str, Any] = {"case_id": case.case_id, "subject": case.subject}
             for arm, given in (("pi", envelope), ("baseline", None)):

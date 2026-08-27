@@ -285,6 +285,7 @@ def attach_excerpts(
     read_lines: SourceReader,
     *,
     named_refs: frozenset[str] = frozenset(),
+    first: frozenset[str] = frozenset(),
     # A second guard on top of the budget, and it was cutting real work: `Flask.url_for` is
     # 124 lines and `create_url_adapter` 122, both just past a limit that exists to stop one
     # body from eating the allowance. Now that a body is costed at what it takes to send,
@@ -327,12 +328,21 @@ def attach_excerpts(
             return 0
         return item.end_line - item.start_line + 1
 
-    # File order. Shortest-first was tried, on the reasoning that it carries the most bodies
-    # for the allowance; measured, it made things worse - 6 of 17 changes fully carried fell
-    # to 4, because the shortest members of a class are one-line properties and `__repr__`,
-    # and spending the allowance on them crowds out the substantial function a change
-    # actually touches.
-    order = range(len(package.items))
+    # `first` before file order. Which symbol a change will touch is not knowable from the
+    # graph, so the allowance goes to whatever the file defines early; ordering by size made
+    # it worse, because a class's shortest members are one-line properties and spending on
+    # them crowds out the function that matters.
+    #
+    # Execution knows, but only from a state where the tests pass. Ranking by what a *failing*
+    # test executes was tried and did not help: the failure truncates the run, so the test
+    # that proves `url_for` is broken never reaches its body, and coverage taken from the
+    # fixed revision maps to line numbers the broken one does not have. The parameter stays
+    # because the ordering it expresses is right; supplying it correctly means collecting
+    # coverage per case, before the change is taken away.
+    order = sorted(
+        range(len(package.items)),
+        key=lambda index: package.items[index].canonical_ref.value not in first,
+    )
 
     spent = 0
     excerpts: dict[int, str] = {}

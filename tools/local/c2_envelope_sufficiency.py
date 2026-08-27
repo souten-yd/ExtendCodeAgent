@@ -24,7 +24,12 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from c2_codegen_bench import Case, break_repository, build_envelope  # noqa: E402
+from c2_codegen_bench import (  # noqa: E402
+    Case,
+    break_repository,
+    build_envelope,
+    executed_by,
+)
 from c2_revert_oracle import is_test_path  # noqa: E402
 
 from extendcodeagent.context import attach_excerpts  # noqa: E402
@@ -87,6 +92,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", type=Path, required=True)
     parser.add_argument("--findings", type=Path, required=True)
+    parser.add_argument("--coverage-data", type=Path, default=None)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
@@ -109,7 +115,8 @@ def main() -> int:
                 # Module-level only: no function body to carry, so the question does not apply.
                 rows.append({"sha": sha, "subject": result["subject"], "applicable": False})
                 continue
-            envelope = json.loads(build_envelope(args.repo, case, reverted))
+            executed = executed_by(args.repo, args.coverage_data, case.detecting)
+            envelope = json.loads(build_envelope(args.repo, case, reverted, executed))
             items = envelope.get("items", [])
             with_source = {
                 str(item.get("summary", "")).rsplit(".", 1)[-1]

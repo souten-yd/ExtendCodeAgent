@@ -862,6 +862,7 @@ class ProjectIntelligenceApplication:
         view: str = "detail",
         scope: str | None = None,
         changing: bool = False,
+        executed_by_failing_tests: tuple[str, ...] = (),
         prior_evidence_ids: tuple[str, ...] = (),
         unresolved_gaps: tuple[str, ...] = (),
     ) -> dict[str, Any]:
@@ -886,6 +887,7 @@ class ProjectIntelligenceApplication:
                 max_items=min(self.max_items, DEFAULT_MAX_OBLIGATIONS),
                 scope=scope,
                 changing=changing,
+                executed_by_failing_tests=frozenset(executed_by_failing_tests),
                 prior_evidence_ids=prior_evidence_ids,
                 unresolved_gaps=unresolved_gaps,
             )

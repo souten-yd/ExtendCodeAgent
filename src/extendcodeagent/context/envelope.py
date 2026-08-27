@@ -40,6 +40,7 @@ def build_answer_envelope(
     max_items: int,
     scope: str | None = None,
     changing: bool = False,
+    executed_by_failing_tests: frozenset[str] = frozenset(),
     prior_evidence_ids: tuple[str, ...] = (),
     unresolved_gaps: tuple[str, ...] = (),
 ) -> dict[str, Any]:
@@ -97,6 +98,11 @@ def build_answer_envelope(
         package,
         read_source_span,
         named_refs=frozenset(target_refs),
+        # A symbol the failing tests execute is the one the change is about. Without it the
+        # allowance went to whatever the file defined first, and across seventeen flask
+        # changes thirteen of the twenty-four missing bodies had been selected and then run
+        # out of room.
+        first=executed_by_failing_tests,
         token_budget=max(0, token_budget - frame),
         expand_files=changing,
     )
