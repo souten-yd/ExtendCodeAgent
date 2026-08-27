@@ -68,12 +68,16 @@ Each reply must be exactly one action, in one of these forms:
 
   GREP <pattern>
   READ <path>
-  REPLACE <path>::<function>
-  <the complete new source of that function, correctly indented>
+  WRITE <path>::<function>
+  <the complete source of that function, correctly indented>
   END
 
-After each REPLACE the tests are run and you are told the result. Do not explain.
+WRITE replaces that function, or adds it to the file if it is not there yet.
+After each WRITE the tests are run and you are told the result. Do not explain.
 Change production code only. The tests are correct; do not edit them.
+
+You have a limited number of steps and are told how many remain. Searching costs a step,
+so stop searching and write once you can see what the change must be.
 """
 
 MAX_READ = 6_000
@@ -116,38 +120,6 @@ def cases_from(findings: Path, limit: int) -> list[Case]:
     return out
 
 
-def _function_names(source: str) -> set[str]:
-    try:
-        tree = ast.parse(source)
-    except SyntaxError:
-        return set()
-    return {
-        node.name
-        for node in ast.walk(tree)
-        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
-    }
-
-
-def modifies_existing_functions_only(repo: Path, case: Case, paths: tuple[str, ...]) -> bool:
-    """Whether REPLACE can express this change at all.
-
-    The action vocabulary here swaps one existing function for another, so a commit that
-    adds or removes a function cannot be written no matter how well the agent reasons.
-    Leaving those in would score the protocol rather than the agent, so they are refused and
-    reported. It is a real bound on what this measures: additions are ordinary work.
-    """
-
-    for path in paths:
-        try:
-            after = _function_names(_git(repo, "show", f"{case.commit}:{path}"))
-            before = _function_names(_git(repo, "show", f"{case.commit}~1:{path}"))
-        except subprocess.CalledProcessError:
-            return False
-        if after != before:
-            return False
-    return True
-
-
 def break_repository(repo: Path, case: Case) -> tuple[str, ...]:
     """Put the commit's production half back, leaving its tests. Returns what was reverted."""
 
@@ -179,8 +151,21 @@ def run_tests(repo: Path, python: Path, tests: tuple[str, ...], timeout: int) ->
     return process.returncode == 0, output
 
 
+def _can_append(tree: ast.Module, name: str) -> bool:
+    """A name that is not there yet can still be written; adding one is ordinary work.
+
+    Refusing additions left half the corpus unscored -- two of every four flask cases -- and
+    what it scored was the action vocabulary rather than the agent.
+    """
+
+    return name.isidentifier()
+
+
 def replace_function(repo: Path, path: str, name: str, source: str) -> str:
-    """Swap one function's body for the model's, by span. Returns a message for the model."""
+    """Put the model's function into the file, replacing or adding it.
+
+    Returns a message for the model, because a rejection it cannot read is a turn wasted.
+    """
 
     target = repo / path
     if not target.is_file():
@@ -195,7 +180,7 @@ def replace_function(repo: Path, path: str, name: str, source: str) -> str:
         for node in ast.walk(tree)
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
     }
-    if name not in spans:
+    if name not in spans and not _can_append(tree, name):
         return f"{path} defines no function named {name}"
     if not source.strip():
         return "the replacement was empty"
@@ -207,14 +192,23 @@ def replace_function(repo: Path, path: str, name: str, source: str) -> str:
             ast.parse("class _C:\n" + "\n".join("    " + line for line in source.splitlines()))
         except SyntaxError:
             return f"the replacement does not parse: {error}"
-    start, end = spans[name]
     lines = text.splitlines()
-    indent = len(lines[start - 1]) - len(lines[start - 1].lstrip())
-    body = [(" " * indent + line.lstrip()) if line.strip() else "" for line in source.splitlines()]
-    # Re-indent only the first line; the model's own relative indentation is kept.
-    shift = indent - (len(source.splitlines()[0]) - len(source.splitlines()[0].lstrip()))
-    body = [(" " * max(shift, 0) + line) if line.strip() else "" for line in source.splitlines()]
-    target.write_text("\n".join([*lines[: start - 1], *body, *lines[end:]]) + "\n")
+    written = source.splitlines()
+    if name not in spans:
+        # Adding a function is ordinary work. Refusing it left half the flask corpus
+        # unscored, which measured the action vocabulary rather than the agent.
+        blank = [""] if lines and lines[-1].strip() else []
+        target.write_text("\n".join([*lines, *blank, *written]) + "\n")
+        return "applied"
+
+    span_start, span_end = spans[name]
+    # Shift the block to where the function actually sits, keeping the relative indentation
+    # the model wrote. A method returned at column zero is valid Python in the wrong place,
+    # and the file then stops parsing for a reason that is not the model's mistake.
+    indent = len(lines[span_start - 1]) - len(lines[span_start - 1].lstrip())
+    shift = max(indent - (len(written[0]) - len(written[0].lstrip())), 0)
+    body = [(" " * shift + line) if line.strip() else "" for line in written]
+    target.write_text("\n".join([*lines[: span_start - 1], *body, *lines[span_end:]]) + "\n")
     return "applied"
 
 
@@ -241,7 +235,7 @@ def complete(endpoint: str, model: str, messages: list[dict[str, str]], max_toke
     )
 
 
-_REPLACE = re.compile(r"^REPLACE\s+(\S+?)::(\S+)\s*$", re.M)
+_WRITE = re.compile(r"^\s*(?:REPLACE|WRITE)\s+(\S+?)::(\S+?)\s*$", re.M)
 
 
 def run_arm(
@@ -273,14 +267,19 @@ def run_arm(
     seconds = 0.0
     actions: list[str] = []
 
-    for _ in range(max_turns):
+    for index in range(max_turns):
+        remaining = max_turns - index
+        messages[-1] = {
+            "role": messages[-1]["role"],
+            "content": f"{messages[-1]['content']}\n\n[{remaining} steps remain]",
+        }
         started = time.monotonic()
         text, fresh = complete(endpoint, model, messages, max_output)
         seconds += time.monotonic() - started
         uncached += fresh
         messages.append({"role": "assistant", "content": text[:4_000]})
 
-        match = _REPLACE.search(text)
+        match = _WRITE.search(text)
         if match:
             actions.append("replace")
             path, name = match.group(1), match.group(2)
@@ -318,7 +317,7 @@ def run_arm(
             )
         else:
             actions.append("malformed")
-            body = "Reply with one action: GREP, READ, or REPLACE <path>::<function>."
+            body = "Reply with one action: GREP, READ, or WRITE <path>::<function>."
         messages.append({"role": "user", "content": body})
 
     return {
@@ -369,9 +368,6 @@ def main() -> int:
         for case in cases_from(args.findings, args.limit):
             reverted = break_repository(args.repo, case)
             if not reverted:
-                continue
-            if not modifies_existing_functions_only(args.repo, case, reverted):
-                print(f"  {case.case_id} skipped: adds or removes a function", flush=True)
                 continue
             broken, _ = run_tests(args.repo, args.python, case.detecting[:8], args.test_timeout)
             if broken:
